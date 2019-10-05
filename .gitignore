@@ -1,0 +1,9 @@
+.env
+.vscode/settings.json
+.mypy_cache
+.pytest_cache
+betterproto/tests/*.bin
+betterproto/tests/*_pb2.py
+betterproto/tests/*.py
+!betterproto/tests/generate.py
+!betterproto/tests/test_*.py

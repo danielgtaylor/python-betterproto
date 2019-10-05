@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+// A test message with a nested message inside of it.
+message Test {
+    // This is the nested type.
+    message Nested {
+      // Stores a simple counter.
+      int32 count = 1;
+    }
+
+    Nested nested = 1;
+    Sibling sibling = 2;
+}
+
+message Sibling {
+  int32 foo = 1;
+}

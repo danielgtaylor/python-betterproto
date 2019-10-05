@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message Test {
+    repeated int32 counts = 1;
+}

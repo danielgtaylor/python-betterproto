@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message Test {
+    sint32 signed_32 = 1;
+    sint64 signed_64 = 2;
+}
