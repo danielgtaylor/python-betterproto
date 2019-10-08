@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message Test {
+    double count = 1;
+}

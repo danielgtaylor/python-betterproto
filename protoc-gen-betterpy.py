@@ -43,8 +43,11 @@ def py_type(descriptor: DescriptorProto) -> Tuple[str, str]:
         if descriptor.default_value:
             default = f'b"{descriptor.default_value}"'
         return "bytes", default
+    elif descriptor.type == 14:
+        # print(descriptor.type_name, file=sys.stderr)
+        return descriptor.type_name.split(".").pop(), 0
     else:
-        raise NotImplementedError()
+        raise NotImplementedError(f"Unknown type {descriptor.type}")
 
 
 def traverse(proto_file):
@@ -101,6 +104,7 @@ def generate_code(request, response):
             "package": proto_file.package,
             "filename": proto_file.name,
             "messages": [],
+            "enums": [],
         }
 
         # Parse request
@@ -148,14 +152,26 @@ def generate_code(request, response):
                     )
                     # print(f, file=sys.stderr)
 
-            # elif isinstance(item, EnumDescriptorProto):
-            #     data.update({
-            #         'type': 'Enum',
-            #         'values': [{'name': v.name, 'value': v.number}
-            #                    for v in item.value]
-            #     })
+                output["messages"].append(data)
 
-            output["messages"].append(data)
+            elif isinstance(item, EnumDescriptorProto):
+                # print(item.name, path, file=sys.stderr)
+                data.update(
+                    {
+                        "type": "Enum",
+                        "comment": get_comment(proto_file, path),
+                        "entries": [
+                            {
+                                "name": v.name,
+                                "value": v.number,
+                                "comment": get_comment(proto_file, path + [2, i]),
+                            }
+                            for i, v in enumerate(item.value)
+                        ],
+                    }
+                )
+
+                output["enums"].append(data)
 
         # Fill response
         f = response.file.add()

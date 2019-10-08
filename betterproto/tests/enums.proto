@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+// Enum for the different greeting types
+enum Greeting {
+  HI = 0;
+  HEY = 1;
+  // Formal greeting
+  HELLO = 2;
+}
+
+message Test {
+  // Greeting enum example
+  Greeting greeting = 1;
+}
