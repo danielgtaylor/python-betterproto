@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os  # isort: skip
 
+# Force pure-python implementation instead of C++, otherwise imports
+# break things because we can't properly reset the symbol database.
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 

@@ -8,6 +8,7 @@ flake8 = "*"
 mypy = "*"
 isort = "*"
 pytest = "*"
+rope = "*"
 
 [packages]
 protobuf = "*"
