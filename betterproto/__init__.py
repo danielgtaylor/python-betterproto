@@ -303,7 +303,11 @@ def _postprocess_single(
         if meta.proto_type in ["string"]:
             value = value.decode("utf-8")
         elif meta.proto_type in ["message"]:
-            value = field.default_factory().parse(value)
+            orig = value
+            value = field.default_factory()
+            if isinstance(value, Message):
+                # If it's a message (instead of e.g. list) then keep going!
+                value.parse(orig)
 
     return value
 
