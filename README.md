@@ -5,7 +5,7 @@
 - [x] Zig-zag signed fields (sint32, sint64)
 - [x] Don't encode zero values for nested types
 - [x] Enums
-- [ ] Repeated message fields
+- [x] Repeated message fields
 - [ ] Maps
 - [ ] Support passthrough of unknown fields
 - [ ] Refs to nested types

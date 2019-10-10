@@ -1,0 +1,10 @@
+{
+  "greetings": [
+    {
+      "greeting": "hello"
+    },
+    {
+      "greeting": "hi"
+    }
+  ]
+}
