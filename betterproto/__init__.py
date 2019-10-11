@@ -385,14 +385,13 @@ class Message(ABC):
 
         return output
 
-    def _cls_for(self, field: dataclasses.Field) -> Type:
+    def _cls_for(self, field: dataclasses.Field, index: int = 0) -> Type:
         """Get the message class for a field from the type hints."""
         module = inspect.getmodule(self)
         type_hints = get_type_hints(self, vars(module))
         cls = type_hints[field.name]
         if hasattr(cls, "__args__"):
-            print(type_hints[field.name].__args__[0])
-            cls = type_hints[field.name].__args__[0]
+            cls = type_hints[field.name].__args__[index]
         return cls
 
     def _postprocess_single(
@@ -420,11 +419,13 @@ class Message(ABC):
             elif meta.proto_type in [TYPE_MAP]:
                 # TODO: This is slow, use a cache to make it faster since each
                 #       key/value pair will recreate the class.
+                kt = self._cls_for(field, index=0)
+                vt = self._cls_for(field, index=1)
                 Entry = dataclasses.make_dataclass(
                     "Entry",
                     [
-                        ("key", Any, dataclass_field(1, meta.map_types[0], None)),
-                        ("value", Any, dataclass_field(2, meta.map_types[1], None)),
+                        ("key", kt, dataclass_field(1, meta.map_types[0], None)),
+                        ("value", vt, dataclass_field(2, meta.map_types[1], None)),
                     ],
                     bases=(Message,),
                 )
@@ -500,10 +501,18 @@ class Message(ABC):
                     v = [i for i in v if i]
                 else:
                     v = v.to_dict()
+
+                if v:
+                    output[field.name] = v
+            elif meta.proto_type == "map":
+                for k in v:
+                    if hasattr(v[k], "to_dict"):
+                        v[k] = v[k].to_dict()
+
                 if v:
                     output[field.name] = v
             elif v != field.default:
-                output[field.name] = getattr(self, field.name)
+                output[field.name] = v
         return output
 
     def from_dict(self, value: dict) -> T:
@@ -516,13 +525,18 @@ class Message(ABC):
             if field.name in value:
                 if meta.proto_type == "message":
                     v = getattr(self, field.name)
-                    print(v, value[field.name])
+                    # print(v, value[field.name])
                     if isinstance(v, list):
                         cls = self._cls_for(field)
                         for i in range(len(value[field.name])):
                             v.append(cls().from_dict(value[field.name][i]))
                     else:
                         v.from_dict(value[field.name])
+                elif meta.proto_type == "map" and meta.map_types[1] == TYPE_MESSAGE:
+                    v = getattr(self, field.name)
+                    cls = self._cls_for(field, index=1)
+                    for k in value[field.name]:
+                        v[k] = cls().from_dict(value[field.name][k])
                 else:
                     setattr(self, field.name, value[field.name])
         return self

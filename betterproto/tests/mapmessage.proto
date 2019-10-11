@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message Test {
+  map<string, Nested> items = 1;
+}
+
+message Nested {
+  int32 count = 1;
+}
