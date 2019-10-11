@@ -4,7 +4,7 @@
 {% if description.enums %}import enum
 {% endif %}
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List
 
 import betterproto
 
@@ -36,7 +36,7 @@ class {{ message.name }}(betterproto.Message):
         {% if field.comment %}
 {{ field.comment }}
         {% endif %}
-    {{ field.name }}: {{ field.type }} = betterproto.{{ field.field_type }}_field({{ field.number }}{% if field.zero %}, default={{ field.zero }}{% endif %})
+    {{ field.name }}: {{ field.type }} = betterproto.{{ field.field_type }}_field({{ field.number }}{% if field.zero and field.field_type != 'map' %}, default={{ field.zero }}{% endif %}{% if field.field_type == 'map'%}, betterproto.{{ field.map_types[0] }}, betterproto.{{ field.map_types[1] }}{% endif %})
     {% endfor %}
 
 

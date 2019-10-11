@@ -6,7 +6,8 @@
 - [x] Don't encode zero values for nested types
 - [x] Enums
 - [x] Repeated message fields
-- [ ] Maps
+- [x] Maps
+  - [ ] Maps of message fields
 - [ ] Support passthrough of unknown fields
 - [ ] Refs to nested types
 - [ ] Imports in proto files

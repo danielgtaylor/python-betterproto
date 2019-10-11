@@ -48,7 +48,7 @@ if __name__ == "__main__":
         json_files = get_files(".json")
 
     for filename in proto_files:
-        print(f"Generatinng code for {os.path.basename(filename)}")
+        print(f"Generating code for {os.path.basename(filename)}")
         subprocess.run(
             f"protoc --python_out=. {os.path.basename(filename)}", shell=True
         )
