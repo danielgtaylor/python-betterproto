@@ -209,6 +209,10 @@ def string_field(number: int, default: str = "") -> Any:
     return dataclass_field(number, TYPE_STRING, default=default)
 
 
+def bytes_field(number: int, default: bytes = b"") -> Any:
+    return dataclass_field(number, TYPE_BYTES, default=default)
+
+
 def message_field(number: int) -> Any:
     return dataclass_field(number, TYPE_MESSAGE)
 
