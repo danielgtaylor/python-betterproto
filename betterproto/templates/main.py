@@ -7,6 +7,10 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 import betterproto
+{% for i in description.imports %}
+
+{{ i }}
+{% endfor %}
 
 
 {% if description.enums %}{% for enum in description.enums %}
@@ -21,9 +25,9 @@ class {{ enum.name }}(enum.IntEnum):
         {% endif %}
     {{ entry.name }} = {{ entry.value }}
     {% endfor %}
+
+
 {% endfor %}
-
-
 {% endif %}
 {% for message in description.messages %}
 @dataclass
@@ -36,8 +40,11 @@ class {{ message.name }}(betterproto.Message):
         {% if field.comment %}
 {{ field.comment }}
         {% endif %}
-    {{ field.name }}: {{ field.type }} = betterproto.{{ field.field_type }}_field({{ field.number }}{% if field.zero and field.field_type != 'map' %}, default={{ field.zero }}{% endif %}{% if field.field_type == 'map'%}, betterproto.{{ field.map_types[0] }}, betterproto.{{ field.map_types[1] }}{% endif %})
+    {{ field.name }}: {{ field.type }} = betterproto.{{ field.field_type }}_field({{ field.number }}{% if field.field_type == 'map'%}, betterproto.{{ field.map_types[0] }}, betterproto.{{ field.map_types[1] }}{% endif %})
     {% endfor %}
+    {% if not message.properties %}
+    pass
+    {% endif %}
 
 
 {% endfor %}

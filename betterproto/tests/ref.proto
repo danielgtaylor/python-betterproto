@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package ref;
+
+import "repeatedmessage.proto";
+
+message Test {
+  repeatedmessage.Sub greeting = 1;
+}

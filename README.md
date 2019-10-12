@@ -13,6 +13,7 @@ This project aims to provide an improved experience when using Protobuf / gRPC i
 
 This project is heavily inspired by, and borrows functionality from:
 
+- https://github.com/protocolbuffers/protobuf/tree/master/python
 - https://github.com/eigenein/protobuf/
 - https://github.com/vmagamedov/grpclib
 
@@ -27,8 +28,8 @@ This project is heavily inspired by, and borrows functionality from:
 - [x] Maps
   - [x] Maps of message fields
 - [ ] Support passthrough of unknown fields
-- [ ] Refs to nested types
-- [ ] Imports in proto files
+- [x] Refs to nested types
+- [x] Imports in proto files
 - [ ] Well-known Google types
 - [ ] JSON that isn't completely naive.
 - [ ] Async service stubs

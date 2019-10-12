@@ -2,7 +2,7 @@ import importlib
 import pytest
 import json
 
-from generate import get_files, get_base
+from .generate import get_files, get_base
 
 inputs = get_files(".bin")
 
@@ -10,7 +10,7 @@ inputs = get_files(".bin")
 @pytest.mark.parametrize("filename", inputs)
 def test_sample(filename: str) -> None:
     module = get_base(filename).split("-")[0]
-    imported = importlib.import_module(module)
+    imported = importlib.import_module(f"betterproto.tests.{module}")
     data_binary = open(filename, "rb").read()
     data_dict = json.loads(open(filename.replace(".bin", ".json")).read())
     t1 = imported.Test().parse(data_binary)
