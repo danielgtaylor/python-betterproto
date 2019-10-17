@@ -13,6 +13,7 @@ rope = "*"
 [packages]
 protobuf = "*"
 jinja2 = "*"
+grpclib = "*"
 
 [requires]
 python_version = "3.7"
