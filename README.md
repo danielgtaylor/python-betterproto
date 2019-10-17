@@ -33,5 +33,8 @@ This project is heavily inspired by, and borrows functionality from:
 - [ ] Well-known Google types
 - [ ] JSON that isn't completely naive.
 - [ ] Async service stubs
+  - [x] Unary-unary
+  - [x] Server streaming response
+  - [ ] Client streaming request
 - [ ] Python package
 - [ ] Cleanup!
