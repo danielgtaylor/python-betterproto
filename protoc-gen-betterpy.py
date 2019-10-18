@@ -1,26 +1,23 @@
 #!/usr/bin/env python
 
-import sys
-
 import itertools
 import json
 import os.path
 import re
-from typing import Tuple, Any, List
+import sys
 import textwrap
+from typing import Any, List, Tuple
 
+from jinja2 import Environment, PackageLoader
+
+from google.protobuf.compiler import plugin_pb2 as plugin
 from google.protobuf.descriptor_pb2 import (
     DescriptorProto,
     EnumDescriptorProto,
-    FileDescriptorProto,
     FieldDescriptorProto,
+    FileDescriptorProto,
     ServiceDescriptorProto,
 )
-
-from google.protobuf.compiler import plugin_pb2 as plugin
-
-
-from jinja2 import Environment, PackageLoader
 
 
 def snake_case(value: str) -> str:

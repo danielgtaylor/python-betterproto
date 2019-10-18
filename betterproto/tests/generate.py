@@ -1,19 +1,21 @@
 #!/usr/bin/env python
+import importlib
+import json
 import os  # isort: skip
+import subprocess
+import sys
+from typing import Generator, Tuple
+
+from google.protobuf import symbol_database
+from google.protobuf.descriptor_pool import DescriptorPool
+from google.protobuf.json_format import MessageToJson, Parse
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 
-import subprocess
-import importlib
-import sys
-from typing import Generator, Tuple
 
-from google.protobuf.json_format import Parse
-from google.protobuf import symbol_database
-from google.protobuf.descriptor_pool import DescriptorPool
 
 root = os.path.dirname(os.path.realpath(__file__))
 
@@ -68,5 +70,10 @@ if __name__ == "__main__":
         print(f"Using {parts[0]}_pb2 to generate {os.path.basename(out)}")
 
         imported = importlib.import_module(f"{parts[0]}_pb2")
-        serialized = Parse(open(filename).read(), imported.Test()).SerializeToString()
+        parsed = Parse(open(filename).read(), imported.Test())
+        serialized = parsed.SerializeToString()
+        serialized_json = MessageToJson(
+            parsed, preserving_proto_field_name=True, use_integers_for_enums=True
+        )
+        assert json.loads(serialized_json) == json.load(open(filename))
         open(out, "wb").write(serialized)

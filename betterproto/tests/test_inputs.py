@@ -1,8 +1,9 @@
 import importlib
-import pytest
 import json
 
-from .generate import get_files, get_base
+import pytest
+
+from .generate import get_base, get_files
 
 inputs = get_files(".bin")
 
