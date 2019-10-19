@@ -169,10 +169,10 @@ Sometimes it is useful to be able to determine whether a message has been sent o
 Use `Message().serialized_on_wire` to determine if it was sent. This is a little bit different from the official Google generated Python code:
 
 ```py
-# Old way
+# Old way (official Google Protobuf package)
 >>> mymessage.HasField('myfield')
 
-# New way
+# New way (this project)
 >>> mymessage.myfield.serialized_on_wire
 ```
 
@@ -226,8 +226,9 @@ $ pipenv run tests
   - [x] 64-bit ints as strings
   - [x] Maps
   - [x] Lists
-  - [ ] Bytes as base64
+  - [x] Bytes as base64
   - [ ] Any support
+  - [x] Enum strings
   - [ ] Well known types support (timestamp, duration, wrappers)
 - [ ] Async service stubs
   - [x] Unary-unary

@@ -69,10 +69,15 @@ if __name__ == "__main__":
         print(f"Using {parts[0]}_pb2 to generate {os.path.basename(out)}")
 
         imported = importlib.import_module(f"{parts[0]}_pb2")
-        parsed = Parse(open(filename).read(), imported.Test())
+        input_json = open(filename).read()
+        parsed = Parse(input_json, imported.Test())
         serialized = parsed.SerializeToString()
-        serialized_json = MessageToJson(
-            parsed, preserving_proto_field_name=True, use_integers_for_enums=True
-        )
-        assert json.loads(serialized_json) == json.load(open(filename))
+        serialized_json = MessageToJson(parsed, preserving_proto_field_name=True)
+
+        s_loaded = json.loads(serialized_json)
+        in_loaded = json.loads(input_json)
+
+        if s_loaded != in_loaded:
+            raise AssertionError("Expected JSON to be equal:", s_loaded, in_loaded)
+
         open(out, "wb").write(serialized)

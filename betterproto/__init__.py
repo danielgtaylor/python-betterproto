@@ -1,8 +1,10 @@
 import dataclasses
+import enum
 import inspect
 import json
 import struct
 from abc import ABC
+from base64 import b64encode, b64decode
 from typing import (
     Any,
     AsyncGenerator,
@@ -220,6 +222,18 @@ def message_field(number: int) -> Any:
 
 def map_field(number: int, key_type: str, value_type: str) -> Any:
     return dataclass_field(number, TYPE_MAP, map_types=(key_type, value_type))
+
+
+class Enum(int, enum.Enum):
+    """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
+
+    @classmethod
+    def from_string(cls, name: str) -> int:
+        """Return the value which corresponds to the string name."""
+        try:
+            return cls.__members__[name]
+        except KeyError as e:
+            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
 
 def _pack_fmt(proto_type: str) -> str:
@@ -596,6 +610,17 @@ class Message(ABC):
                         output[field.name] = [str(n) for n in v]
                     else:
                         output[field.name] = str(v)
+                elif meta.proto_type == TYPE_BYTES:
+                    if isinstance(v, list):
+                        output[field.name] = [b64encode(b).decode("utf8") for b in v]
+                    else:
+                        output[field.name] = b64encode(v).decode("utf8")
+                elif meta.proto_type == TYPE_ENUM:
+                    enum_values = list(self._cls_for(field))
+                    if isinstance(v, list):
+                        output[field.name] = [enum_values[e].name for e in v]
+                    else:
+                        output[field.name] = enum_values[v].name
                 else:
                     output[field.name] = v
         return output
@@ -630,7 +655,20 @@ class Message(ABC):
                             v = [int(n) for n in value[field.name]]
                         else:
                             v = int(value[field.name])
-                    setattr(self, field.name, v)
+                    elif meta.proto_type == TYPE_BYTES:
+                        if isinstance(value[field.name], list):
+                            v = [b64decode(n) for n in value[field.name]]
+                        else:
+                            v = b64decode(value[field.name])
+                    elif meta.proto_type == TYPE_ENUM:
+                        enum_cls = self._cls_for(field)
+                        if isinstance(v, list):
+                            v = [enum_cls.from_string(e) for e in v]
+                        elif isinstance(v, str):
+                            v = enum_cls.from_string(v)
+
+                    if v is not None:
+                        setattr(self, field.name, v)
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:

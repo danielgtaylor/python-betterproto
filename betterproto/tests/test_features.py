@@ -30,3 +30,21 @@ def test_has_field():
     # Can manually set it but defaults to false
     foo.bar = Bar()
     assert foo.bar.serialized_on_wire == False
+
+
+def test_enum_as_int_json():
+    class TestEnum(betterproto.Enum):
+        ZERO = 0
+        ONE = 1
+
+    @dataclass
+    class Foo(betterproto.Message):
+        bar: TestEnum = betterproto.enum_field(1)
+
+    # JSON strings are supported, but ints should still be supported too.
+    foo = Foo().from_dict({"bar": 1})
+    assert foo.bar == TestEnum.ONE
+
+    # Plain-ol'-ints should serialize properly too.
+    foo.bar = 1
+    assert foo.to_dict() == {"bar": "ONE"}
