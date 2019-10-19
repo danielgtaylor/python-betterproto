@@ -1,7 +1,12 @@
 #!/usr/bin/env python
+import os
+
+# Force pure-python implementation instead of C++, otherwise imports
+# break things because we can't properly reset the symbol database.
+os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
 import importlib
 import json
-import os  # isort: skip
 import subprocess
 import sys
 from typing import Generator, Tuple
@@ -9,12 +14,6 @@ from typing import Generator, Tuple
 from google.protobuf import symbol_database
 from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.json_format import MessageToJson, Parse
-
-# Force pure-python implementation instead of C++, otherwise imports
-# break things because we can't properly reset the symbol database.
-os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
-
-
 
 
 root = os.path.dirname(os.path.realpath(__file__))
@@ -55,7 +54,7 @@ if __name__ == "__main__":
             f"protoc --python_out=. {os.path.basename(filename)}", shell=True
         )
         subprocess.run(
-            f"protoc --plugin=protoc-gen-custom=../../protoc-gen-betterpy.py --custom_out=. {os.path.basename(filename)}",
+            f"protoc --plugin=protoc-gen-custom=../plugin.py --custom_out=. {os.path.basename(filename)}",
             shell=True,
         )
 

@@ -4,7 +4,10 @@
 {% if description.enums %}import enum
 {% endif %}
 from dataclasses import dataclass
-from typing import AsyncGenerator, Dict, List, Optional
+{% if description.typing_imports %}
+from typing import {% for i in description.typing_imports %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
 
 import betterproto
 {% if description.services %}

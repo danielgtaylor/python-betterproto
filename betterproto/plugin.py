@@ -8,7 +8,7 @@ import sys
 import textwrap
 from typing import Any, List, Tuple
 
-from jinja2 import Environment, PackageLoader
+import jinja2
 
 from google.protobuf.compiler import plugin_pb2 as plugin
 from google.protobuf.descriptor_pb2 import (
@@ -130,12 +130,12 @@ def get_comment(proto_file, path: List[int]) -> str:
 
 
 def generate_code(request, response):
-    env = Environment(
+    env = jinja2.Environment(
         trim_blocks=True,
         lstrip_blocks=True,
-        loader=PackageLoader("betterproto", "templates"),
+        loader=jinja2.FileSystemLoader("%s/templates/" % os.path.dirname(__file__)),
     )
-    template = env.get_template("main.py")
+    template = env.get_template("template.py")
 
     output_map = {}
     for proto_file in request.proto_file:
@@ -157,6 +157,7 @@ def generate_code(request, response):
             "package": package,
             "files": [f.name for f in options["files"]],
             "imports": set(),
+            "typing_imports": set(),
             "messages": [],
             "enums": [],
             "services": [],
@@ -229,12 +230,14 @@ def generate_code(request, response):
                                                 f.Type.Name(nested.field[0].type),
                                                 f.Type.Name(nested.field[1].type),
                                             )
+                                            output["typing_imports"].add("Dict")
 
                         if f.label == 3 and field_type != "map":
                             # Repeated field
                             repeated = True
                             t = f"List[{t}]"
                             zero = "[]"
+                            output["typing_imports"].add("List")
 
                             if f.type in [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 17, 18]:
                                 packed = True
@@ -292,6 +295,9 @@ def generate_code(request, response):
                     for msg in output["messages"]:
                         if msg["name"] == input_type:
                             input_message = msg
+                            for field in msg["properties"]:
+                                if field["zero"] == "None":
+                                    output["typing_imports"].add("Optional")
                             break
 
                     data["methods"].append(
@@ -311,9 +317,13 @@ def generate_code(request, response):
                         }
                     )
 
+                    if method.server_streaming:
+                        output["typing_imports"].add("AsyncGenerator")
+
                 output["services"].append(data)
 
         output["imports"] = sorted(output["imports"])
+        output["typing_imports"] = sorted(output["typing_imports"])
 
         # Fill response
         f = response.file.add()
@@ -341,7 +351,8 @@ def generate_code(request, response):
         init.content = b""
 
 
-if __name__ == "__main__":
+def main():
+    """The plugin's main entry point."""
     # Read request message from stdin
     data = sys.stdin.buffer.read()
 
@@ -360,3 +371,7 @@ if __name__ == "__main__":
 
     # Write to stdout
     sys.stdout.buffer.write(output)
+
+
+if __name__ == "__main__":
+    main()

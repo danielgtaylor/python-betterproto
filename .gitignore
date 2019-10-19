@@ -8,3 +8,6 @@ betterproto/tests/*.py
 !betterproto/tests/generate.py
 !betterproto/tests/test_*.py
 **/__pycache__
+dist
+**/*.egg-info
+output

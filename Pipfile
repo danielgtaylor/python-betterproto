@@ -19,6 +19,6 @@ grpclib = "*"
 python_version = "3.7"
 
 [scripts]
-plugin = "protoc --plugin=protoc-gen-custom=protoc-gen-betterpy.py --custom_out=output"
+plugin = "protoc --plugin=protoc-gen-custom=betterproto/plugin.py --custom_out=output"
 generate = "python betterproto/tests/generate.py"
 test = "pytest ./betterproto/tests"

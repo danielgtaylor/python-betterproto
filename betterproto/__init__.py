@@ -633,9 +633,9 @@ class Message(ABC):
                     setattr(self, field.name, v)
         return self
 
-    def to_json(self) -> str:
+    def to_json(self, indent: Union[None, int, str] = None) -> str:
         """Returns the encoded JSON representation of this message instance."""
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(), indent=indent)
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
         """
