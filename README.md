@@ -218,7 +218,7 @@ $ pipenv run tests
 - [x] Repeated message fields
 - [x] Maps
   - [x] Maps of message fields
-- [ ] Support passthrough of unknown fields
+- [x] Support passthrough of unknown fields
 - [x] Refs to nested types
 - [x] Imports in proto files
 - [x] Well-known Google types

@@ -48,3 +48,25 @@ def test_enum_as_int_json():
     # Plain-ol'-ints should serialize properly too.
     foo.bar = 1
     assert foo.to_dict() == {"bar": "ONE"}
+
+
+def test_unknown_fields():
+    @dataclass
+    class Newer(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+        bar: int = betterproto.int32_field(2)
+        baz: str = betterproto.string_field(3)
+
+    @dataclass
+    class Older(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+
+    newer = Newer(foo=True, bar=1, baz="Hello")
+    serialized_newer = bytes(newer)
+
+    # Unknown fields in `Newer` should round trip with `Older`
+    round_trip = bytes(Older().parse(serialized_newer))
+    assert serialized_newer == round_trip
+
+    new_again = Newer().parse(round_trip)
+    assert newer == new_again
