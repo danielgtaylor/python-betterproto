@@ -54,8 +54,16 @@ class {{ message.name }}(betterproto.Message):
 {% endfor %}
 {% for service in description.services %}
 class {{ service.name }}Stub(betterproto.ServiceStub):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% endif %}
     {% for method in service.methods %}
     async def {{ method.py_name }}(self{% if method.input_message and method.input_message.properties %}, *, {% for field in method.input_message.properties %}{{ field.name }}: {% if field.zero == "None" %}Optional[{{ field.type }}]{% else %}{{ field.type }}{% endif %} = {{ field.zero }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) -> {% if method.server_streaming %}AsyncGenerator[{{ method.output }}, None]{% else %}{{ method.output }}{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
         request = {{ method.input }}()
         {% for field in method.input_message.properties %}
             {% if field.field_type == 'message' %}

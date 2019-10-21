@@ -114,11 +114,11 @@ def get_comment(proto_file, path: List[int]) -> str:
                 sci.leading_comments.strip().replace("\n", ""), width=75
             )
 
-            if path[-2] == 2:
+            if path[-2] == 2 and path[-4] != 6:
                 # This is a field
                 return "    # " + "    # ".join(lines)
             else:
-                # This is a class
+                # This is a message, enum, service, or method
                 if len(lines) == 1 and len(lines[0]) < 70:
                     lines[0] = lines[0].strip('"')
                     return f'    """{lines[0]}"""'
@@ -278,13 +278,16 @@ def generate_code(request, response):
 
                     output["enums"].append(data)
 
-            for service in proto_file.service:
+            for i, service in enumerate(proto_file.service):
                 # print(service, file=sys.stderr)
 
-                # TODO: comments
-                data = {"name": service.name, "methods": []}
+                data = {
+                    "name": service.name,
+                    "comment": get_comment(proto_file, [6, i]),
+                    "methods": [],
+                }
 
-                for method in service.method:
+                for j, method in enumerate(service.method):
                     if method.client_streaming:
                         raise NotImplementedError("Client streaming not yet supported")
 
@@ -304,6 +307,7 @@ def generate_code(request, response):
                         {
                             "name": method.name,
                             "py_name": snake_case(method.name),
+                            "comment": get_comment(proto_file, [6, i, 2, j]),
                             "route": f"/{package}.{service.name}/{method.name}",
                             "input": get_ref_type(
                                 package, output["imports"], method.input_type
