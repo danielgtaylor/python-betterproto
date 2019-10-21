@@ -1,5 +1,7 @@
 # Better Protobuf / gRPC Support for Python
 
+![](https://github.com/danielgtaylor/python-betterproto/workflows/CI/badge.svg)
+
 This project aims to provide an improved experience when using Protobuf / gRPC in a modern Python environment by making use of modern language features and generating readable, understandable, idiomatic Python code. It will not support legacy features or environments. The following are supported:
 
 - Protobuf 3 & gRPC code generation
