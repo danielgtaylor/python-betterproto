@@ -1,0 +1,19 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+        sudo apt install protobuf-compiler pipenv
+        pipenv install --dev
+    - name: Run tests
+      run: |
+        pipenv run generate
+        pipenv run test
