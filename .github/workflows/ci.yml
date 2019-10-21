@@ -12,7 +12,8 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt install protobuf-compiler
-        pip3 install pipenv
+        pip3 install --user pipenv
+        export PATH="$HOME/.local/bin:$PATH"
         pipenv install --dev
     - name: Run tests
       run: |
