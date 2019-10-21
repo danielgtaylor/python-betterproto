@@ -222,6 +222,10 @@ $ pipenv run tests
 - [x] Refs to nested types
 - [x] Imports in proto files
 - [x] Well-known Google types
+- [ ] OneOf support
+  - [x] Basic support on the wire
+  - [ ] Check which was set from the group
+  - [ ] Setting one unsets the others
 - [ ] JSON that isn't completely naive.
   - [x] 64-bit ints as strings
   - [x] Maps

@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message Test {
+  oneof foo {
+    int32 count = 1;
+    string name = 2;
+  }
+}
