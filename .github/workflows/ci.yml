@@ -12,7 +12,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt install protobuf-compiler
-        pip install pipenv
+        pip3 install pipenv
         pipenv install --dev
     - name: Run tests
       run: |
