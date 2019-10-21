@@ -9,11 +9,13 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - uses: dschep/install-pipenv-action@v1
     - name: Install dependencies
       run: |
         sudo apt install protobuf-compiler
-        pip3 install --user pipenv
-        export PATH="$HOME/.local/bin:$PATH"
         pipenv install --dev
     - name: Run tests
       run: |
