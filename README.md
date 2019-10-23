@@ -39,13 +39,17 @@ This project is a reimplementation from the ground up focused on idiomatic moder
 
 ## Installation & Getting Started
 
-First, install the package:
+First, install the package. Note that the `[compiler]` feature flag tells it to install extra dependencies only needed by the `protoc` plugin:
 
 ```sh
+# Install both the library and compiler
+$ pip install betterproto[compiler]
+
+# Install just the library (to use the generated code output)
 $ pip install betterproto
 ```
 
-Now, given a proto file, e.g `example.proto`:
+Now, given you installed the compiler and have a proto file, e.g `example.proto`:
 
 ```protobuf
 syntax = "proto3";

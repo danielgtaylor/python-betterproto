@@ -8,7 +8,13 @@ import sys
 import textwrap
 from typing import Any, List, Tuple
 
-import jinja2
+try:
+    import jinja2
+except ImportError:
+    print(
+        "Unable to import `jinja2`. Did you install the compiler feature with `pip install betterproto[compiler]`?"
+    )
+    raise SystemExit(1)
 
 from google.protobuf.compiler import plugin_pb2 as plugin
 from google.protobuf.descriptor_pb2 import (

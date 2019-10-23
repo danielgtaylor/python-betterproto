@@ -14,7 +14,9 @@ setup(
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "output", "output.*"]
     ),
-    package_data={"betterproto": ["py.typed", "templates"]},
-    install_requires=["grpclib", "protobuf"],
+    package_data={"betterproto": ["py.typed", "templates/template.py"]},
+    python_requires=">=3.7",
+    install_requires=["grpclib"],
+    extras_require={"compiler": ["jinja2", "protobuf"]},
     zip_safe=False,
 )
