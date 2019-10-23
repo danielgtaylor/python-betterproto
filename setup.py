@@ -2,8 +2,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="betterproto",
-    version="1.0",
+    version="1.0.1",
     description="A better Protobuf / gRPC generator & library",
+    long_description=open("README.md", "r").read(),
+    long_description_content_type="text/markdown",
     url="http://github.com/danielgtaylor/python-betterproto",
     author="Daniel G. Taylor",
     author_email="danielgtaylor@gmail.com",

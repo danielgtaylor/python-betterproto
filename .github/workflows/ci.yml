@@ -4,20 +4,28 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-    - uses: dschep/install-pipenv-action@v1
-    - name: Install dependencies
-      run: |
-        sudo apt install protobuf-compiler
-        pipenv install --dev
-    - name: Run tests
-      run: |
-        pipenv run generate
-        pipenv run test
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - uses: dschep/install-pipenv-action@v1
+      - name: Install dependencies
+        run: |
+          sudo apt install protobuf-compiler
+          pipenv install --dev
+      - name: Run tests
+        run: |
+          pipenv run generate
+          pipenv run test
+      - name: Build package
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+        run: pipenv run python setup.py sdist
+      - name: Publish package
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.pypi }}
