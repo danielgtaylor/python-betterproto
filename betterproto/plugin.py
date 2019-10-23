@@ -363,9 +363,19 @@ def generate_code(request, response):
                 inits.add(base)
 
     for base in inits:
+        name = os.path.join(base, "__init__.py")
+
+        if os.path.exists(name):
+            # Never overwrite inits as they may have custom stuff in them.
+            continue
+
         init = response.file.add()
-        init.name = os.path.join(base, "__init__.py")
+        init.name = name
         init.content = b""
+
+    filenames = sorted([f.name for f in response.file])
+    for fname in filenames:
+        print(f"Writing {fname}", file=sys.stderr)
 
 
 def main():
