@@ -168,19 +168,75 @@ Both serializing and parsing are supported to/from JSON and Python dictionaries 
 
 Sometimes it is useful to be able to determine whether a message has been sent on the wire. This is how the Google wrapper types work to let you know whether a value is unset, set as the default (zero value), or set as something else, for example.
 
-Use `Message().serialized_on_wire` to determine if it was sent. This is a little bit different from the official Google generated Python code:
+Use `betterproto.serialized_on_wire(message)` to determine if it was sent. This is a little bit different from the official Google generated Python code, and it lives outside the generated `Message` class to prevent name clashes. Note that it **only** supports Proto 3 and thus can **only** be used to check if `Message` fields are set. You cannot check if a scalar was sent on the wire.
 
 ```py
 # Old way (official Google Protobuf package)
 >>> mymessage.HasField('myfield')
 
 # New way (this project)
->>> mymessage.myfield.serialized_on_wire
+>>> betterproto.serialized_on_wire(mymessage.myfield)
+```
+
+### One-of Support
+
+Protobuf supports grouping fields in a `oneof` clause. Only one of the fields in the group may be set at a given time. For example, given the proto:
+
+```protobuf
+syntax = "proto3";
+
+message Test {
+  oneof foo {
+    bool on = 1;
+    int32 count = 2;
+    string name = 3;
+  }
+}
+```
+
+You can use `betterproto.which_one_of(message, group_name)` to determine which of the fields was set. It returns a tuple of the field name and value, or a blank string and `None` if unset.
+
+```py
+>>> test = Test()
+>>> betterproto.which_one_of(test, "foo")
+["", None]
+
+>>> test.on = True
+>>> betterproto.which_one_of(test, "foo")
+["on", True]
+
+# Setting one member of the group resets the others.
+>>> test.count = 57
+>>> betterproto.which_one_of(test, "foo")
+["count", 57]
+>>> test.on
+False
+
+# Default (zero) values also work.
+>>> test.name = ""
+>>> betterproto.which_one_of(test, "foo")
+["name", ""]
+>>> test.count
+0
+>>> test.on
+False
+```
+
+Again this is a little different than the official Google code generator:
+
+```py
+# Old way (official Google protobuf package)
+>>> message.WhichOneof("group")
+"foo"
+
+# New way (this project)
+>>> betterproto.which_one_of(message, "group")
+["foo", "foo's value"]
 ```
 
 ## Development
 
-First, make sure you have Python 3.7+ and `pipenv` installed:
+First, make sure you have Python 3.7+ and `pipenv` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
 
 ```sh
 # Get set up with the virtual env & dependencies
@@ -224,10 +280,10 @@ $ pipenv run tests
 - [x] Refs to nested types
 - [x] Imports in proto files
 - [x] Well-known Google types
-- [ ] OneOf support
+- [x] OneOf support
   - [x] Basic support on the wire
-  - [ ] Check which was set from the group
-  - [ ] Setting one unsets the others
+  - [x] Check which was set from the group
+  - [x] Setting one unsets the others
 - [ ] JSON that isn't completely naive.
   - [x] 64-bit ints as strings
   - [x] Maps
@@ -236,6 +292,7 @@ $ pipenv run tests
   - [ ] Any support
   - [x] Enum strings
   - [ ] Well known types support (timestamp, duration, wrappers)
+  - [ ] Support different casing (orig vs. camel vs. others?)
 - [ ] Async service stubs
   - [x] Unary-unary
   - [x] Server streaming response
@@ -243,7 +300,7 @@ $ pipenv run tests
 - [ ] Renaming messages and fields to conform to Python name standards
 - [ ] Renaming clashes with language keywords and standard library top-level packages
 - [x] Python package
-- [ ] Automate running tests
+- [x] Automate running tests
 - [ ] Cleanup!
 
 ## License

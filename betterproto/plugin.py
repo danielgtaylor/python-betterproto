@@ -242,6 +242,10 @@ def generate_code(request, response):
                             if f.type in [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 17, 18]:
                                 packed = True
 
+                        one_of = ""
+                        if f.HasField("oneof_index"):
+                            one_of = item.oneof_decl[f.oneof_index].name
+
                         data["properties"].append(
                             {
                                 "name": f.name,
@@ -254,6 +258,7 @@ def generate_code(request, response):
                                 "zero": zero,
                                 "repeated": repeated,
                                 "packed": packed,
+                                "one_of": one_of,
                             }
                         )
                         # print(f, file=sys.stderr)
