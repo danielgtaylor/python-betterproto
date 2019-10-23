@@ -18,7 +18,7 @@ import grpclib
 
 
 {% if description.enums %}{% for enum in description.enums %}
-class {{ enum.name }}(betterproto.Enum):
+class {{ enum.py_name }}(betterproto.Enum):
     {% if enum.comment %}
 {{ enum.comment }}
 
@@ -35,7 +35,7 @@ class {{ enum.name }}(betterproto.Enum):
 {% endif %}
 {% for message in description.messages %}
 @dataclass
-class {{ message.name }}(betterproto.Message):
+class {{ message.py_name }}(betterproto.Message):
     {% if message.comment %}
 {{ message.comment }}
 
@@ -44,7 +44,7 @@ class {{ message.name }}(betterproto.Message):
         {% if field.comment %}
 {{ field.comment }}
         {% endif %}
-    {{ field.name }}: {{ field.type }} = betterproto.{{ field.field_type }}_field({{ field.number }}{% if field.field_type == 'map'%}, betterproto.{{ field.map_types[0] }}, betterproto.{{ field.map_types[1] }}{% endif %}{% if field.one_of %}, group="{{ field.one_of }}"{% endif %})
+    {{ field.py_name }}: {{ field.type }} = betterproto.{{ field.field_type }}_field({{ field.number }}{% if field.field_type == 'map'%}, betterproto.{{ field.map_types[0] }}, betterproto.{{ field.map_types[1] }}{% endif %}{% if field.one_of %}, group="{{ field.one_of }}"{% endif %})
     {% endfor %}
     {% if not message.properties %}
     pass
@@ -53,7 +53,7 @@ class {{ message.name }}(betterproto.Message):
 
 {% endfor %}
 {% for service in description.services %}
-class {{ service.name }}Stub(betterproto.ServiceStub):
+class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
 {{ service.comment }}
 

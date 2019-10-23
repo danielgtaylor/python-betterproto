@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+enum my_enum {
+  ZERO = 0;
+  ONE = 1;
+  TWO = 2;
+}
+
+message Test {
+  int32 camelCase = 1;
+  my_enum snake_case = 2;
+}

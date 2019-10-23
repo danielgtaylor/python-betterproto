@@ -115,3 +115,34 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo2, "group1")[0] == "bar"
     assert foo.bar == 0
     assert betterproto.which_one_of(foo2, "group2")[0] == ""
+
+
+def test_json_casing():
+    @dataclass
+    class CasingTest(betterproto.Message):
+        pascal_case: int = betterproto.int32_field(1)
+        camel_case: int = betterproto.int32_field(2)
+        snake_case: int = betterproto.int32_field(3)
+        kabob_case: int = betterproto.int32_field(4)
+
+    # Parsing should accept almost any input
+    test = CasingTest().from_dict(
+        {"PascalCase": 1, "camelCase": 2, "snake_case": 3, "kabob-case": 4}
+    )
+
+    assert test == CasingTest(1, 2, 3, 4)
+
+    # Serializing should be strict.
+    assert test.to_dict() == {
+        "pascalCase": 1,
+        "camelCase": 2,
+        "snakeCase": 3,
+        "kabobCase": 4,
+    }
+
+    assert test.to_dict(casing=betterproto.Casing.SNAKE) == {
+        "pascal_case": 1,
+        "camel_case": 2,
+        "snake_case": 3,
+        "kabob_case": 4,
+    }

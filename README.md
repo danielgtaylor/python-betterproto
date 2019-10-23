@@ -301,7 +301,7 @@ $ pipenv run tests
   - [x] Unary-unary
   - [x] Server streaming response
   - [ ] Client streaming request
-- [ ] Renaming messages and fields to conform to Python name standards
+- [x] Renaming messages and fields to conform to Python name standards
 - [ ] Renaming clashes with language keywords and standard library top-level packages
 - [x] Python package
 - [x] Automate running tests

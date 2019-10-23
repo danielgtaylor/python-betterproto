@@ -72,7 +72,8 @@ if __name__ == "__main__":
         input_json = open(filename).read()
         parsed = Parse(input_json, imported.Test())
         serialized = parsed.SerializeToString()
-        serialized_json = MessageToJson(parsed, preserving_proto_field_name=True)
+        preserve = "casing" not in filename
+        serialized_json = MessageToJson(parsed, preserving_proto_field_name=preserve)
 
         s_loaded = json.loads(serialized_json)
         in_loaded = json.loads(input_json)

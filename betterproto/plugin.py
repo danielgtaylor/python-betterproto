@@ -16,6 +16,8 @@ except ImportError:
     )
     raise SystemExit(1)
 
+import stringcase
+
 from google.protobuf.compiler import plugin_pb2 as plugin
 from google.protobuf.descriptor_pb2 import (
     DescriptorProto,
@@ -26,12 +28,6 @@ from google.protobuf.descriptor_pb2 import (
 )
 
 
-def snake_case(value: str) -> str:
-    return (
-        re.sub(r"(?<=[a-z])[A-Z]|[A-Z](?=[^A-Z])", r"_\g<0>", value).lower().strip("_")
-    )
-
-
 def get_ref_type(package: str, imports: set, type_name: str) -> str:
     """
     Return a Python type name for a proto type reference. Adds the import if
@@ -40,12 +36,16 @@ def get_ref_type(package: str, imports: set, type_name: str) -> str:
     type_name = type_name.lstrip(".")
     if type_name.startswith(package):
         # This is the current package, which has nested types flattened.
-        type_name = f'"{type_name.lstrip(package).lstrip(".").replace(".", "")}"'
+        # foo.bar_thing => FooBarThing
+        parts = type_name.lstrip(package).lstrip(".").split(".")
+        cased = [stringcase.pascalcase(part) for part in parts]
+        type_name = f'"{"".join(cased)}"'
 
     if "." in type_name:
         # This is imported from another package. No need
         # to use a forward ref and we need to add the import.
         parts = type_name.split(".")
+        parts[-1] = stringcase.pascalcase(parts[-1])
         imports.add(f"from .{'.'.join(parts[:-2])} import {parts[-2]}")
         type_name = f"{parts[-2]}.{parts[-1]}"
 
@@ -179,7 +179,7 @@ def generate_code(request, response):
             for item, path in traverse(proto_file):
                 # print(item, file=sys.stderr)
                 # print(path, file=sys.stderr)
-                data = {"name": item.name}
+                data = {"name": item.name, "py_name": stringcase.pascalcase(item.name)}
 
                 if isinstance(item, DescriptorProto):
                     # print(item, file=sys.stderr)
@@ -255,6 +255,7 @@ def generate_code(request, response):
                         data["properties"].append(
                             {
                                 "name": f.name,
+                                "py_name": stringcase.snakecase(f.name),
                                 "number": f.number,
                                 "comment": get_comment(proto_file, path + [2, i]),
                                 "proto_type": int(f.type),
@@ -294,6 +295,7 @@ def generate_code(request, response):
 
                 data = {
                     "name": service.name,
+                    "py_name": stringcase.pascalcase(service.name),
                     "comment": get_comment(proto_file, [6, i]),
                     "methods": [],
                 }
@@ -317,7 +319,7 @@ def generate_code(request, response):
                     data["methods"].append(
                         {
                             "name": method.name,
-                            "py_name": snake_case(method.name),
+                            "py_name": stringcase.snakecase(method.name),
                             "comment": get_comment(proto_file, [6, i, 2, j]),
                             "route": f"/{package}.{service.name}/{method.name}",
                             "input": get_ref_type(
