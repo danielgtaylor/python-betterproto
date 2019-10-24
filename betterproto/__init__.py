@@ -26,6 +26,8 @@ import grpclib.client
 import grpclib.const
 import stringcase
 
+from .casing import safe_snake_case
+
 # Proto 3 data types
 TYPE_ENUM = "enum"
 TYPE_BOOL = "bool"
@@ -642,7 +644,7 @@ class Message(ABC):
         for field in dataclasses.fields(self):
             meta = FieldMetadata.get(field)
             v = getattr(self, field.name)
-            cased_name = casing(field.name)
+            cased_name = casing(field.name).rstrip("_")
             if meta.proto_type == "message":
                 if isinstance(v, list):
                     # Convert each item.
@@ -686,7 +688,7 @@ class Message(ABC):
         self._serialized_on_wire = True
         fields_by_name = {f.name: f for f in dataclasses.fields(self)}
         for key in value:
-            snake_cased = stringcase.snakecase(key)
+            snake_cased = safe_snake_case(key)
             if snake_cased in fields_by_name:
                 field = fields_by_name[snake_cased]
                 meta = FieldMetadata.get(field)

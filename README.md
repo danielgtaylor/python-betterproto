@@ -155,7 +155,7 @@ You can use it like so (enable async in the interactive shell first):
 EchoResponse(values=["hello", "hello"])
 
 >>> async for response in service.echo_stream(value="hello", extra_times=1)
-    print(response)
+        print(response)
 
 EchoStreamResponse(value="hello")
 EchoStreamResponse(value="hello")
@@ -296,13 +296,13 @@ $ pipenv run tests
   - [ ] Any support
   - [x] Enum strings
   - [ ] Well known types support (timestamp, duration, wrappers)
-  - [ ] Support different casing (orig vs. camel vs. others?)
+  - [x] Support different casing (orig vs. camel vs. others?)
 - [ ] Async service stubs
   - [x] Unary-unary
   - [x] Server streaming response
   - [ ] Client streaming request
 - [x] Renaming messages and fields to conform to Python name standards
-- [ ] Renaming clashes with language keywords and standard library top-level packages
+- [x] Renaming clashes with language keywords
 - [x] Python package
 - [x] Automate running tests
 - [ ] Cleanup!

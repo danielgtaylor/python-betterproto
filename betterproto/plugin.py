@@ -27,6 +27,8 @@ from google.protobuf.descriptor_pb2 import (
     ServiceDescriptorProto,
 )
 
+from betterproto.casing import safe_snake_case
+
 
 def get_ref_type(package: str, imports: set, type_name: str) -> str:
     """
@@ -255,7 +257,7 @@ def generate_code(request, response):
                         data["properties"].append(
                             {
                                 "name": f.name,
-                                "py_name": stringcase.snakecase(f.name),
+                                "py_name": safe_snake_case(f.name),
                                 "number": f.number,
                                 "comment": get_comment(proto_file, path + [2, i]),
                                 "proto_type": int(f.type),
