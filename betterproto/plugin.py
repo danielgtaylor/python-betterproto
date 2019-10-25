@@ -124,7 +124,7 @@ def get_comment(proto_file, path: List[int]) -> str:
 
             if path[-2] == 2 and path[-4] != 6:
                 # This is a field
-                return "    # " + "    # ".join(lines)
+                return "    # " + "\n    # ".join(lines)
             else:
                 # This is a message, enum, service, or method
                 if len(lines) == 1 and len(lines[0]) < 70:
