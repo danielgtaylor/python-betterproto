@@ -238,6 +238,53 @@ Again this is a little different than the official Google code generator:
 ["foo", "foo's value"]
 ```
 
+### Well-Known Google Types
+
+Google provides several well-known message types like a timestamp, duration, and several wrappers used to provide optional zero value support. Each of these has a special JSON representation and is handled a little differently from normal messages. The Python mapping for these is as follows:
+
+| Google Message              | Python Type                              | Default                |
+| --------------------------- | ---------------------------------------- | ---------------------- |
+| `google.protobuf.duration`  | [`datetime.timedelta`][td]               | `0`                    |
+| `google.protobuf.timestamp` | Timezone-aware [`datetime.datetime`][dt] | `1970-01-01T00:00:00Z` |
+| `google.protobuf.*Value`    | `Optional[...]`                          | `None`                 |
+
+[td]: https://docs.python.org/3/library/datetime.html#timedelta-objects
+[dt]: https://docs.python.org/3/library/datetime.html#datetime.datetime
+
+For the wrapper types, the Python type corresponds to the wrapped type, e.g. `google.protobuf.BoolValue` becomes `Optional[bool]` while `google.protobuf.Int32Value` becomes `Optional[int]`. All of the optional values default to `None`, so don't forget to check for that possible state. Given:
+
+```protobuf
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+message Test {
+  google.protobuf.BoolValue maybe = 1;
+  google.protobuf.Timestamp ts = 2;
+  google.protobuf.Duration duration = 3;
+}
+```
+
+You can do stuff like:
+
+```py
+>>> t = Test().from_dict({"maybe": True, "ts": "2019-01-01T12:00:00Z", "duration": "1.200s"})
+>>> t
+st(maybe=True, ts=datetime.datetime(2019, 1, 1, 12, 0, tzinfo=datetime.timezone.utc), duration=datetime.timedelta(seconds=1, microseconds=200000))
+
+>>> t.ts - t.duration
+datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
+
+>>> t.ts.isoformat()
+'2019-01-01T12:00:00+00:00'
+
+>>> t.maybe = None
+>>> t.to_dict()
+{'ts': '2019-01-01T12:00:00Z', 'duration': '1.200s'}
+```
+
 ## Development
 
 First, make sure you have Python 3.7+ and `pipenv` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
@@ -295,7 +342,7 @@ $ pipenv run tests
   - [x] Bytes as base64
   - [ ] Any support
   - [x] Enum strings
-  - [ ] Well known types support (timestamp, duration, wrappers)
+  - [x] Well known types support (timestamp, duration, wrappers)
   - [x] Support different casing (orig vs. camel vs. others?)
 - [ ] Async service stubs
   - [x] Unary-unary

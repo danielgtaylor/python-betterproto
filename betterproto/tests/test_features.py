@@ -1,5 +1,6 @@
 import betterproto
 from dataclasses import dataclass
+from typing import Optional
 
 
 def test_has_field():
@@ -146,3 +147,18 @@ def test_json_casing():
         "snake_case": 3,
         "kabob_case": 4,
     }
+
+
+def test_optional_flag():
+    @dataclass
+    class Request(betterproto.Message):
+        flag: Optional[bool] = betterproto.message_field(1, wraps=betterproto.TYPE_BOOL)
+
+    # Serialization of not passed vs. set vs. zero-value.
+    assert bytes(Request()) == b""
+    assert bytes(Request(flag=True)) == b"\n\x02\x08\x01"
+    assert bytes(Request(flag=False)) == b"\n\x00"
+
+    # Differentiate between not passed and the zero-value.
+    assert Request().parse(b"").flag == None
+    assert Request().parse(b"\n\x00").flag == False

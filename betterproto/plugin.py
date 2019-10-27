@@ -236,6 +236,14 @@ def generate_code(request, response):
                         packed = False
 
                         field_type = f.Type.Name(f.type).lower()[5:]
+
+                        field_wraps = ""
+                        if f.type_name.startswith(
+                            ".google.protobuf"
+                        ) and f.type_name.endswith("Value"):
+                            w = f.type_name.split(".").pop()[:-5].upper()
+                            field_wraps = f"betterproto.TYPE_{w}"
+
                         map_types = None
                         if f.type == 11:
                             # This might be a map...
@@ -301,6 +309,7 @@ def generate_code(request, response):
                                 "comment": get_comment(proto_file, path + [2, i]),
                                 "proto_type": int(f.type),
                                 "field_type": field_type,
+                                "field_wraps": field_wraps,
                                 "map_types": map_types,
                                 "type": t,
                                 "zero": zero,
