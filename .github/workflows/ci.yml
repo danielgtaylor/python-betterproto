@@ -14,7 +14,7 @@ jobs:
       - uses: dschep/install-pipenv-action@v1
       - name: Install dependencies
         run: |
-          sudo apt install protobuf-compiler
+          sudo apt install protobuf-compiler libprotobuf-dev
           pipenv install --dev
       - name: Run tests
         run: |
