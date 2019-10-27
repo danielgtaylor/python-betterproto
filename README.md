@@ -10,6 +10,7 @@ This project aims to provide an improved experience when using Protobuf / gRPC i
   - Enums
   - Dataclasses
   - `async`/`await`
+  - Timezone-aware `datetime` and `timedelta` objects
   - Relative imports
   - Mypy type checking
 
@@ -34,6 +35,8 @@ This project exists because I am unhappy with the state of the official Google p
   - Much code looks like C++ or Java ported 1:1 to Python
   - Capitalized function names like `HasField()` and `SerializeToString()`
   - Uses `SerializeToString()` rather than the built-in `__bytes__()`
+  - Special wrapped types don't use Python's `None`
+  - Timestamp/duration types don't use Python's built-in `datetime` module
 
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
@@ -167,6 +170,12 @@ Both serializing and parsing are supported to/from JSON and Python dictionaries 
 
 - Dicts: `Message().to_dict()`, `Message().from_dict(...)`
 - JSON: `Message().to_json()`, `Message().from_json(...)`
+
+For compatibility the default is to convert field names to `camelCase`. You can control this behavior by passing a casing value, e.g:
+
+```py
+>>> MyMessage().to_dict(casing=betterproto.Casing.SNAKE)
+```
 
 ### Determining if a message was sent
 
