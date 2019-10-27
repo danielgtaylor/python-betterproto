@@ -19,6 +19,7 @@ jobs:
       - name: Run tests
         run: |
           cp .env.default .env
+          pipenv run pip install -e .
           pipenv run generate
           pipenv run test
       - name: Build package
