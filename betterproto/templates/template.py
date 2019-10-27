@@ -2,6 +2,10 @@
 # sources: {{ ', '.join(description.files) }}
 # plugin: python-betterproto
 from dataclasses import dataclass
+{% if description.datetime_imports %}
+from datetime import {% for i in description.datetime_imports %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif%}
 {% if description.typing_imports %}
 from typing import {% for i in description.typing_imports %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 
