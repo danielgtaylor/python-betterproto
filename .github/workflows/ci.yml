@@ -18,7 +18,7 @@ jobs:
           pipenv install --dev
       - name: Run tests
         run: |
-          export PYTHONPATH=.
+          cp .env.default .env
           pipenv run generate
           pipenv run test
       - name: Build package
