@@ -15,6 +15,7 @@ protobuf = "*"
 jinja2 = "*"
 grpclib = "*"
 stringcase = "*"
+black = "*"
 
 [requires]
 python_version = "3.7"
@@ -23,3 +24,6 @@ python_version = "3.7"
 plugin = "protoc --plugin=protoc-gen-custom=betterproto/plugin.py --custom_out=output"
 generate = "python betterproto/tests/generate.py"
 test = "pytest ./betterproto/tests"
+
+[pipenv]
+allow_prereleases = true

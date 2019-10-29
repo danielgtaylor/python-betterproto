@@ -19,6 +19,6 @@ setup(
     package_data={"betterproto": ["py.typed", "templates/template.py"]},
     python_requires=">=3.7",
     install_requires=["grpclib", "stringcase"],
-    extras_require={"compiler": ["jinja2", "protobuf"]},
+    extras_require={"compiler": ["black", "jinja2", "protobuf"]},
     zip_safe=False,
 )

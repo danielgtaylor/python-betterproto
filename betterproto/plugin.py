@@ -9,13 +9,14 @@ import textwrap
 from typing import Any, List, Tuple
 
 try:
-    import jinja2
+    import black
 except ImportError:
     print(
-        "Unable to import `jinja2`. Did you install the compiler feature with `pip install betterproto[compiler]`?"
+        "Unable to import `black` formatter. Did you install the compiler feature with `pip install betterproto[compiler]`?"
     )
     raise SystemExit(1)
 
+import jinja2
 import stringcase
 
 from google.protobuf.compiler import plugin_pb2 as plugin
@@ -398,8 +399,11 @@ def generate_code(request, response):
         # print(filename, file=sys.stderr)
         f.name = filename.replace(".", os.path.sep) + ".py"
 
-        # f.content = json.dumps(output, indent=2)
-        f.content = template.render(description=output).rstrip("\n") + "\n"
+        # Render and then format the output file.
+        f.content = black.format_str(
+            template.render(description=output),
+            mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
+        )
 
     inits = set([""])
     for f in response.file:
