@@ -15,8 +15,8 @@ import betterproto
 {% if description.services %}
 import grpclib
 {% endif %}
-{% for i in description.imports %}
 
+{% for i in description.imports %}
 {{ i }}
 {% endfor %}
 

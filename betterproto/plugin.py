@@ -142,25 +142,26 @@ def traverse(proto_file):
     )
 
 
-def get_comment(proto_file, path: List[int]) -> str:
+def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
+    pad = " " * indent
     for sci in proto_file.source_code_info.location:
         # print(list(sci.path), path, file=sys.stderr)
         if list(sci.path) == path and sci.leading_comments:
             lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""), width=75
+                sci.leading_comments.strip().replace("\n", ""), width=79 - indent
             )
 
             if path[-2] == 2 and path[-4] != 6:
                 # This is a field
-                return "    # " + "\n    # ".join(lines)
+                return f"{pad}# " + f"\n{pad}# ".join(lines)
             else:
                 # This is a message, enum, service, or method
-                if len(lines) == 1 and len(lines[0]) < 70:
+                if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
                     lines[0] = lines[0].strip('"')
-                    return f'    """{lines[0]}"""'
+                    return f'{pad}"""{lines[0]}"""'
                 else:
-                    joined = "\n    ".join(lines)
-                    return f'    """\n    {joined}\n    """'
+                    joined = f"\n{pad}".join(lines)
+                    return f'{pad}"""\n{pad}{joined}\n{pad}"""'
 
     return ""
 
@@ -371,7 +372,7 @@ def generate_code(request, response):
                         {
                             "name": method.name,
                             "py_name": stringcase.snakecase(method.name),
-                            "comment": get_comment(proto_file, [6, i, 2, j]),
+                            "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
                             "route": f"/{package}.{service.name}/{method.name}",
                             "input": get_ref_type(
                                 package, output["imports"], method.input_type
