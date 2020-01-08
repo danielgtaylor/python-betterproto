@@ -430,6 +430,9 @@ class Message(ABC):
     _group_map: Dict[str, dict]
 
     def __post_init__(self) -> None:
+        # Keep track of whether every field was default
+        all_sentinel = True
+
         # Set a default value for each field in the class after `__init__` has
         # already been run.
         group_map: Dict[str, dict] = {"fields": {}, "groups": {}}
@@ -446,6 +449,7 @@ class Message(ABC):
 
             if getattr(self, field.name) != PLACEHOLDER:
                 # Skip anything not set to the sentinel value
+                all_sentinel = False
 
                 if meta.group:
                     # This was set, so make it the selected value of the one-of.
@@ -456,7 +460,7 @@ class Message(ABC):
             setattr(self, field.name, self._get_field_default(field, meta))
 
         # Now that all the defaults are set, reset it!
-        self.__dict__["_serialized_on_wire"] = False
+        self.__dict__["_serialized_on_wire"] = not all_sentinel
         self.__dict__["_unknown_fields"] = b""
         self.__dict__["_group_map"] = group_map
 
