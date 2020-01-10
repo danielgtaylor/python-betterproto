@@ -723,14 +723,14 @@ class Message(ABC):
                         output[cased_name] = v
                 elif isinstance(v, list):
                     # Convert each item.
-                    v = [i.to_dict() for i in v]
+                    v = [i.to_dict(casing) for i in v]
                     output[cased_name] = v
                 elif v._serialized_on_wire:
-                    output[cased_name] = v.to_dict()
+                    output[cased_name] = v.to_dict(casing)
             elif meta.proto_type == "map":
                 for k in v:
                     if hasattr(v[k], "to_dict"):
-                        v[k] = v[k].to_dict()
+                        v[k] = v[k].to_dict(casing)
 
                 if v:
                     output[cased_name] = v
