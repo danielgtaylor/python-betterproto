@@ -33,6 +33,21 @@ def test_has_field():
     assert betterproto.serialized_on_wire(foo.bar) == False
 
 
+def test_class_init():
+    @dataclass
+    class Bar(betterproto.Message):
+        name: str = betterproto.string_field(1)
+
+    @dataclass
+    class Foo(betterproto.Message):
+        name: str = betterproto.string_field(1)
+        child: Bar = betterproto.message_field(2)
+
+    foo = Foo(name="foo", child=Bar(name="bar"))
+
+    assert foo.to_dict() == {"name": "foo", "child": {"name": "bar"}}
+
+
 def test_enum_as_int_json():
     class TestEnum(betterproto.Enum):
         ZERO = 0
