@@ -162,3 +162,95 @@ def test_optional_flag():
     # Differentiate between not passed and the zero-value.
     assert Request().parse(b"").flag == None
     assert Request().parse(b"\n\x00").flag == False
+
+
+def test_to_dict_default_values():
+    @dataclass
+    class TestMessage(betterproto.Message):
+        some_int: int = betterproto.int32_field(1)
+        some_double: float = betterproto.double_field(2)
+        some_str: str = betterproto.string_field(3)
+        some_bool: bool = betterproto.bool_field(4)
+
+    # Empty dict
+    test = TestMessage().from_dict({})
+
+    assert test.to_dict(include_default_values=True) == {
+        'someInt': 0,
+        'someDouble': 0.0,
+        'someStr': '',
+        'someBool': False
+    }
+
+    # All default values
+    test = TestMessage().from_dict({
+        'someInt': 0,
+        'someDouble': 0.0,
+        'someStr': '',
+        'someBool': False
+    })
+
+    assert test.to_dict(include_default_values=True) == {
+        'someInt': 0,
+        'someDouble': 0.0,
+        'someStr': '',
+        'someBool': False
+    }
+
+    # Some default and some other values
+    @dataclass
+    class TestMessage2(betterproto.Message):
+        some_int: int = betterproto.int32_field(1)
+        some_double: float = betterproto.double_field(2)
+        some_str: str = betterproto.string_field(3)
+        some_bool: bool = betterproto.bool_field(4)
+        some_default_int: int = betterproto.int32_field(5)
+        some_default_double: float = betterproto.double_field(6)
+        some_default_str: str = betterproto.string_field(7)
+        some_default_bool: bool = betterproto.bool_field(8)
+
+    test = TestMessage2().from_dict({
+        'someInt': 2,
+        'someDouble': 1.2,
+        'someStr': 'hello',
+        'someBool': True,
+        'someDefaultInt': 0,
+        'someDefaultDouble': 0.0,
+        'someDefaultStr': '',
+        'someDefaultBool': False
+    })
+
+    assert test.to_dict(include_default_values=True) == {
+        'someInt': 2,
+        'someDouble': 1.2,
+        'someStr': 'hello',
+        'someBool': True,
+        'someDefaultInt': 0,
+        'someDefaultDouble': 0.0,
+        'someDefaultStr': '',
+        'someDefaultBool': False
+    }
+
+    # Nested messages
+    @dataclass
+    class TestChildMessage(betterproto.Message):
+        some_other_int: int = betterproto.int32_field(1)
+
+    @dataclass
+    class TestParentMessage(betterproto.Message):
+        some_int: int = betterproto.int32_field(1)
+        some_double: float = betterproto.double_field(2)
+        some_message: TestChildMessage = betterproto.message_field(3)
+
+    test = TestParentMessage().from_dict({
+        'someInt': 0,
+        'someDouble': 1.2,
+    })
+
+    assert test.to_dict(include_default_values=True) == {
+        'someInt': 0,
+        'someDouble': 1.2,
+        'someMessage': {
+            'someOtherInt': 0
+        }
+    }
