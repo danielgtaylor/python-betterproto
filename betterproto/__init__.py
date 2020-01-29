@@ -728,7 +728,8 @@ class Message(ABC):
                 elif isinstance(v, list):
                     # Convert each item.
                     v = [i.to_dict(casing) for i in v]
-                    output[cased_name] = v
+                    if v:
+                        output[cased_name] = v
                 elif v._serialized_on_wire:
                     output[cased_name] = v.to_dict(casing)
             elif meta.proto_type == "map":
