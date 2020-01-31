@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Exclude empty lists from `to_dict` by default [#16](https://github.com/danielgtaylor/python-betterproto/pull/16)
+- Add `include_default_values` parameter for `to_dict` [#12](https://github.com/danielgtaylor/python-betterproto/pull/12)
+
 ## [1.2.2] - 2020-01-09
 
 - Mention lack of Proto 2 support in README.
