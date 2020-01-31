@@ -733,7 +733,8 @@ class Message(ABC):
                 elif isinstance(v, list):
                     # Convert each item.
                     v = [i.to_dict(casing, include_default_values) for i in v]
-                    output[cased_name] = v
+                    if v or include_default_values:
+                        output[cased_name] = v
                 else:
                     if v._serialized_on_wire or include_default_values:
                         output[cased_name] = v.to_dict(casing, include_default_values)
