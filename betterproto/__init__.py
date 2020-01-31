@@ -704,11 +704,16 @@ class Message(ABC):
     def FromString(cls: Type[T], data: bytes) -> T:
         return cls().parse(data)
 
-    def to_dict(self, casing: Casing = Casing.CAMEL) -> dict:
+    def to_dict(self, casing: Casing = Casing.CAMEL, include_default_values: bool = False) -> dict:
         """
         Returns a dict representation of this message instance which can be
         used to serialize to e.g. JSON. Defaults to camel casing for
         compatibility but can be set to other modes.
+
+        `include_default_values` can be set to `True` to include default
+        values of fields. E.g. an `int32` type field with `0` value will
+        not be in returned dict if `include_default_values` is set to
+        `False`.
         """
         output: Dict[str, Any] = {}
         for field in dataclasses.fields(self):
@@ -717,29 +722,30 @@ class Message(ABC):
             cased_name = casing(field.name).rstrip("_")  # type: ignore
             if meta.proto_type == "message":
                 if isinstance(v, datetime):
-                    if v != DATETIME_ZERO:
+                    if v != DATETIME_ZERO or include_default_values:
                         output[cased_name] = _Timestamp.timestamp_to_json(v)
                 elif isinstance(v, timedelta):
-                    if v != timedelta(0):
+                    if v != timedelta(0) or include_default_values:
                         output[cased_name] = _Duration.delta_to_json(v)
                 elif meta.wraps:
-                    if v is not None:
+                    if v is not None or include_default_values:
                         output[cased_name] = v
                 elif isinstance(v, list):
                     # Convert each item.
-                    v = [i.to_dict(casing) for i in v]
+                    v = [i.to_dict(casing, include_default_values) for i in v]
                     if v:
                         output[cased_name] = v
-                elif v._serialized_on_wire:
-                    output[cased_name] = v.to_dict(casing)
+                else:
+                    if v._serialized_on_wire or include_default_values:
+                        output[cased_name] = v.to_dict(casing, include_default_values)
             elif meta.proto_type == "map":
                 for k in v:
                     if hasattr(v[k], "to_dict"):
-                        v[k] = v[k].to_dict(casing)
+                        v[k] = v[k].to_dict(casing, include_default_values)
 
-                if v:
+                if v or include_default_values:
                     output[cased_name] = v
-            elif v != self._get_field_default(field, meta):
+            elif v != self._get_field_default(field, meta) or include_default_values:
                 if meta.proto_type in INT_64_TYPES:
                     if isinstance(v, list):
                         output[cased_name] = [str(n) for n in v]
