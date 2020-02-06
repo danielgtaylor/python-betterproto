@@ -133,8 +133,9 @@ def traverse(proto_file):
 
                 if item.nested_type:
                     for n, p in _traverse(path + [i, 3], item.nested_type):
-                        # Adjust the name since we flatten the heirarchy.
-                        n.name = item.name + n.name
+                        if not n.name.startswith(item.name):
+                            # Adjust the name since we flatten the heirarchy.
+                            n.name = item.name + n.name
                         yield n, p
 
     return itertools.chain(
