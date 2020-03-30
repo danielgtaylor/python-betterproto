@@ -569,10 +569,10 @@ class Message(ABC):
 
         value: Any = 0
         if hasattr(t, "__origin__"):
-            if t.__origin__ == dict:
+            if t.__origin__ in (dict, Dict):
                 # This is some kind of map (dict in Python).
                 value = {}
-            elif t.__origin__ == list:
+            elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
                 value = []
             elif t.__origin__ == Union and t.__args__[1] == type(None):
