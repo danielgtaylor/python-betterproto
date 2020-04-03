@@ -3,6 +3,7 @@ import enum
 import inspect
 import json
 import struct
+import sys
 from abc import ABC
 from base64 import b64encode, b64decode
 from datetime import datetime, timedelta, timezone
@@ -32,6 +33,13 @@ from .casing import safe_snake_case
 
 if TYPE_CHECKING:
     from grpclib._protocols import IProtoMessage
+
+if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
+    # Apply backport of datetime.fromisoformat from 3.7
+    from backports.datetime_fromisoformat import MonkeyPatch
+
+    MonkeyPatch.patch_fromisoformat()
+
 
 # Proto 3 data types
 TYPE_ENUM = "enum"
@@ -569,10 +577,10 @@ class Message(ABC):
 
         value: Any = 0
         if hasattr(t, "__origin__"):
-            if t.__origin__ == dict:
+            if t.__origin__ in (dict, Dict):
                 # This is some kind of map (dict in Python).
                 value = {}
-            elif t.__origin__ == list:
+            elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
                 value = []
             elif t.__origin__ == Union and t.__args__[1] == type(None):

@@ -17,8 +17,13 @@ setup(
         exclude=["tests", "*.tests", "*.tests.*", "output", "output.*"]
     ),
     package_data={"betterproto": ["py.typed", "templates/template.py"]},
-    python_requires=">=3.7",
-    install_requires=["grpclib", "stringcase"],
+    python_requires=">=3.6",
+    install_requires=[
+        'dataclasses; python_version<"3.7"',
+        'backports-datetime-fromisoformat; python_version<"3.7"',
+        "grpclib",
+        "stringcase",
+    ],
     extras_require={"compiler": ["black", "jinja2", "protobuf"]},
     zip_safe=False,
 )

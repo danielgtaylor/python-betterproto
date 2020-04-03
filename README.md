@@ -6,7 +6,7 @@ This project aims to provide an improved experience when using Protobuf / gRPC i
 
 - Protobuf 3 & gRPC code generation
   - Both binary & JSON serialization is built-in
-- Python 3.7+ making use of:
+- Python 3.6+ making use of:
   - Enums
   - Dataclasses
   - `async`/`await`
@@ -296,7 +296,7 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ## Development
 
-First, make sure you have Python 3.7+ and `pipenv` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
+First, make sure you have Python 3.6+ and `pipenv` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
 
 ```sh
 # Get set up with the virtual env & dependencies

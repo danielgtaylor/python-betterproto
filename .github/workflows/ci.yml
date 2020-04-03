@@ -3,7 +3,28 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  build:
+
+  build-p36:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+      - uses: dschep/install-pipenv-action@v1
+      - name: Install dependencies
+        run: |
+          sudo apt install protobuf-compiler libprotobuf-dev
+          pipenv install --dev
+      - name: Run tests
+        run: |
+          cp .env.default .env
+          pipenv run pip install -e .
+          pipenv run generate
+          pipenv run test
+
+  build-p37:
     runs-on: ubuntu-latest
 
     steps:
