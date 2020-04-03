@@ -191,25 +191,22 @@ def test_to_dict_default_values():
     test = TestMessage().from_dict({})
 
     assert test.to_dict(include_default_values=True) == {
-        'someInt': 0,
-        'someDouble': 0.0,
-        'someStr': '',
-        'someBool': False
+        "someInt": 0,
+        "someDouble": 0.0,
+        "someStr": "",
+        "someBool": False,
     }
 
     # All default values
-    test = TestMessage().from_dict({
-        'someInt': 0,
-        'someDouble': 0.0,
-        'someStr': '',
-        'someBool': False
-    })
+    test = TestMessage().from_dict(
+        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
+    )
 
     assert test.to_dict(include_default_values=True) == {
-        'someInt': 0,
-        'someDouble': 0.0,
-        'someStr': '',
-        'someBool': False
+        "someInt": 0,
+        "someDouble": 0.0,
+        "someStr": "",
+        "someBool": False,
     }
 
     # Some default and some other values
@@ -224,26 +221,28 @@ def test_to_dict_default_values():
         some_default_str: str = betterproto.string_field(7)
         some_default_bool: bool = betterproto.bool_field(8)
 
-    test = TestMessage2().from_dict({
-        'someInt': 2,
-        'someDouble': 1.2,
-        'someStr': 'hello',
-        'someBool': True,
-        'someDefaultInt': 0,
-        'someDefaultDouble': 0.0,
-        'someDefaultStr': '',
-        'someDefaultBool': False
-    })
+    test = TestMessage2().from_dict(
+        {
+            "someInt": 2,
+            "someDouble": 1.2,
+            "someStr": "hello",
+            "someBool": True,
+            "someDefaultInt": 0,
+            "someDefaultDouble": 0.0,
+            "someDefaultStr": "",
+            "someDefaultBool": False,
+        }
+    )
 
     assert test.to_dict(include_default_values=True) == {
-        'someInt': 2,
-        'someDouble': 1.2,
-        'someStr': 'hello',
-        'someBool': True,
-        'someDefaultInt': 0,
-        'someDefaultDouble': 0.0,
-        'someDefaultStr': '',
-        'someDefaultBool': False
+        "someInt": 2,
+        "someDouble": 1.2,
+        "someStr": "hello",
+        "someBool": True,
+        "someDefaultInt": 0,
+        "someDefaultDouble": 0.0,
+        "someDefaultStr": "",
+        "someDefaultBool": False,
     }
 
     # Nested messages
@@ -257,15 +256,10 @@ def test_to_dict_default_values():
         some_double: float = betterproto.double_field(2)
         some_message: TestChildMessage = betterproto.message_field(3)
 
-    test = TestParentMessage().from_dict({
-        'someInt': 0,
-        'someDouble': 1.2,
-    })
+    test = TestParentMessage().from_dict({"someInt": 0, "someDouble": 1.2,})
 
     assert test.to_dict(include_default_values=True) == {
-        'someInt': 0,
-        'someDouble': 1.2,
-        'someMessage': {
-            'someOtherInt': 0
-        }
+        "someInt": 0,
+        "someDouble": 1.2,
+        "someMessage": {"someOtherInt": 0},
     }

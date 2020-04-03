@@ -712,7 +712,9 @@ class Message(ABC):
     def FromString(cls: Type[T], data: bytes) -> T:
         return cls().parse(data)
 
-    def to_dict(self, casing: Casing = Casing.CAMEL, include_default_values: bool = False) -> dict:
+    def to_dict(
+        self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
+    ) -> dict:
         """
         Returns a dict representation of this message instance which can be
         used to serialize to e.g. JSON. Defaults to camel casing for
