@@ -46,7 +46,7 @@ First, install the package. Note that the `[compiler]` feature flag tells it to 
 
 ```sh
 # Install both the library and compiler
-$ pip install betterproto[compiler]
+$ pip install "betterproto[compiler]"
 
 # Install just the library (to use the generated code output)
 $ pip install betterproto
