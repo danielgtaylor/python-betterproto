@@ -2,6 +2,8 @@
 .vscode/settings.json
 .mypy_cache
 .pytest_cache
+.python-version
+build/
 betterproto/tests/*.bin
 betterproto/tests/*_pb2.py
 betterproto/tests/*.py

@@ -1,5 +1,5 @@
 [tool.black]
-target-version = ['py37']
+target-version = ['py36']
 
 [tool.isort]
 multi_line_output = 3

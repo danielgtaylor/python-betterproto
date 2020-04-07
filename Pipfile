@@ -9,6 +9,7 @@ mypy = "*"
 isort = "*"
 pytest = "*"
 rope = "*"
+v = {editable = true,version = "*"}
 
 [packages]
 protobuf = "*"
@@ -16,9 +17,11 @@ jinja2 = "*"
 grpclib = "*"
 stringcase = "*"
 black = "*"
+backports-datetime-fromisoformat = "*"
+dataclasses = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.6"
 
 [scripts]
 plugin = "protoc --plugin=protoc-gen-custom=betterproto/plugin.py --custom_out=output"
