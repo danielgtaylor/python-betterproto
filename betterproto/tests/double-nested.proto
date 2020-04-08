@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+message Test {
+  message Parent {
+    message RootParentChild {
+      string a = 1;
+    }
+    enum EnumChild{
+      A = 0;
+      B = 1;
+    }
+    message Child {
+      string foo = 1;
+    }
+    reserved 1;
+    repeated Child child = 2;
+    repeated EnumChild enum_child=3;
+    repeated RootParentChild root_parent_child=4;
+    bool bar = 5;
+  }
+  string name = 1;
+  Parent parent = 4;
+}

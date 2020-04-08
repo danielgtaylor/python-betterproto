@@ -1,0 +1,11 @@
+{
+  "parent": {
+    "root_parent_child": {"a": "hello"},
+    "bar": true
+  },
+  "child": {
+    "foo": "hello"
+  },
+  "enum_child": "A",
+  "name": "double-nested"
+}
