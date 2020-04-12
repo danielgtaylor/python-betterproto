@@ -8,6 +8,7 @@ flake8 = "*"
 mypy = "*"
 isort = "*"
 pytest = "*"
+pytest-asyncio = "*"
 rope = "*"
 v = {editable = true,version = "*"}
 
