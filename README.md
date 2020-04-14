@@ -323,7 +323,7 @@ Here's how to run the tests.
 $ pipenv run generate
 
 # Run the tests
-$ pipenv run tests
+$ pipenv run test
 ```
 
 ### TODO
