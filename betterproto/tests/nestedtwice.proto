@@ -1,24 +1,25 @@
 syntax = "proto3";
 
 message Test {
-  message Parent {
-    // Test if name of enclosing message is a prefix name of enclosed message
-    message TestParentChild {
-      string a = 1;
+  message Root {
+    message Parent {
+      message RootParentChild {
+        string a = 1;
+      }
+      enum EnumChild{
+        A = 0;
+        B = 1;
+      }
+      message Child {
+        string foo = 1;
+      }
+      reserved 1;
+      repeated Child child = 2;
+      repeated EnumChild enum_child=3;
+      repeated RootParentChild root_parent_child=4;
+      bool bar = 5;
     }
-    enum EnumChild{
-      A = 0;
-      B = 1;
-    }
-    message Child {
-      string foo = 1;
-    }
-    reserved 1;
-    repeated Child child = 2;
-    repeated EnumChild enumChild=3;
-    repeated TestParentChild rootParentChild=4;
-    bool bar = 5;
+    string name = 1;
+    Parent parent = 4;
   }
-  string name = 1;
-  Parent parent = 2;
 }
