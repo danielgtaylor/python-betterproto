@@ -20,6 +20,7 @@ message Test {
       bool bar = 5;
     }
     string name = 1;
-    Parent parent = 4;
+    Parent parent = 2;
   }
+  Root root = 1;
 }
