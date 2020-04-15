@@ -1,9 +1,11 @@
 {
   "name": "double-nested",
-  "parent": {
-    "child": [{"foo": "hello"}],
-    "enumChild": ["A"],
-    "rootParentChild": [{"a": "hello"}],
-    "bar": true
+  "root": {
+    "parent": {
+      "child": [{"foo": "hello"}],
+      "enumChild": ["A"],
+      "rootParentChild": [{"a": "hello"}],
+      "bar": true
+    }
   }
 }
