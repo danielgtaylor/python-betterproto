@@ -122,19 +122,19 @@ def get_py_zero(type_num: int) -> str:
 
 
 def traverse(proto_file):
-    def _traverse(path, items):
+    def _traverse(path, items, prefix = ''):
         for i, item in enumerate(items):
+            # Adjust the name since we flatten the heirarchy.
+            item.name = next_prefix = prefix + item.name
             yield item, path + [i]
 
             if isinstance(item, DescriptorProto):
                 for enum in item.enum_type:
-                    enum.name = item.name + enum.name
+                    enum.name = next_prefix + enum.name
                     yield enum, path + [i, 4]
 
                 if item.nested_type:
-                    for n, p in _traverse(path + [i, 3], item.nested_type):
-                        # Adjust the name since we flatten the heirarchy.
-                        n.name = item.name + n.name
+                    for n, p in _traverse(path + [i, 3], item.nested_type, next_prefix):
                         yield n, p
 
     return itertools.chain(
