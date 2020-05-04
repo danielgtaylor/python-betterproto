@@ -5,3 +5,7 @@ message Test {
   int32 with = 2;
   int32 as = 3;
 }
+
+service TestService {
+  rpc GetTest(Test) returns (Test) {}
+}
