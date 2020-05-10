@@ -397,37 +397,13 @@ def generate_code(request, response):
 
         # Fill response
         f = response.file.add()
-        # print(filename, file=sys.stderr)
-        f.name = filename.replace(".", os.path.sep) + ".py"
+        f.name = os.path.sep.join(filename.split('.') + ['__init__.py'])
 
         # Render and then format the output file.
         f.content = black.format_str(
             template.render(description=output),
-            mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
+            mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
         )
-
-    inits = set([""])
-    for f in response.file:
-        # Ensure output paths exist
-        # print(f.name, file=sys.stderr)
-        dirnames = os.path.dirname(f.name)
-        if dirnames:
-            os.makedirs(dirnames, exist_ok=True)
-            base = ""
-            for part in dirnames.split(os.path.sep):
-                base = os.path.join(base, part)
-                inits.add(base)
-
-    for base in inits:
-        name = os.path.join(base, "__init__.py")
-
-        if os.path.exists(name):
-            # Never overwrite inits as they may have custom stuff in them.
-            continue
-
-        init = response.file.add()
-        init.name = name
-        init.content = b""
 
     filenames = sorted([f.name for f in response.file])
     for fname in filenames:
