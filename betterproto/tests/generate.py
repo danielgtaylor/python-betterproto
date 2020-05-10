@@ -48,13 +48,19 @@ if __name__ == "__main__":
         proto_files = get_files(".proto")
         json_files = get_files(".json")
 
+    if os.name == 'nt':
+        plugin_path = os.path.join('..', 'plugin.bat')
+    else:
+        plugin_path = os.path.join('..', 'plugin.py')
+    
+
     for filename in proto_files:
         print(f"Generating code for {os.path.basename(filename)}")
         subprocess.run(
             f"protoc --python_out=. {os.path.basename(filename)}", shell=True
         )
         subprocess.run(
-            f"protoc --plugin=protoc-gen-custom=../plugin.py --custom_out=. {os.path.basename(filename)}",
+            f"protoc --plugin=protoc-gen-custom={plugin_path} --custom_out=. {os.path.basename(filename)}",
             shell=True,
         )
 

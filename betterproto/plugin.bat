@@ -1,0 +1,1 @@
+@python ../plugin.py %*
