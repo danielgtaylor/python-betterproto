@@ -63,11 +63,28 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 
     {% endif %}
     {% for method in service.methods %}
-    async def {{ method.py_name }}(self{% if method.input_message and method.input_message.properties %}, *, {% for field in method.input_message.properties %}{{ field.name }}: {% if field.zero == "None" and not field.type.startswith("Optional[") %}Optional[{{ field.type }}]{% else %}{{ field.type }}{% endif %} = {{ field.zero }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) -> {% if method.server_streaming %}AsyncGenerator[{{ method.output }}, None]{% else %}{{ method.output }}{% endif %}:
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            {%- if method.input_message and method.input_message.properties -%}, *,
+                {%- for field in method.input_message.properties -%}
+                    {{ field.name }}: {% if field.zero == "None" and not field.type.startswith("Optional[") -%}
+                                        Optional[{{ field.type }}]
+                                      {%- else -%}
+                                        {{ field.type }}
+                                      {%- endif -%} = {{ field.zero }}
+                    {%- if not loop.last %}, {% endif -%}
+                {%- endfor -%}
+            {%- endif -%}
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , request_iterator: Iterator["{{ method.input }}"]
+        {%- endif -%}
+            ) -> {% if method.server_streaming %}AsyncGenerator[{{ method.output }}, None]{% else %}{{ method.output }}{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
         {% endif %}
+        {% if not method.client_streaming %}
         request = {{ method.input }}()
         {% for field in method.input_message.properties %}
             {% if field.field_type == 'message' %}
@@ -77,20 +94,41 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
         request.{{ field.name }} = {{ field.name }}
             {% endif %}
         {% endfor %}
+        {% endif %}
 
         {% if method.server_streaming %}
+            {% if method.client_streaming %}
+        async for response in self._stream_stream(
+            "{{ method.route }}",
+            request_iterator,
+            {{ method.input }},
+            {{ method.output }},
+        ):
+            yield response
+            {% else %}
         async for response in self._unary_stream(
             "{{ method.route }}",
             request,
             {{ method.output }},
         ):
             yield response
+
+            {% endif %}
+        {% else %}
+        {% if method.client_streaming %}
+        return await self._stream_unary(
+            "{{ method.route }}",
+            request_iterator,
+            {{ method.input }},
+            {{ method.output }}
+        )
         {% else %}
         return await self._unary_unary(
             "{{ method.route }}",
             request,
-            {{ method.output }},
+            {{ method.output }}
         )
+        {% endif %}
         {% endif %}
 
     {% endfor %}
