@@ -357,11 +357,8 @@ def generate_code(request, response):
                         raise NotImplementedError("Client streaming not yet supported")
 
                     input_message = None
-                    input_type = get_ref_type(
-                        package, output["imports"], method.input_type
-                    ).strip('"')
                     for msg in output["messages"]:
-                        if msg["name"] == input_type:
+                        if msg["name"] == method.input_type:
                             input_message = msg
                             for field in msg["properties"]:
                                 if field["zero"] == "None":
