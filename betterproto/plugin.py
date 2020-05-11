@@ -213,14 +213,10 @@ def generate_code(request, response):
     template = env.get_template("template.py")
 
     output_files = collections.defaultdict()
-    # def log(message):
-    #     sys.stderr.write(f"{message}\n")
-
-    root_packages = {proto_file.package.split('.')[0] for proto_file in request.proto_file}
 
     for proto_file in request.proto_file:
-        out = proto_file.package
-        if out == "google.protobuf":
+        package = proto_file.package
+        if package == "google.protobuf":
             continue
 
         if package:
@@ -228,16 +224,43 @@ def generate_code(request, response):
         else:
             output_file_name = '__root__.py'
 
-        # log(f"  output name:  {output_file_name}")
-
         output_files.setdefault(output_file_name, {"package": package, "files": []})
         output_files[output_file_name]["files"].append(proto_file)
 
-    # TODO: Figure out how to handle gRPC request/response messages and add
-    # processing below for Service.
+    for output_file_name, output_file_data in output_files.items():
+        package = output_file_data["package"]
+        template_data = {
+            "package": package,
+            "files": [f.name for f in output_file_data["files"]],
+            "imports": set(),
+            "datetime_imports": set(),
+            "typing_imports": set(),
+            "messages": [],
+            "enums": [],
+            "services": [],
+        }
+        output_file_data['template_data'] = template_data
+
+    # read messages
+    global_messages = []
+    for output_file_name, output_file_data in output_files.items():
+        for proto_file in output_file_data["files"]:
+            for item, path in traverse(proto_file):
+                read_item(item, path, proto_file, output_file_data['package'], output_file_data['template_data'], global_messages)
+
+    # read services
+    for output_file_name, output_file_data in output_files.items():
+        for proto_file in output_file_data["files"]:
+            sys.stderr.write(f'===== service : file {proto_file.name} ====\n')
+            for i, service in enumerate(proto_file.service):
+                read_service(i, output_file_data['package'], proto_file, service, output_file_data['template_data'], global_messages)
 
     for output_file_name, output_file_data in output_files.items():
-        template_data = get_template_data(output_file_data)
+        template_data = output_file_data['template_data']
+
+        template_data["imports"] = sorted(template_data["imports"])
+        template_data["datetime_imports"] = sorted(template_data["datetime_imports"])
+        template_data["typing_imports"] = sorted(template_data["typing_imports"])
 
         # Fill response
         f = response.file.add()
@@ -254,207 +277,187 @@ def generate_code(request, response):
         print(f"Writing {fname}", file=sys.stderr)
 
 
-def get_template_data(options):
-    package = options["package"]
-    # print(package, filename, file=sys.stderr)
-    template_data = {
-        "package": package,
-        "files": [f.name for f in options["files"]],
-        "imports": set(),
-        "datetime_imports": set(),
-        "typing_imports": set(),
-        "messages": [],
-        "enums": [],
-        "services": [],
-    }
-    for proto_file in options["files"]:
-        # print(proto_file.message_type, file=sys.stderr)
-        # print(proto_file.service, file=sys.stderr)
-        # print(proto_file.source_code_info, file=sys.stderr)
+def read_item(item, path, proto_file, package, template_data, global_messages):
+    item_data = {"name": item.name, "py_name": stringcase.pascalcase(item.name), 'full_name': f'{package}.{item.name}'}
 
-        for item, path in traverse(proto_file):
-            # print(item, file=sys.stderr)
-            # print(path, file=sys.stderr)
-            data = {"name": item.name, "py_name": stringcase.pascalcase(item.name)}
+    #sys.stderr.write(f'  item {item.name}\n')
 
-            if isinstance(item, DescriptorProto):
-                # print(item, file=sys.stderr)
-                if item.options.map_entry:
-                    # Skip generated map entry messages since we just use dicts
-                    continue
+    if isinstance(item, DescriptorProto):
+        # print(item, file=sys.stderr)
+        if item.options.map_entry:
+            # Skip generated map entry messages since we just use dicts
+            return
 
-                data.update(
-                    {
-                        "type": "Message",
-                        "comment": get_comment(proto_file, path),
-                        "properties": [],
-                    }
-                )
-
-                for i, f in enumerate(item.field):
-                    t = py_type(package, template_data["imports"], item, f)
-                    zero = get_py_zero(f.type)
-
-                    repeated = False
-                    packed = False
-
-                    field_type = f.Type.Name(f.type).lower()[5:]
-
-                    field_wraps = ""
-                    if f.type_name.startswith(
-                        ".google.protobuf"
-                    ) and f.type_name.endswith("Value"):
-                        w = f.type_name.split(".").pop()[:-5].upper()
-                        field_wraps = f"betterproto.TYPE_{w}"
-
-                    map_types = None
-                    if f.type == 11:
-                        # This might be a map...
-                        message_type = f.type_name.split(".").pop().lower()
-                        # message_type = py_type(package)
-                        map_entry = f"{f.name.replace('_', '').lower()}entry"
-
-                        if message_type == map_entry:
-                            for nested in item.nested_type:
-                                if (
-                                    nested.name.replace("_", "").lower()
-                                    == map_entry
-                                ):
-                                    if nested.options.map_entry:
-                                        # print("Found a map!", file=sys.stderr)
-                                        k = py_type(
-                                            package,
-                                            template_data["imports"],
-                                            item,
-                                            nested.field[0],
-                                        )
-                                        v = py_type(
-                                            package,
-                                            template_data["imports"],
-                                            item,
-                                            nested.field[1],
-                                        )
-                                        t = f"Dict[{k}, {v}]"
-                                        field_type = "map"
-                                        map_types = (
-                                            f.Type.Name(nested.field[0].type),
-                                            f.Type.Name(nested.field[1].type),
-                                        )
-                                        template_data["typing_imports"].add("Dict")
-
-                    if f.label == 3 and field_type != "map":
-                        # Repeated field
-                        repeated = True
-                        t = f"List[{t}]"
-                        zero = "[]"
-                        template_data["typing_imports"].add("List")
-
-                        if f.type in [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 17, 18]:
-                            packed = True
-
-                    one_of = ""
-                    if f.HasField("oneof_index"):
-                        one_of = item.oneof_decl[f.oneof_index].name
-
-                    if "Optional[" in t:
-                        template_data["typing_imports"].add("Optional")
-
-                    if "timedelta" in t:
-                        template_data["datetime_imports"].add("timedelta")
-                    elif "datetime" in t:
-                        template_data["datetime_imports"].add("datetime")
-
-                    data["properties"].append(
-                        {
-                            "name": f.name,
-                            "py_name": safe_snake_case(f.name),
-                            "number": f.number,
-                            "comment": get_comment(proto_file, path + [2, i]),
-                            "proto_type": int(f.type),
-                            "field_type": field_type,
-                            "field_wraps": field_wraps,
-                            "map_types": map_types,
-                            "type": t,
-                            "zero": zero,
-                            "repeated": repeated,
-                            "packed": packed,
-                            "one_of": one_of,
-                        }
-                    )
-                    # print(f, file=sys.stderr)
-
-                template_data["messages"].append(data)
-            elif isinstance(item, EnumDescriptorProto):
-                # print(item.name, path, file=sys.stderr)
-                data.update(
-                    {
-                        "type": "Enum",
-                        "comment": get_comment(proto_file, path),
-                        "entries": [
-                            {
-                                "name": v.name,
-                                "value": v.number,
-                                "comment": get_comment(proto_file, path + [2, i]),
-                            }
-                            for i, v in enumerate(item.value)
-                        ],
-                    }
-                )
-
-                template_data["enums"].append(data)
-
-        for i, service in enumerate(proto_file.service):
-            # print(service, file=sys.stderr)
-
-            data = {
-                "name": service.name,
-                "py_name": stringcase.pascalcase(service.name),
-                "comment": get_comment(proto_file, [6, i]),
-                "methods": [],
+        item_data.update(
+            {
+                "type": "Message",
+                "comment": get_comment(proto_file, path),
+                "properties": [],
             }
+        )
 
-            for j, method in enumerate(service.method):
-                if method.client_streaming:
-                    raise NotImplementedError("Client streaming not yet supported")
+        for i, field in enumerate(item.field):
+            t = py_type(package, template_data["imports"], item, field)
+            zero = get_py_zero(field.type)
 
-                input_message = None
-                input_type = get_ref_type(
-                    package, template_data["imports"], method.input_type
-                ).strip('"')
-                for msg in template_data["messages"]:
-                    if msg["name"] == input_type:
-                        input_message = msg
-                        for field in msg["properties"]:
-                            if field["zero"] == "None":
-                                template_data["typing_imports"].add("Optional")
-                        break
+            repeated = False
+            packed = False
 
-                data["methods"].append(
+            field_type = field.Type.Name(field.type).lower()[5:]
+
+            field_wraps = ""
+            if field.type_name.startswith(
+                ".google.protobuf"
+            ) and field.type_name.endswith("Value"):
+                w = field.type_name.split(".").pop()[:-5].upper()
+                field_wraps = f"betterproto.TYPE_{w}"
+
+            map_types = None
+            if field.type == 11:
+                # This might be a map...
+                message_type = field.type_name.split(".").pop().lower()
+                # message_type = py_type(package)
+                map_entry = f"{field.name.replace('_', '').lower()}entry"
+
+                if message_type == map_entry:
+                    for nested in item.nested_type:
+                        if (
+                            nested.name.replace("_", "").lower()
+                            == map_entry
+                        ):
+                            if nested.options.map_entry:
+                                # print("Found a map!", file=sys.stderr)
+                                k = py_type(
+                                    package,
+                                    template_data["imports"],
+                                    item,
+                                    nested.field[0],
+                                )
+                                v = py_type(
+                                    package,
+                                    template_data["imports"],
+                                    item,
+                                    nested.field[1],
+                                )
+                                t = f"Dict[{k}, {v}]"
+                                field_type = "map"
+                                map_types = (
+                                    field.Type.Name(nested.field[0].type),
+                                    field.Type.Name(nested.field[1].type),
+                                )
+                                template_data["typing_imports"].add("Dict")
+
+            if field.label == 3 and field_type != "map":
+                # Repeated field
+                repeated = True
+                t = f"List[{t}]"
+                zero = "[]"
+                template_data["typing_imports"].add("List")
+
+                if field.type in [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 17, 18]:
+                    packed = True
+
+            one_of = ""
+            if field.HasField("oneof_index"):
+                one_of = item.oneof_decl[field.oneof_index].name
+
+            if "Optional[" in t:
+                template_data["typing_imports"].add("Optional")
+
+            if "timedelta" in t:
+                template_data["datetime_imports"].add("timedelta")
+            elif "datetime" in t:
+                template_data["datetime_imports"].add("datetime")
+
+            item_data["properties"].append(
+                {
+                    "name": field.name,
+                    "py_name": safe_snake_case(field.name),
+                    "number": field.number,
+                    "comment": get_comment(proto_file, path + [2, i]),
+                    "proto_type": int(field.type),
+                    "field_type": field_type,
+                    "field_wraps": field_wraps,
+                    "map_types": map_types,
+                    "type": t,
+                    "zero": zero,
+                    "repeated": repeated,
+                    "packed": packed,
+                    "one_of": one_of,
+                }
+            )
+
+        template_data["messages"].append(item_data)
+        global_messages.append(item_data)
+    elif isinstance(item, EnumDescriptorProto):
+        item_data.update(
+            {
+                "type": "Enum",
+                "comment": get_comment(proto_file, path),
+                "entries": [
                     {
-                        "name": method.name,
-                        "py_name": stringcase.snakecase(method.name),
-                        "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
-                        "route": f"/{package}.{service.name}/{method.name}",
-                        "input": get_ref_type(
-                            package, template_data["imports"], method.input_type
-                        ).strip('"'),
-                        "input_message": input_message,
-                        "output": get_ref_type(
-                            package, template_data["imports"], method.output_type, unwrap=False
-                        ).strip('"'),
-                        "client_streaming": method.client_streaming,
-                        "server_streaming": method.server_streaming,
+                        "name": v.name,
+                        "value": v.number,
+                        "comment": get_comment(proto_file, path + [2, i]),
                     }
-                )
+                    for i, v in enumerate(item.value)
+                ],
+            }
+        )
+        template_data["enums"].append(item_data)
 
-                if method.server_streaming:
-                    template_data["typing_imports"].add("AsyncGenerator")
 
-            template_data["services"].append(data)
-    template_data["imports"] = sorted(template_data["imports"])
-    template_data["datetime_imports"] = sorted(template_data["datetime_imports"])
-    template_data["typing_imports"] = sorted(template_data["typing_imports"])
-    return template_data
+def read_service(i, package, proto_file, service, template_data, global_messages):
+    data = {
+        "name": service.name,
+        "py_name": stringcase.pascalcase(service.name),
+        "comment": get_comment(proto_file, [6, i]),
+        "methods": [],
+    }
+    for j, method in enumerate(service.method):
+        if method.client_streaming:
+            raise NotImplementedError("Client streaming not yet supported")
+        sys.stderr.write(f'  add {method.name}\n')
+
+        input_message = None
+        input_type = get_ref_type(
+            package, template_data["imports"], method.input_type
+        ).strip('"')
+        for msg in global_messages:
+            if msg["full_name"] == method.input_type.lstrip('.'):
+                input_message = msg
+                for field in msg["properties"]:
+                    if field["zero"] == "None":
+                        template_data["typing_imports"].add("Optional")
+                break
+
+        if not input_message:
+            sys.stderr.write(f"no input message found for {input_type} / {method}\n")
+            sys.stderr.write(f" {global_messages}\n")
+            sys.stderr.write(f"\n")
+
+        method_data = {
+            "name": method.name,
+            "py_name": stringcase.snakecase(method.name),
+            "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
+            "route": f"/{package}.{service.name}/{method.name}",
+            "input": get_ref_type(
+                package, template_data["imports"], method.input_type
+            ).strip('"'),
+            "input_message": input_message,
+            "output": get_ref_type(
+                package, template_data["imports"], method.output_type, unwrap=False
+            ).strip('"'),
+            "client_streaming": method.client_streaming,
+            "server_streaming": method.server_streaming,
+        }
+        # sys.stderr.write(f'METHOD: {method_data}\n')
+        data["methods"].append(method_data)
+
+        if method.server_streaming:
+            template_data["typing_imports"].add("AsyncGenerator")
+    template_data["services"].append(data)
+
 
 def main():
     """The plugin's main entry point."""
