@@ -311,8 +311,6 @@ def generate_code(request, response):
                 }
 
                 for j, method in enumerate(service.method):
-                    if method.client_streaming:
-                        raise NotImplementedError("Client streaming not yet supported")
 
                     input_message = None
                     input_type = get_ref_type(
@@ -349,6 +347,9 @@ def generate_code(request, response):
 
                     if method.server_streaming:
                         output["typing_imports"].add("AsyncGenerator")
+
+                    if method.client_streaming:
+                        output["typing_imports"].add("Iterator")
 
                 output["services"].append(data)
 

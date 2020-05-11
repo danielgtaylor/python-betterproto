@@ -14,10 +14,12 @@ from typing import (
     Collection,
     Dict,
     Generator,
+    Iterator,
     List,
     Mapping,
     Optional,
     Set,
+    SupportsBytes,
     Tuple,
     Type,
     TypeVar,
@@ -431,6 +433,7 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
 
 # Bound type variable to allow methods to return `self` of subclasses
 T = TypeVar("T", bound="Message")
+ST = TypeVar("ST", bound="IProtoMessage")
 
 
 class ProtoClassMetadata:
@@ -1102,5 +1105,40 @@ class ServiceStub(ABC):
             **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
             await stream.send_message(request, end=True)
+            async for message in stream:
+                yield message
+
+    async def _stream_unary(
+        self,
+        route: str,
+        request_iterator: Iterator["IProtoMessage"],
+        request_type: Type[ST],
+        response_type: Type[T],
+    ) -> T:
+        """Make a stream request and return the response."""
+        async with self.channel.request(
+            route, grpclib.const.Cardinality.STREAM_UNARY, request_type, response_type
+        ) as stream:
+            for message in request_iterator:
+                await stream.send_message(message)
+            await stream.send_request(end=True)
+            response = await stream.recv_message()
+            assert response is not None
+            return response
+
+    async def _stream_stream(
+        self,
+        route: str,
+        request_iterator: Iterator["IProtoMessage"],
+        request_type: Type[ST],
+        response_type: Type[T],
+    ) -> AsyncGenerator[T, None]:
+        """Make a stream request and return the stream response iterator."""
+        async with self.channel.request(
+            route, grpclib.const.Cardinality.STREAM_STREAM, request_type, response_type
+        ) as stream:
+            for message in request_iterator:
+                await stream.send_message(message)
+            await stream.send_request(end=True)
             async for message in stream:
                 yield message
