@@ -426,6 +426,29 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
 T = TypeVar("T", bound="Message")
 
 
+def make_protoclass(cls):
+    fields = {}
+    groups = {}
+
+    for field in dataclasses.fields(cls):
+        meta = FieldMetadata.get(field)
+
+        if meta.group:
+            # This is part of a one-of group.
+            fields[field.name] = meta.group
+
+            groups.setdefault(meta.group, set()).add(field)
+
+    setattr(cls, "_proto_group_by_field", fields)
+    setattr(cls, "_proto_fields_by_group", groups)
+
+
+def protoclass(*args, **kwargs):
+    cls = dataclasses.dataclass(*args, **kwargs)
+    make_protoclass(cls)
+    return cls
+
+
 class Message(ABC):
     """
     A protobuf message base class. Generated code will inherit from this and
@@ -443,17 +466,12 @@ class Message(ABC):
 
         # Set a default value for each field in the class after `__init__` has
         # already been run.
-        group_map: Dict[str, dict] = {"fields": {}, "groups": {}}
+        group_map: Dict[str, dataclasses.Field] = {}
         for field in dataclasses.fields(self):
             meta = FieldMetadata.get(field)
 
             if meta.group:
-                # This is part of a one-of group.
-                group_map["fields"][field.name] = meta.group
-
-                if meta.group not in group_map["groups"]:
-                    group_map["groups"][meta.group] = {"current": None, "fields": set()}
-                group_map["groups"][meta.group]["fields"].add(field)
+                group_map.setdefault(meta.group)
 
             if getattr(self, field.name) != PLACEHOLDER:
                 # Skip anything not set to the sentinel value
@@ -461,7 +479,7 @@ class Message(ABC):
 
                 if meta.group:
                     # This was set, so make it the selected value of the one-of.
-                    group_map["groups"][meta.group]["current"] = field
+                    group_map[meta.group] = field
 
                 continue
 
@@ -477,16 +495,17 @@ class Message(ABC):
             # Track when a field has been set.
             self.__dict__["_serialized_on_wire"] = True
 
-        if attr in getattr(self, "_group_map", {}).get("fields", {}):
-            group = self._group_map["fields"][attr]
-            for field in self._group_map["groups"][group]["fields"]:
-                if field.name == attr:
-                    self._group_map["groups"][group]["current"] = field
-                else:
-                    super().__setattr__(
-                        field.name,
-                        self._get_field_default(field, FieldMetadata.get(field)),
-                    )
+        if hasattr(self, "_group_map"):  # __post_init__ had already run
+            if attr in self._proto_group_by_field:
+                group = self._proto_group_by_field[attr]
+                for field in self._proto_fields_by_group[group]:
+                    if field.name == attr:
+                        self._group_map[group] = field
+                    else:
+                        super().__setattr__(
+                            field.name,
+                            self._get_field_default(field, FieldMetadata.get(field)),
+                        )
 
         super().__setattr__(attr, value)
 
@@ -508,7 +527,7 @@ class Message(ABC):
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
             selected_in_group = False
-            if meta.group and self._group_map["groups"][meta.group]["current"] == field:
+            if meta.group and self._group_map[meta.group] == field:
                 selected_in_group = True
 
             serialize_empty = False
@@ -652,6 +671,7 @@ class Message(ABC):
                     ],
                     bases=(Message,),
                 )
+                make_protoclass(Entry)
                 value = Entry().parse(value)
 
         return value
@@ -859,13 +879,13 @@ def serialized_on_wire(message: Message) -> bool:
 
 def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
     """Return the name and value of a message's one-of field group."""
-    field = message._group_map["groups"].get(group_name, {}).get("current")
+    field = message._group_map.get(group_name)
     if not field:
         return ("", None)
     return (field.name, getattr(message, field.name))
 
 
-@dataclasses.dataclass
+@protoclass
 class _Duration(Message):
     # Signed seconds of the span of time. Must be from -315,576,000,000 to
     # +315,576,000,000 inclusive. Note: these bounds are computed from: 60
@@ -890,7 +910,7 @@ class _Duration(Message):
         return ".".join(parts) + "s"
 
 
-@dataclasses.dataclass
+@protoclass
 class _Timestamp(Message):
     # Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must
     # be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.
@@ -940,47 +960,47 @@ class _WrappedMessage(Message):
         return self
 
 
-@dataclasses.dataclass
+@protoclass
 class _BoolValue(_WrappedMessage):
     value: bool = bool_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _Int32Value(_WrappedMessage):
     value: int = int32_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _UInt32Value(_WrappedMessage):
     value: int = uint32_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _Int64Value(_WrappedMessage):
     value: int = int64_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _UInt64Value(_WrappedMessage):
     value: int = uint64_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _FloatValue(_WrappedMessage):
     value: float = float_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _DoubleValue(_WrappedMessage):
     value: float = double_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _StringValue(_WrappedMessage):
     value: str = string_field(1)
 
 
-@dataclasses.dataclass
+@protoclass
 class _BytesValue(_WrappedMessage):
     value: bytes = bytes_field(1)
 
