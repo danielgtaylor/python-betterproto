@@ -14,7 +14,8 @@ from typing import (
     Dict,
     Generator,
     Iterable,
-    Iterator, List,
+    Iterator,
+    List,
     Optional,
     SupportsBytes,
     Tuple,
@@ -1033,7 +1034,11 @@ class ServiceStub(ABC):
                 yield message
 
     async def _stream_unary(
-        self, route: str, request_iterator: Iterator["IProtoMessage"], request_type: Type[ST], response_type: Type[T]
+        self,
+        route: str,
+        request_iterator: Iterator["IProtoMessage"],
+        request_type: Type[ST],
+        response_type: Type[T],
     ) -> T:
         """Make a unary request and return the stream response iterator."""
         async with self.channel.request(
@@ -1047,7 +1052,11 @@ class ServiceStub(ABC):
             return response
 
     async def _stream_stream(
-        self, route: str, request_iterator: Iterator["IProtoMessage"], request_type: Type[ST], response_type: Type[T]
+        self,
+        route: str,
+        request_iterator: Iterator["IProtoMessage"],
+        request_type: Type[ST],
+        response_type: Type[T],
     ) -> AsyncGenerator[T, None]:
         """Make a unary request and return the stream response iterator."""
         async with self.channel.request(
