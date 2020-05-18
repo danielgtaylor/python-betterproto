@@ -1040,7 +1040,7 @@ class ServiceStub(ABC):
         request_type: Type[ST],
         response_type: Type[T],
     ) -> T:
-        """Make a unary request and return the stream response iterator."""
+        """Make a stream request and return the response."""
         async with self.channel.request(
             route, grpclib.const.Cardinality.STREAM_UNARY, request_type, response_type
         ) as stream:
@@ -1058,7 +1058,7 @@ class ServiceStub(ABC):
         request_type: Type[ST],
         response_type: Type[T],
     ) -> AsyncGenerator[T, None]:
-        """Make a unary request and return the stream response iterator."""
+        """Make a stream request and return the stream response iterator."""
         async with self.channel.request(
             route, grpclib.const.Cardinality.STREAM_STREAM, request_type, response_type
         ) as stream:
