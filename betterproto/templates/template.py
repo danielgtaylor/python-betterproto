@@ -97,7 +97,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
         {% endif %}
 
         {% if method.server_streaming %}
-            {% if method.client_streaming %}
+        {% if method.client_streaming %}
         async for response in self._stream_stream(
             "{{ method.route }}",
             request_iterator,
@@ -105,7 +105,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {{ method.output }},
         ):
             yield response
-            {% else %}
+        {% else %}{# i.e. not client streaming #}
         async for response in self._unary_stream(
             "{{ method.route }}",
             request,
@@ -113,8 +113,8 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
         ):
             yield response
 
-            {% endif %}
-        {% else %}
+        {% endif %}{# if client streaming #}
+        {% else %}{# i.e. not server streaming #}
         {% if method.client_streaming %}
         return await self._stream_unary(
             "{{ method.route }}",
@@ -122,13 +122,13 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {{ method.input }},
             {{ method.output }}
         )
-        {% else %}
+        {% else %}{# i.e. not client streaming #}
         return await self._unary_unary(
             "{{ method.route }}",
             request,
             {{ method.output }}
         )
-        {% endif %}
+        {% endif %}{# client streaming #}
         {% endif %}
 
     {% endfor %}
