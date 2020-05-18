@@ -16,7 +16,7 @@ from typing import (
     Iterable,
     Iterator, List,
     Optional,
-    Sequence, SupportsBytes,
+    SupportsBytes,
     Tuple,
     Type,
     TypeVar,
