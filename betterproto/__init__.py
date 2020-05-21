@@ -11,10 +11,12 @@ from typing import (
     Any,
     AsyncGenerator,
     Callable,
+    Collection,
     Dict,
     Generator,
     Iterable,
     List,
+    Mapping,
     Optional,
     SupportsBytes,
     Tuple,
@@ -1000,20 +1002,57 @@ def _get_wrapper(proto_type: str) -> Type:
     }[proto_type]
 
 
+_Value = Union[str, bytes]
+_MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
+
+
 class ServiceStub(ABC):
     """
     Base class for async gRPC service stubs.
     """
 
-    def __init__(self, channel: grpclib.client.Channel) -> None:
+    def __init__(
+        self,
+        channel: grpclib.client.Channel,
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional[grpclib.metadata.Deadline] = None,
+        metadata: Optional[_MetadataLike] = None,
+    ) -> None:
         self.channel = channel
+        self.timeout = timeout
+        self.deadline = deadline
+        self.metadata = metadata
+
+    def __resolve_request_kwargs(
+        self,
+        timeout: Optional[float],
+        deadline: Optional[grpclib.metadata.Deadline],
+        metadata: Optional[_MetadataLike],
+    ):
+        return {
+            "timeout": self.timeout if timeout is None else timeout,
+            "deadline": self.deadline if deadline is None else deadline,
+            "metadata": self.metadata if metadata is None else metadata,
+        }
 
     async def _unary_unary(
-        self, route: str, request: "IProtoMessage", response_type: Type[T]
+        self,
+        route: str,
+        request: "IProtoMessage",
+        response_type: Type[T],
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional[grpclib.metadata.Deadline] = None,
+        metadata: Optional[_MetadataLike] = None,
     ) -> T:
         """Make a unary request and return the response."""
         async with self.channel.request(
-            route, grpclib.const.Cardinality.UNARY_UNARY, type(request), response_type
+            route,
+            grpclib.const.Cardinality.UNARY_UNARY,
+            type(request),
+            response_type,
+            **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
             await stream.send_message(request, end=True)
             response = await stream.recv_message()
@@ -1021,11 +1060,22 @@ class ServiceStub(ABC):
             return response
 
     async def _unary_stream(
-        self, route: str, request: "IProtoMessage", response_type: Type[T]
+        self,
+        route: str,
+        request: "IProtoMessage",
+        response_type: Type[T],
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional[grpclib.metadata.Deadline] = None,
+        metadata: Optional[_MetadataLike] = None,
     ) -> AsyncGenerator[T, None]:
         """Make a unary request and return the stream response iterator."""
         async with self.channel.request(
-            route, grpclib.const.Cardinality.UNARY_STREAM, type(request), response_type
+            route,
+            grpclib.const.Cardinality.UNARY_STREAM,
+            type(request),
+            response_type,
+            **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
             await stream.send_message(request, end=True)
             async for message in stream:
