@@ -75,10 +75,9 @@ def get_ref_type(package: str, imports: set, type_name: str, unwrap: bool = True
 
         if type_name == "google.protobuf.Timestamp":
             return "datetime"
-    else:
-        if wrapper:
-            imports.add(f"from {wrapper.__module__} import {wrapper.__name__}")
-            return f"{wrapper.__name__}"
+    elif wrapper:
+        imports.add(f"from {wrapper.__module__} import {wrapper.__name__}")
+        return f"{wrapper.__name__}"
 
     if type_name.startswith(package):
         parts = type_name.lstrip(package).lstrip(".").split(".")
