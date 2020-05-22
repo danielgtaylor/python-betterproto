@@ -322,7 +322,7 @@ Adding a standard test case is easy.
   - add `<name>.proto`  with a message called `Test`
   - add `<name>.json` with some test data
 
-It will be picked up automatically when you run `pipenv test`
+It will be picked up automatically when you run the tests.
 
 - See also: [Standard Tests Development Guide](betterproto/tests/README.md) 
 
@@ -356,6 +356,9 @@ $ pipenv run test
 - [x] Refs to nested types
 - [x] Imports in proto files
 - [x] Well-known Google types
+  - [ ] Support as request input
+  - [ ] Support as response output
+    - [ ] Automatically wrap/unwrap responses
 - [x] OneOf support
   - [x] Basic support on the wire
   - [x] Check which was set from the group
