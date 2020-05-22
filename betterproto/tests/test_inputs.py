@@ -3,6 +3,8 @@ import json
 import os
 import sys
 import pytest
+import betterproto
+from betterproto.tests.util import get_directories, inputs_path
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
@@ -12,8 +14,6 @@ from google.protobuf import symbol_database
 from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.json_format import Parse
 
-import betterproto
-from betterproto.tests.util import get_directories, inputs_path
 
 excluded_test_cases = {'googletypes_response', 'service'}
 test_case_names = {*get_directories(inputs_path)} - excluded_test_cases
@@ -50,12 +50,7 @@ def test_message_json(test_case_name: str) -> None:
     message.from_json(reference_json_data)
     message_json = message.to_json(0)
 
-    print(reference_json_data)
-    print(message_json)
-
     assert json.loads(reference_json_data) == json.loads(message_json)
-
-    # todo: handle -negative
 
 
 @pytest.mark.parametrize("test_case_name", test_case_names)
@@ -67,7 +62,6 @@ def test_binary_compatibility(test_case_name: str) -> None:
 
     reference_module_root = os.path.join(*reference_output_package.split('.'), test_case_name)
 
-    print(f'Appending {reference_module_root}')
     sys.path.append(reference_module_root)
 
     # import reference message
@@ -94,6 +88,7 @@ def test_binary_compatibility(test_case_name: str) -> None:
 '''
 helper methods
 '''
+
 
 def get_test_case_json_data(test_case_name):
     test_data_path = os.path.join(inputs_path, test_case_name, f'{test_case_name}.json')
