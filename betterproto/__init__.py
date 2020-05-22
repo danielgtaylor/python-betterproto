@@ -27,7 +27,7 @@ from typing import (
     TYPE_CHECKING,
 )
 
-import grpclib.client
+
 import grpclib.const
 import stringcase
 
@@ -35,6 +35,8 @@ from .casing import safe_snake_case
 
 if TYPE_CHECKING:
     from grpclib._protocols import IProtoMessage
+    from grpclib.client import Channel
+    from grpclib.metadata import Deadline
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
     # Apply backport of datetime.fromisoformat from 3.7
@@ -1013,10 +1015,10 @@ class ServiceStub(ABC):
 
     def __init__(
         self,
-        channel: grpclib.client.Channel,
+        channel: 'Channel',
         *,
         timeout: Optional[float] = None,
-        deadline: Optional[grpclib.metadata.Deadline] = None,
+        deadline: Optional['Deadline'] = None,
         metadata: Optional[_MetadataLike] = None,
     ) -> None:
         self.channel = channel
@@ -1027,7 +1029,7 @@ class ServiceStub(ABC):
     def __resolve_request_kwargs(
         self,
         timeout: Optional[float],
-        deadline: Optional[grpclib.metadata.Deadline],
+        deadline: Optional['Deadline'],
         metadata: Optional[_MetadataLike],
     ):
         return {
@@ -1043,7 +1045,7 @@ class ServiceStub(ABC):
         response_type: Type[T],
         *,
         timeout: Optional[float] = None,
-        deadline: Optional[grpclib.metadata.Deadline] = None,
+        deadline: Optional['Deadline'] = None,
         metadata: Optional[_MetadataLike] = None,
     ) -> T:
         """Make a unary request and return the response."""
@@ -1066,7 +1068,7 @@ class ServiceStub(ABC):
         response_type: Type[T],
         *,
         timeout: Optional[float] = None,
-        deadline: Optional[grpclib.metadata.Deadline] = None,
+        deadline: Optional['Deadline'] = None,
         metadata: Optional[_MetadataLike] = None,
     ) -> AsyncGenerator[T, None]:
         """Make a unary request and return the stream response iterator."""
