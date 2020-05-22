@@ -50,7 +50,12 @@ def test_message_json(test_case_name: str) -> None:
     message.from_json(reference_json_data)
     message_json = message.to_json(0)
 
-    assert json.loads(message_json) == json.loads(reference_json_data)
+    print(reference_json_data)
+    print(message_json)
+
+    assert json.loads(reference_json_data) == json.loads(message_json)
+
+    # todo: handle -negative
 
 
 @pytest.mark.parametrize("test_case_name", test_case_names)

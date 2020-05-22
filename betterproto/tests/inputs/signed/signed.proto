@@ -1,6 +1,9 @@
 syntax = "proto3";
 
 message Test {
-    sint32 signed_32 = 1;
-    sint64 signed_64 = 2;
+    // todo: rename fields after fixing bug where 'signed_32_positive' will map to 'signed_32Positive' as output json
+    sint32 signed32 = 1;    //  signed_32_positive
+    sint32 negative32 = 2;  //  signed_32_negative
+    sint64 string64 = 3;    //  signed_64_positive
+    sint64 negative64 = 4;  //  signed_64_negative
 }
