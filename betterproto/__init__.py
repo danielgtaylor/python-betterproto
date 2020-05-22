@@ -1015,10 +1015,10 @@ class ServiceStub(ABC):
 
     def __init__(
         self,
-        channel: 'Channel',
+        channel: "Channel",
         *,
         timeout: Optional[float] = None,
-        deadline: Optional['Deadline'] = None,
+        deadline: Optional["Deadline"] = None,
         metadata: Optional[_MetadataLike] = None,
     ) -> None:
         self.channel = channel
@@ -1029,7 +1029,7 @@ class ServiceStub(ABC):
     def __resolve_request_kwargs(
         self,
         timeout: Optional[float],
-        deadline: Optional['Deadline'],
+        deadline: Optional["Deadline"],
         metadata: Optional[_MetadataLike],
     ):
         return {
@@ -1045,7 +1045,7 @@ class ServiceStub(ABC):
         response_type: Type[T],
         *,
         timeout: Optional[float] = None,
-        deadline: Optional['Deadline'] = None,
+        deadline: Optional["Deadline"] = None,
         metadata: Optional[_MetadataLike] = None,
     ) -> T:
         """Make a unary request and return the response."""
@@ -1068,7 +1068,7 @@ class ServiceStub(ABC):
         response_type: Type[T],
         *,
         timeout: Optional[float] = None,
-        deadline: Optional['Deadline'] = None,
+        deadline: Optional["Deadline"] = None,
         metadata: Optional[_MetadataLike] = None,
     ) -> AsyncGenerator[T, None]:
         """Make a unary request and return the stream response iterator."""
