@@ -20,8 +20,6 @@ stringcase = "*"
 black = "*"
 backports-datetime-fromisoformat = "*"
 dataclasses = "*"
-betterproto = {editable = true,path = "."}
-pytest-asyncio = "*"
 
 [requires]
 python_version = "3.6"
