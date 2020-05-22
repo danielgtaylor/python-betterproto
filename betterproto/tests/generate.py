@@ -18,12 +18,9 @@ def generate(whitelist: Set[str]):
     test_case_names = set(get_directories(inputs_path))
 
     for test_case_name in sorted(test_case_names):
-        test_case_path = os.path.join(inputs_path, test_case_name)
+        test_case_path = os.path.realpath(os.path.join(inputs_path, test_case_name))
 
-        is_path_whitelisted = path_whitelist and os.path.realpath(test_case_path) in path_whitelist
-        is_name_whitelisted = name_whitelist and test_case_name in name_whitelist
-
-        if whitelist and not is_path_whitelisted and not is_name_whitelisted:
+        if whitelist and test_case_path not in path_whitelist and test_case_name not in name_whitelist:
             continue
 
         case_output_dir_reference = os.path.join(output_path_reference, test_case_name)
