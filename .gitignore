@@ -4,14 +4,9 @@
 .pytest_cache
 .python-version
 build/
-betterproto/tests/*.bin
-betterproto/tests/*_pb2.py
-betterproto/tests/*.py
-!betterproto/tests/generate.py
-!betterproto/tests/test_*.py
+betterproto/tests/output_*
 **/__pycache__
 dist
 **/*.egg-info
 output
-betterproto/tests/output_*
 .idea
