@@ -6,6 +6,8 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 root_path = os.path.dirname(os.path.realpath(__file__))
 inputs_path = os.path.join(root_path, 'inputs')
+output_path_reference = os.path.join(root_path, 'output_reference')
+output_path_betterproto = os.path.join(root_path, 'output_betterproto')
 
 if os.name == 'nt':
     plugin_path = os.path.join(root_path, '..', 'plugin.bat')
