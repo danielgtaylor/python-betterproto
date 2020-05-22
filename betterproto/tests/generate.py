@@ -17,7 +17,7 @@ def generate(whitelist: Set[str]):
 
     test_case_names = set(get_directories(inputs_path))
 
-    for test_case_name in test_case_names:
+    for test_case_name in sorted(test_case_names):
         test_case_path = os.path.join(inputs_path, test_case_name)
 
         is_path_whitelisted = path_whitelist and os.path.realpath(test_case_path) in path_whitelist
@@ -51,7 +51,7 @@ HELP = "\n".join([
 
 
 def main():
-    if sys.argv[1] in ('-h', '--help'):
+    if set(sys.argv).intersection({'-h', '--help'}):
         print(HELP)
         return
     whitelist = set(sys.argv[1:])
