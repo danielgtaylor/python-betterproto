@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package repeatedmessage;
+
+message Test {
+  repeated Sub greetings = 1;
+}
+
+message Sub {
+  string greeting = 1;
+}

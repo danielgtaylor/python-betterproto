@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+service Test {
+    rpc GetInt32 (Input) returns (google.protobuf.Int32Value);
+    rpc GetAnotherInt32 (Input) returns (google.protobuf.Int32Value);
+    rpc GetInt64 (Input) returns (google.protobuf.Int64Value);
+    rpc GetOutput (Input) returns (Output);
+}
+
+message Input {
+
+}
+
+message Output {
+    google.protobuf.Int64Value int64 = 1;
+}
