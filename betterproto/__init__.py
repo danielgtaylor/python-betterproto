@@ -433,9 +433,9 @@ T = TypeVar("T", bound="Message")
 
 
 class ProtoClassMetadata:
-    cls: "Message"
+    cls: Type["Message"]
 
-    def __init__(self, cls: "Message"):
+    def __init__(self, cls: Type["Message"]):
         self.cls = cls
         by_field = {}
         by_group = {}
@@ -451,6 +451,9 @@ class ProtoClassMetadata:
 
         self.oneof_group_by_field = by_field
         self.oneof_field_by_group = by_group
+
+        self.init_default_gen()
+        self.init_cls_by_field()
 
     def init_default_gen(self):
         default_gen = {}
@@ -478,33 +481,12 @@ class ProtoClassMetadata:
                     ],
                     bases=(Message,),
                 )
-                make_protoclass(Entry)
                 field_cls[field.name] = Entry
                 field_cls[field.name + ".value"] = vt
             else:
                 field_cls[field.name] = self.cls._cls_for(field)
 
         self.cls_by_field = field_cls
-
-    def __getattr__(self, item):
-        # Lazy init because forward reference classes may not be available at the beginning.
-        if item == 'default_gen':
-            self.init_default_gen()
-            return self.default_gen
-
-        if item == 'cls_by_field':
-            self.init_cls_by_field()
-            return self.cls_by_field
-
-
-def make_protoclass(cls):
-    setattr(cls, "_betterproto", ProtoClassMetadata(cls))
-
-
-def protoclass(*args, **kwargs):
-    cls = dataclasses.dataclass(*args, **kwargs)
-    make_protoclass(cls)
-    return cls
 
 
 class Message(ABC):
@@ -566,6 +548,19 @@ class Message(ABC):
                         )
 
         super().__setattr__(attr, value)
+
+    @property
+    def _betterproto(self):
+        """
+        Lazy initialize metadata for each protobuf class.
+        It may be initialized multiple times in a multi-threaded environment,
+        but that won't affect the correctness.
+        """
+        meta = getattr(self.__class__, "_betterproto_meta", None)
+        if not meta:
+            meta = ProtoClassMetadata(self.__class__)
+            self.__class__._betterproto_meta = meta
+        return meta
 
     def __bytes__(self) -> bytes:
         """
@@ -932,7 +927,7 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
     return (field.name, getattr(message, field.name))
 
 
-@protoclass
+@dataclasses.dataclass
 class _Duration(Message):
     # Signed seconds of the span of time. Must be from -315,576,000,000 to
     # +315,576,000,000 inclusive. Note: these bounds are computed from: 60
@@ -957,7 +952,7 @@ class _Duration(Message):
         return ".".join(parts) + "s"
 
 
-@protoclass
+@dataclasses.dataclass
 class _Timestamp(Message):
     # Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must
     # be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.
@@ -1007,47 +1002,47 @@ class _WrappedMessage(Message):
         return self
 
 
-@protoclass
+@dataclasses.dataclass
 class _BoolValue(_WrappedMessage):
     value: bool = bool_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _Int32Value(_WrappedMessage):
     value: int = int32_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _UInt32Value(_WrappedMessage):
     value: int = uint32_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _Int64Value(_WrappedMessage):
     value: int = int64_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _UInt64Value(_WrappedMessage):
     value: int = uint64_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _FloatValue(_WrappedMessage):
     value: float = float_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _DoubleValue(_WrappedMessage):
     value: float = double_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _StringValue(_WrappedMessage):
     value: str = string_field(1)
 
 
-@protoclass
+@dataclasses.dataclass
 class _BytesValue(_WrappedMessage):
     value: bytes = bytes_field(1)
 

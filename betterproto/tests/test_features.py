@@ -4,11 +4,11 @@ from typing import Optional
 
 
 def test_has_field():
-    @betterproto.protoclass
+    @dataclass
     class Bar(betterproto.Message):
         baz: int = betterproto.int32_field(1)
 
-    @betterproto.protoclass
+    @dataclass
     class Foo(betterproto.Message):
         bar: Bar = betterproto.message_field(1)
 
@@ -34,11 +34,11 @@ def test_has_field():
 
 
 def test_class_init():
-    @betterproto.protoclass
+    @dataclass
     class Bar(betterproto.Message):
         name: str = betterproto.string_field(1)
 
-    @betterproto.protoclass
+    @dataclass
     class Foo(betterproto.Message):
         name: str = betterproto.string_field(1)
         child: Bar = betterproto.message_field(2)
@@ -53,7 +53,7 @@ def test_enum_as_int_json():
         ZERO = 0
         ONE = 1
 
-    @betterproto.protoclass
+    @dataclass
     class Foo(betterproto.Message):
         bar: TestEnum = betterproto.enum_field(1)
 
@@ -67,13 +67,13 @@ def test_enum_as_int_json():
 
 
 def test_unknown_fields():
-    @betterproto.protoclass
+    @dataclass
     class Newer(betterproto.Message):
         foo: bool = betterproto.bool_field(1)
         bar: int = betterproto.int32_field(2)
         baz: str = betterproto.string_field(3)
 
-    @betterproto.protoclass
+    @dataclass
     class Older(betterproto.Message):
         foo: bool = betterproto.bool_field(1)
 
@@ -89,11 +89,11 @@ def test_unknown_fields():
 
 
 def test_oneof_support():
-    @betterproto.protoclass
+    @dataclass
     class Sub(betterproto.Message):
         val: int = betterproto.int32_field(1)
 
-    @betterproto.protoclass
+    @dataclass
     class Foo(betterproto.Message):
         bar: int = betterproto.int32_field(1, group="group1")
         baz: str = betterproto.string_field(2, group="group1")
@@ -134,7 +134,7 @@ def test_oneof_support():
 
 
 def test_json_casing():
-    @betterproto.protoclass
+    @dataclass
     class CasingTest(betterproto.Message):
         pascal_case: int = betterproto.int32_field(1)
         camel_case: int = betterproto.int32_field(2)
@@ -165,7 +165,7 @@ def test_json_casing():
 
 
 def test_optional_flag():
-    @betterproto.protoclass
+    @dataclass
     class Request(betterproto.Message):
         flag: Optional[bool] = betterproto.message_field(1, wraps=betterproto.TYPE_BOOL)
 
@@ -180,7 +180,7 @@ def test_optional_flag():
 
 
 def test_to_dict_default_values():
-    @betterproto.protoclass
+    @dataclass
     class TestMessage(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
@@ -210,7 +210,7 @@ def test_to_dict_default_values():
     }
 
     # Some default and some other values
-    @betterproto.protoclass
+    @dataclass
     class TestMessage2(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
@@ -246,11 +246,11 @@ def test_to_dict_default_values():
     }
 
     # Nested messages
-    @betterproto.protoclass
+    @dataclass
     class TestChildMessage(betterproto.Message):
         some_other_int: int = betterproto.int32_field(1)
 
-    @betterproto.protoclass
+    @dataclass
     class TestParentMessage(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
