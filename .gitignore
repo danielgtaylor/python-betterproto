@@ -13,3 +13,5 @@ betterproto/tests/*.py
 dist
 **/*.egg-info
 output
+betterproto/tests/output_*
+.idea
