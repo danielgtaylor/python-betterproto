@@ -3,8 +3,8 @@ import grpclib
 from grpclib.testing import ChannelFor
 import pytest
 from typing import Dict
-from .service import DoThingResponse, DoThingRequest, ExampleServiceStub
 
+from betterproto.tests.output_betterproto.service.service import DoThingResponse, DoThingRequest, ExampleServiceStub
 
 class ExampleService:
     def __init__(self, test_hook=None):
