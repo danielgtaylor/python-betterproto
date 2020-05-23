@@ -2,7 +2,9 @@ from typing import Optional
 
 import pytest
 
-from betterproto.tests.output_betterproto.googletypes_response.googletypes_response import TestStub
+from betterproto.tests.output_betterproto.googletypes_response.googletypes_response import (
+    TestStub
+)
 
 
 class TestStubChild(TestStub):
@@ -12,7 +14,7 @@ class TestStubChild(TestStub):
 
 @pytest.mark.asyncio
 async def test():
-    pytest.skip('todo')
+    pytest.skip("todo")
     stub = TestStubChild(None)
     await stub.get_int64()
     assert stub.response_type != Optional[int]

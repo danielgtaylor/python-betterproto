@@ -4,7 +4,12 @@ from grpclib.testing import ChannelFor
 import pytest
 from typing import Dict
 
-from betterproto.tests.output_betterproto.service.service import DoThingResponse, DoThingRequest, ExampleServiceStub
+from betterproto.tests.output_betterproto.service.service import (
+    DoThingResponse,
+    DoThingRequest,
+    ExampleServiceStub,
+)
+
 
 class ExampleService:
     def __init__(self, test_hook=None):
@@ -29,7 +34,7 @@ class ExampleService:
                 grpclib.const.Cardinality.UNARY_UNARY,
                 DoThingRequest,
                 DoThingResponse,
-            ),
+            )
         }
 
 
@@ -94,7 +99,9 @@ async def test_service_call_lower_level_with_overrides():
     ) as channel:
         stub = ExampleServiceStub(channel, deadline=deadline, metadata=metadata)
         response = await stub._unary_unary(
-            "/service.ExampleService/DoThing", DoThingRequest(ITERATIONS), DoThingResponse,
+            "/service.ExampleService/DoThing",
+            DoThingRequest(ITERATIONS),
+            DoThingResponse,
             deadline=kwarg_deadline,
             metadata=kwarg_metadata,
         )
@@ -116,7 +123,9 @@ async def test_service_call_lower_level_with_overrides():
     ) as channel:
         stub = ExampleServiceStub(channel, deadline=deadline, metadata=metadata)
         response = await stub._unary_unary(
-            "/service.ExampleService/DoThing", DoThingRequest(ITERATIONS), DoThingResponse,
+            "/service.ExampleService/DoThing",
+            DoThingRequest(ITERATIONS),
+            DoThingResponse,
             timeout=kwarg_timeout,
             metadata=kwarg_metadata,
         )

@@ -122,7 +122,7 @@ def get_py_zero(type_num: int) -> str:
 
 
 def traverse(proto_file):
-    def _traverse(path, items, prefix = ''):
+    def _traverse(path, items, prefix=""):
         for i, item in enumerate(items):
             # Adjust the name since we flatten the heirarchy.
             item.name = next_prefix = prefix + item.name
