@@ -311,7 +311,6 @@ def generate_code(request, response):
                 }
 
                 for j, method in enumerate(service.method):
-
                     input_message = None
                     input_type = get_ref_type(
                         package, output["imports"], method.input_type
