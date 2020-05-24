@@ -16,7 +16,11 @@ from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.json_format import Parse
 
 
-excluded_test_cases = {"googletypes_response", "service"}
+excluded_test_cases = {
+    "googletypes_response",
+    "googletypes_response_embedded",
+    "service",
+}
 test_case_names = {*get_directories(inputs_path)} - excluded_test_cases
 
 plugin_output_package = "betterproto.tests.output_betterproto"
