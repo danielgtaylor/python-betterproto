@@ -73,3 +73,18 @@ The following tests are automatically executed for all cases:
   - `betterproto/tests/output_reference` &mdash; *reference implementation classes*
 - `pipenv run test`
 
+## Intentionally Failing tests
+
+The standard test suite includes tests that fail by intention. These tests document known bugs and missing features that are intended to be corrented in the future.
+
+When running `pytest`, they show up as `x` or  `X` in the test results.
+
+```
+betterproto/tests/test_inputs.py ..x...x..x...x.X........xx........x.....x.......x.xx....x...................... [ 84%]
+```
+
+- `.` &mdash; PASSED
+- `x` &mdash; XFAIL: expected failure
+- `X` &mdash; XPASS: expected failure, but still passed
+
+Test cases marked for expected failure are declared in [inputs/xfail.py](inputs.xfail.py)
