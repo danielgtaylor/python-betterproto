@@ -2,17 +2,20 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 
+// Tests that wrapped return values can be used
+
 service Test {
-    rpc GetInt32 (Input) returns (google.protobuf.Int32Value);
-    rpc GetAnotherInt32 (Input) returns (google.protobuf.Int32Value);
+    rpc GetDouble (Input) returns (google.protobuf.DoubleValue);
+    rpc GetFloat (Input) returns (google.protobuf.FloatValue);
     rpc GetInt64 (Input) returns (google.protobuf.Int64Value);
-    rpc GetOutput (Input) returns (Output);
+    rpc GetUInt64 (Input) returns (google.protobuf.UInt64Value);
+    rpc GetInt32 (Input) returns (google.protobuf.Int32Value);
+    rpc GetUInt32 (Input) returns (google.protobuf.UInt32Value);
+    rpc GetBool (Input) returns (google.protobuf.BoolValue);
+    rpc GetString (Input) returns (google.protobuf.StringValue);
+    rpc GetBytes (Input) returns (google.protobuf.BytesValue);
 }
 
 message Input {
 
-}
-
-message Output {
-    google.protobuf.Int64Value int64 = 1;
 }
