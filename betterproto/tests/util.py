@@ -48,3 +48,14 @@ def protoc_reference(path: str, output_dir: str):
         f"protoc --python_out={output_dir} --proto_path={path} {path}/*.proto",
         shell=True,
     )
+
+
+def get_test_case_json_data(test_case_name, json_file_name=None):
+    test_data_file_name = json_file_name if json_file_name else f"{test_case_name}.json"
+    test_data_file_path = os.path.join(inputs_path, test_case_name, test_data_file_name)
+
+    if not os.path.exists(test_data_file_path):
+        return None
+
+    with open(test_data_file_path) as fh:
+        return fh.read()
