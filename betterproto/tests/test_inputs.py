@@ -99,6 +99,9 @@ def test_binary_compatibility(repeat, test_data: TestData) -> None:
         # # Generally this can't be relied on, but here we are aiming to match the
         # # existing Python implementation and aren't doing anything tricky.
         # # https://developers.google.com/protocol-buffers/docs/encoding#implications
+        assert bytes(plugin_instance_from_json) == reference_binary_output
+        assert bytes(plugin_instance_from_binary) == reference_binary_output
+
         assert plugin_instance_from_json == plugin_instance_from_binary
         assert (
             plugin_instance_from_json.to_dict() == plugin_instance_from_binary.to_dict()
