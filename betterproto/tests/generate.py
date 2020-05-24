@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import glob
 import os
+import shutil
 import sys
 from typing import Set
 
@@ -17,6 +19,14 @@ from betterproto.tests.util import (
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 
+def clear_directory(path: str):
+    for file_or_directory in glob.glob(os.path.join(path, "*")):
+        if os.path.isdir(file_or_directory):
+            shutil.rmtree(file_or_directory)
+        else:
+            os.remove(file_or_directory)
+
+
 def generate(whitelist: Set[str]):
     path_whitelist = {os.path.realpath(e) for e in whitelist if os.path.exists(e)}
     name_whitelist = {e for e in whitelist if not os.path.exists(e)}
@@ -24,26 +34,33 @@ def generate(whitelist: Set[str]):
     test_case_names = set(get_directories(inputs_path))
 
     for test_case_name in sorted(test_case_names):
-        test_case_path = os.path.realpath(os.path.join(inputs_path, test_case_name))
+        test_case_input_path = os.path.realpath(
+            os.path.join(inputs_path, test_case_name)
+        )
 
         if (
             whitelist
-            and test_case_path not in path_whitelist
+            and test_case_input_path not in path_whitelist
             and test_case_name not in name_whitelist
         ):
             continue
 
-        case_output_dir_reference = os.path.join(output_path_reference, test_case_name)
-        case_output_dir_betterproto = os.path.join(
+        test_case_output_path_reference = os.path.join(
+            output_path_reference, test_case_name
+        )
+        test_case_output_path_betterproto = os.path.join(
             output_path_betterproto, test_case_name
         )
 
         print(f"Generating output for {test_case_name}")
-        os.makedirs(case_output_dir_reference, exist_ok=True)
-        os.makedirs(case_output_dir_betterproto, exist_ok=True)
+        os.makedirs(test_case_output_path_reference, exist_ok=True)
+        os.makedirs(test_case_output_path_betterproto, exist_ok=True)
 
-        protoc_reference(test_case_path, case_output_dir_reference)
-        protoc_plugin(test_case_path, case_output_dir_betterproto)
+        clear_directory(test_case_output_path_reference)
+        clear_directory(test_case_output_path_betterproto)
+
+        protoc_reference(test_case_input_path, test_case_output_path_reference)
+        protoc_plugin(test_case_input_path, test_case_output_path_betterproto)
 
 
 HELP = "\n".join(
