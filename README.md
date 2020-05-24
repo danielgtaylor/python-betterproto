@@ -311,10 +311,26 @@ $ pip install -e .
 
 There are two types of tests:
 
-1. Manually-written tests for some behavior of the library
-2. Proto files and JSON inputs for automated tests
+1. Standard tests
+2. Custom tests
 
-For #2, you can add a new `*.proto` file into the `betterproto/tests` directory along with a sample `*.json` input and it will get automatically picked up.
+#### Standard tests
+
+Adding a standard test case is easy.
+
+- Create a new directory `betterproto/tests/inputs/<name>`
+  - add `<name>.proto`  with a message called `Test`
+  - add `<name>.json` with some test data
+
+It will be picked up automatically when you run the tests.
+
+- See also: [Standard Tests Development Guide](betterproto/tests/README.md) 
+
+#### Custom tests
+
+Custom tests are found in `tests/test_*.py` and are run with pytest.
+
+#### Running
 
 Here's how to run the tests.
 
@@ -322,7 +338,7 @@ Here's how to run the tests.
 # Generate assets from sample .proto files
 $ pipenv run generate
 
-# Run the tests
+# Run all tests
 $ pipenv run test
 ```
 
@@ -340,6 +356,9 @@ $ pipenv run test
 - [x] Refs to nested types
 - [x] Imports in proto files
 - [x] Well-known Google types
+  - [ ] Support as request input
+  - [ ] Support as response output
+    - [ ] Automatically wrap/unwrap responses
 - [x] OneOf support
   - [x] Basic support on the wire
   - [x] Check which was set from the group
