@@ -2,10 +2,14 @@ import importlib
 import json
 import os
 import sys
-import pytest
-import betterproto
-from betterproto.tests.util import get_directories, inputs_path
 from collections import namedtuple
+from typing import Set
+
+import pytest
+
+import betterproto
+from betterproto.tests.inputs import xfail
+from betterproto.tests.util import get_directories, get_test_case_json_data, inputs_path
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
@@ -16,12 +20,34 @@ from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.json_format import Parse
 
 
-excluded_test_cases = {
-    "googletypes_response",
-    "googletypes_response_embedded",
-    "service",
-}
-test_case_names = {*get_directories(inputs_path)} - excluded_test_cases
+class TestCases:
+    def __init__(self, path, services: Set[str], xfail: Set[str]):
+        _all = set(get_directories(path))
+        _services = services
+        _messages = _all - services
+        _messages_with_json = {
+            test for test in _messages if get_test_case_json_data(test)
+        }
+
+        self.all = self.apply_xfail_marks(_all, xfail)
+        self.services = self.apply_xfail_marks(_services, xfail)
+        self.messages = self.apply_xfail_marks(_messages, xfail)
+        self.messages_with_json = self.apply_xfail_marks(_messages_with_json, xfail)
+
+    @staticmethod
+    def apply_xfail_marks(test_set: Set[str], xfail: Set[str]):
+        return [
+            pytest.param(test, marks=pytest.mark.xfail) if test in xfail else test
+            for test in test_set
+        ]
+
+
+test_cases = TestCases(
+    path=inputs_path,
+    # test cases for services
+    services={"googletypes_response", "googletypes_response_embedded", "service"},
+    xfail=xfail.tests,
+)
 
 plugin_output_package = "betterproto.tests.output_betterproto"
 reference_output_package = "betterproto.tests.output_reference"
@@ -30,7 +56,7 @@ reference_output_package = "betterproto.tests.output_reference"
 TestData = namedtuple("TestData", "plugin_module, reference_module, json_data")
 
 
-@pytest.fixture(scope="module", params=test_case_names)
+@pytest.fixture
 def test_data(request):
     test_case_name = request.param
 
@@ -60,11 +86,13 @@ def test_data(request):
     sys.path.remove(reference_module_root)
 
 
+@pytest.mark.parametrize("test_data", test_cases.messages, indirect=True)
 def test_message_can_instantiated(test_data: TestData) -> None:
     plugin_module, *_ = test_data
     plugin_module.Test()
 
 
+@pytest.mark.parametrize("test_data", test_cases.messages, indirect=True)
 def test_message_equality(test_data: TestData) -> None:
     plugin_module, *_ = test_data
     message1 = plugin_module.Test()
@@ -72,6 +100,7 @@ def test_message_equality(test_data: TestData) -> None:
     assert message1 == message2
 
 
+@pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
 def test_message_json(repeat, test_data: TestData) -> None:
     plugin_module, _, json_data = test_data
 
@@ -84,6 +113,7 @@ def test_message_json(repeat, test_data: TestData) -> None:
         assert json.loads(json_data) == json.loads(message_json)
 
 
+@pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
 
@@ -108,17 +138,3 @@ def test_binary_compatibility(repeat, test_data: TestData) -> None:
         assert (
             plugin_instance_from_json.to_dict() == plugin_instance_from_binary.to_dict()
         )
-
-
-"""
-helper methods
-"""
-
-
-def get_test_case_json_data(test_case_name):
-    test_data_path = os.path.join(inputs_path, test_case_name, f"{test_case_name}.json")
-    if not os.path.exists(test_data_path):
-        return None
-
-    with open(test_data_path) as fh:
-        return fh.read()
