@@ -9,6 +9,7 @@ import pytest
 
 import betterproto
 from betterproto.tests.inputs import xfail
+from betterproto.tests.mocks import MockChannel
 from betterproto.tests.util import get_directories, get_test_case_json_data, inputs_path
 
 # Force pure-python implementation instead of C++, otherwise imports
@@ -111,6 +112,12 @@ def test_message_json(repeat, test_data: TestData) -> None:
         message_json = message.to_json(0)
 
         assert json.loads(json_data) == json.loads(message_json)
+
+
+@pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
+def test_service_can_be_instantiated(test_data: TestData) -> None:
+    plugin_module, _, json_data = test_data
+    plugin_module.TestStub(MockChannel())
 
 
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)

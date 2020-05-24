@@ -10,6 +10,6 @@ message DoThingResponse {
   int32 successfulIterations = 1;
 }
 
-service ExampleService {
+service Test {
   rpc DoThing (DoThingRequest) returns (DoThingResponse);
 }
