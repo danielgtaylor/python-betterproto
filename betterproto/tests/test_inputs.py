@@ -45,14 +45,16 @@ def test_data(request):
 
     sys.path.append(reference_module_root)
 
-    yield TestData(
-        plugin_module=importlib.import_module(
-            f"{plugin_output_package}.{test_case_name}.{test_case_name}"
-        ),
-        reference_module=importlib.import_module(
-            f"{reference_output_package}.{test_case_name}.{test_case_name}_pb2"
-        ),
-        json_data=get_test_case_json_data(test_case_name),
+    yield (
+        TestData(
+            plugin_module=importlib.import_module(
+                f"{plugin_output_package}.{test_case_name}.{test_case_name}"
+            ),
+            reference_module=lambda: importlib.import_module(
+                f"{reference_output_package}.{test_case_name}.{test_case_name}_pb2"
+            ),
+            json_data=get_test_case_json_data(test_case_name),
+        )
     )
 
     sys.path.remove(reference_module_root)
@@ -85,7 +87,7 @@ def test_message_json(repeat, test_data: TestData) -> None:
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
 
-    reference_instance = Parse(json_data, reference_module.Test())
+    reference_instance = Parse(json_data, reference_module().Test())
     reference_binary_output = reference_instance.SerializeToString()
 
     for _ in range(repeat):
