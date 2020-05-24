@@ -27,7 +27,7 @@ class MockStream:
         self.responses = responses
 
     async def recv_message(self):
-        return next(self.responses)
+        return self.responses.pop(0)
 
     async def send_message(self, *args, **kwargs):
         pass
@@ -36,4 +36,4 @@ class MockStream:
         return True
 
     async def __aenter__(self):
-        return True
+        return self

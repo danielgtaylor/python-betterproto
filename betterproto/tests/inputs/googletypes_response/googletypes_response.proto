@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
 
-// Tests that wrapped return values can be used
+// Tests that wrapped values can be used directly as return values
 
 service Test {
     rpc GetDouble (Input) returns (google.protobuf.DoubleValue);
