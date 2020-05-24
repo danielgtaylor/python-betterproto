@@ -43,11 +43,14 @@ async def test_channel_receives_wrapped_type(
 async def test_service_unwraps_response(
     service_method: Callable[[TestStub], Any], wrapper_class: Callable, value
 ):
+    """
+    grpclib does not unwrap wrapper values returned by services
+    """
     wrapped_value = wrapper_class()
     wrapped_value.value = value
     service = TestStub(MockChannel(responses=[wrapped_value]))
 
     response_value = await service_method(service)
 
-    assert type(response_value) == value
+    assert response_value == value
     assert type(response_value) == type(value)
