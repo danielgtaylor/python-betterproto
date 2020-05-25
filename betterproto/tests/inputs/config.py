@@ -9,6 +9,7 @@ tests = {
     "import_packages_same_name",
     "oneof_enum",
     "googletypes_service_returns_empty",
+    "casing_message_field_uppercase",
 }
 
 services = {

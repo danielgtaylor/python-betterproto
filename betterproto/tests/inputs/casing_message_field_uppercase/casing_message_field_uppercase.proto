@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message Test {
+  int32 UPPER_CAMEL_CASE = 1;
+}
