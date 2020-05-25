@@ -1,5 +1,7 @@
 syntax = "proto3";
 
 message Test {
-  int32 UPPER_CAMEL_CASE = 1;
+  int32 UPPERCASE = 1;
+  int32 UPPERCASE_V2 = 2;
+  int32 UPPER_CAMEL_CASE = 3;
 }
