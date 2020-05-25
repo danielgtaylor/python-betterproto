@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "package_message.proto";
+
+// Tests generated imports when a message in a package refers to a message in a nested child package.
+
+message Test {
+  package.PackageMessage message = 1;
+}

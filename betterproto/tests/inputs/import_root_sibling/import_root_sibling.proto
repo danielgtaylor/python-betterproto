@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "sibling.proto";
+
+// Tests generated imports when a message in the root package refers to another message in the root package
+
+message Test {
+  SiblingMessage sibling = 1;
+}

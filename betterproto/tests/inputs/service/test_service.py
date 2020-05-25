@@ -7,7 +7,7 @@ from typing import Dict
 from betterproto.tests.output_betterproto.service.service import (
     DoThingResponse,
     DoThingRequest,
-    ExampleServiceStub,
+    TestStub as ExampleServiceStub,
 )
 
 
@@ -29,12 +29,12 @@ class ExampleService:
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
-            "/service.ExampleService/DoThing": grpclib.const.Handler(
+            "/service.Test/DoThing": grpclib.const.Handler(
                 self.DoThing,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 DoThingRequest,
                 DoThingResponse,
-            )
+            ),
         }
 
 
@@ -99,7 +99,7 @@ async def test_service_call_lower_level_with_overrides():
     ) as channel:
         stub = ExampleServiceStub(channel, deadline=deadline, metadata=metadata)
         response = await stub._unary_unary(
-            "/service.ExampleService/DoThing",
+            "/service.Test/DoThing",
             DoThingRequest(ITERATIONS),
             DoThingResponse,
             deadline=kwarg_deadline,
@@ -123,7 +123,7 @@ async def test_service_call_lower_level_with_overrides():
     ) as channel:
         stub = ExampleServiceStub(channel, deadline=deadline, metadata=metadata)
         response = await stub._unary_unary(
-            "/service.ExampleService/DoThing",
+            "/service.Test/DoThing",
             DoThingRequest(ITERATIONS),
             DoThingResponse,
             timeout=kwarg_timeout,

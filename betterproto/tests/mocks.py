@@ -5,8 +5,8 @@ from grpclib.client import Channel
 
 class MockChannel(Channel):
     # noinspection PyMissingConstructor
-    def __init__(self, responses: List) -> None:
-        self.responses = responses
+    def __init__(self, responses=None) -> None:
+        self.responses = responses if responses else []
         self.requests = []
 
     def request(self, route, cardinality, request, response_type, **kwargs):

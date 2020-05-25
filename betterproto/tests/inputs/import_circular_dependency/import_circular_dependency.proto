@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "root.proto";
+import "other.proto";
+
+// This test-case verifies that future implementations will support circular dependencies in the generated python files.
+//
+// This becomes important when generating 1 python file/module per package, rather than 1 file per proto file.
+//
+// Scenario:
+//
+//     The proto messages depend on each other in a non-circular way:
+//
+//           Test -------> RootPackageMessage <--------------.
+//             `------------------------------------> OtherPackageMessage
+//
+//     Test and RootPackageMessage are in different files, but belong to the same package (root):
+//
+//           (Test -------> RootPackageMessage) <------------.
+//             `------------------------------------> OtherPackageMessage
+//
+//     After grouping the packages into single files or modules, a circular dependency is created:
+//
+//           (root: Test & RootPackageMessage) <-------> (other: OtherPackageMessage)
+message Test {
+  RootPackageMessage message = 1;
+  other.OtherPackageMessage other =2;
+}
