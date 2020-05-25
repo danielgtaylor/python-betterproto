@@ -7,7 +7,7 @@ from betterproto.tests.output_betterproto.import_service_input_message.import_se
 )
 
 
-@pytest.mark.xfail(reason="Request Input Messages are not imported for service")
+@pytest.mark.xfail(reason="#68 Request Input Messages are not imported for service")
 @pytest.mark.asyncio
 async def test_service_correctly_imports_reference_message():
     mock_response = RequestResponse(value=10)
