@@ -46,7 +46,12 @@ class TestCases:
 test_cases = TestCases(
     path=inputs_path,
     # test cases for services
-    services={"googletypes_response", "googletypes_response_embedded", "service"},
+    services={
+        "googletypes_response",
+        "googletypes_response_embedded",
+        "service",
+        "import_service_input_message_dependency",
+    },
     xfail=xfail.tests,
 )
 
