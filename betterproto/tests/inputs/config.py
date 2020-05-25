@@ -10,6 +10,8 @@ tests = {
     "oneof_enum",
     "googletypes_service_returns_empty",
     "casing_message_field_uppercase",
+    "namespace_keywords",
+    "namespace_builtin_types"
 }
 
 services = {

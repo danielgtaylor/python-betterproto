@@ -2,6 +2,7 @@
 import glob
 import os
 import shutil
+import subprocess
 import sys
 from typing import Set
 
@@ -33,6 +34,8 @@ def generate(whitelist: Set[str]):
 
     test_case_names = set(get_directories(inputs_path))
 
+    failed_test_cases = []
+
     for test_case_name in sorted(test_case_names):
         test_case_input_path = os.path.realpath(
             os.path.join(inputs_path, test_case_name)
@@ -45,22 +48,39 @@ def generate(whitelist: Set[str]):
         ):
             continue
 
-        test_case_output_path_reference = os.path.join(
-            output_path_reference, test_case_name
-        )
-        test_case_output_path_betterproto = os.path.join(
-            output_path_betterproto, test_case_name
-        )
-
         print(f"Generating output for {test_case_name}")
-        os.makedirs(test_case_output_path_reference, exist_ok=True)
-        os.makedirs(test_case_output_path_betterproto, exist_ok=True)
+        try:
+            generate_test_case_output(test_case_name, test_case_input_path)
+        except subprocess.CalledProcessError as e:
+            failed_test_cases.append(test_case_name)
 
-        clear_directory(test_case_output_path_reference)
-        clear_directory(test_case_output_path_betterproto)
+    if failed_test_cases:
+        sys.stderr.write("\nFailed to generate the following test cases:\n")
+        for failed_test_case in failed_test_cases:
+            sys.stderr.write(f"- {failed_test_case}\n")
 
-        protoc_reference(test_case_input_path, test_case_output_path_reference)
-        protoc_plugin(test_case_input_path, test_case_output_path_betterproto)
+
+def generate_test_case_output(test_case_name, test_case_input_path=None):
+    if not test_case_input_path:
+        test_case_input_path = os.path.realpath(
+            os.path.join(inputs_path, test_case_name)
+        )
+
+    test_case_output_path_reference = os.path.join(
+        output_path_reference, test_case_name
+    )
+    test_case_output_path_betterproto = os.path.join(
+        output_path_betterproto, test_case_name
+    )
+
+    os.makedirs(test_case_output_path_reference, exist_ok=True)
+    os.makedirs(test_case_output_path_betterproto, exist_ok=True)
+
+    clear_directory(test_case_output_path_reference)
+    clear_directory(test_case_output_path_betterproto)
+
+    protoc_reference(test_case_input_path, test_case_output_path_reference)
+    protoc_plugin(test_case_input_path, test_case_output_path_betterproto)
 
 
 HELP = "\n".join(

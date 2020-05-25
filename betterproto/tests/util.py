@@ -36,10 +36,11 @@ def read_relative(file: str, path: str):
         return fh.read()
 
 
-def protoc_plugin(path: str, output_dir: str):
-    subprocess.run(
+def protoc_plugin(path: str, output_dir: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
         f"protoc --plugin=protoc-gen-custom={plugin_path} --custom_out={output_dir} --proto_path={path} {path}/*.proto",
         shell=True,
+        check=True,
     )
 
 
