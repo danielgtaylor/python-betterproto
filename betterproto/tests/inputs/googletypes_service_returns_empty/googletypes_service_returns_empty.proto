@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+service Test {
+    rpc Send (RequestMessage) returns (google.protobuf.Empty) {
+    }
+}
+
+message RequestMessage {
+}

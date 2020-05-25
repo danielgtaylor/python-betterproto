@@ -8,6 +8,7 @@ tests = {
     "import_circular_dependency",
     "import_packages_same_name",
     "oneof_enum",
+    "googletypes_service_returns_empty",
 }
 
 services = {
@@ -16,4 +17,5 @@ services = {
     "service",
     "import_service_input_message",
     "import_service_input_message_dependency",
+    "googletypes_service_returns_empty"
 }
