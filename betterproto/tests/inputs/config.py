@@ -16,6 +16,5 @@ services = {
     "googletypes_response_embedded",
     "service",
     "import_service_input_message",
-    "import_service_input_message_dependency",
-    "googletypes_service_returns_empty"
+    "googletypes_service_returns_empty",
 }
