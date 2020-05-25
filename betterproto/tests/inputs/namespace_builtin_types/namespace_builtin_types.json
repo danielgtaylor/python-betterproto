@@ -1,0 +1,16 @@
+{
+  "int": "value-for-int",
+  "float": "value-for-float",
+  "complex": "value-for-complex",
+  "list": "value-for-list",
+  "tuple": "value-for-tuple",
+  "range": "value-for-range",
+  "str": "value-for-str",
+  "bytearray": "value-for-bytearray",
+  "bytes": "value-for-bytes",
+  "memoryview": "value-for-memoryview",
+  "set": "value-for-set",
+  "frozenset": "value-for-frozenset",
+  "map": "value-for-map",
+  "bool": "value-for-bool"
+}
