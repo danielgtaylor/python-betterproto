@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package users.v1;
+
+message User {
+
+}

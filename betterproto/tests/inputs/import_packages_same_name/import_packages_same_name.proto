@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "users_v1.proto";
+import "posts_v1.proto";
+
+// Tests generated message can correctly reference two packages with the same leaf-name
+
+message Test {
+  users.v1.User user = 1;
+  posts.v1.Post post = 2;
+}
