@@ -8,7 +8,7 @@ from typing import Set
 import pytest
 
 import betterproto
-from betterproto.tests.inputs import xfail
+from betterproto.tests.inputs import config as test_input_config
 from betterproto.tests.mocks import MockChannel
 from betterproto.tests.util import get_directories, get_test_case_json_data, inputs_path
 
@@ -45,14 +45,8 @@ class TestCases:
 
 test_cases = TestCases(
     path=inputs_path,
-    # test cases for services
-    services={
-        "googletypes_response",
-        "googletypes_response_embedded",
-        "service",
-        "import_service_input_message_dependency",
-    },
-    xfail=xfail.tests,
+    services=test_input_config.services,
+    xfail=test_input_config.tests,
 )
 
 plugin_output_package = "betterproto.tests.output_betterproto"

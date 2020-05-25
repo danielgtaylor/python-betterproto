@@ -6,5 +6,14 @@ tests = {
     "import_root_package_from_child",
     "import_parent_package_from_child",
     "import_circular_dependency",
+    "import_packages_same_name",
     "oneof_enum",
+}
+
+services = {
+    "googletypes_response",
+    "googletypes_response_embedded",
+    "service",
+    "import_service_input_message",
+    "import_service_input_message_dependency",
 }
