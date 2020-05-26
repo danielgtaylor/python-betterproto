@@ -1,84 +1,91 @@
 #!/usr/bin/env python
+import glob
 import os
+import shutil
+import sys
+from typing import Set
+
+from betterproto.tests.util import (
+    get_directories,
+    inputs_path,
+    output_path_betterproto,
+    output_path_reference,
+    protoc_plugin,
+    protoc_reference,
+)
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
-import importlib
-import json
-import subprocess
-import sys
-from typing import Generator, Tuple
 
-from google.protobuf import symbol_database
-from google.protobuf.descriptor_pool import DescriptorPool
-from google.protobuf.json_format import MessageToJson, Parse
+def clear_directory(path: str):
+    for file_or_directory in glob.glob(os.path.join(path, "*")):
+        if os.path.isdir(file_or_directory):
+            shutil.rmtree(file_or_directory)
+        else:
+            os.remove(file_or_directory)
 
 
-root = os.path.dirname(os.path.realpath(__file__))
+def generate(whitelist: Set[str]):
+    path_whitelist = {os.path.realpath(e) for e in whitelist if os.path.exists(e)}
+    name_whitelist = {e for e in whitelist if not os.path.exists(e)}
+
+    test_case_names = set(get_directories(inputs_path))
+
+    for test_case_name in sorted(test_case_names):
+        test_case_input_path = os.path.realpath(
+            os.path.join(inputs_path, test_case_name)
+        )
+
+        if (
+            whitelist
+            and test_case_input_path not in path_whitelist
+            and test_case_name not in name_whitelist
+        ):
+            continue
+
+        test_case_output_path_reference = os.path.join(
+            output_path_reference, test_case_name
+        )
+        test_case_output_path_betterproto = os.path.join(
+            output_path_betterproto, test_case_name
+        )
+
+        print(f"Generating output for {test_case_name}")
+        os.makedirs(test_case_output_path_reference, exist_ok=True)
+        os.makedirs(test_case_output_path_betterproto, exist_ok=True)
+
+        clear_directory(test_case_output_path_reference)
+        clear_directory(test_case_output_path_betterproto)
+
+        protoc_reference(test_case_input_path, test_case_output_path_reference)
+        protoc_plugin(test_case_input_path, test_case_output_path_betterproto)
 
 
-def get_files(end: str) -> Generator[str, None, None]:
-    for r, dirs, files in os.walk(root):
-        for filename in [f for f in files if f.endswith(end)]:
-            yield os.path.join(r, filename)
+HELP = "\n".join(
+    [
+        "Usage: python generate.py",
+        "       python generate.py [DIRECTORIES or NAMES]",
+        "Generate python classes for standard tests.",
+        "",
+        "DIRECTORIES    One or more relative or absolute directories of test-cases to generate classes for.",
+        "               python generate.py inputs/bool inputs/double inputs/enum",
+        "",
+        "NAMES          One or more test-case names to generate classes for.",
+        "               python generate.py bool double enums",
+    ]
+)
 
 
-def get_base(filename: str) -> str:
-    return os.path.splitext(os.path.basename(filename))[0]
+def main():
+    if set(sys.argv).intersection({"-h", "--help"}):
+        print(HELP)
+        return
+    whitelist = set(sys.argv[1:])
 
-
-def ensure_ext(filename: str, ext: str) -> str:
-    if not filename.endswith(ext):
-        return filename + ext
-    return filename
+    generate(whitelist)
 
 
 if __name__ == "__main__":
-    os.chdir(root)
-
-    if len(sys.argv) > 1:
-        proto_files = [ensure_ext(f, ".proto") for f in sys.argv[1:]]
-        bases = {get_base(f) for f in proto_files}
-        json_files = [
-            f for f in get_files(".json") if get_base(f).split("-")[0] in bases
-        ]
-    else:
-        proto_files = get_files(".proto")
-        json_files = get_files(".json")
-
-    for filename in proto_files:
-        print(f"Generating code for {os.path.basename(filename)}")
-        subprocess.run(
-            f"protoc --python_out=. {os.path.basename(filename)}", shell=True
-        )
-        subprocess.run(
-            f"protoc --plugin=protoc-gen-custom=../plugin.py --custom_out=. {os.path.basename(filename)}",
-            shell=True,
-        )
-
-    for filename in json_files:
-        # Reset the internal symbol database so we can import the `Test` message
-        # multiple times. Ugh.
-        sym = symbol_database.Default()
-        sym.pool = DescriptorPool()
-
-        parts = get_base(filename).split("-")
-        out = filename.replace(".json", ".bin")
-        print(f"Using {parts[0]}_pb2 to generate {os.path.basename(out)}")
-
-        imported = importlib.import_module(f"{parts[0]}_pb2")
-        input_json = open(filename).read()
-        parsed = Parse(input_json, imported.Test())
-        serialized = parsed.SerializeToString()
-        preserve = "casing" not in filename
-        serialized_json = MessageToJson(parsed, preserving_proto_field_name=preserve)
-
-        s_loaded = json.loads(serialized_json)
-        in_loaded = json.loads(input_json)
-
-        if s_loaded != in_loaded:
-            raise AssertionError("Expected JSON to be equal:", s_loaded, in_loaded)
-
-        open(out, "wb").write(serialized)
+    main()

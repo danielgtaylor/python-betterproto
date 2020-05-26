@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "parent_package_message.proto";
+
+package parent.child;
+
+// Tests generated imports when a message refers to a message defined in its parent package
+
+message Test {
+  ParentPackageMessage message_implicit = 1;
+  parent.ParentPackageMessage message_explicit = 2;
+}

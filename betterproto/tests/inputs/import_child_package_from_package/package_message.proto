@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "child.proto";
+
+package package;
+
+message PackageMessage {
+    package.childpackage.ChildMessage c = 1;
+}

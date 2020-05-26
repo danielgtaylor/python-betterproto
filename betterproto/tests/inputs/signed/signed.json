@@ -1,0 +1,6 @@
+{
+  "signed32": 150,
+  "negative32": -150,
+  "string64": "150",
+  "negative64": "-150"
+}

@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import itertools
-import json
 import os.path
-import re
 import sys
 import textwrap
-from typing import Any, List, Tuple
+from collections import defaultdict
+from typing import Dict, List, Optional, Type
 
 try:
     import black
@@ -24,44 +23,51 @@ from google.protobuf.descriptor_pb2 import (
     DescriptorProto,
     EnumDescriptorProto,
     FieldDescriptorProto,
-    FileDescriptorProto,
-    ServiceDescriptorProto,
 )
 
 from betterproto.casing import safe_snake_case
 
+import google.protobuf.wrappers_pb2 as google_wrappers
 
-WRAPPER_TYPES = {
-    "google.protobuf.DoubleValue": "float",
-    "google.protobuf.FloatValue": "float",
-    "google.protobuf.Int64Value": "int",
-    "google.protobuf.UInt64Value": "int",
-    "google.protobuf.Int32Value": "int",
-    "google.protobuf.UInt32Value": "int",
-    "google.protobuf.BoolValue": "bool",
-    "google.protobuf.StringValue": "str",
-    "google.protobuf.BytesValue": "bytes",
-}
+WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(lambda: None, {
+    'google.protobuf.DoubleValue': google_wrappers.DoubleValue,
+    'google.protobuf.FloatValue': google_wrappers.FloatValue,
+    'google.protobuf.Int64Value': google_wrappers.Int64Value,
+    'google.protobuf.UInt64Value': google_wrappers.UInt64Value,
+    'google.protobuf.Int32Value': google_wrappers.Int32Value,
+    'google.protobuf.UInt32Value': google_wrappers.UInt32Value,
+    'google.protobuf.BoolValue': google_wrappers.BoolValue,
+    'google.protobuf.StringValue': google_wrappers.StringValue,
+    'google.protobuf.BytesValue': google_wrappers.BytesValue,
+})
 
 
-def get_ref_type(package: str, imports: set, type_name: str) -> str:
+def get_ref_type(package: str, imports: set, type_name: str, unwrap: bool = True) -> str:
     """
     Return a Python type name for a proto type reference. Adds the import if
-    necessary.
+    necessary. Unwraps well known type if required.
     """
     # If the package name is a blank string, then this should still work
     # because by convention packages are lowercase and message/enum types are
     # pascal-cased. May require refactoring in the future.
     type_name = type_name.lstrip(".")
 
-    if type_name in WRAPPER_TYPES:
-        return f"Optional[{WRAPPER_TYPES[type_name]}]"
+    # Check if type is wrapper.
+    wrapper_class = WRAPPER_TYPES[type_name]
 
-    if type_name == "google.protobuf.Duration":
-        return "timedelta"
+    if unwrap:
+        if wrapper_class:
+            wrapped_type = type(wrapper_class().value)
+            return f"Optional[{wrapped_type.__name__}]"
 
-    if type_name == "google.protobuf.Timestamp":
-        return "datetime"
+        if type_name == "google.protobuf.Duration":
+            return "timedelta"
+
+        if type_name == "google.protobuf.Timestamp":
+            return "datetime"
+    elif wrapper_class:
+        imports.add(f"from {wrapper_class.__module__} import {wrapper_class.__name__}")
+        return f"{wrapper_class.__name__}"
 
     if type_name.startswith(package):
         parts = type_name.lstrip(package).lstrip(".").split(".")
@@ -122,7 +128,7 @@ def get_py_zero(type_num: int) -> str:
 
 
 def traverse(proto_file):
-    def _traverse(path, items, prefix = ''):
+    def _traverse(path, items, prefix=""):
         for i, item in enumerate(items):
             # Adjust the name since we flatten the heirarchy.
             item.name = next_prefix = prefix + item.name
@@ -379,7 +385,7 @@ def generate_code(request, response):
                             ).strip('"'),
                             "input_message": input_message,
                             "output": get_ref_type(
-                                package, output["imports"], method.output_type
+                                package, output["imports"], method.output_type, unwrap=False
                             ).strip('"'),
                             "client_streaming": method.client_streaming,
                             "server_streaming": method.server_streaming,

@@ -256,7 +256,7 @@ def test_to_dict_default_values():
         some_double: float = betterproto.double_field(2)
         some_message: TestChildMessage = betterproto.message_field(3)
 
-    test = TestParentMessage().from_dict({"someInt": 0, "someDouble": 1.2,})
+    test = TestParentMessage().from_dict({"someInt": 0, "someDouble": 1.2})
 
     assert test.to_dict(include_default_values=True) == {
         "someInt": 0,

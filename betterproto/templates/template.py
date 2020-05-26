@@ -63,7 +63,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 
     {% endif %}
     {% for method in service.methods %}
-    async def {{ method.py_name }}(self{% if method.input_message and method.input_message.properties %}, *, {% for field in method.input_message.properties %}{{ field.name }}: {% if field.zero == "None" and not field.type.startswith("Optional[") %}Optional[{{ field.type }}]{% else %}{{ field.type }}{% endif %} = {{ field.zero }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) -> {% if method.server_streaming %}AsyncGenerator[{{ method.output }}, None]{% else %}{{ method.output }}{% endif %}:
+    async def {{ method.py_name }}(self{% if method.input_message and method.input_message.properties %}, *, {% for field in method.input_message.properties %}{{ field.py_name }}: {% if field.zero == "None" and not field.type.startswith("Optional[") %}Optional[{{ field.type }}]{% else %}{{ field.type }}{% endif %} = {{ field.zero }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) -> {% if method.server_streaming %}AsyncGenerator[{{ method.output }}, None]{% else %}{{ method.output }}{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
@@ -71,10 +71,10 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
         request = {{ method.input }}()
         {% for field in method.input_message.properties %}
             {% if field.field_type == 'message' %}
-        if {{ field.name }} is not None:
-            request.{{ field.name }} = {{ field.name }}
+        if {{ field.py_name }} is not None:
+            request.{{ field.py_name }} = {{ field.py_name }}
             {% else %}
-        request.{{ field.name }} = {{ field.name }}
+        request.{{ field.py_name }} = {{ field.py_name }}
             {% endif %}
         {% endfor %}
 

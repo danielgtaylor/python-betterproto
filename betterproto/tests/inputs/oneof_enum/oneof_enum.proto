@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message Test {
+  oneof action {
+    Signal signal = 1;
+    Move move = 2;
+  }
+}
+
+enum Signal {
+  PASS = 0;
+  RESIGN = 1;
+}
+
+message Move {
+  int32 x = 1;
+  int32 y = 2;
+}

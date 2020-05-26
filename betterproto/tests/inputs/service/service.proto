@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package service;
+
+message DoThingRequest {
+  int32 iterations = 1;
+}
+
+message DoThingResponse {
+  int32 successfulIterations = 1;
+}
+
+service Test {
+  rpc DoThing (DoThingRequest) returns (DoThingResponse);
+}

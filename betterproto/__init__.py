@@ -11,10 +11,12 @@ from typing import (
     Any,
     AsyncGenerator,
     Callable,
+    Collection,
     Dict,
     Generator,
     Iterable,
     List,
+    Mapping,
     Optional,
     SupportsBytes,
     Tuple,
@@ -25,7 +27,7 @@ from typing import (
     TYPE_CHECKING,
 )
 
-import grpclib.client
+
 import grpclib.const
 import stringcase
 
@@ -33,6 +35,8 @@ from .casing import safe_snake_case
 
 if TYPE_CHECKING:
     from grpclib._protocols import IProtoMessage
+    from grpclib.client import Channel
+    from grpclib.metadata import Deadline
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
     # Apply backport of datetime.fromisoformat from 3.7
@@ -118,7 +122,11 @@ WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
 
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
-DATETIME_ZERO = datetime(1970, 1, 1, tzinfo=timezone.utc)
+def datetime_default_gen():
+    return datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+
+DATETIME_ZERO = datetime_default_gen()
 
 
 class Casing(enum.Enum):
@@ -426,6 +434,63 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
 T = TypeVar("T", bound="Message")
 
 
+class ProtoClassMetadata:
+    cls: Type["Message"]
+
+    def __init__(self, cls: Type["Message"]):
+        self.cls = cls
+        by_field = {}
+        by_group = {}
+
+        for field in dataclasses.fields(cls):
+            meta = FieldMetadata.get(field)
+
+            if meta.group:
+                # This is part of a one-of group.
+                by_field[field.name] = meta.group
+
+                by_group.setdefault(meta.group, set()).add(field)
+
+        self.oneof_group_by_field = by_field
+        self.oneof_field_by_group = by_group
+
+        self.init_default_gen()
+        self.init_cls_by_field()
+
+    def init_default_gen(self):
+        default_gen = {}
+
+        for field in dataclasses.fields(self.cls):
+            meta = FieldMetadata.get(field)
+            default_gen[field.name] = self.cls._get_field_default_gen(field, meta)
+
+        self.default_gen = default_gen
+
+    def init_cls_by_field(self):
+        field_cls = {}
+
+        for field in dataclasses.fields(self.cls):
+            meta = FieldMetadata.get(field)
+            if meta.proto_type == TYPE_MAP:
+                assert meta.map_types
+                kt = self.cls._cls_for(field, index=0)
+                vt = self.cls._cls_for(field, index=1)
+                Entry = dataclasses.make_dataclass(
+                    "Entry",
+                    [
+                        ("key", kt, dataclass_field(1, meta.map_types[0])),
+                        ("value", vt, dataclass_field(2, meta.map_types[1])),
+                    ],
+                    bases=(Message,),
+                )
+                field_cls[field.name] = Entry
+                field_cls[field.name + ".value"] = vt
+            else:
+                field_cls[field.name] = self.cls._cls_for(field)
+
+        self.cls_by_field = field_cls
+
+
 class Message(ABC):
     """
     A protobuf message base class. Generated code will inherit from this and
@@ -443,17 +508,12 @@ class Message(ABC):
 
         # Set a default value for each field in the class after `__init__` has
         # already been run.
-        group_map: Dict[str, dict] = {"fields": {}, "groups": {}}
+        group_map: Dict[str, dataclasses.Field] = {}
         for field in dataclasses.fields(self):
             meta = FieldMetadata.get(field)
 
             if meta.group:
-                # This is part of a one-of group.
-                group_map["fields"][field.name] = meta.group
-
-                if meta.group not in group_map["groups"]:
-                    group_map["groups"][meta.group] = {"current": None, "fields": set()}
-                group_map["groups"][meta.group]["fields"].add(field)
+                group_map.setdefault(meta.group)
 
             if getattr(self, field.name) != PLACEHOLDER:
                 # Skip anything not set to the sentinel value
@@ -461,7 +521,7 @@ class Message(ABC):
 
                 if meta.group:
                     # This was set, so make it the selected value of the one-of.
-                    group_map["groups"][meta.group]["current"] = field
+                    group_map[meta.group] = field
 
                 continue
 
@@ -477,18 +537,32 @@ class Message(ABC):
             # Track when a field has been set.
             self.__dict__["_serialized_on_wire"] = True
 
-        if attr in getattr(self, "_group_map", {}).get("fields", {}):
-            group = self._group_map["fields"][attr]
-            for field in self._group_map["groups"][group]["fields"]:
-                if field.name == attr:
-                    self._group_map["groups"][group]["current"] = field
-                else:
-                    super().__setattr__(
-                        field.name,
-                        self._get_field_default(field, FieldMetadata.get(field)),
-                    )
+        if hasattr(self, "_group_map"):  # __post_init__ had already run
+            if attr in self._betterproto.oneof_group_by_field:
+                group = self._betterproto.oneof_group_by_field[attr]
+                for field in self._betterproto.oneof_field_by_group[group]:
+                    if field.name == attr:
+                        self._group_map[group] = field
+                    else:
+                        super().__setattr__(
+                            field.name,
+                            self._get_field_default(field, FieldMetadata.get(field)),
+                        )
 
         super().__setattr__(attr, value)
+
+    @property
+    def _betterproto(self):
+        """
+        Lazy initialize metadata for each protobuf class.
+        It may be initialized multiple times in a multi-threaded environment,
+        but that won't affect the correctness.
+        """
+        meta = getattr(self.__class__, "_betterproto_meta", None)
+        if not meta:
+            meta = ProtoClassMetadata(self.__class__)
+            self.__class__._betterproto_meta = meta
+        return meta
 
     def __bytes__(self) -> bytes:
         """
@@ -508,7 +582,7 @@ class Message(ABC):
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
             selected_in_group = False
-            if meta.group and self._group_map["groups"][meta.group]["current"] == field:
+            if meta.group and self._group_map[meta.group] == field:
                 selected_in_group = True
 
             serialize_empty = False
@@ -560,47 +634,50 @@ class Message(ABC):
     # For compatibility with other libraries
     SerializeToString = __bytes__
 
-    def _type_hint(self, field_name: str) -> Type:
-        module = inspect.getmodule(self.__class__)
-        type_hints = get_type_hints(self.__class__, vars(module))
+    @classmethod
+    def _type_hint(cls, field_name: str) -> Type:
+        module = inspect.getmodule(cls)
+        type_hints = get_type_hints(cls, vars(module))
         return type_hints[field_name]
 
-    def _cls_for(self, field: dataclasses.Field, index: int = 0) -> Type:
+    @classmethod
+    def _cls_for(cls, field: dataclasses.Field, index: int = 0) -> Type:
         """Get the message class for a field from the type hints."""
-        cls = self._type_hint(field.name)
-        if hasattr(cls, "__args__") and index >= 0:
-            cls = cls.__args__[index]
-        return cls
+        field_cls = cls._type_hint(field.name)
+        if hasattr(field_cls, "__args__") and index >= 0:
+            field_cls = field_cls.__args__[index]
+        return field_cls
 
     def _get_field_default(self, field: dataclasses.Field, meta: FieldMetadata) -> Any:
-        t = self._type_hint(field.name)
+        return self._betterproto.default_gen[field.name]()
 
-        value: Any = 0
+    @classmethod
+    def _get_field_default_gen(cls, field: dataclasses.Field, meta: FieldMetadata) -> Any:
+        t = cls._type_hint(field.name)
+
         if hasattr(t, "__origin__"):
             if t.__origin__ in (dict, Dict):
                 # This is some kind of map (dict in Python).
-                value = {}
+                return dict
             elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
-                value = []
+                return list
             elif t.__origin__ == Union and t.__args__[1] == type(None):
                 # This is an optional (wrapped) field. For setting the default we
                 # really don't care what kind of field it is.
-                value = None
+                return type(None)
             else:
-                value = t()
+                return t
         elif issubclass(t, Enum):
             # Enums always default to zero.
-            value = 0
+            return int
         elif t == datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
-            value = DATETIME_ZERO
+            return datetime_default_gen
         else:
             # This is either a primitive scalar or another message type. Calling
             # it should result in its zero value.
-            value = t()
-
-        return value
+            return t
 
     def _postprocess_single(
         self, wire_type: int, meta: FieldMetadata, field: dataclasses.Field, value: Any
@@ -625,7 +702,7 @@ class Message(ABC):
             if meta.proto_type == TYPE_STRING:
                 value = value.decode("utf-8")
             elif meta.proto_type == TYPE_MESSAGE:
-                cls = self._cls_for(field)
+                cls = self._betterproto.cls_by_field[field.name]
 
                 if cls == datetime:
                     value = _Timestamp().parse(value).to_datetime()
@@ -639,20 +716,7 @@ class Message(ABC):
                     value = cls().parse(value)
                     value._serialized_on_wire = True
             elif meta.proto_type == TYPE_MAP:
-                # TODO: This is slow, use a cache to make it faster since each
-                #       key/value pair will recreate the class.
-                assert meta.map_types
-                kt = self._cls_for(field, index=0)
-                vt = self._cls_for(field, index=1)
-                Entry = dataclasses.make_dataclass(
-                    "Entry",
-                    [
-                        ("key", kt, dataclass_field(1, meta.map_types[0])),
-                        ("value", vt, dataclass_field(2, meta.map_types[1])),
-                    ],
-                    bases=(Message,),
-                )
-                value = Entry().parse(value)
+                value = self._betterproto.cls_by_field[field.name]().parse(value)
 
         return value
 
@@ -767,7 +831,7 @@ class Message(ABC):
                     else:
                         output[cased_name] = b64encode(v).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
-                    enum_values = list(self._cls_for(field))  # type: ignore
+                    enum_values = list(self._betterproto.cls_by_field[field.name])  # type: ignore
                     if isinstance(v, list):
                         output[cased_name] = [enum_values[e].name for e in v]
                     else:
@@ -793,7 +857,7 @@ class Message(ABC):
                     if meta.proto_type == "message":
                         v = getattr(self, field.name)
                         if isinstance(v, list):
-                            cls = self._cls_for(field)
+                            cls = self._betterproto.cls_by_field[field.name]
                             for i in range(len(value[key])):
                                 v.append(cls().from_dict(value[key][i]))
                         elif isinstance(v, datetime):
@@ -810,7 +874,7 @@ class Message(ABC):
                             v.from_dict(value[key])
                     elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                         v = getattr(self, field.name)
-                        cls = self._cls_for(field, index=1)
+                        cls = self._betterproto.cls_by_field[field.name + ".value"]
                         for k in value[key]:
                             v[k] = cls().from_dict(value[key][k])
                     else:
@@ -826,7 +890,7 @@ class Message(ABC):
                             else:
                                 v = b64decode(value[key])
                         elif meta.proto_type == TYPE_ENUM:
-                            enum_cls = self._cls_for(field)
+                            enum_cls = self._betterproto.cls_by_field[field.name]
                             if isinstance(v, list):
                                 v = [enum_cls.from_string(e) for e in v]
                             elif isinstance(v, str):
@@ -859,7 +923,7 @@ def serialized_on_wire(message: Message) -> bool:
 
 def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
     """Return the name and value of a message's one-of field group."""
-    field = message._group_map["groups"].get(group_name, {}).get("current")
+    field = message._group_map.get(group_name)
     if not field:
         return ("", None)
     return (field.name, getattr(message, field.name))
@@ -1000,20 +1064,57 @@ def _get_wrapper(proto_type: str) -> Type:
     }[proto_type]
 
 
+_Value = Union[str, bytes]
+_MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
+
+
 class ServiceStub(ABC):
     """
     Base class for async gRPC service stubs.
     """
 
-    def __init__(self, channel: grpclib.client.Channel) -> None:
+    def __init__(
+        self,
+        channel: "Channel",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional[_MetadataLike] = None,
+    ) -> None:
         self.channel = channel
+        self.timeout = timeout
+        self.deadline = deadline
+        self.metadata = metadata
+
+    def __resolve_request_kwargs(
+        self,
+        timeout: Optional[float],
+        deadline: Optional["Deadline"],
+        metadata: Optional[_MetadataLike],
+    ):
+        return {
+            "timeout": self.timeout if timeout is None else timeout,
+            "deadline": self.deadline if deadline is None else deadline,
+            "metadata": self.metadata if metadata is None else metadata,
+        }
 
     async def _unary_unary(
-        self, route: str, request: "IProtoMessage", response_type: Type[T]
+        self,
+        route: str,
+        request: "IProtoMessage",
+        response_type: Type[T],
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional[_MetadataLike] = None,
     ) -> T:
         """Make a unary request and return the response."""
         async with self.channel.request(
-            route, grpclib.const.Cardinality.UNARY_UNARY, type(request), response_type
+            route,
+            grpclib.const.Cardinality.UNARY_UNARY,
+            type(request),
+            response_type,
+            **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
             await stream.send_message(request, end=True)
             response = await stream.recv_message()
@@ -1021,11 +1122,22 @@ class ServiceStub(ABC):
             return response
 
     async def _unary_stream(
-        self, route: str, request: "IProtoMessage", response_type: Type[T]
+        self,
+        route: str,
+        request: "IProtoMessage",
+        response_type: Type[T],
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional[_MetadataLike] = None,
     ) -> AsyncGenerator[T, None]:
         """Make a unary request and return the stream response iterator."""
         async with self.channel.request(
-            route, grpclib.const.Cardinality.UNARY_STREAM, type(request), response_type
+            route,
+            grpclib.const.Cardinality.UNARY_STREAM,
+            type(request),
+            response_type,
+            **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
             await stream.send_message(request, end=True)
             async for message in stream:
