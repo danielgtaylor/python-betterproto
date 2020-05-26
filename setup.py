@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="betterproto",
-    version="1.2.3",
+    version="1.2.4",
     description="A better Protobuf / gRPC generator & library",
     long_description=open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
