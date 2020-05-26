@@ -5,14 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.4] - 2020-04-26
 
 - Enforce utf-8 for reading the readme in setup.py [#67](https://github.com/danielgtaylor/python-betterproto/pull/67)
-- Add intentionally failing test-cases for unimplemented bug-fixes [#55](https://github.com/danielgtaylor/python-betterproto/pull/55)
 - Only import types from grpclib when type checking [#52](https://github.com/danielgtaylor/python-betterproto/pull/52)
-- Re-organized test cases [#51](https://github.com/danielgtaylor/python-betterproto/pull/51)
 - Improve performance of serialize/deserialize by caching type information of fields in class [#46](https://github.com/danielgtaylor/python-betterproto/pull/46)
-- Adding basic support for client streaming [#45](https://github.com/danielgtaylor/python-betterproto/pull/45)
 - Support using Google's wrapper types as RPC output values [#40](https://github.com/danielgtaylor/python-betterproto/pull/40)
 - Fixes issue where protoc did not recognize plugin.py as win32 application [#38](https://github.com/danielgtaylor/python-betterproto/pull/38)
 - Fix services using non-pythonified field names [#34](https://github.com/danielgtaylor/python-betterproto/pull/34)
@@ -57,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[unreleased]: https://github.com/danielgtaylor/python-betterproto/compare/v1.2.3...HEAD
+[1.2.4]: https://github.com/danielgtaylor/python-betterproto/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/danielgtaylor/python-betterproto/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/danielgtaylor/python-betterproto/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/danielgtaylor/python-betterproto/compare/v1.2.0...v1.2.1
