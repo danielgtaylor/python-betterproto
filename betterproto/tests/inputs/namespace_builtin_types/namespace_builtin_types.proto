@@ -8,30 +8,31 @@ message Test {
     string float = 2;
     string complex = 3;
 
-    // https://docs.python.org/3/library/stdtypes.html#generator-types
-    string list = 10;
-    string tuple = 11;
-    string range = 12;
+    // https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
+    string list = 4;
+    string tuple = 5;
+    string range = 6;
 
     // https://docs.python.org/3/library/stdtypes.html#str
-    string str = 21;
+    string str = 7;
 
     // https://docs.python.org/3/library/stdtypes.html#bytearray-objects
-    string bytearray = 22;
+    string bytearray = 8;
 
     // https://docs.python.org/3/library/stdtypes.html#bytes-and-bytearray-operations
-    string bytes = 23;
+    string bytes = 9;
 
     // https://docs.python.org/3/library/stdtypes.html#memory-views
-    string memoryview = 24;
+    string memoryview = 10;
 
     // https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset
-    string set = 25;
-    string frozenset = 26;
+    string set = 11;
+    string frozenset = 12;
 
     // https://docs.python.org/3/library/stdtypes.html#dict
-    string map = 27;
+    string map = 13;
+    string dict = 14;
 
     // https://docs.python.org/3/library/stdtypes.html#boolean-values
-    string bool = 28;
+    string bool = 15;
 }
