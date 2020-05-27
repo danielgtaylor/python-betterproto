@@ -25,7 +25,7 @@ class TestCases:
     def __init__(self, path, services: Set[str], xfail: Set[str]):
         _all = set(get_directories(path))
         _services = services
-        _messages = _all - services
+        _messages = (_all - services) - {"__pycache__"}
         _messages_with_json = {
             test for test in _messages if get_test_case_json_data(test)
         }
