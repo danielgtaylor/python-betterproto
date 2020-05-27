@@ -16,7 +16,7 @@ setup(
     packages=find_packages(
         exclude=["tests", "*.tests", "*.tests.*", "output", "output.*"]
     ),
-    package_data={"betterproto": ["py.typed", "templates/template.py"]},
+    package_data={"betterproto": ["py.typed", "templates/template.py.j2"]},
     python_requires=">=3.6",
     install_requires=[
         'dataclasses; python_version<"3.7"',

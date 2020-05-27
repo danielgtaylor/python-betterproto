@@ -652,7 +652,9 @@ class Message(ABC):
         return self._betterproto.default_gen[field.name]()
 
     @classmethod
-    def _get_field_default_gen(cls, field: dataclasses.Field, meta: FieldMetadata) -> Any:
+    def _get_field_default_gen(
+        cls, field: dataclasses.Field, meta: FieldMetadata
+    ) -> Any:
         t = cls._type_hint(field.name)
 
         if hasattr(t, "__origin__"):
@@ -831,7 +833,9 @@ class Message(ABC):
                     else:
                         output[cased_name] = b64encode(v).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
-                    enum_values = list(self._betterproto.cls_by_field[field.name])  # type: ignore
+                    enum_values = list(
+                        self._betterproto.cls_by_field[field.name]
+                    )  # type: ignore
                     if isinstance(v, list):
                         output[cased_name] = [enum_values[e].name for e in v]
                     else:

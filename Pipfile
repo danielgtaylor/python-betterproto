@@ -10,7 +10,6 @@ isort = "*"
 pytest = "*"
 pytest-asyncio = "*"
 rope = "*"
-v = {editable = true,version = "*"}
 
 [packages]
 protobuf = "*"

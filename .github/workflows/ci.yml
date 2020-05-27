@@ -4,6 +4,24 @@ on: [push, pull_request]
 
 jobs:
 
+  check-formatting:
+    runs-on: ubuntu-latest
+
+    name: Consult black on python formatting
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+      - uses: dschep/install-pipenv-action@v1
+      - name: Install dependencies
+        run: |
+          pipenv install --dev --python ${pythonLocation}/python
+      - name: Run black
+        run: |
+          pipenv run black . --check --diff --exclude tests/output_
+
   run-tests:
     runs-on: ubuntu-latest
 
