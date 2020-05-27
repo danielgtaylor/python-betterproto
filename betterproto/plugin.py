@@ -183,7 +183,7 @@ def generate_code(request, response):
         lstrip_blocks=True,
         loader=jinja2.FileSystemLoader("%s/templates/" % os.path.dirname(__file__)),
     )
-    template = env.get_template("template.py")
+    template = env.get_template("template.py.j2")
 
     output_map = {}
     for proto_file in request.proto_file:
