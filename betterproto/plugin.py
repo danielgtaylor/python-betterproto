@@ -29,20 +29,25 @@ from betterproto.casing import safe_snake_case
 
 import google.protobuf.wrappers_pb2 as google_wrappers
 
-WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(lambda: None, {
-    'google.protobuf.DoubleValue': google_wrappers.DoubleValue,
-    'google.protobuf.FloatValue': google_wrappers.FloatValue,
-    'google.protobuf.Int64Value': google_wrappers.Int64Value,
-    'google.protobuf.UInt64Value': google_wrappers.UInt64Value,
-    'google.protobuf.Int32Value': google_wrappers.Int32Value,
-    'google.protobuf.UInt32Value': google_wrappers.UInt32Value,
-    'google.protobuf.BoolValue': google_wrappers.BoolValue,
-    'google.protobuf.StringValue': google_wrappers.StringValue,
-    'google.protobuf.BytesValue': google_wrappers.BytesValue,
-})
+WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
+    lambda: None,
+    {
+        "google.protobuf.DoubleValue": google_wrappers.DoubleValue,
+        "google.protobuf.FloatValue": google_wrappers.FloatValue,
+        "google.protobuf.Int64Value": google_wrappers.Int64Value,
+        "google.protobuf.UInt64Value": google_wrappers.UInt64Value,
+        "google.protobuf.Int32Value": google_wrappers.Int32Value,
+        "google.protobuf.UInt32Value": google_wrappers.UInt32Value,
+        "google.protobuf.BoolValue": google_wrappers.BoolValue,
+        "google.protobuf.StringValue": google_wrappers.StringValue,
+        "google.protobuf.BytesValue": google_wrappers.BytesValue,
+    },
+)
 
 
-def get_ref_type(package: str, imports: set, type_name: str, unwrap: bool = True) -> str:
+def get_ref_type(
+    package: str, imports: set, type_name: str, unwrap: bool = True
+) -> str:
     """
     Return a Python type name for a proto type reference. Adds the import if
     necessary. Unwraps well known type if required.
@@ -385,7 +390,10 @@ def generate_code(request, response):
                             ).strip('"'),
                             "input_message": input_message,
                             "output": get_ref_type(
-                                package, output["imports"], method.output_type, unwrap=False
+                                package,
+                                output["imports"],
+                                method.output_type,
+                                unwrap=False,
                             ).strip('"'),
                             "client_streaming": method.client_streaming,
                             "server_streaming": method.server_streaming,

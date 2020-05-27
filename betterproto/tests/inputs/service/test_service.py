@@ -34,7 +34,7 @@ class ExampleService:
                 grpclib.const.Cardinality.UNARY_UNARY,
                 DoThingRequest,
                 DoThingResponse,
-            ),
+            )
         }
 
 
