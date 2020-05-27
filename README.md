@@ -307,6 +307,18 @@ $ pipenv shell
 $ pip install -e .
 ```
 
+### Code style
+
+This project enforces [black](https://github.com/psf/black) python code formatting.
+
+Before commiting changes run:
+
+```bash
+pipenv run black .
+```
+
+To avoid merge conflicts later, non-black formatted python code will fail in CI.
+
 ### Tests
 
 There are two types of tests:
@@ -324,7 +336,7 @@ Adding a standard test case is easy.
 
 It will be picked up automatically when you run the tests.
 
-- See also: [Standard Tests Development Guide](betterproto/tests/README.md) 
+- See also: [Standard Tests Development Guide](betterproto/tests/README.md)
 
 #### Custom tests
 
