@@ -49,6 +49,8 @@ WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
 WELLKNOWN_TYPES: Dict[str, Optional[Type]] = defaultdict(lambda: None, {
     'google.protobuf.Empty': google.protobuf.empty_pb2.Empty,
     'google.protobuf.Struct': google.protobuf.struct_pb2.Struct,
+    'google.protobuf.Value': google.protobuf.struct_pb2.Value,
+    'google.protobuf.ListValue': google.protobuf.struct_pb2.ListValue,
 })
 
 

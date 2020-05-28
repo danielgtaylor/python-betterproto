@@ -10,7 +10,7 @@ tests = {
     "oneof_enum",  # 63
     "casing_message_field_uppercase",  # 11
     "namespace_keywords",  # 70
-    "namespace_builtin_types"  # 53
+    "namespace_builtin_types",  # 53
 }
 
 services = {

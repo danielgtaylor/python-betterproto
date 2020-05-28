@@ -6,6 +6,8 @@ import "google/protobuf/struct.proto";
 service Test {
     rpc GetEmpty (RequestMessage) returns (google.protobuf.Empty);
     rpc GetStruct (RequestMessage) returns (google.protobuf.Struct);
+    rpc GetListValue (RequestMessage) returns (google.protobuf.ListValue);
+    rpc GetValue (RequestMessage) returns (google.protobuf.Value);
 }
 
 message RequestMessage {
