@@ -28,6 +28,8 @@ from google.protobuf.descriptor_pb2 import (
 from betterproto.casing import safe_snake_case
 
 import google.protobuf.wrappers_pb2 as google_wrappers
+import google.protobuf.empty_pb2
+import google.protobuf.struct_pb2
 
 WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
     lambda: None,
@@ -43,6 +45,11 @@ WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
         "google.protobuf.BytesValue": google_wrappers.BytesValue,
     },
 )
+
+WELLKNOWN_TYPES: Dict[str, Optional[Type]] = defaultdict(lambda: None, {
+    'google.protobuf.Empty': google.protobuf.empty_pb2.Empty,
+    'google.protobuf.Struct': google.protobuf.struct_pb2.Struct,
+})
 
 
 def get_ref_type(
@@ -81,6 +88,13 @@ def get_ref_type(
             # foo.bar_thing => FooBarThing
             cased = [stringcase.pascalcase(part) for part in parts]
             type_name = f'"{"".join(cased)}"'
+
+    if type_name in WELLKNOWN_TYPES:
+        type_module = WELLKNOWN_TYPES[type_name].__module__
+        type_name = WELLKNOWN_TYPES[type_name].__name__
+        type_module_alias = safe_snake_case(type_module)
+        imports.add(f"import {type_module} as {type_module_alias}")
+        return f'{type_module_alias}.{type_name}'
 
     if "." in type_name:
         # This is imported from another package. No need
