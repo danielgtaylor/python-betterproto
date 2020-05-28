@@ -87,4 +87,4 @@ betterproto/tests/test_inputs.py ..x...x..x...x.X........xx........x.....x......
 - `x` &mdash; XFAIL: expected failure
 - `X` &mdash; XPASS: expected failure, but still passed
 
-Test cases marked for expected failure are declared in [inputs/xfail.py](inputs.xfail.py)
+Test cases marked for expected failure are declared in [inputs/config.py](inputs/config.py)

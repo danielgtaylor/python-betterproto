@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+// Tests that messages may contain fields that are Python keywords
+//
+// Generated with Python 3.7.6
+// print('\n'.join(f'string {k} = {i+1};' for i,k in enumerate(keyword.kwlist)))
+
+message Test {
+    string False = 1;
+    string None = 2;
+    string True = 3;
+    string and = 4;
+    string as = 5;
+    string assert = 6;
+    string async = 7;
+    string await = 8;
+    string break = 9;
+    string class = 10;
+    string continue = 11;
+    string def = 12;
+    string del = 13;
+    string elif = 14;
+    string else = 15;
+    string except = 16;
+    string finally = 17;
+    string for = 18;
+    string from = 19;
+    string global = 20;
+    string if = 21;
+    string import = 22;
+    string in = 23;
+    string is = 24;
+    string lambda = 25;
+    string nonlocal = 26;
+    string not = 27;
+    string or = 28;
+    string pass = 29;
+    string raise = 30;
+    string return = 31;
+    string try = 32;
+    string while = 33;
+    string with = 34;
+    string yield = 35;
+}

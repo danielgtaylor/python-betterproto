@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+// Tests that messages may contain fields with names that are python types
+
+message Test {
+    // https://docs.python.org/2/library/stdtypes.html#numeric-types-int-float-long-complex
+    string int = 1;
+    string float = 2;
+    string complex = 3;
+
+    // https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
+    string list = 4;
+    string tuple = 5;
+    string range = 6;
+
+    // https://docs.python.org/3/library/stdtypes.html#str
+    string str = 7;
+
+    // https://docs.python.org/3/library/stdtypes.html#bytearray-objects
+    string bytearray = 8;
+
+    // https://docs.python.org/3/library/stdtypes.html#bytes-and-bytearray-operations
+    string bytes = 9;
+
+    // https://docs.python.org/3/library/stdtypes.html#memory-views
+    string memoryview = 10;
+
+    // https://docs.python.org/3/library/stdtypes.html#set-types-set-frozenset
+    string set = 11;
+    string frozenset = 12;
+
+    // https://docs.python.org/3/library/stdtypes.html#dict
+    string map = 13;
+    string dict = 14;
+
+    // https://docs.python.org/3/library/stdtypes.html#boolean-values
+    string bool = 15;
+}
