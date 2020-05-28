@@ -46,12 +46,15 @@ WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
     },
 )
 
-WELLKNOWN_TYPES: Dict[str, Optional[Type]] = defaultdict(lambda: None, {
-    'google.protobuf.Empty': google.protobuf.empty_pb2.Empty,
-    'google.protobuf.Struct': google.protobuf.struct_pb2.Struct,
-    'google.protobuf.Value': google.protobuf.struct_pb2.Value,
-    'google.protobuf.ListValue': google.protobuf.struct_pb2.ListValue,
-})
+WELLKNOWN_TYPES: Dict[str, Optional[Type]] = defaultdict(
+    lambda: None,
+    {
+        "google.protobuf.Empty": google.protobuf.empty_pb2.Empty,
+        "google.protobuf.Struct": google.protobuf.struct_pb2.Struct,
+        "google.protobuf.Value": google.protobuf.struct_pb2.Value,
+        "google.protobuf.ListValue": google.protobuf.struct_pb2.ListValue,
+    },
+)
 
 
 def get_ref_type(
@@ -96,7 +99,7 @@ def get_ref_type(
         type_name = WELLKNOWN_TYPES[type_name].__name__
         type_module_alias = safe_snake_case(type_module)
         imports.add(f"import {type_module} as {type_module_alias}")
-        return f'{type_module_alias}.{type_name}'
+        return f"{type_module_alias}.{type_name}"
 
     if "." in type_name:
         # This is imported from another package. No need
