@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-from collections import defaultdict
 import itertools
 import os.path
+import re
 import stringcase
 import sys
 import textwrap
+from collections import defaultdict
 from typing import Dict, List, Optional, Type
 from betterproto.casing import safe_snake_case
+import betterproto
 
 try:
     # betterproto[compiler] specific dependencies
@@ -259,11 +261,13 @@ def generate_code(request, response):
                         field_type = f.Type.Name(f.type).lower()[5:]
 
                         field_wraps = ""
-                        if f.type_name.startswith(
-                            ".google.protobuf"
-                        ) and f.type_name.endswith("Value"):
-                            w = f.type_name.split(".").pop()[:-5].upper()
-                            field_wraps = f"betterproto.TYPE_{w}"
+                        match_wrapper = re.match(
+                            "\\.google\\.protobuf\\.(.+)Value", f.type_name
+                        )
+                        if match_wrapper:
+                            wrapped_type = "TYPE_" + match_wrapper.group(1).upper()
+                            if wrapped_type in dir(betterproto):
+                                field_wraps = f"betterproto.{wrapped_type}"
 
                         map_types = None
                         if f.type == 11:
