@@ -88,6 +88,14 @@ def get_ref_type(
             cased = [stringcase.pascalcase(part) for part in parts]
             type_name = f'"{"".join(cased)}"'
 
+    # Use precompiled classes for google.protobuf.* objects
+    if type_name.startswith("google.protobuf.") and type_name.count(".") == 2:
+        type_name = type_name.rsplit(".", maxsplit=1)[1]
+        import_package = "betterproto.lib.google.protobuf"
+        import_alias = safe_snake_case(import_package)
+        imports.add(f"import {import_package} as {import_alias}")
+        return f"{import_alias}.{type_name}"
+
     if "." in type_name:
         # This is imported from another package. No need
         # to use a forward ref and we need to add the import.

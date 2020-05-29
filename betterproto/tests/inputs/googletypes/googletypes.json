@@ -1,5 +1,7 @@
 {
   "maybe": false,
   "ts": "1972-01-01T10:00:20.021Z",
-  "duration": "1.200s"
+  "duration": "1.200s",
+  "important": 10,
+  "empty": {}
 }
