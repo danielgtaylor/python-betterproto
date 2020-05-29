@@ -8,7 +8,6 @@ tests = {
     "import_circular_dependency",  # failing because of other bugs now
     "import_packages_same_name",  # 25
     "oneof_enum",  # 63
-    "googletypes_service_returns_empty",  # 9
     "casing_message_field_uppercase",  # 11
     "namespace_keywords",  # 70
     "namespace_builtin_types",  # 53
@@ -22,4 +21,5 @@ services = {
     "service",
     "import_service_input_message",
     "googletypes_service_returns_empty",
+    "googletypes_service_returns_googletype",
 }
