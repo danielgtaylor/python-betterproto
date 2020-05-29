@@ -12,6 +12,8 @@ tests = {
     "casing_message_field_uppercase",  # 11
     "namespace_keywords",  # 70
     "namespace_builtin_types",  # 53
+    "googletypes_struct",  # 9
+    "googletypes_value",  # 9
 }
 
 services = {

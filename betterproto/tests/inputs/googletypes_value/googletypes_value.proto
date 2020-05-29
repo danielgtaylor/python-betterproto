@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/struct.proto";
+
+// Tests that fields of type google.protobuf.Value can contain arbitrary JSON-values.
+
+message Test {
+  google.protobuf.Value value1 = 1;
+  google.protobuf.Value value2 = 2;
+  google.protobuf.Value value3 = 3;
+  google.protobuf.Value value4 = 4;
+  google.protobuf.Value value5 = 5;
+}
