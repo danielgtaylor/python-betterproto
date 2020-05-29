@@ -182,6 +182,9 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
 
 
 def generate_code(request, response):
+    plugin_options = os.environ.get("BETTERPROTO_OPTS")
+    plugin_options = plugin_options.split(" ") if plugin_options else []
+
     env = jinja2.Environment(
         trim_blocks=True,
         lstrip_blocks=True,
@@ -192,7 +195,8 @@ def generate_code(request, response):
     output_map = {}
     for proto_file in request.proto_file:
         out = proto_file.package
-        if out == "google.protobuf":
+
+        if out == "google.protobuf" and "INCLUDE_GOOGLE" not in plugin_options:
             continue
 
         if not out:
