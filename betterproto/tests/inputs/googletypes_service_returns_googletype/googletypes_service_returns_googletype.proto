@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+
+// Tests that imports are generated correctly when returning Google well-known types
+
+service Test {
+    rpc GetEmpty (RequestMessage) returns (google.protobuf.Empty);
+    rpc GetStruct (RequestMessage) returns (google.protobuf.Struct);
+    rpc GetListValue (RequestMessage) returns (google.protobuf.ListValue);
+    rpc GetValue (RequestMessage) returns (google.protobuf.Value);
+}
+
+message RequestMessage {
+}
