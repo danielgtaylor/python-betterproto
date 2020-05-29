@@ -8,6 +8,7 @@ class MockChannel(Channel):
     def __init__(self, responses=None) -> None:
         self.responses = responses if responses else []
         self.requests = []
+        self._loop = None
 
     def request(self, route, cardinality, request, response_type, **kwargs):
         self.requests.append(
