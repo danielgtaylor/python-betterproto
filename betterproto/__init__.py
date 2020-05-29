@@ -1016,63 +1016,18 @@ class _WrappedMessage(Message):
         return self
 
 
-@dataclasses.dataclass
-class _BoolValue(_WrappedMessage):
-    value: bool = bool_field(1)
-
-
-@dataclasses.dataclass
-class _Int32Value(_WrappedMessage):
-    value: int = int32_field(1)
-
-
-@dataclasses.dataclass
-class _UInt32Value(_WrappedMessage):
-    value: int = uint32_field(1)
-
-
-@dataclasses.dataclass
-class _Int64Value(_WrappedMessage):
-    value: int = int64_field(1)
-
-
-@dataclasses.dataclass
-class _UInt64Value(_WrappedMessage):
-    value: int = uint64_field(1)
-
-
-@dataclasses.dataclass
-class _FloatValue(_WrappedMessage):
-    value: float = float_field(1)
-
-
-@dataclasses.dataclass
-class _DoubleValue(_WrappedMessage):
-    value: float = double_field(1)
-
-
-@dataclasses.dataclass
-class _StringValue(_WrappedMessage):
-    value: str = string_field(1)
-
-
-@dataclasses.dataclass
-class _BytesValue(_WrappedMessage):
-    value: bytes = bytes_field(1)
-
-
 def _get_wrapper(proto_type: str) -> Type:
     """Get the wrapper message class for a wrapped type."""
     return {
-        TYPE_BOOL: _BoolValue,
-        TYPE_INT32: _Int32Value,
-        TYPE_UINT32: _UInt32Value,
-        TYPE_INT64: _Int64Value,
-        TYPE_UINT64: _UInt64Value,
-        TYPE_FLOAT: _FloatValue,
-        TYPE_DOUBLE: _DoubleValue,
-        TYPE_STRING: _StringValue,
-        TYPE_BYTES: _BytesValue,
+        TYPE_BOOL: BoolValue,
+        TYPE_INT32: Int32Value,
+        TYPE_UINT32: UInt32Value,
+        TYPE_INT64: Int64Value,
+        TYPE_UINT64: UInt64Value,
+        TYPE_FLOAT: FloatValue,
+        TYPE_DOUBLE: DoubleValue,
+        TYPE_STRING: StringValue,
+        TYPE_BYTES: BytesValue,
     }[proto_type]
 
 
@@ -1154,3 +1109,16 @@ class ServiceStub(ABC):
             await stream.send_message(request, end=True)
             async for message in stream:
                 yield message
+
+
+from .lib.google.protobuf import (
+    BoolValue,
+    BytesValue,
+    DoubleValue,
+    FloatValue,
+    Int32Value,
+    Int64Value,
+    StringValue,
+    UInt32Value,
+    UInt64Value,
+)
