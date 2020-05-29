@@ -123,7 +123,6 @@ def test_service_can_be_instantiated(test_data: TestData) -> None:
     plugin_module.TestStub(MockChannel())
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
