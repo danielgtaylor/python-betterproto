@@ -1,33 +1,37 @@
 #!/usr/bin/env python
 
+from collections import defaultdict
 import itertools
 import os.path
+import stringcase
 import sys
 import textwrap
-from collections import defaultdict
 from typing import Dict, List, Optional, Type
+from betterproto.casing import safe_snake_case
 
 try:
+    # betterproto[compiler] specific dependencies
     import black
-except ImportError:
+    from google.protobuf.compiler import plugin_pb2 as plugin
+    from google.protobuf.descriptor_pb2 import (
+        DescriptorProto,
+        EnumDescriptorProto,
+        FieldDescriptorProto,
+    )
+    import google.protobuf.wrappers_pb2 as google_wrappers
+    import jinja2
+except ImportError as err:
+    missing_import = err.args[0][17:-1]
     print(
-        "Unable to import `black` formatter. Did you install the compiler feature with `pip install betterproto[compiler]`?"
+        "\033[31m"
+        f"Unable to import `{missing_import}` from betterproto plugin! "
+        "Please ensure that you've installed betterproto as "
+        '`pip install "betterproto[compiler]"` so that compiler dependencies '
+        "are included."
+        "\033[0m"
     )
     raise SystemExit(1)
 
-import jinja2
-import stringcase
-
-from google.protobuf.compiler import plugin_pb2 as plugin
-from google.protobuf.descriptor_pb2 import (
-    DescriptorProto,
-    EnumDescriptorProto,
-    FieldDescriptorProto,
-)
-
-from betterproto.casing import safe_snake_case
-
-import google.protobuf.wrappers_pb2 as google_wrappers
 
 WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
     lambda: None,
