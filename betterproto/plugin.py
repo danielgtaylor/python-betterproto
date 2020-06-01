@@ -198,7 +198,7 @@ def generate_code(request, response):
 
                         field_wraps = ""
                         match_wrapper = re.match(
-                            "\\.google\\.protobuf\\.(.+)Value", f.type_name
+                            r"\.google\.protobuf\.(.+)Value", f.type_name
                         )
                         if match_wrapper:
                             wrapped_type = "TYPE_" + match_wrapper.group(1).upper()
