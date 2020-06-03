@@ -942,7 +942,19 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
 
 
 # Circular import workaround: google.protobuf depends on base classes defined above.
-from .lib.google.protobuf import Duration, Timestamp
+from .lib.google.protobuf import (
+    Duration,
+    Timestamp,
+    BoolValue,
+    BytesValue,
+    DoubleValue,
+    FloatValue,
+    Int32Value,
+    Int64Value,
+    StringValue,
+    UInt32Value,
+    UInt64Value,
+)
 
 
 class _Duration(Duration):
@@ -1092,16 +1104,3 @@ class ServiceStub(ABC):
             await stream.send_message(request, end=True)
             async for message in stream:
                 yield message
-
-
-from .lib.google.protobuf import (
-    BoolValue,
-    BytesValue,
-    DoubleValue,
-    FloatValue,
-    Int32Value,
-    Int64Value,
-    StringValue,
-    UInt32Value,
-    UInt64Value,
-)
