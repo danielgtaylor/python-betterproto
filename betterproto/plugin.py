@@ -202,7 +202,7 @@ def generate_code(request, response):
                         )
                         if match_wrapper:
                             wrapped_type = "TYPE_" + match_wrapper.group(1).upper()
-                            if wrapped_type in dir(betterproto):
+                            if hasattr(betterproto, wrapped_type):
                                 field_wraps = f"betterproto.{wrapped_type}"
 
                         map_types = None
