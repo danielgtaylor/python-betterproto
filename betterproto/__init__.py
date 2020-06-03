@@ -941,6 +941,7 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
     return (field_name, getattr(message, field_name))
 
 
+# Circular import workaround: google.protobuf depends on base classes defined above.
 from .lib.google.protobuf import Duration, Timestamp
 
 
