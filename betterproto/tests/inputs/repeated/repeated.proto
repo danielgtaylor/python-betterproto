@@ -1,11 +1,5 @@
 syntax = "proto3";
 
-package repeated;
-
 message Test {
     repeated string names = 1;
-}
-
-service ExampleService {
-  rpc DoThing (Test) returns (Test);
 }
