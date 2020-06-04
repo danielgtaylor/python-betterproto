@@ -747,6 +747,9 @@ class Message(ABC):
                 self._unknown_fields += parsed.raw
                 continue
 
+            # Got some data over the wire
+            self._serialized_on_wire = True
+
             meta = self._betterproto.meta_by_field_name[field_name]
 
             value: Any
