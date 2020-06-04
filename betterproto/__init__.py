@@ -741,14 +741,14 @@ class Message(ABC):
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
         """
+        # Got some data over the wire
+        self._serialized_on_wire = True
+
         for parsed in parse_fields(data):
             field_name = self._betterproto.field_name_by_number.get(parsed.number)
             if not field_name:
                 self._unknown_fields += parsed.raw
                 continue
-
-            # Got some data over the wire
-            self._serialized_on_wire = True
 
             meta = self._betterproto.meta_by_field_name[field_name]
 

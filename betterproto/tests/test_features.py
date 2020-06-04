@@ -39,11 +39,9 @@ def test_has_field():
             2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
         )
 
-    # Unset with empty collections
+    # Is always set from parse, even if all collections are empty
     with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == False
-
-    # Set with non-empty collections
+    assert betterproto.serialized_on_wire(with_collections_empty) == True
     with_collections_list = WithCollections().parse(
         bytes(WithCollections(test_list=["a", "b", "c"]))
     )
