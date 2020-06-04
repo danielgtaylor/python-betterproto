@@ -3,6 +3,7 @@ import pytest
 from ..compile.importing import get_ref_type
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     ["google_type", "expected_name", "expected_import"],
     [
@@ -38,6 +39,7 @@ def test_import_google_wellknown_types_non_wrappers(
     assert imports.__contains__(expected_import)
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
@@ -60,6 +62,7 @@ def test_importing_google_wrappers_unwraps_them(google_type: str, expected_name:
     assert imports == set()
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
@@ -128,6 +131,16 @@ def test_import_deeply_nested_child_from_root():
     assert name == "deeply_nested_child.Message"
 
 
+def test_import_deeply_nested_child_from_package():
+    imports = set()
+    name = get_ref_type(
+        package="package", imports=imports, type_name="package.deeply.nested.child.Message"
+    )
+
+    assert imports == {"from .deeply.nested import child as deeply_nested_child"}
+    assert name == "deeply_nested_child.Message"
+
+
 def test_import_parent_package_from_child():
     imports = set()
     name = get_ref_type(
@@ -172,5 +185,21 @@ def test_import_root_sibling():
     imports = set()
     name = get_ref_type(package="", imports=imports, type_name="Message")
 
-    assert imports == set()
+    assert imports == {"from . import Message"}
+    assert name == "Message"
+
+
+def test_import_nested_siblings():
+    imports = set()
+    name = get_ref_type(package="foo", imports=imports, type_name="foo.Message")
+
+    assert imports == {"from . import Message"}
+    assert name == "Message"
+
+
+def test_import_deeply_nested_siblings():
+    imports = set()
+    name = get_ref_type(package="foo.bar", imports=imports, type_name="foo.bar.Message")
+
+    assert imports == {"from . import Message"}
     assert name == "Message"

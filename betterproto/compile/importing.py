@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Dict, List, Type
 
 import stringcase
 
@@ -43,13 +43,6 @@ def get_ref_type(
         if type_name == "google.protobuf.Timestamp":
             return "datetime"
 
-    if type_name.startswith(package):
-        parts = type_name.lstrip(package).lstrip(".").split(".")
-        if len(parts) == 1 or (len(parts) > 1 and parts[0][0] == parts[0][0].upper()):
-            # This is the current package, which has nested types flattened.
-            # foo.bar_thing => FooBarThing
-            cased = [stringcase.pascalcase(part) for part in parts]
-            type_name = f'"{"".join(cased)}"'
 
     # Use precompiled classes for google.protobuf.* objects
     if type_name.startswith("google.protobuf.") and type_name.count(".") == 2:
@@ -59,12 +52,58 @@ def get_ref_type(
         imports.add(f"import {import_package} as {import_alias}")
         return f"{import_alias}.{type_name}"
 
-    if "." in type_name:
-        # This is imported from another package. No need
-        # to use a forward ref and we need to add the import.
-        parts = type_name.split(".")
-        parts[-1] = stringcase.pascalcase(parts[-1])
-        imports.add(f"from .{'.'.join(parts[:-2])} import {parts[-2]}")
-        type_name = f"{parts[-2]}.{parts[-1]}"
+    importing_package: List[str] = type_name.split('.')
+    importing_type: str = stringcase.pascalcase(importing_package.pop())
+    current_package: List[str] = package.split('.') if package else []
 
-    return type_name
+    # importing sibling
+    '''
+    package = 
+    name    = Foo
+
+    package = foo
+    name    = foo.Bar
+
+    package = foo.bar
+    name    = foo.bar.Baz
+    '''
+    if importing_package == current_package:
+        imports.add(f"from . import {importing_type}")
+        return importing_type
+
+    # importing child & descendent:
+    '''
+    package = 
+    name    = foo.Bar
+    
+    package = 
+    name    = foo.bar.Baz
+    '''
+    if importing_package[0:len(current_package)] == current_package:
+        relative_importing_package = '.'.join(importing_package[len(current_package):])
+        imports.add(f"from . import {relative_importing_package}")
+        return f"{relative_importing_package}.{importing_type}"
+
+    # importing parent & ancestor
+    '''
+    package = foo.bar
+    name    = foo.Foo
+    
+    package = foo
+    name    = Bar
+    
+    package = foo.bar.baz
+    name    = Bar
+    '''
+
+    # importing unrelated or cousin
+    '''
+    package = foo.bar
+    name    = baz.Foo
+
+    package = foo.bar.baz
+    name    = foo.example.Bar
+    '''
+
+    return None
+    # return type_name
