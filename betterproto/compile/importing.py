@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import Dict, List, Type
 
 import stringcase
@@ -80,9 +81,17 @@ def get_ref_type(
     name    = foo.bar.Baz
     '''
     if importing_package[0:len(current_package)] == current_package:
-        relative_importing_package = '.'.join(importing_package[len(current_package):])
-        imports.add(f"from . import {relative_importing_package}")
-        return f"{relative_importing_package}.{importing_type}"
+        importing_descendent = importing_package[len(current_package):]
+        string_from = '.'.join(importing_descendent[0:-1])
+        string_import = importing_descendent[-1]
+
+        if string_from:
+            string_alias = '_'.join(importing_descendent)
+            imports.add(f"from .{string_from} import {string_import} as {string_alias}")
+            return f"{string_alias}.{importing_type}"
+        else:
+            imports.add(f"from . import {string_import}")
+            return f"{string_import}.{importing_type}"
 
     # importing parent & ancestor
     '''
@@ -95,6 +104,10 @@ def get_ref_type(
     package = foo.bar.baz
     name    = Bar
     '''
+    if current_package[0:len(importing_package)] == importing_package:
+        distance = len(current_package) - len(importing_package)
+        imports.add(f"from .{'.' * distance} import {importing_type}")
+        return importing_type
 
     # importing unrelated or cousin
     '''
@@ -104,6 +117,13 @@ def get_ref_type(
     package = foo.bar.baz
     name    = foo.example.Bar
     '''
+    root_distance = len(current_package)
+    shared_ancestory_length = reduce(lambda l, pair: l + (pair[0] == pair[1]), zip(current_package, importing_package), 0)
 
-    return None
+    string_from = f"{'.' * (shared_ancestory_length+1)}.{'.'.join(importing_package[0:-1])}"
+    string_import = importing_package[-1]
+    string_alias = '_' * root_distance + safe_snake_case('.'.join(importing_package))
+    imports.add(f"from {string_from} import {string_import} as {string_alias}")
+
+    return f"{string_alias}.{importing_type}"
     # return type_name

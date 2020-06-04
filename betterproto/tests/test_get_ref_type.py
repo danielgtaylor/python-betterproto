@@ -141,6 +141,30 @@ def test_import_deeply_nested_child_from_package():
     assert name == "deeply_nested_child.Message"
 
 
+def test_import_root_sibling():
+    imports = set()
+    name = get_ref_type(package="", imports=imports, type_name="Message")
+
+    assert imports == {"from . import Message"}
+    assert name == "Message"
+
+
+def test_import_nested_siblings():
+    imports = set()
+    name = get_ref_type(package="foo", imports=imports, type_name="foo.Message")
+
+    assert imports == {"from . import Message"}
+    assert name == "Message"
+
+
+def test_import_deeply_nested_siblings():
+    imports = set()
+    name = get_ref_type(package="foo.bar", imports=imports, type_name="foo.bar.Message")
+
+    assert imports == {"from . import Message"}
+    assert name == "Message"
+
+
 def test_import_parent_package_from_child():
     imports = set()
     name = get_ref_type(
@@ -181,25 +205,25 @@ def test_import_root_package_from_deeply_nested_child():
     assert name == "Message"
 
 
-def test_import_root_sibling():
+def test_import_unrelated_package():
     imports = set()
-    name = get_ref_type(package="", imports=imports, type_name="Message")
+    name = get_ref_type(package="a", imports=imports, type_name="b.Message")
 
-    assert imports == {"from . import Message"}
-    assert name == "Message"
+    assert imports == {"from .. import b as _b"}
+    assert name == "_b.Message"
 
 
-def test_import_nested_siblings():
+def test_import_cousin_package():
     imports = set()
-    name = get_ref_type(package="foo", imports=imports, type_name="foo.Message")
+    name = get_ref_type(package="a.a", imports=imports, type_name="a.b.Message")
 
-    assert imports == {"from . import Message"}
-    assert name == "Message"
+    assert imports == {"from .. import b as __b"}
+    assert name == "__b.Message"
 
 
-def test_import_deeply_nested_siblings():
+def test_import_far_cousin_package():
     imports = set()
-    name = get_ref_type(package="foo.bar", imports=imports, type_name="foo.bar.Message")
+    name = get_ref_type(package="a.a.a", imports=imports, type_name="a.b.c.Message")
 
-    assert imports == {"from . import Message"}
-    assert name == "Message"
+    assert imports == {"from ... import c as ___c"}
+    assert name == "___c.Message"
