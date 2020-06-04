@@ -35,16 +35,22 @@ def test_has_field():
     @dataclass
     class WithCollections(betterproto.Message):
         test_list: List[str] = betterproto.string_field(1)
-        test_map: Dict[str, str] = betterproto.map_field(2, betterproto.TYPE_STRING, betterproto.TYPE_STRING)
+        test_map: Dict[str, str] = betterproto.map_field(
+            2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
+        )
 
     # Unset with empty collections
     with_collections_empty = WithCollections().parse(bytes(WithCollections()))
     assert betterproto.serialized_on_wire(with_collections_empty) == False
 
     # Set with non-empty collections
-    with_collections_list = WithCollections().parse(bytes(WithCollections(test_list=['a', 'b', 'c'])))
+    with_collections_list = WithCollections().parse(
+        bytes(WithCollections(test_list=["a", "b", "c"]))
+    )
     assert betterproto.serialized_on_wire(with_collections_list) == True
-    with_collections_map = WithCollections().parse(bytes(WithCollections(test_map={'a': 'b', 'c': 'd'})))
+    with_collections_map = WithCollections().parse(
+        bytes(WithCollections(test_map={"a": "b", "c": "d"}))
+    )
     assert betterproto.serialized_on_wire(with_collections_map) == True
 
 
