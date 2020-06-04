@@ -80,3 +80,97 @@ def test_importing_google_wrappers_without_unwrapping(
     name = get_ref_type(package="", imports=set(), type_name=google_type, unwrap=False)
 
     assert name == expected_name
+
+
+def test_import_child_package_from_package():
+    imports = set()
+    name = get_ref_type(
+        package="package", imports=imports, type_name="package.child.Message"
+    )
+
+    assert imports == {"from . import child"}
+    assert name == "child.Message"
+
+
+def test_import_child_package_from_root():
+    imports = set()
+    name = get_ref_type(package="", imports=imports, type_name="child.Message")
+
+    assert imports == {"from . import child"}
+    assert name == "child.Message"
+
+
+def test_import_camel_cased():
+    imports = set()
+    name = get_ref_type(
+        package="", imports=imports, type_name="child_package.example_message"
+    )
+
+    assert imports == {"from . import child_package"}
+    assert name == "child_package.ExampleMessage"
+
+
+def test_import_nested_child_from_root():
+    imports = set()
+    name = get_ref_type(package="", imports=imports, type_name="nested.child.Message")
+
+    assert imports == {"from .nested import child as nested_child"}
+    assert name == "nested_child.Message"
+
+
+def test_import_deeply_nested_child_from_root():
+    imports = set()
+    name = get_ref_type(
+        package="", imports=imports, type_name="deeply.nested.child.Message"
+    )
+
+    assert imports == {"from .deeply.nested import child as deeply_nested_child"}
+    assert name == "deeply_nested_child.Message"
+
+
+def test_import_parent_package_from_child():
+    imports = set()
+    name = get_ref_type(
+        package="package.child", imports=imports, type_name="package.Message"
+    )
+
+    assert imports == {"from .. import Message"}
+    assert name == "Message"
+
+
+def test_import_parent_package_from_deeply_nested_child():
+    imports = set()
+    name = get_ref_type(
+        package="package.deeply.nested.child",
+        imports=imports,
+        type_name="package.deeply.nested.Message",
+    )
+
+    assert imports == {"from .. import Message"}
+    assert name == "Message"
+
+
+def test_import_root_package_from_child():
+    imports = set()
+    name = get_ref_type(package="package.child", imports=imports, type_name="Message")
+
+    assert imports == {"from ... import Message"}
+    assert name == "Message"
+
+
+def test_import_root_package_from_deeply_nested_child():
+    imports = set()
+    name = get_ref_type(
+        package="package.deeply.nested.child", imports=imports, type_name="Message"
+    )
+
+    assert imports == {"from ..... import Message"}
+    assert name == "Message"
+
+
+def test_import_root_sibling():
+    imports = set()
+    name = get_ref_type(package="", imports=imports, type_name="Message")
+
+    assert imports == set()
+    assert name == "Message"
