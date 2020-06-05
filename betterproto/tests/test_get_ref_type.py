@@ -134,7 +134,9 @@ def test_import_deeply_nested_child_from_root():
 def test_import_deeply_nested_child_from_package():
     imports = set()
     name = get_ref_type(
-        package="package", imports=imports, type_name="package.deeply.nested.child.Message"
+        package="package",
+        imports=imports,
+        type_name="package.deeply.nested.child.Message",
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
@@ -207,23 +209,47 @@ def test_import_root_package_from_deeply_nested_child():
 
 def test_import_unrelated_package():
     imports = set()
-    name = get_ref_type(package="a", imports=imports, type_name="b.Message")
+    name = get_ref_type(package="a", imports=imports, type_name="p.Message")
 
-    assert imports == {"from .. import b as _b"}
-    assert name == "_b.Message"
+    assert imports == {"from .. import p as _p"}
+    assert name == "_p.Message"
+
+
+def test_import_unrelated_nested_package():
+    imports = set()
+    name = get_ref_type(package="a.b", imports=imports, type_name="p.q.Message")
+
+    assert imports == {"from ...p import q as __p_q"}
+    assert name == "__p_q.Message"
+
+
+def test_import_unrelated_deeply_nested_package():
+    imports = set()
+    name = get_ref_type(package="a.b.c.d", imports=imports, type_name="p.q.r.s.Message")
+
+    assert imports == {"from .....p.q.r import s as ____p_q_r_s"}
+    assert name == "____p_q_r_s.Message"
 
 
 def test_import_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.a", imports=imports, type_name="a.b.Message")
+    name = get_ref_type(package="a.x", imports=imports, type_name="a.y.Message")
 
-    assert imports == {"from .. import b as __b"}
-    assert name == "__b.Message"
+    assert imports == {"from .. import y as _y"}
+    assert name == "_y.Message"
 
 
 def test_import_far_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.a.a", imports=imports, type_name="a.b.c.Message")
+    name = get_ref_type(package="a.x.y", imports=imports, type_name="a.b.c.Message")
 
-    assert imports == {"from ... import c as ___c"}
-    assert name == "___c.Message"
+    assert imports == {"from ...b import c as __b_c"}
+    assert name == "__b_c.Message"
+
+
+def test_import_far_far_cousin_package():
+    imports = set()
+    name = get_ref_type(package="a.x.y.z", imports=imports, type_name="a.b.c.d.Message")
+
+    assert imports == {"from ....b.c import d as ___b_c_d"}
+    assert name == "___b_c_d.Message"
