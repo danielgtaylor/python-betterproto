@@ -120,8 +120,7 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
 
 
 def generate_code(request, response):
-    plugin_options = os.environ.get("BETTERPROTO_OPTS")
-    plugin_options = plugin_options.split(" ") if plugin_options else []
+    plugin_options = request.parameter.split(",") if request.parameter else []
 
     env = jinja2.Environment(
         trim_blocks=True,

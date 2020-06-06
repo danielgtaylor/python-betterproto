@@ -360,13 +360,17 @@ $ pipenv run test
 Betterproto includes compiled versions for Google's well-known types at [betterproto/lib/google](betterproto/lib/google).
 Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
 
-Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, set this environment variable: `BETTERPROTO_OPTS=INCLUDE_GOOGLE`. 
+Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
 
 Assuming your `google.protobuf` source files (included with all releases of `protoc`) are located in `/usr/local/include`, you can regenerate them as follows:
 
 ```sh
-export BETTERPROTO_OPTS=INCLUDE_GOOGLE
-protoc --plugin=protoc-gen-custom=betterproto/plugin.py --custom_out=betterproto/lib -I/usr/local/include/ /usr/local/include/google/protobuf/*.proto
+protoc \
+    --plugin=protoc-gen-custom=betterproto/plugin.py \
+    --custom_opt=INCLUDE_GOOGLE \
+    --custom_out=betterproto/lib \
+    -I /usr/local/include/ \
+    /usr/local/include/google/protobuf/*.proto
 ```
 
 
