@@ -23,7 +23,7 @@ from google.protobuf.json_format import Parse
 
 class TestCases:
     def __init__(self, path, services: Set[str], xfail: Set[str]):
-        _all = set(get_directories(path))
+        _all = set(get_directories(path)) - {"__pycache__"}
         _services = services
         _messages = _all - services
         _messages_with_json = {
