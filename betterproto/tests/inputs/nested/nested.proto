@@ -10,7 +10,7 @@ message Test {
 
     Nested nested = 1;
     Sibling sibling = 2;
-    Sibling sibling2 = 3;
+//    Sibling sibling2 = 3;
 }
 
 message Sibling {

@@ -57,7 +57,9 @@ plugin_output_package = "betterproto.tests.output_betterproto"
 reference_output_package = "betterproto.tests.output_reference"
 
 
-TestData = namedtuple("TestData", "plugin_module, reference_module, json_data")
+TestData = namedtuple(
+    "TestData", ["plugin_module", "reference_module", "json_data", "entry_point"]
+)
 
 
 @pytest.fixture
@@ -75,15 +77,18 @@ def test_data(request):
 
     sys.path.append(reference_module_root)
 
+    test_package = test_case_name + test_input_config.packages.get(test_case_name, "")
+
     yield (
         TestData(
             plugin_module=importlib.import_module(
-                f"{plugin_output_package}.{test_case_name}.{test_case_name}"
+                f"{plugin_output_package}.{test_package}"
             ),
             reference_module=lambda: importlib.import_module(
                 f"{reference_output_package}.{test_case_name}.{test_case_name}_pb2"
             ),
             json_data=get_test_case_json_data(test_case_name),
+            entry_point=test_package,
         )
     )
 
@@ -106,7 +111,7 @@ def test_message_equality(test_data: TestData) -> None:
 
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
 def test_message_json(repeat, test_data: TestData) -> None:
-    plugin_module, _, json_data = test_data
+    plugin_module, _, json_data, entry_point = test_data
 
     for _ in range(repeat):
         message: betterproto.Message = plugin_module.Test()
@@ -119,13 +124,13 @@ def test_message_json(repeat, test_data: TestData) -> None:
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
 def test_service_can_be_instantiated(test_data: TestData) -> None:
-    plugin_module, _, json_data = test_data
+    plugin_module, _, json_data, entry_point = test_data
     plugin_module.TestStub(MockChannel())
 
 
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
-    plugin_module, reference_module, json_data = test_data
+    plugin_module, reference_module, json_data, entry_point = test_data
 
     reference_instance = Parse(json_data, reference_module().Test())
     reference_binary_output = reference_instance.SerializeToString()

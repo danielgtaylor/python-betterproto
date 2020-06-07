@@ -30,7 +30,7 @@ from typing import (
 import grpclib.const
 import stringcase
 
-from .casing import safe_snake_case
+from .casing import safe_snake_case, snake_case
 
 if TYPE_CHECKING:
     from grpclib._protocols import IProtoMessage
@@ -132,7 +132,7 @@ class Casing(enum.Enum):
     """Casing constants for serialization."""
 
     CAMEL = stringcase.camelcase
-    SNAKE = stringcase.snakecase
+    SNAKE = snake_case
 
 
 class _PLACEHOLDER:

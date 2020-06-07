@@ -1,9 +1,8 @@
 import pytest
 
-from ..compile.importing import get_ref_type
+from ..compile.importing import get_ref_type, parse_source_type_name
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize(
     ["google_type", "expected_name", "expected_import"],
     [
@@ -33,13 +32,14 @@ def test_import_google_wellknown_types_non_wrappers(
     google_type: str, expected_name: str, expected_import: str
 ):
     imports = set()
-    name = get_ref_type(package="", imports=imports, type_name=google_type)
+    name = get_ref_type(package="", imports=imports, source_type=google_type)
 
     assert name == expected_name
-    assert imports.__contains__(expected_import)
+    assert imports.__contains__(
+        expected_import
+    ), f"{expected_import} not found in {imports}"
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
@@ -56,13 +56,12 @@ def test_import_google_wellknown_types_non_wrappers(
 )
 def test_importing_google_wrappers_unwraps_them(google_type: str, expected_name: str):
     imports = set()
-    name = get_ref_type(package="", imports=imports, type_name=google_type)
+    name = get_ref_type(package="", imports=imports, source_type=google_type)
 
     assert name == expected_name
     assert imports == set()
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
@@ -80,7 +79,9 @@ def test_importing_google_wrappers_unwraps_them(google_type: str, expected_name:
 def test_importing_google_wrappers_without_unwrapping(
     google_type: str, expected_name: str
 ):
-    name = get_ref_type(package="", imports=set(), type_name=google_type, unwrap=False)
+    name = get_ref_type(
+        package="", imports=set(), source_type=google_type, unwrap=False
+    )
 
     assert name == expected_name
 
@@ -88,7 +89,7 @@ def test_importing_google_wrappers_without_unwrapping(
 def test_import_child_package_from_package():
     imports = set()
     name = get_ref_type(
-        package="package", imports=imports, type_name="package.child.Message"
+        package="package", imports=imports, source_type="package.child.Message"
     )
 
     assert imports == {"from . import child"}
@@ -97,7 +98,7 @@ def test_import_child_package_from_package():
 
 def test_import_child_package_from_root():
     imports = set()
-    name = get_ref_type(package="", imports=imports, type_name="child.Message")
+    name = get_ref_type(package="", imports=imports, source_type="child.Message")
 
     assert imports == {"from . import child"}
     assert name == "child.Message"
@@ -106,7 +107,7 @@ def test_import_child_package_from_root():
 def test_import_camel_cased():
     imports = set()
     name = get_ref_type(
-        package="", imports=imports, type_name="child_package.example_message"
+        package="", imports=imports, source_type="child_package.example_message"
     )
 
     assert imports == {"from . import child_package"}
@@ -115,7 +116,7 @@ def test_import_camel_cased():
 
 def test_import_nested_child_from_root():
     imports = set()
-    name = get_ref_type(package="", imports=imports, type_name="nested.child.Message")
+    name = get_ref_type(package="", imports=imports, source_type="nested.child.Message")
 
     assert imports == {"from .nested import child as nested_child"}
     assert name == "nested_child.Message"
@@ -124,7 +125,7 @@ def test_import_nested_child_from_root():
 def test_import_deeply_nested_child_from_root():
     imports = set()
     name = get_ref_type(
-        package="", imports=imports, type_name="deeply.nested.child.Message"
+        package="", imports=imports, source_type="deeply.nested.child.Message"
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
@@ -136,7 +137,7 @@ def test_import_deeply_nested_child_from_package():
     name = get_ref_type(
         package="package",
         imports=imports,
-        type_name="package.deeply.nested.child.Message",
+        source_type="package.deeply.nested.child.Message",
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
@@ -145,32 +146,32 @@ def test_import_deeply_nested_child_from_package():
 
 def test_import_root_sibling():
     imports = set()
-    name = get_ref_type(package="", imports=imports, type_name="Message")
+    name = get_ref_type(package="", imports=imports, source_type="Message")
 
-    assert imports == {"from . import Message"}
-    assert name == "Message"
+    assert imports == set()
+    assert name == '"Message"'
 
 
 def test_import_nested_siblings():
     imports = set()
-    name = get_ref_type(package="foo", imports=imports, type_name="foo.Message")
+    name = get_ref_type(package="foo", imports=imports, source_type="foo.Message")
 
-    assert imports == {"from . import Message"}
-    assert name == "Message"
+    assert name == '"Message"'
 
 
 def test_import_deeply_nested_siblings():
     imports = set()
-    name = get_ref_type(package="foo.bar", imports=imports, type_name="foo.bar.Message")
+    name = get_ref_type(
+        package="foo.bar", imports=imports, source_type="foo.bar.Message"
+    )
 
-    assert imports == {"from . import Message"}
-    assert name == "Message"
+    assert name == '"Message"'
 
 
 def test_import_parent_package_from_child():
     imports = set()
     name = get_ref_type(
-        package="package.child", imports=imports, type_name="package.Message"
+        package="package.child", imports=imports, source_type="package.Message"
     )
 
     assert imports == {"from .. import Message"}
@@ -182,7 +183,7 @@ def test_import_parent_package_from_deeply_nested_child():
     name = get_ref_type(
         package="package.deeply.nested.child",
         imports=imports,
-        type_name="package.deeply.nested.Message",
+        source_type="package.deeply.nested.Message",
     )
 
     assert imports == {"from .. import Message"}
@@ -191,7 +192,7 @@ def test_import_parent_package_from_deeply_nested_child():
 
 def test_import_root_package_from_child():
     imports = set()
-    name = get_ref_type(package="package.child", imports=imports, type_name="Message")
+    name = get_ref_type(package="package.child", imports=imports, source_type="Message")
 
     assert imports == {"from ... import Message"}
     assert name == "Message"
@@ -200,7 +201,7 @@ def test_import_root_package_from_child():
 def test_import_root_package_from_deeply_nested_child():
     imports = set()
     name = get_ref_type(
-        package="package.deeply.nested.child", imports=imports, type_name="Message"
+        package="package.deeply.nested.child", imports=imports, source_type="Message"
     )
 
     assert imports == {"from ..... import Message"}
@@ -209,7 +210,7 @@ def test_import_root_package_from_deeply_nested_child():
 
 def test_import_unrelated_package():
     imports = set()
-    name = get_ref_type(package="a", imports=imports, type_name="p.Message")
+    name = get_ref_type(package="a", imports=imports, source_type="p.Message")
 
     assert imports == {"from .. import p as _p"}
     assert name == "_p.Message"
@@ -217,7 +218,7 @@ def test_import_unrelated_package():
 
 def test_import_unrelated_nested_package():
     imports = set()
-    name = get_ref_type(package="a.b", imports=imports, type_name="p.q.Message")
+    name = get_ref_type(package="a.b", imports=imports, source_type="p.q.Message")
 
     assert imports == {"from ...p import q as __p_q"}
     assert name == "__p_q.Message"
@@ -225,7 +226,9 @@ def test_import_unrelated_nested_package():
 
 def test_import_unrelated_deeply_nested_package():
     imports = set()
-    name = get_ref_type(package="a.b.c.d", imports=imports, type_name="p.q.r.s.Message")
+    name = get_ref_type(
+        package="a.b.c.d", imports=imports, source_type="p.q.r.s.Message"
+    )
 
     assert imports == {"from .....p.q.r import s as ____p_q_r_s"}
     assert name == "____p_q_r_s.Message"
@@ -233,7 +236,7 @@ def test_import_unrelated_deeply_nested_package():
 
 def test_import_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.x", imports=imports, type_name="a.y.Message")
+    name = get_ref_type(package="a.x", imports=imports, source_type="a.y.Message")
 
     assert imports == {"from .. import y as _y"}
     assert name == "_y.Message"
@@ -241,7 +244,7 @@ def test_import_cousin_package():
 
 def test_import_far_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.x.y", imports=imports, type_name="a.b.c.Message")
+    name = get_ref_type(package="a.x.y", imports=imports, source_type="a.b.c.Message")
 
     assert imports == {"from ...b import c as __b_c"}
     assert name == "__b_c.Message"
@@ -249,7 +252,22 @@ def test_import_far_cousin_package():
 
 def test_import_far_far_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.x.y.z", imports=imports, type_name="a.b.c.d.Message")
+    name = get_ref_type(
+        package="a.x.y.z", imports=imports, source_type="a.b.c.d.Message"
+    )
 
     assert imports == {"from ....b.c import d as ___b_c_d"}
     assert name == "___b_c_d.Message"
+
+
+@pytest.mark.parametrize(
+    ["full_name", "expected_output"],
+    [
+        ("package.SomeMessage.NestedType", ("package", "SomeMessage.NestedType")),
+        (".package.SomeMessage.NestedType", ("package", "SomeMessage.NestedType")),
+        (".service.ExampleRequest", ("service", "ExampleRequest")),
+        (".package.lower_case_message", ("package", "lower_case_message")),
+    ],
+)
+def test_parse_field_type_name(full_name, expected_output):
+    assert parse_source_type_name(full_name) == expected_output
