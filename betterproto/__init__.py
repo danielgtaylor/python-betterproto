@@ -440,7 +440,7 @@ class ProtoClassMetadata:
 
     def __init__(self, cls: Type["Message"]):
         by_field = {}
-        by_group = {}
+        by_group: Dict[str, Set] = {}
         by_field_name = {}
         by_field_number = {}
 
@@ -780,7 +780,7 @@ class Message(ABC):
 
     def to_dict(
         self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """
         Returns a dict representation of this message instance which can be
         used to serialize to e.g. JSON. Defaults to camel casing for

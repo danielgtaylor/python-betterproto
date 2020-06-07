@@ -3,9 +3,10 @@ import asyncio
 import grpclib.const
 from typing import (
     Any,
+    AsyncIterable,
     AsyncIterator,
     Collection,
-    Iterator,
+    Iterable,
     Mapping,
     Optional,
     Tuple,
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 
 _Value = Union[str, bytes]
 _MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
-_MessageSource = Union[Iterator["IProtoMessage"], AsyncIterator["IProtoMessage"]]
+_MessageSource = Union[Iterable["IProtoMessage"], AsyncIterable["IProtoMessage"]]
 
 
 class ServiceStub(ABC):
@@ -160,7 +161,7 @@ class ServiceStub(ABC):
 
     @staticmethod
     async def _send_messages(stream, messages: _MessageSource):
-        if hasattr(messages, "__aiter__"):
+        if isinstance(messages, AsyncIterable):
             async for message in messages:
                 await stream.send_message(message)
         else:
