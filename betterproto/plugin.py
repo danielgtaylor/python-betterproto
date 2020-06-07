@@ -3,11 +3,9 @@
 import itertools
 import os.path
 import re
-import stringcase
 import sys
 import textwrap
 from typing import List
-from betterproto.casing import safe_snake_case
 from betterproto.compile.importing import get_ref_type
 import betterproto
 from betterproto.compile.naming import (
@@ -131,17 +129,21 @@ def generate_code(request, response):
 
     output_map = {}
     for proto_file in request.proto_file:
-        out = proto_file.package
-
-        if out == "google.protobuf" and "INCLUDE_GOOGLE" not in plugin_options:
+        if (
+            proto_file.package == "google.protobuf"
+            and "INCLUDE_GOOGLE" not in plugin_options
+        ):
             continue
 
-        if not out:
-            out = os.path.splitext(proto_file.name)[0].replace(os.path.sep, ".")
+        # if proto_file.package:
+        output_file = (
+            os.path.join(proto_file.package.replace(".", os.path.sep), "__init__")
+            + ".py"
+        )
 
-        if out not in output_map:
-            output_map[out] = {"package": proto_file.package, "files": []}
-        output_map[out]["files"].append(proto_file)
+        if output_file not in output_map:
+            output_map[output_file] = {"package": proto_file.package, "files": []}
+        output_map[output_file]["files"].append(proto_file)
 
     # TODO: Figure out how to handle gRPC request/response messages and add
     # processing below for Service.
@@ -349,8 +351,7 @@ def generate_code(request, response):
 
         # Fill response
         f = response.file.add()
-        # print(filename, file=sys.stderr)
-        f.name = filename.replace(".", os.path.sep) + ".py"
+        f.name = filename
 
         # Render and then format the output file.
         f.content = black.format_str(
@@ -358,32 +359,24 @@ def generate_code(request, response):
             mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
         )
 
-    inits = set([""])
-    for f in response.file:
-        # Ensure output paths exist
-        # print(f.name, file=sys.stderr)
-        dirnames = os.path.dirname(f.name)
-        if dirnames:
-            os.makedirs(dirnames, exist_ok=True)
-            base = ""
-            for part in dirnames.split(os.path.sep):
-                base = os.path.join(base, part)
-                inits.add(base)
+    output_files = list(output_map.keys())
+    for output_file in output_files:
+        path = os.path.dirname(output_file)
 
-    for base in inits:
-        name = os.path.join(base, "__init__.py")
+        for sub_path in path.split(os.path.sep):
+            init_file = os.path.join(sub_path, "__init__.py")
 
-        if os.path.exists(name):
-            # Never overwrite inits as they may have custom stuff in them.
-            continue
+            if init_file in output_files:
+                continue
 
-        init = response.file.add()
-        init.name = name
-        init.content = b""
+            output_files.append(init_file)
+            init = response.file.add()
+            init.name = init_file
+            init.content = b""
 
     filenames = sorted([f.name for f in response.file])
     for fname in filenames:
-        print(f"Writing {fname}", file=sys.stderr)
+        print(f"Writing {repr(fname)}", file=sys.stderr)
 
 
 def main():
