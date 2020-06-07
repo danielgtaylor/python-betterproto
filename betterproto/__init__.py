@@ -593,7 +593,7 @@ class Message(ABC):
             serialize_empty = False
             if isinstance(value, Message) and value._serialized_on_wire:
                 # Empty messages can still be sent on the wire if they were
-                # set (or received empty).
+                # set (or recieved empty).
                 serialize_empty = True
 
             if value == self._get_field_default(field_name) and not (

@@ -344,11 +344,12 @@ def generate_code(request, response):
                         }
                     )
 
-                    if method.server_streaming:
-                        output["typing_imports"].add("AsyncGenerator")
-
                     if method.client_streaming:
-                        output["typing_imports"].add("Iterator")
+                        output["typing_imports"].add("AsyncIterable")
+                        output["typing_imports"].add("Iterable")
+                        output["typing_imports"].add("Union")
+                    if method.server_streaming:
+                        output["typing_imports"].add("AsyncIterator")
 
                 output["services"].append(data)
 

@@ -1,7 +1,8 @@
 from abc import ABC
+import asyncio
 import grpclib.const
 from typing import (
-    AsyncGenerator,
+    Any,
     AsyncIterator,
     Collection,
     Iterator,
@@ -16,17 +17,18 @@ from .._types import ST, T
 
 if TYPE_CHECKING:
     from grpclib._protocols import IProtoMessage
-    from grpclib.client import Channel
+    from grpclib.client import Channel, Stream
     from grpclib.metadata import Deadline
 
 
 _Value = Union[str, bytes]
 _MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
+_MessageSource = Union[Iterator["IProtoMessage"], AsyncIterator["IProtoMessage"]]
 
 
 class ServiceStub(ABC):
     """
-    Base class for async gRPC service stubs.
+    Base class for async gRPC clients.
     """
 
     def __init__(
@@ -86,7 +88,7 @@ class ServiceStub(ABC):
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
         metadata: Optional[_MetadataLike] = None,
-    ) -> AsyncGenerator[T, None]:
+    ) -> AsyncIterator[T]:
         """Make a unary request and return the stream response iterator."""
         async with self.channel.request(
             route,
@@ -102,17 +104,23 @@ class ServiceStub(ABC):
     async def _stream_unary(
         self,
         route: str,
-        request_iterator: Iterator["IProtoMessage"],
+        request_iterator: _MessageSource,
         request_type: Type[ST],
         response_type: Type[T],
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional[_MetadataLike] = None,
     ) -> T:
         """Make a stream request and return the response."""
         async with self.channel.request(
-            route, grpclib.const.Cardinality.STREAM_UNARY, request_type, response_type
+            route,
+            grpclib.const.Cardinality.STREAM_UNARY,
+            request_type,
+            response_type,
+            **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
-            for message in request_iterator:
-                await stream.send_message(message)
-            await stream.send_request(end=True)
+            await self._send_messages(stream, request_iterator)
             response = await stream.recv_message()
             assert response is not None
             return response
@@ -120,16 +128,42 @@ class ServiceStub(ABC):
     async def _stream_stream(
         self,
         route: str,
-        request_iterator: Iterator["IProtoMessage"],
+        request_iterator: _MessageSource,
         request_type: Type[ST],
         response_type: Type[T],
-    ) -> AsyncGenerator[T, None]:
-        """Make a stream request and return the stream response iterator."""
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional[_MetadataLike] = None,
+    ) -> AsyncIterator[T]:
+        """
+        Make a stream request and return an AsyncIterator to iterate over response
+        messages.
+        """
         async with self.channel.request(
-            route, grpclib.const.Cardinality.STREAM_STREAM, request_type, response_type
+            route,
+            grpclib.const.Cardinality.STREAM_STREAM,
+            request_type,
+            response_type,
+            **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
-            for message in request_iterator:
+            await stream.send_request()
+            sending_task = asyncio.ensure_future(
+                self._send_messages(stream, request_iterator)
+            )
+            try:
+                async for response in stream:
+                    yield response
+            except:
+                sending_task.cancel()
+                raise
+
+    @staticmethod
+    async def _send_messages(stream, messages: _MessageSource):
+        if hasattr(messages, "__aiter__"):
+            async for message in messages:
                 await stream.send_message(message)
-            await stream.send_request(end=True)
-            async for message in stream:
-                yield message
+        else:
+            for message in messages:
+                await stream.send_message(message)
+        await stream.end()
