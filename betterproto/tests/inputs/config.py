@@ -16,6 +16,9 @@ tests = {
 packages = {
     "import_root_package_from_child": ".child",
     "import_parent_package_from_child": ".parent.child",
+    "import_root_package_from_nested_child": ".nested.child",
+    "import_cousin_package": ".test.subpackage",
+    "import_cousin_package_same_name": ".test.subpackage",
     "repeatedmessage": ".repeatedmessage",
     "service": ".service",
 }

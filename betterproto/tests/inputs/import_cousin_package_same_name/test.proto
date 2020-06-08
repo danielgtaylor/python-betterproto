@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package test.subpackage;
+
+import "cousin.proto";
+
+// Verify that we can import a message unrelated to us, in a subpackage with the same name as us.
+
+message Test {
+    cousin.subpackage.CousinMessage message = 1;
+}
