@@ -2,12 +2,14 @@
 
 import itertools
 import os.path
+import pathlib
 import re
 import sys
 import textwrap
 from typing import List
-from betterproto.compile.importing import get_ref_type
+
 import betterproto
+from betterproto.compile.importing import get_ref_type
 from betterproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -135,11 +137,7 @@ def generate_code(request, response):
         ):
             continue
 
-        # if proto_file.package:
-        output_file = (
-            os.path.join(proto_file.package.replace(".", os.path.sep), "__init__")
-            + ".py"
-        )
+        output_file = str(pathlib.Path(*proto_file.package.split("."), "__init__.py"))
 
         if output_file not in output_map:
             output_map[output_file] = {"package": proto_file.package, "files": []}
@@ -359,24 +357,17 @@ def generate_code(request, response):
             mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
         )
 
-    output_files = list(output_map.keys())
-    for output_file in output_files:
-        path = os.path.dirname(output_file)
+    # Make each output directory a package with __init__ file
+    output_paths = set(pathlib.Path(path) for path in output_map.keys())
+    output_dirs = [directory for path in output_paths for directory in path.parents]
+    init_files = set(d.joinpath("__init__.py") for d in output_dirs) - output_paths
 
-        for sub_path in path.split(os.path.sep):
-            init_file = os.path.join(sub_path, "__init__.py")
+    for init_file in init_files:
+        init = response.file.add()
+        init.name = str(init_file)
 
-            if init_file in output_files:
-                continue
-
-            output_files.append(init_file)
-            init = response.file.add()
-            init.name = init_file
-            init.content = b""
-
-    filenames = sorted([f.name for f in response.file])
-    for fname in filenames:
-        print(f"Writing {repr(fname)}", file=sys.stderr)
+    for filename in sorted(output_paths.union(init_files)):
+        print(f"Writing {filename}", file=sys.stderr)
 
 
 def main():
