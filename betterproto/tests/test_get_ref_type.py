@@ -174,8 +174,8 @@ def test_import_parent_package_from_child():
         package="package.child", imports=imports, source_type="package.Message"
     )
 
-    assert imports == {"from ... import package as ___package"}
-    assert name == "___package.Message"
+    assert imports == {"from ... import package as __package__"}
+    assert name == "__package__.Message"
 
 
 def test_import_parent_package_from_deeply_nested_child():
@@ -186,8 +186,8 @@ def test_import_parent_package_from_deeply_nested_child():
         source_type="package.deeply.nested.Message",
     )
 
-    assert imports == {"from ... import nested as ___nested"}
-    assert name == "___nested.Message"
+    assert imports == {"from ... import nested as __nested__"}
+    assert name == "__nested__.Message"
 
 
 def test_import_ancestor_package_from_nested_child():
@@ -198,8 +198,8 @@ def test_import_ancestor_package_from_nested_child():
         source_type="package.ancestor.Message",
     )
 
-    assert imports == {"from .... import ancestor as ____ancestor"}
-    assert name == "____ancestor.Message"
+    assert imports == {"from .... import ancestor as ___ancestor__"}
+    assert name == "___ancestor__.Message"
 
 
 def test_import_root_package_from_child():
@@ -224,16 +224,16 @@ def test_import_unrelated_package():
     imports = set()
     name = get_ref_type(package="a", imports=imports, source_type="p.Message")
 
-    assert imports == {"from .. import p as _p"}
-    assert name == "_p.Message"
+    assert imports == {"from .. import p as _p__"}
+    assert name == "_p__.Message"
 
 
 def test_import_unrelated_nested_package():
     imports = set()
     name = get_ref_type(package="a.b", imports=imports, source_type="p.q.Message")
 
-    assert imports == {"from ...p import q as __p_q"}
-    assert name == "__p_q.Message"
+    assert imports == {"from ...p import q as __p_q__"}
+    assert name == "__p_q__.Message"
 
 
 def test_import_unrelated_deeply_nested_package():
@@ -242,16 +242,16 @@ def test_import_unrelated_deeply_nested_package():
         package="a.b.c.d", imports=imports, source_type="p.q.r.s.Message"
     )
 
-    assert imports == {"from .....p.q.r import s as ____p_q_r_s"}
-    assert name == "____p_q_r_s.Message"
+    assert imports == {"from .....p.q.r import s as ____p_q_r_s__"}
+    assert name == "____p_q_r_s__.Message"
 
 
 def test_import_cousin_package():
     imports = set()
     name = get_ref_type(package="a.x", imports=imports, source_type="a.y.Message")
 
-    assert imports == {"from .. import y as _y"}
-    assert name == "_y.Message"
+    assert imports == {"from .. import y as _y__"}
+    assert name == "_y__.Message"
 
 
 def test_import_cousin_package_different_name():
@@ -260,8 +260,8 @@ def test_import_cousin_package_different_name():
         package="test.package1", imports=imports, source_type="cousin.package2.Message"
     )
 
-    assert imports == {"from ...cousin import package2 as __cousin_package2"}
-    assert name == "__cousin_package2.Message"
+    assert imports == {"from ...cousin import package2 as __cousin_package2__"}
+    assert name == "__cousin_package2__.Message"
 
 
 def test_import_cousin_package_same_name():
@@ -270,16 +270,16 @@ def test_import_cousin_package_same_name():
         package="test.package", imports=imports, source_type="cousin.package.Message"
     )
 
-    assert imports == {"from ...cousin import package as __cousin_package"}
-    assert name == "__cousin_package.Message"
+    assert imports == {"from ...cousin import package as __cousin_package__"}
+    assert name == "__cousin_package__.Message"
 
 
 def test_import_far_cousin_package():
     imports = set()
     name = get_ref_type(package="a.x.y", imports=imports, source_type="a.b.c.Message")
 
-    assert imports == {"from ...b import c as __b_c"}
-    assert name == "__b_c.Message"
+    assert imports == {"from ...b import c as __b_c__"}
+    assert name == "__b_c__.Message"
 
 
 def test_import_far_far_cousin_package():
@@ -288,8 +288,8 @@ def test_import_far_far_cousin_package():
         package="a.x.y.z", imports=imports, source_type="a.b.c.d.Message"
     )
 
-    assert imports == {"from ....b.c import d as ___b_c_d"}
-    assert name == "___b_c_d.Message"
+    assert imports == {"from ....b.c import d as ___b_c_d__"}
+    assert name == "___b_c_d__.Message"
 
 
 @pytest.mark.parametrize(

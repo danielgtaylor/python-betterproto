@@ -129,7 +129,8 @@ def import_ancestor(current_package, imports, py_package, py_type):
     distance_up = len(current_package) - len(py_package)
     if py_package:
         string_import = py_package[-1]
-        string_alias = f"__{'_' * distance_up}{string_import}"
+        # Add trailing __ to avoid name mangling (python.org/dev/peps/pep-0008/#id34)
+        string_alias = f"_{'_' * distance_up}{string_import}__"
         string_from = f"..{'.' * distance_up}"
         imports.add(f"from {string_from} import {string_import} as {string_alias}")
         return f"{string_alias}.{py_type}"
@@ -152,8 +153,9 @@ def import_cousin(current_package, imports, py_package, py_type):
         py_package[len(shared_ancestry) : -1]
     )
     string_import = py_package[-1]
-    alias = f"{'_' * distance_up}" + safe_snake_case(
+    # Add trailing __ to avoid name mangling (python.org/dev/peps/pep-0008/#id34)
+    string_alias = f"{'_' * distance_up}" + safe_snake_case(
         ".".join(py_package[len(shared_ancestry) :])
-    )
-    imports.add(f"from {string_from} import {string_import} as {alias}")
-    return f"{alias}.{py_type}"
+    ) + "__"
+    imports.add(f"from {string_from} import {string_import} as {string_alias}")
+    return f"{string_alias}.{py_type}"
