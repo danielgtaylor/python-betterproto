@@ -127,8 +127,15 @@ def import_ancestor(current_package, imports, py_package, py_type):
     name    = Bar
     """
     distance_up = len(current_package) - len(py_package)
-    imports.add(f"from .{'.' * distance_up} import {py_type}")
-    return py_type
+    if py_package:
+        string_import = py_package[-1]
+        string_alias = f"__{'_' * distance_up}{string_import}"
+        string_from = f"..{'.' * distance_up}"
+        imports.add(f"from {string_from} import {string_import} as {string_alias}")
+        return f"{string_alias}.{py_type}"
+    else:
+        imports.add(f"from .{'.' * distance_up} import {py_type}")
+        return py_type
 
 
 def import_cousin(current_package, imports, py_package, py_type):

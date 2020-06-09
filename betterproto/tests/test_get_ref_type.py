@@ -174,8 +174,8 @@ def test_import_parent_package_from_child():
         package="package.child", imports=imports, source_type="package.Message"
     )
 
-    assert imports == {"from .. import Message"}
-    assert name == "Message"
+    assert imports == {"from ... import package as ___package"}
+    assert name == "___package.Message"
 
 
 def test_import_parent_package_from_deeply_nested_child():
@@ -186,8 +186,20 @@ def test_import_parent_package_from_deeply_nested_child():
         source_type="package.deeply.nested.Message",
     )
 
-    assert imports == {"from .. import Message"}
-    assert name == "Message"
+    assert imports == {"from ... import nested as ___nested"}
+    assert name == "___nested.Message"
+
+
+def test_import_ancestor_package_from_nested_child():
+    imports = set()
+    name = get_ref_type(
+        package="package.ancestor.nested.child",
+        imports=imports,
+        source_type="package.ancestor.Message",
+    )
+
+    assert imports == {"from .... import ancestor as ____ancestor"}
+    assert name == "____ancestor.Message"
 
 
 def test_import_root_package_from_child():
