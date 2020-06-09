@@ -242,6 +242,26 @@ def test_import_cousin_package():
     assert name == "_y.Message"
 
 
+def test_import_cousin_package_different_name():
+    imports = set()
+    name = get_ref_type(
+        package="test.package1", imports=imports, source_type="cousin.package2.Message"
+    )
+
+    assert imports == {"from ...cousin import package2 as __cousin_package2"}
+    assert name == "__cousin_package2.Message"
+
+
+def test_import_cousin_package_same_name():
+    imports = set()
+    name = get_ref_type(
+        package="test.package", imports=imports, source_type="cousin.package.Message"
+    )
+
+    assert imports == {"from ...cousin import package as __cousin_package"}
+    assert name == "__cousin_package.Message"
+
+
 def test_import_far_cousin_package():
     imports = set()
     name = get_ref_type(package="a.x.y", imports=imports, source_type="a.b.c.Message")
