@@ -76,8 +76,8 @@ def camel_case(value: str):
     """
     Capitalize all words except first and remove symbols.
     """
-    return capitalize_first(pascal_case(value))
+    return lowercase_first(pascal_case(value))
 
 
-def capitalize_first(value: str):
+def lowercase_first(value: str):
     return value[0:1].lower() + value[1:]
