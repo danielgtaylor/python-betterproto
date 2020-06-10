@@ -312,7 +312,7 @@ $ pip install -e .
 
 This project enforces [black](https://github.com/psf/black) python code formatting.
 
-Before commiting changes run:
+Before committing changes run:
 
 ```bash
 pipenv run black .
@@ -333,7 +333,7 @@ Adding a standard test case is easy.
 
 - Create a new directory `betterproto/tests/inputs/<name>`
   - add `<name>.proto`  with a message called `Test`
-  - add `<name>.json` with some test data
+  - add `<name>.json` with some test data (optional)
 
 It will be picked up automatically when you run the tests.
 

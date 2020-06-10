@@ -1,6 +1,9 @@
+import importlib
 import os
+import pathlib
 import subprocess
-from typing import Generator
+from types import ModuleType
+from typing import Callable, Generator, Optional
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -60,3 +63,25 @@ def get_test_case_json_data(test_case_name, json_file_name=None):
 
     with open(test_data_file_path) as fh:
         return fh.read()
+
+
+def find_module(
+    module: ModuleType, predicate: Callable[[ModuleType], bool]
+) -> Optional[ModuleType]:
+    if predicate(module):
+        return module
+
+    module_path = pathlib.Path(*module.__path__)
+
+    for sub in list(module_path.glob("**/")):
+        if not sub.is_dir() or sub == module_path:
+            continue
+        sub_module_path = sub.relative_to(module_path)
+        sub_module_name = ".".join(sub_module_path.parts)
+
+        sub_module = importlib.import_module(f".{sub_module_name}", module.__name__)
+
+        if predicate(sub_module):
+            return sub_module
+
+    return None
