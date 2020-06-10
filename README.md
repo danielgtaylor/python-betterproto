@@ -296,6 +296,8 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ## Development
 
+Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-evluyf3k-QvBmw9IK1s8hT~9~S1vKzg)!
+
 First, make sure you have Python 3.6+ and `pipenv` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
 
 ```sh
@@ -393,6 +395,10 @@ $ pipenv run test
 - [x] Python package
 - [x] Automate running tests
 - [ ] Cleanup!
+
+## Community
+
+Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-evluyf3k-QvBmw9IK1s8hT~9~S1vKzg)!
 
 ## License
 
