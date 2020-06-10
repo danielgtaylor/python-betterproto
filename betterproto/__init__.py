@@ -28,9 +28,8 @@ from typing import (
 
 
 import grpclib.const
-import stringcase
 
-from .casing import safe_snake_case, snake_case
+from .casing import camel_case, safe_snake_case, snake_case
 
 if TYPE_CHECKING:
     from grpclib._protocols import IProtoMessage
@@ -131,7 +130,7 @@ DATETIME_ZERO = datetime_default_gen()
 class Casing(enum.Enum):
     """Casing constants for serialization."""
 
-    CAMEL = stringcase.camelcase
+    CAMEL = camel_case
     SNAKE = snake_case
 
 

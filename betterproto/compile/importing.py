@@ -154,8 +154,10 @@ def import_cousin(current_package, imports, py_package, py_type):
     )
     string_import = py_package[-1]
     # Add trailing __ to avoid name mangling (python.org/dev/peps/pep-0008/#id34)
-    string_alias = f"{'_' * distance_up}" + safe_snake_case(
-        ".".join(py_package[len(shared_ancestry) :])
-    ) + "__"
+    string_alias = (
+        f"{'_' * distance_up}"
+        + safe_snake_case(".".join(py_package[len(shared_ancestry) :]))
+        + "__"
+    )
     imports.add(f"from {string_from} import {string_import} as {string_alias}")
     return f"{string_alias}.{py_type}"
