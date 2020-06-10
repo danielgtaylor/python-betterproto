@@ -7,7 +7,8 @@ xfail = {
     "namespace_keywords",  # 70
     "namespace_builtin_types",  # 53
     "googletypes_struct",  # 9
-    "googletypes_value",  # 9
+    "googletypes_value",  # 9,
+    "import_capitalized_package",
 }
 
 services = {
