@@ -1,6 +1,6 @@
 from typing import Any, Callable, Optional
 
-import google.protobuf.wrappers_pb2 as wrappers
+import betterproto.lib.google.protobuf as protobuf
 import pytest
 
 from betterproto.tests.mocks import MockChannel
@@ -9,15 +9,15 @@ from betterproto.tests.output_betterproto.googletypes_response.googletypes_respo
 )
 
 test_cases = [
-    (TestStub.get_double, wrappers.DoubleValue, 2.5),
-    (TestStub.get_float, wrappers.FloatValue, 2.5),
-    (TestStub.get_int64, wrappers.Int64Value, -64),
-    (TestStub.get_u_int64, wrappers.UInt64Value, 64),
-    (TestStub.get_int32, wrappers.Int32Value, -32),
-    (TestStub.get_u_int32, wrappers.UInt32Value, 32),
-    (TestStub.get_bool, wrappers.BoolValue, True),
-    (TestStub.get_string, wrappers.StringValue, "string"),
-    (TestStub.get_bytes, wrappers.BytesValue, bytes(0xFF)[0:4]),
+    (TestStub.get_double, protobuf.DoubleValue, 2.5),
+    (TestStub.get_float, protobuf.FloatValue, 2.5),
+    (TestStub.get_int64, protobuf.Int64Value, -64),
+    (TestStub.get_u_int64, protobuf.UInt64Value, 64),
+    (TestStub.get_int32, protobuf.Int32Value, -32),
+    (TestStub.get_u_int32, protobuf.UInt32Value, 32),
+    (TestStub.get_bool, protobuf.BoolValue, True),
+    (TestStub.get_string, protobuf.StringValue, "string"),
+    (TestStub.get_bytes, protobuf.BytesValue, bytes(0xFF)[0:4]),
 ]
 
 

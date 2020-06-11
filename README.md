@@ -256,6 +256,7 @@ Google provides several well-known message types like a timestamp, duration, and
 | `google.protobuf.duration`  | [`datetime.timedelta`][td]               | `0`                    |
 | `google.protobuf.timestamp` | Timezone-aware [`datetime.datetime`][dt] | `1970-01-01T00:00:00Z` |
 | `google.protobuf.*Value`    | `Optional[...]`                          | `None`                 |
+| `google.protobuf.*`         | `betterproto.lib.google.protobuf.*`      | `None`                 |
 
 [td]: https://docs.python.org/3/library/datetime.html#timedelta-objects
 [dt]: https://docs.python.org/3/library/datetime.html#datetime.datetime
@@ -353,6 +354,25 @@ $ pipenv run generate
 # Run all tests
 $ pipenv run test
 ```
+
+### (Re)compiling Google Well-known Types
+
+Betterproto includes compiled versions for Google's well-known types at [betterproto/lib/google](betterproto/lib/google).
+Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
+
+Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
+
+Assuming your `google.protobuf` source files (included with all releases of `protoc`) are located in `/usr/local/include`, you can regenerate them as follows:
+
+```sh
+protoc \
+    --plugin=protoc-gen-custom=betterproto/plugin.py \
+    --custom_opt=INCLUDE_GOOGLE \
+    --custom_out=betterproto/lib \
+    -I /usr/local/include/ \
+    /usr/local/include/google/protobuf/*.proto
+```
+
 
 ### TODO
 

@@ -941,19 +941,23 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
     return (field_name, getattr(message, field_name))
 
 
-@dataclasses.dataclass
-class _Duration(Message):
-    # Signed seconds of the span of time. Must be from -315,576,000,000 to
-    # +315,576,000,000 inclusive. Note: these bounds are computed from: 60
-    # sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
-    seconds: int = int64_field(1)
-    # Signed fractions of a second at nanosecond resolution of the span of time.
-    # Durations less than one second are represented with a 0 `seconds` field and
-    # a positive or negative `nanos` field. For durations of one second or more,
-    # a non-zero value for the `nanos` field must be of the same sign as the
-    # `seconds` field. Must be from -999,999,999 to +999,999,999 inclusive.
-    nanos: int = int32_field(2)
+# Circular import workaround: google.protobuf depends on base classes defined above.
+from .lib.google.protobuf import (
+    Duration,
+    Timestamp,
+    BoolValue,
+    BytesValue,
+    DoubleValue,
+    FloatValue,
+    Int32Value,
+    Int64Value,
+    StringValue,
+    UInt32Value,
+    UInt64Value,
+)
 
+
+class _Duration(Duration):
     def to_timedelta(self) -> timedelta:
         return timedelta(seconds=self.seconds, microseconds=self.nanos / 1e3)
 
@@ -966,16 +970,7 @@ class _Duration(Message):
         return ".".join(parts) + "s"
 
 
-@dataclasses.dataclass
-class _Timestamp(Message):
-    # Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must
-    # be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.
-    seconds: int = int64_field(1)
-    # Non-negative fractions of a second at nanosecond resolution. Negative
-    # second values with fractions must still have non-negative nanos values that
-    # count forward in time. Must be from 0 to 999,999,999 inclusive.
-    nanos: int = int32_field(2)
-
+class _Timestamp(Timestamp):
     def to_datetime(self) -> datetime:
         ts = self.seconds + (self.nanos / 1e9)
         return datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -1016,63 +1011,18 @@ class _WrappedMessage(Message):
         return self
 
 
-@dataclasses.dataclass
-class _BoolValue(_WrappedMessage):
-    value: bool = bool_field(1)
-
-
-@dataclasses.dataclass
-class _Int32Value(_WrappedMessage):
-    value: int = int32_field(1)
-
-
-@dataclasses.dataclass
-class _UInt32Value(_WrappedMessage):
-    value: int = uint32_field(1)
-
-
-@dataclasses.dataclass
-class _Int64Value(_WrappedMessage):
-    value: int = int64_field(1)
-
-
-@dataclasses.dataclass
-class _UInt64Value(_WrappedMessage):
-    value: int = uint64_field(1)
-
-
-@dataclasses.dataclass
-class _FloatValue(_WrappedMessage):
-    value: float = float_field(1)
-
-
-@dataclasses.dataclass
-class _DoubleValue(_WrappedMessage):
-    value: float = double_field(1)
-
-
-@dataclasses.dataclass
-class _StringValue(_WrappedMessage):
-    value: str = string_field(1)
-
-
-@dataclasses.dataclass
-class _BytesValue(_WrappedMessage):
-    value: bytes = bytes_field(1)
-
-
 def _get_wrapper(proto_type: str) -> Type:
     """Get the wrapper message class for a wrapped type."""
     return {
-        TYPE_BOOL: _BoolValue,
-        TYPE_INT32: _Int32Value,
-        TYPE_UINT32: _UInt32Value,
-        TYPE_INT64: _Int64Value,
-        TYPE_UINT64: _UInt64Value,
-        TYPE_FLOAT: _FloatValue,
-        TYPE_DOUBLE: _DoubleValue,
-        TYPE_STRING: _StringValue,
-        TYPE_BYTES: _BytesValue,
+        TYPE_BOOL: BoolValue,
+        TYPE_INT32: Int32Value,
+        TYPE_UINT32: UInt32Value,
+        TYPE_INT64: Int64Value,
+        TYPE_UINT64: UInt64Value,
+        TYPE_FLOAT: FloatValue,
+        TYPE_DOUBLE: DoubleValue,
+        TYPE_STRING: StringValue,
+        TYPE_BYTES: BytesValue,
     }[proto_type]
 
 

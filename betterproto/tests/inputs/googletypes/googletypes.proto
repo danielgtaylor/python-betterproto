@@ -3,10 +3,12 @@ syntax = "proto3";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
 
 message Test {
   google.protobuf.BoolValue maybe = 1;
   google.protobuf.Timestamp ts = 2;
   google.protobuf.Duration duration = 3;
   google.protobuf.Int32Value important = 4;
+  google.protobuf.Empty empty = 5;
 }

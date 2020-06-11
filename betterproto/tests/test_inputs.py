@@ -30,6 +30,10 @@ class TestCases:
             test for test in _messages if get_test_case_json_data(test)
         }
 
+        unknown_xfail_tests = xfail - _all
+        if unknown_xfail_tests:
+            raise Exception(f"Unknown test(s) in config.py: {unknown_xfail_tests}")
+
         self.all = self.apply_xfail_marks(_all, xfail)
         self.services = self.apply_xfail_marks(_services, xfail)
         self.messages = self.apply_xfail_marks(_messages, xfail)
@@ -110,7 +114,7 @@ def test_message_json(repeat, test_data: TestData) -> None:
         message.from_json(json_data)
         message_json = message.to_json(0)
 
-        assert json.loads(json_data) == json.loads(message_json)
+        assert json.loads(message_json) == json.loads(json_data)
 
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)

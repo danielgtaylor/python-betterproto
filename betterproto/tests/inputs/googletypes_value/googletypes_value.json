@@ -1,0 +1,11 @@
+{
+  "value1": "hello world",
+  "value2": true,
+  "value3": 1,
+  "value4": null,
+  "value5": [
+    1,
+    2,
+    3
+  ]
+}
