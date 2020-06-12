@@ -818,13 +818,10 @@ class Message(ABC):
                         output[cased_name] = v
                 elif isinstance(v, list):
                     # Convert each item.
-                    new = v
-                    for i in v:
-                        if isinstance(i, Message):
-                            new.append(i.to_dict(casing, include_default_values))
-                        else:
-                            new.append(i)
-                    v = new
+                    try:
+                        v = [i.to_dict(casing, include_default_values) for i in v]
+                    except AttributeError:
+                        pass
                     if v or include_default_values:
                         output[cased_name] = v
                 else:
