@@ -103,9 +103,9 @@ def py_type(
     message: DescriptorProto,
     descriptor: FieldDescriptorProto,
 ) -> str:
-    if descriptor.type in [1, 2, 6, 7, 15, 16]:
+    if descriptor.type in [1, 2]:
         return "float"
-    elif descriptor.type in [3, 4, 5, 13, 17, 18]:
+    elif descriptor.type in [3, 4, 5, 6, 7, 13, 15, 16, 17, 18]:
         return "int"
     elif descriptor.type == 8:
         return "bool"
