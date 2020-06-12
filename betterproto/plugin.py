@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import itertools
 import os.path
 import pathlib
@@ -8,6 +7,7 @@ import sys
 import textwrap
 from typing import List
 
+sys.path.append(str(pathlib.Path(__file__).parent.parent))  # add betterproto to path
 import betterproto
 from betterproto.compile.importing import get_ref_type
 from betterproto.compile.naming import (
