@@ -70,10 +70,10 @@ def get_ref_type(
     if py_package == current_package:
         return import_sibling(py_type)
 
-    if py_package[0 : len(current_package)] == current_package:
+    if py_package[: len(current_package)] == current_package:
         return import_descendent(current_package, imports, py_package, py_type)
 
-    if current_package[0 : len(py_package)] == py_package:
+    if current_package[: len(py_package)] == py_package:
         return import_ancestor(current_package, imports, py_package, py_type)
 
     return import_cousin(current_package, imports, py_package, py_type)
@@ -109,7 +109,7 @@ def import_descendent(current_package, imports, py_package, py_type):
     name    = foo.bar.Baz
     """
     importing_descendent = py_package[len(current_package) :]
-    string_from = ".".join(importing_descendent[0:-1])
+    string_from = ".".join(importing_descendent[:-1])
     string_import = importing_descendent[-1]
     if string_from:
         string_alias = "_".join(importing_descendent)
