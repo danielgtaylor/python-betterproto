@@ -68,13 +68,23 @@ def get_test_case_json_data(test_case_name, json_file_name=None):
 def find_module(
     module: ModuleType, predicate: Callable[[ModuleType], bool]
 ) -> Optional[ModuleType]:
+    """
+    Recursively search module tree for a module that matches the search predicate.
+    Assumes that the submodules are directories containing __init__.py.
+
+    Example:
+
+        # find module inside foo that contains Test
+        import foo
+        test_module = find_module(foo, lambda m: hasattr(m, 'Test'))
+    """
     if predicate(module):
         return module
 
     module_path = pathlib.Path(*module.__path__)
 
-    for sub in list(module_path.glob("**/")):
-        if not sub.is_dir() or sub == module_path:
+    for sub in list(sub.parent for sub in module_path.glob("**/__init__.py")):
+        if sub == module_path:
             continue
         sub_module_path = sub.relative_to(module_path)
         sub_module_name = ".".join(sub_module_path.parts)

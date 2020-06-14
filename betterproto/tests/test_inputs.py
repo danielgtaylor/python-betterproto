@@ -91,7 +91,7 @@ def test_data(request):
     if not plugin_module_entry_point:
         raise Exception(
             f"Test case {repr(test_case_name)} has no entry point. "
-            + "Please add a proto message or service called Test and recompile."
+            "Please add a proto message or service called Test and recompile."
         )
 
     yield (
