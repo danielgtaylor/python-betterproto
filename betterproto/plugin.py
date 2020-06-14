@@ -359,8 +359,14 @@ def generate_code(request, response):
 
     # Make each output directory a package with __init__ file
     output_paths = set(pathlib.Path(path) for path in output_map.keys())
-    output_dirs = [directory for path in output_paths for directory in path.parents]
-    init_files = set(d.joinpath("__init__.py") for d in output_dirs) - output_paths
+    init_files = (
+        set(
+            directory.joinpath("__init__.py")
+            for path in output_paths
+            for directory in path.parents
+        )
+        - output_paths
+    )
 
     for init_file in init_files:
         init = response.file.add()
