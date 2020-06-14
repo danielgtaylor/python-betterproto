@@ -9,7 +9,7 @@ import textwrap
 from typing import List
 
 import betterproto
-from betterproto.compile.importing import get_ref_type
+from betterproto.compile.importing import get_type_reference
 from betterproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -51,7 +51,7 @@ def py_type(package: str, imports: set, field: FieldDescriptorProto) -> str:
         return "str"
     elif field.type in [11, 14]:
         # Type referencing another defined Message or a named enum
-        return get_ref_type(package, imports, field.type_name)
+        return get_type_reference(package, imports, field.type_name)
     elif field.type == 12:
         return "bytes"
     else:
@@ -306,7 +306,7 @@ def generate_code(request, response):
                         raise NotImplementedError("Client streaming not yet supported")
 
                     input_message = None
-                    input_type = get_ref_type(
+                    input_type = get_type_reference(
                         package, output["imports"], method.input_type
                     ).strip('"')
                     for msg in output["messages"]:
@@ -323,11 +323,11 @@ def generate_code(request, response):
                             "py_name": pythonize_method_name(method.name),
                             "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
                             "route": f"/{package}.{service.name}/{method.name}",
-                            "input": get_ref_type(
+                            "input": get_type_reference(
                                 package, output["imports"], method.input_type
                             ).strip('"'),
                             "input_message": input_message,
-                            "output": get_ref_type(
+                            "output": get_type_reference(
                                 package,
                                 output["imports"],
                                 method.output_type,

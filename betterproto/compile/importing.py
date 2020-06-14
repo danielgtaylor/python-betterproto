@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict, List, Type
+from typing import Dict, List, Set, Type
 
 from betterproto import safe_snake_case
 from betterproto.compile.naming import pythonize_class_name
@@ -35,7 +35,7 @@ def parse_source_type_name(field_type_name):
     return package, name
 
 
-def get_ref_type(
+def get_type_reference(
     package: str, imports: set, source_type: str, unwrap: bool = True,
 ) -> str:
     """
@@ -65,48 +65,43 @@ def get_ref_type(
         py_package = ["betterproto", "lib"] + py_package
 
     if py_package[:1] == ["betterproto"]:
-        return import_root(imports, py_package, py_type)
+        return reference_absolute(imports, py_package, py_type)
 
     if py_package == current_package:
-        return import_sibling(py_type)
+        return reference_sibling(py_type)
 
     if py_package[: len(current_package)] == current_package:
-        return import_descendent(current_package, imports, py_package, py_type)
+        return reference_descendent(current_package, imports, py_package, py_type)
 
     if current_package[: len(py_package)] == py_package:
-        return import_ancestor(current_package, imports, py_package, py_type)
+        return reference_ancestor(current_package, imports, py_package, py_type)
 
-    return import_cousin(current_package, imports, py_package, py_type)
+    return reference_cousin(current_package, imports, py_package, py_type)
 
 
-def import_root(imports, py_package, py_type):
+def reference_absolute(imports, py_package, py_type):
+    """
+    Returns a reference to a python type located in the root, i.e. sys.path.
+    """
     string_import = ".".join(py_package)
     string_alias = safe_snake_case(string_import)
     imports.add(f"import {string_import} as {string_alias}")
     return f"{string_alias}.{py_type}"
 
 
-def import_sibling(py_type):
+def reference_sibling(py_type: str) -> str:
     """
-    package =
-    name    = Foo
-
-    package = foo
-    name    = foo.Bar
-
-    package = foo.bar
-    name    = foo.bar.Baz
+    Returns a reference to a python type within the same package as the current package.
     """
     return f'"{py_type}"'
 
 
-def import_descendent(current_package, imports, py_package, py_type):
+def reference_descendent(
+    current_package: List[str], imports: Set[str], py_package: List[str], py_type: str
+) -> str:
     """
-    package =
-    name    = foo.Bar
-
-    package =
-    name    = foo.bar.Baz
+    Returns a reference to a python type in a package that is a descendent of the current package,
+    and adds the required import that is aliased to avoid name conflicts.
     """
     importing_descendent = py_package[len(current_package) :]
     string_from = ".".join(importing_descendent[:-1])
@@ -120,16 +115,12 @@ def import_descendent(current_package, imports, py_package, py_type):
         return f"{string_import}.{py_type}"
 
 
-def import_ancestor(current_package, imports, py_package, py_type):
+def reference_ancestor(
+    current_package: List[str], imports: Set[str], py_package: List[str], py_type: str
+) -> str:
     """
-    package = foo.bar
-    name    = foo.Foo
-
-    package = foo
-    name    = Bar
-
-    package = foo.bar.baz
-    name    = Bar
+    Returns a reference to a python type in a package which is an ancestor to the current package,
+    and adds the required import that is aliased (if possible) to avoid name conflicts.
     """
     distance_up = len(current_package) - len(py_package)
     if py_package:
@@ -144,13 +135,12 @@ def import_ancestor(current_package, imports, py_package, py_type):
         return py_type
 
 
-def import_cousin(current_package, imports, py_package, py_type):
+def reference_cousin(
+    current_package: List[str], imports: Set[str], py_package: List[str], py_type: str
+) -> str:
     """
-    package = foo.bar
-    name    = baz.Foo
-
-    package = foo.bar.baz
-    name    = foo.example.Bar
+    Returns a reference to a python type in a package that is not descendent, ancestor or sibling,
+    and adds the required import that is aliased to avoid name conflicts.
     """
     shared_ancestry = os.path.commonprefix([current_package, py_package])
     distance_up = len(current_package) - len(shared_ancestry)

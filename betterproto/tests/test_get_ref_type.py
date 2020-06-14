@@ -1,6 +1,6 @@
 import pytest
 
-from ..compile.importing import get_ref_type, parse_source_type_name
+from ..compile.importing import get_type_reference, parse_source_type_name
 
 
 @pytest.mark.parametrize(
@@ -28,11 +28,11 @@ from ..compile.importing import get_ref_type, parse_source_type_name
         ),
     ],
 )
-def test_import_google_wellknown_types_non_wrappers(
+def test_reference_google_wellknown_types_non_wrappers(
     google_type: str, expected_name: str, expected_import: str
 ):
     imports = set()
-    name = get_ref_type(package="", imports=imports, source_type=google_type)
+    name = get_type_reference(package="", imports=imports, source_type=google_type)
 
     assert name == expected_name
     assert imports.__contains__(
@@ -54,9 +54,11 @@ def test_import_google_wellknown_types_non_wrappers(
         (".google.protobuf.BytesValue", "Optional[bytes]"),
     ],
 )
-def test_importing_google_wrappers_unwraps_them(google_type: str, expected_name: str):
+def test_referenceing_google_wrappers_unwraps_them(
+    google_type: str, expected_name: str
+):
     imports = set()
-    name = get_ref_type(package="", imports=imports, source_type=google_type)
+    name = get_type_reference(package="", imports=imports, source_type=google_type)
 
     assert name == expected_name
     assert imports == set()
@@ -76,19 +78,19 @@ def test_importing_google_wrappers_unwraps_them(google_type: str, expected_name:
         (".google.protobuf.BytesValue", "betterproto_lib_google_protobuf.BytesValue"),
     ],
 )
-def test_importing_google_wrappers_without_unwrapping(
+def test_referenceing_google_wrappers_without_unwrapping(
     google_type: str, expected_name: str
 ):
-    name = get_ref_type(
+    name = get_type_reference(
         package="", imports=set(), source_type=google_type, unwrap=False
     )
 
     assert name == expected_name
 
 
-def test_import_child_package_from_package():
+def test_reference_child_package_from_package():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="package", imports=imports, source_type="package.child.Message"
     )
 
@@ -96,17 +98,17 @@ def test_import_child_package_from_package():
     assert name == "child.Message"
 
 
-def test_import_child_package_from_root():
+def test_reference_child_package_from_root():
     imports = set()
-    name = get_ref_type(package="", imports=imports, source_type="child.Message")
+    name = get_type_reference(package="", imports=imports, source_type="child.Message")
 
     assert imports == {"from . import child"}
     assert name == "child.Message"
 
 
-def test_import_camel_cased():
+def test_reference_camel_cased():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="", imports=imports, source_type="child_package.example_message"
     )
 
@@ -114,17 +116,19 @@ def test_import_camel_cased():
     assert name == "child_package.ExampleMessage"
 
 
-def test_import_nested_child_from_root():
+def test_reference_nested_child_from_root():
     imports = set()
-    name = get_ref_type(package="", imports=imports, source_type="nested.child.Message")
+    name = get_type_reference(
+        package="", imports=imports, source_type="nested.child.Message"
+    )
 
     assert imports == {"from .nested import child as nested_child"}
     assert name == "nested_child.Message"
 
 
-def test_import_deeply_nested_child_from_root():
+def test_reference_deeply_nested_child_from_root():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="", imports=imports, source_type="deeply.nested.child.Message"
     )
 
@@ -132,9 +136,9 @@ def test_import_deeply_nested_child_from_root():
     assert name == "deeply_nested_child.Message"
 
 
-def test_import_deeply_nested_child_from_package():
+def test_reference_deeply_nested_child_from_package():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="package",
         imports=imports,
         source_type="package.deeply.nested.child.Message",
@@ -144,33 +148,35 @@ def test_import_deeply_nested_child_from_package():
     assert name == "deeply_nested_child.Message"
 
 
-def test_import_root_sibling():
+def test_reference_root_sibling():
     imports = set()
-    name = get_ref_type(package="", imports=imports, source_type="Message")
+    name = get_type_reference(package="", imports=imports, source_type="Message")
 
     assert imports == set()
     assert name == '"Message"'
 
 
-def test_import_nested_siblings():
+def test_reference_nested_siblings():
     imports = set()
-    name = get_ref_type(package="foo", imports=imports, source_type="foo.Message")
+    name = get_type_reference(package="foo", imports=imports, source_type="foo.Message")
 
+    assert imports == set()
     assert name == '"Message"'
 
 
-def test_import_deeply_nested_siblings():
+def test_reference_deeply_nested_siblings():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="foo.bar", imports=imports, source_type="foo.bar.Message"
     )
 
+    assert imports == set()
     assert name == '"Message"'
 
 
-def test_import_parent_package_from_child():
+def test_reference_parent_package_from_child():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="package.child", imports=imports, source_type="package.Message"
     )
 
@@ -178,9 +184,9 @@ def test_import_parent_package_from_child():
     assert name == "__package__.Message"
 
 
-def test_import_parent_package_from_deeply_nested_child():
+def test_reference_parent_package_from_deeply_nested_child():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="package.deeply.nested.child",
         imports=imports,
         source_type="package.deeply.nested.Message",
@@ -190,9 +196,9 @@ def test_import_parent_package_from_deeply_nested_child():
     assert name == "__nested__.Message"
 
 
-def test_import_ancestor_package_from_nested_child():
+def test_reference_ancestor_package_from_nested_child():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="package.ancestor.nested.child",
         imports=imports,
         source_type="package.ancestor.Message",
@@ -202,17 +208,19 @@ def test_import_ancestor_package_from_nested_child():
     assert name == "___ancestor__.Message"
 
 
-def test_import_root_package_from_child():
+def test_reference_root_package_from_child():
     imports = set()
-    name = get_ref_type(package="package.child", imports=imports, source_type="Message")
+    name = get_type_reference(
+        package="package.child", imports=imports, source_type="Message"
+    )
 
     assert imports == {"from ... import Message"}
     assert name == "Message"
 
 
-def test_import_root_package_from_deeply_nested_child():
+def test_reference_root_package_from_deeply_nested_child():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="package.deeply.nested.child", imports=imports, source_type="Message"
     )
 
@@ -220,25 +228,25 @@ def test_import_root_package_from_deeply_nested_child():
     assert name == "Message"
 
 
-def test_import_unrelated_package():
+def test_reference_unrelated_package():
     imports = set()
-    name = get_ref_type(package="a", imports=imports, source_type="p.Message")
+    name = get_type_reference(package="a", imports=imports, source_type="p.Message")
 
     assert imports == {"from .. import p as _p__"}
     assert name == "_p__.Message"
 
 
-def test_import_unrelated_nested_package():
+def test_reference_unrelated_nested_package():
     imports = set()
-    name = get_ref_type(package="a.b", imports=imports, source_type="p.q.Message")
+    name = get_type_reference(package="a.b", imports=imports, source_type="p.q.Message")
 
     assert imports == {"from ...p import q as __p_q__"}
     assert name == "__p_q__.Message"
 
 
-def test_import_unrelated_deeply_nested_package():
+def test_reference_unrelated_deeply_nested_package():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="a.b.c.d", imports=imports, source_type="p.q.r.s.Message"
     )
 
@@ -246,17 +254,17 @@ def test_import_unrelated_deeply_nested_package():
     assert name == "____p_q_r_s__.Message"
 
 
-def test_import_cousin_package():
+def test_reference_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.x", imports=imports, source_type="a.y.Message")
+    name = get_type_reference(package="a.x", imports=imports, source_type="a.y.Message")
 
     assert imports == {"from .. import y as _y__"}
     assert name == "_y__.Message"
 
 
-def test_import_cousin_package_different_name():
+def test_reference_cousin_package_different_name():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="test.package1", imports=imports, source_type="cousin.package2.Message"
     )
 
@@ -264,9 +272,9 @@ def test_import_cousin_package_different_name():
     assert name == "__cousin_package2__.Message"
 
 
-def test_import_cousin_package_same_name():
+def test_reference_cousin_package_same_name():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="test.package", imports=imports, source_type="cousin.package.Message"
     )
 
@@ -274,17 +282,19 @@ def test_import_cousin_package_same_name():
     assert name == "__cousin_package__.Message"
 
 
-def test_import_far_cousin_package():
+def test_reference_far_cousin_package():
     imports = set()
-    name = get_ref_type(package="a.x.y", imports=imports, source_type="a.b.c.Message")
+    name = get_type_reference(
+        package="a.x.y", imports=imports, source_type="a.b.c.Message"
+    )
 
     assert imports == {"from ...b import c as __b_c__"}
     assert name == "__b_c__.Message"
 
 
-def test_import_far_far_cousin_package():
+def test_reference_far_far_cousin_package():
     imports = set()
-    name = get_ref_type(
+    name = get_type_reference(
         package="a.x.y.z", imports=imports, source_type="a.b.c.d.Message"
     )
 
