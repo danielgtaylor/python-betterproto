@@ -13,26 +13,26 @@ class Message(betterproto.Message):
     body: str = betterproto.string_field(1)
 
 
-async def to_list(generator: AsyncIterator):
-    lis = []
-    async for value in generator:
-        lis.append(value)
-    return lis
-
-
 @pytest.fixture
 def expected_responses():
     return [Message("Hello world 1"), Message("Hello world 2"), Message("Done")]
 
 
 class ClientStub:
-    async def connect(self, requests):
+    async def connect(self, requests: AsyncIterator):
         await asyncio.sleep(0.1)
         async for request in requests:
             await asyncio.sleep(0.1)
             yield request
         await asyncio.sleep(0.1)
         yield Message("Done")
+
+
+async def to_list(generator: AsyncIterator):
+    lis = []
+    async for value in generator:
+        lis.append(value)
+    return lis
 
 
 @pytest.fixture
@@ -118,6 +118,33 @@ async def test_send_from_close_manually_immediately(client, expected_responses):
     await requests.send_from(
         [Message(body="Hello world 1"), Message(body="Hello world 2")], close=False
     )
+
+    requests.close()
+
+    assert await to_list(responses) == expected_responses
+
+
+@pytest.mark.asyncio
+async def test_send_individually_and_close_before_connect(client, expected_responses):
+    requests = AsyncChannel()
+
+    await requests.send(Message(body="Hello world 1"))
+    await requests.send(Message(body="Hello world 2"))
+    requests.close()
+
+    responses = client.connect(requests)
+
+    assert await to_list(responses) == expected_responses
+
+
+@pytest.mark.asyncio
+async def test_send_individually_and_close_after_connect(client, expected_responses):
+    requests = AsyncChannel()
+
+    await requests.send(Message(body="Hello world 1"))
+    await requests.send(Message(body="Hello world 2"))
+
+    responses = client.connect(requests)
 
     requests.close()
 
