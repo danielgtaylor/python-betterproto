@@ -100,13 +100,14 @@ class AsyncChannel(AsyncIterable[T]):
         return self
 
     async def __anext__(self) -> T:
-        if self.done:
+        if self.done():
             raise StopAsyncIteration
         self._waiting_recievers += 1
         try:
             result = await self._queue.get()
             if result is self.__flush:
                 raise StopAsyncIteration
+            return result
         finally:
             self._waiting_recievers -= 1
             self._queue.task_done()
@@ -151,7 +152,7 @@ class AsyncChannel(AsyncIterable[T]):
                 await self._queue.put(item)
         if close:
             # Complete the closing process
-            await self.close()
+            self.close()
 
     async def send(self, item: T):
         """
@@ -168,7 +169,7 @@ class AsyncChannel(AsyncIterable[T]):
         or None if the channel is closed before another item is sent.
         :return: An item from the channel
         """
-        if self.done:
+        if self.done():
             raise ChannelDone("Cannot recieve from a closed channel")
         self._waiting_recievers += 1
         try:
