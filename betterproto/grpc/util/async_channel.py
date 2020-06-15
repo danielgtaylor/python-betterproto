@@ -81,17 +81,10 @@ class AsyncChannel(AsyncIterable[T]):
     """
 
     def __init__(
-        self,
-        source: Union[Iterable[T], AsyncIterable[T]] = tuple(),
-        *,
-        buffer_limit: int = 0,
-        close: bool = False,
+        self, *, buffer_limit: int = 0, close: bool = False,
     ):
         self._queue: asyncio.Queue[Union[T, object]] = asyncio.Queue(buffer_limit)
         self._closed = False
-        self._sending_task = (
-            asyncio.ensure_future(self.send_from(source, close)) if source else None
-        )
         self._waiting_recievers: int = 0
         # Track whether flush has been invoked so it can only happen once
         self._flushed = False
@@ -132,7 +125,7 @@ class AsyncChannel(AsyncIterable[T]):
 
     async def send_from(
         self, source: Union[Iterable[T], AsyncIterable[T]], close: bool = False
-    ):
+    ) -> "AsyncChannel[T]":
         """
         Iterates the given [Async]Iterable and sends all the resulting items.
         If close is set to True then subsequent send calls will be rejected with a
@@ -153,8 +146,9 @@ class AsyncChannel(AsyncIterable[T]):
         if close:
             # Complete the closing process
             self.close()
+        return self
 
-    async def send(self, item: T):
+    async def send(self, item: T) -> "AsyncChannel[T]":
         """
         Send a single item over this channel.
         :param item: The item to send
@@ -162,6 +156,7 @@ class AsyncChannel(AsyncIterable[T]):
         if self._closed:
             raise ChannelClosed("Cannot send through a closed channel")
         await self._queue.put(item)
+        return self
 
     async def recieve(self) -> Optional[T]:
         """
@@ -185,8 +180,6 @@ class AsyncChannel(AsyncIterable[T]):
         """
         Close this channel to new items
         """
-        if self._sending_task is not None:
-            self._sending_task.cancel()
         self._closed = True
         asyncio.ensure_future(self._flush_queue())
 
