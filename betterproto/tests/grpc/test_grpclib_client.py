@@ -1,3 +1,4 @@
+import asyncio
 from betterproto.tests.output_betterproto.service.service import (
     DoThingResponse,
     DoThingRequest,
@@ -129,7 +130,10 @@ async def test_async_gen_for_stream_stream_request():
         # Use an AsyncChannel to decouple sending and recieving, it'll send some_things
         # immediately and we'll use it to send more_things later, after recieving some
         # results
-        request_chan = AsyncChannel(GetThingRequest(name) for name in some_things)
+        request_chan = AsyncChannel()
+        send_initial_requests = asyncio.ensure_future(
+            request_chan.send_from(GetThingRequest(name) for name in some_things)
+        )
         response_index = 0
         async for response in client.get_different_things(request_chan):
             assert response.name == expected_things[response_index]
@@ -138,13 +142,13 @@ async def test_async_gen_for_stream_stream_request():
             if more_things:
                 # Send some more requests as we recieve reponses to be sure coordination of
                 # send/recieve events doesn't matter
-                another_response = await request_chan.send(
-                    GetThingRequest(more_things.pop(0))
-                )
-                if another_response is not None:
-                    assert another_response.name == expected_things[response_index]
-                    assert another_response.version == response_index
-                    response_index += 1
+                await request_chan.send(GetThingRequest(more_things.pop(0)))
+            elif not send_initial_requests.done():
+                # Make sure the sending task it completed
+                await send_initial_requests
             else:
                 # No more things to send make sure channel is closed
-                await request_chan.close()
+                request_chan.close()
+        assert response_index == len(
+            expected_things
+        ), "Didn't recieve all exptected responses"
