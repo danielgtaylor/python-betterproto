@@ -30,14 +30,15 @@ class ChannelDone(Exception):
 
 class AsyncChannel(AsyncIterable[T]):
     """
-    A buffered async channel for sending items between coroutines with FIFO semantics.
+    A buffered async channel for sending items between coroutines with FIFO ordering.
 
     This makes decoupled bidirection steaming gRPC requests easy if used like:
 
     .. code-block:: python
         client = GeneratedStub(grpclib_chan)
-        # The channel can be initialised with items to send immediately
-        request_chan = AsyncChannel([ReqestObject(...), ReqestObject(...)])
+        request_chan = await AsyncChannel()
+        # We can start be sending all the requests we already have
+        await request_chan.send_from([ReqestObject(...), ReqestObject(...)])
         async for response in client.rpc_call(request_chan):
             # The response iterator will remain active until the connection is closed
             ...
@@ -48,7 +49,6 @@ class AsyncChannel(AsyncIterable[T]):
             request_chan.close()
 
     Items can be sent through the channel by either:
-    - providing an iterable to the constructor
     - providing an iterable to the send_from method
     - passing them to the send method one at a time
 
@@ -81,17 +81,10 @@ class AsyncChannel(AsyncIterable[T]):
     """
 
     def __init__(
-        self,
-        source: Union[Iterable[T], AsyncIterable[T]] = tuple(),
-        *,
-        buffer_limit: int = 0,
-        close: bool = False,
+        self, *, buffer_limit: int = 0, close: bool = False,
     ):
         self._queue: asyncio.Queue[Union[T, object]] = asyncio.Queue(buffer_limit)
         self._closed = False
-        self._sending_task = (
-            asyncio.ensure_future(self.send_from(source, close)) if source else None
-        )
         self._waiting_recievers: int = 0
         # Track whether flush has been invoked so it can only happen once
         self._flushed = False
@@ -100,13 +93,14 @@ class AsyncChannel(AsyncIterable[T]):
         return self
 
     async def __anext__(self) -> T:
-        if self.done:
+        if self.done():
             raise StopAsyncIteration
         self._waiting_recievers += 1
         try:
             result = await self._queue.get()
             if result is self.__flush:
                 raise StopAsyncIteration
+            return result
         finally:
             self._waiting_recievers -= 1
             self._queue.task_done()
@@ -131,7 +125,7 @@ class AsyncChannel(AsyncIterable[T]):
 
     async def send_from(
         self, source: Union[Iterable[T], AsyncIterable[T]], close: bool = False
-    ):
+    ) -> "AsyncChannel[T]":
         """
         Iterates the given [Async]Iterable and sends all the resulting items.
         If close is set to True then subsequent send calls will be rejected with a
@@ -151,9 +145,10 @@ class AsyncChannel(AsyncIterable[T]):
                 await self._queue.put(item)
         if close:
             # Complete the closing process
-            await self.close()
+            self.close()
+        return self
 
-    async def send(self, item: T):
+    async def send(self, item: T) -> "AsyncChannel[T]":
         """
         Send a single item over this channel.
         :param item: The item to send
@@ -161,6 +156,7 @@ class AsyncChannel(AsyncIterable[T]):
         if self._closed:
             raise ChannelClosed("Cannot send through a closed channel")
         await self._queue.put(item)
+        return self
 
     async def recieve(self) -> Optional[T]:
         """
@@ -168,7 +164,7 @@ class AsyncChannel(AsyncIterable[T]):
         or None if the channel is closed before another item is sent.
         :return: An item from the channel
         """
-        if self.done:
+        if self.done():
             raise ChannelDone("Cannot recieve from a closed channel")
         self._waiting_recievers += 1
         try:
@@ -184,8 +180,6 @@ class AsyncChannel(AsyncIterable[T]):
         """
         Close this channel to new items
         """
-        if self._sending_task is not None:
-            self._sending_task.cancel()
         self._closed = True
         asyncio.ensure_future(self._flush_queue())
 
