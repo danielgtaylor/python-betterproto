@@ -13,6 +13,7 @@ tests = {
     "namespace_builtin_types",  # 53
     "googletypes_struct",  # 9
     "googletypes_value",  # 9
+    "to_dict_with_missing_enum",  # 93
 }
 
 services = {
