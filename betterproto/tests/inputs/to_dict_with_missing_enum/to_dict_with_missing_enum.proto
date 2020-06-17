@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-message TestMessage {
+message Test {
   enum MyEnum {
     ZERO = 0;
     ONE = 1;
