@@ -351,10 +351,9 @@ Custom tests are found in `tests/test_*.py` and are run with pytest.
 Here's how to run the tests.
 
 ```sh
-# Generate assets from sample .proto files
+# Generate assets from sample .proto files required by the tests
 make generate
-
-# Run all tests
+# Run the tests
 make test
 ```
 

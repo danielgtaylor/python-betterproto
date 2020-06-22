@@ -10,11 +10,17 @@ jobs:
     name: Consult black on python formatting
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: 3.7
       - uses: Gr1N/setup-poetry@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
       - name: Install dependencies
         run: poetry install
       - name: Run black
@@ -25,25 +31,37 @@ jobs:
 
     name: Run tests with tox
 
+    strategy:
+      matrix:
+        python-version: [ '3.6', '3.7', '3.8']
+
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
-          python-version: 3.7
+          python-version: ${{ matrix.python-version }}
       - uses: Gr1N/setup-poetry@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
       - name: Install dependencies
         run: |
           sudo apt install protobuf-compiler libprotobuf-dev
           poetry install
       - name: Run tests
-        run: make full-test
+        run: |
+          make generate
+          make test
 
   build-release:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: 3.7
       - uses: Gr1N/setup-poetry@v2
