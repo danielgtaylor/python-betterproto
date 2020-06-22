@@ -21,7 +21,11 @@ protobuf = { version = "^3.12.2", optional = true }
 stringcase = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
+black = "^19.10b0"
+bpython = "^0.19"
+jinja2 = "^2.11.2"
 mypy = "^0.770"
+protobuf = "^3.12.2"
 pytest = "^5.4.2"
 pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
@@ -55,4 +59,3 @@ commands =
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
-

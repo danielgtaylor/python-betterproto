@@ -3,10 +3,7 @@ help:               ##	- Show this help.
 
 # Dev workflow tasks
 
-setup:              ##	- Setup the virtualenv with poetry
-	poetry install -E compiler
-
-generate:           ##	- Generate test cases (do this once before running test)
+generate:           ## - Generate test cases (do this once before running test)
 	poetry run ./betterproto/tests/generate.py
 
 test:               ##	- Run tests

@@ -16,7 +16,7 @@ jobs:
           python-version: 3.7
       - uses: Gr1N/setup-poetry@v2
       - name: Install dependencies
-        run: make setup
+        run: poetry install
       - name: Run black
         run: make check-style
 
@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt install protobuf-compiler libprotobuf-dev
-          make setup
+          poetry install
       - name: Run tests
         run: make full-test
 
