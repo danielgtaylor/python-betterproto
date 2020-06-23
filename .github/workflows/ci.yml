@@ -10,63 +10,65 @@ jobs:
     name: Consult black on python formatting
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - uses: dschep/install-pipenv-action@v1
+      - uses: Gr1N/setup-poetry@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
       - name: Install dependencies
-        run: |
-          pipenv install --dev --python ${pythonLocation}/python
+        run: poetry install
       - name: Run black
-        run: |
-          pipenv run black . --check --diff --exclude tests/output_
+        run: make check-style
 
   run-tests:
     runs-on: ubuntu-latest
 
+    name: Run tests with tox
+
     strategy:
       matrix:
-        python-version: [ '3.6', '3.7' ]
-
-    name: Python ${{ matrix.python-version }} test
+        python-version: [ '3.6', '3.7', '3.8']
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - uses: dschep/install-pipenv-action@v1
+      - uses: Gr1N/setup-poetry@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
       - name: Install dependencies
         run: |
           sudo apt install protobuf-compiler libprotobuf-dev
-          pipenv install --dev --python ${pythonLocation}/python
+          poetry install
       - name: Run tests
         run: |
-          cp .env.default .env
-          pipenv run pip install -e .
-          pipenv run generate
-          pipenv run test
+          make generate
+          make test
 
   build-release:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
           python-version: 3.7
-      - uses: dschep/install-pipenv-action@v1
-      - name: Install dependencies
-        run: |
-          sudo apt install protobuf-compiler libprotobuf-dev
-          pipenv install --dev --python ${pythonLocation}/python
+      - uses: Gr1N/setup-poetry@v2
       - name: Build package
+        run: poetry build
+      - name: Publish package to PyPI
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-        run: pipenv run python setup.py sdist
-      - name: Publish package
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@v1.0.0a0
-        with:
-          user: __token__
-          password: ${{ secrets.pypi }}
+        run: poetry publish -n
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.pypi }}
