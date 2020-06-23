@@ -1,3 +1,5 @@
+.coverage
+.DS_Store
 .env
 .vscode/settings.json
 .mypy_cache
@@ -11,3 +13,4 @@ dist
 output
 .idea
 .DS_Store
+.tox
