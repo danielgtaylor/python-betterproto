@@ -2,6 +2,7 @@ from betterproto.tests.output_betterproto.to_dict_with_missing_enum.to_dict_with
     Test,
     TestMyEnum,
 )
+import pytest
 
 
 def test_message_attributes():
