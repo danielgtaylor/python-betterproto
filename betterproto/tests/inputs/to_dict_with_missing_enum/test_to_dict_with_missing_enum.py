@@ -5,6 +5,7 @@ from betterproto.tests.output_betterproto.to_dict_with_missing_enum.to_dict_with
 import pytest
 
 
+@pytest.mark.xfail("#93")
 def test_message_attributes():
     assert (
         Test(x=TestMyEnum.ONE).to_dict()['x'] == "ONE"
