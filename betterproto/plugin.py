@@ -6,10 +6,10 @@ import re
 import stringcase
 import sys
 import textwrap
-from typing import List
+from typing import List, Union
+import betterproto
 from betterproto.casing import safe_snake_case
 from betterproto.compile.importing import get_ref_type
-import betterproto
 
 try:
     # betterproto[compiler] specific dependencies
@@ -58,8 +58,8 @@ def py_type(
         raise NotImplementedError(f"Unknown type {descriptor.type}")
 
 
-def get_py_zero(type_num: int) -> str:
-    zero = 0
+def get_py_zero(type_num: int) -> Union[str, float]:
+    zero: Union[str, float] = 0
     if type_num in []:
         zero = 0.0
     elif type_num == 8:
@@ -311,9 +311,6 @@ def generate_code(request, response):
                 }
 
                 for j, method in enumerate(service.method):
-                    if method.client_streaming:
-                        raise NotImplementedError("Client streaming not yet supported")
-
                     input_message = None
                     input_type = get_ref_type(
                         package, output["imports"], method.input_type
@@ -347,8 +344,12 @@ def generate_code(request, response):
                         }
                     )
 
+                    if method.client_streaming:
+                        output["typing_imports"].add("AsyncIterable")
+                        output["typing_imports"].add("Iterable")
+                        output["typing_imports"].add("Union")
                     if method.server_streaming:
-                        output["typing_imports"].add("AsyncGenerator")
+                        output["typing_imports"].add("AsyncIterator")
 
                 output["services"].append(data)
 
