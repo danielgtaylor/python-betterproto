@@ -5,8 +5,9 @@ import json
 import struct
 import sys
 from abc import ABC
-from base64 import b64encode, b64decode
+from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
+import stringcase
 from typing import (
     Any,
     AsyncGenerator,
@@ -14,28 +15,20 @@ from typing import (
     Collection,
     Dict,
     Generator,
+    Iterator,
     List,
     Mapping,
     Optional,
     Set,
+    SupportsBytes,
     Tuple,
     Type,
-    TypeVar,
     Union,
     get_type_hints,
-    TYPE_CHECKING,
 )
-
-
-import grpclib.const
-import stringcase
-
+from ._types import ST, T
 from .casing import safe_snake_case
-
-if TYPE_CHECKING:
-    from grpclib._protocols import IProtoMessage
-    from grpclib.client import Channel
-    from grpclib.metadata import Deadline
+from .grpc.grpclib_client import ServiceStub
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
     # Apply backport of datetime.fromisoformat from 3.7
@@ -429,10 +422,6 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
         )
 
 
-# Bound type variable to allow methods to return `self` of subclasses
-T = TypeVar("T", bound="Message")
-
-
 class ProtoClassMetadata:
     oneof_group_by_field: Dict[str, str]
     oneof_field_by_group: Dict[str, Set[dataclasses.Field]]
@@ -451,7 +440,7 @@ class ProtoClassMetadata:
 
     def __init__(self, cls: Type["Message"]):
         by_field = {}
-        by_group = {}
+        by_group: Dict[str, Set] = {}
         by_field_name = {}
         by_field_number = {}
 
@@ -604,7 +593,7 @@ class Message(ABC):
             serialize_empty = False
             if isinstance(value, Message) and value._serialized_on_wire:
                 # Empty messages can still be sent on the wire if they were
-                # set (or received empty).
+                # set (or recieved empty).
                 serialize_empty = True
 
             if value == self._get_field_default(field_name) and not (
@@ -791,7 +780,7 @@ class Message(ABC):
 
     def to_dict(
         self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """
         Returns a dict representation of this message instance which can be
         used to serialize to e.g. JSON. Defaults to camel casing for
@@ -1024,83 +1013,3 @@ def _get_wrapper(proto_type: str) -> Type:
         TYPE_STRING: StringValue,
         TYPE_BYTES: BytesValue,
     }[proto_type]
-
-
-_Value = Union[str, bytes]
-_MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
-
-
-class ServiceStub(ABC):
-    """
-    Base class for async gRPC service stubs.
-    """
-
-    def __init__(
-        self,
-        channel: "Channel",
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> None:
-        self.channel = channel
-        self.timeout = timeout
-        self.deadline = deadline
-        self.metadata = metadata
-
-    def __resolve_request_kwargs(
-        self,
-        timeout: Optional[float],
-        deadline: Optional["Deadline"],
-        metadata: Optional[_MetadataLike],
-    ):
-        return {
-            "timeout": self.timeout if timeout is None else timeout,
-            "deadline": self.deadline if deadline is None else deadline,
-            "metadata": self.metadata if metadata is None else metadata,
-        }
-
-    async def _unary_unary(
-        self,
-        route: str,
-        request: "IProtoMessage",
-        response_type: Type[T],
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> T:
-        """Make a unary request and return the response."""
-        async with self.channel.request(
-            route,
-            grpclib.const.Cardinality.UNARY_UNARY,
-            type(request),
-            response_type,
-            **self.__resolve_request_kwargs(timeout, deadline, metadata),
-        ) as stream:
-            await stream.send_message(request, end=True)
-            response = await stream.recv_message()
-            assert response is not None
-            return response
-
-    async def _unary_stream(
-        self,
-        route: str,
-        request: "IProtoMessage",
-        response_type: Type[T],
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> AsyncGenerator[T, None]:
-        """Make a unary request and return the stream response iterator."""
-        async with self.channel.request(
-            route,
-            grpclib.const.Cardinality.UNARY_STREAM,
-            type(request),
-            response_type,
-            **self.__resolve_request_kwargs(timeout, deadline, metadata),
-        ) as stream:
-            await stream.send_message(request, end=True)
-            async for message in stream:
-                yield message

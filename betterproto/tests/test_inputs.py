@@ -23,9 +23,9 @@ from google.protobuf.json_format import Parse
 
 class TestCases:
     def __init__(self, path, services: Set[str], xfail: Set[str]):
-        _all = set(get_directories(path))
+        _all = set(get_directories(path)) - {"__pycache__"}
         _services = services
-        _messages = _all - services
+        _messages = (_all - services) - {"__pycache__"}
         _messages_with_json = {
             test for test in _messages if get_test_case_json_data(test)
         }
