@@ -1,4 +1,4 @@
-from betterproto.tests.output_betterproto.to_dict_with_missing_enum.to_dict_with_missing_enum import (
+from betterproto.tests.output_betterproto.enum_skipped_value.enum_skipped_value import (
     Test,
     TestMyEnum,
 )
