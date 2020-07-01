@@ -3,13 +3,25 @@ syntax = "proto3";
 package service;
 
 message DoThingRequest {
-  int32 iterations = 1;
+  string name = 1;
 }
 
 message DoThingResponse {
-  int32 successfulIterations = 1;
+  repeated string names = 1;
+}
+
+message GetThingRequest {
+  string name = 1;
+}
+
+message GetThingResponse {
+  string name = 1;
+  int32 version = 2;
 }
 
 service Test {
   rpc DoThing (DoThingRequest) returns (DoThingResponse);
+  rpc DoManyThings (stream DoThingRequest) returns (DoThingResponse);
+  rpc GetThingVersions (GetThingRequest) returns (stream GetThingResponse);
+  rpc GetDifferentThings (stream GetThingRequest) returns (stream GetThingResponse);
 }

@@ -6,7 +6,7 @@ import pathlib
 import re
 import sys
 import textwrap
-from typing import List
+from typing import List, Union
 
 import betterproto
 from betterproto.compile.importing import get_type_reference
@@ -41,9 +41,9 @@ except ImportError as err:
 
 
 def py_type(package: str, imports: set, field: FieldDescriptorProto) -> str:
-    if field.type in [1, 2, 6, 7, 15, 16]:
+    if field.type in [1, 2]:
         return "float"
-    elif field.type in [3, 4, 5, 13, 17, 18]:
+    elif field.type in [3, 4, 5, 6, 7, 13, 15, 16, 17, 18]:
         return "int"
     elif field.type == 8:
         return "bool"
@@ -58,8 +58,8 @@ def py_type(package: str, imports: set, field: FieldDescriptorProto) -> str:
         raise NotImplementedError(f"Unknown type {field.type}")
 
 
-def get_py_zero(type_num: int) -> str:
-    zero = 0
+def get_py_zero(type_num: int) -> Union[str, float]:
+    zero: Union[str, float] = 0
     if type_num in []:
         zero = 0.0
     elif type_num == 8:
@@ -302,9 +302,6 @@ def generate_code(request, response):
                 }
 
                 for j, method in enumerate(service.method):
-                    if method.client_streaming:
-                        raise NotImplementedError("Client streaming not yet supported")
-
                     input_message = None
                     input_type = get_type_reference(
                         package, output["imports"], method.input_type
@@ -338,8 +335,12 @@ def generate_code(request, response):
                         }
                     )
 
+                    if method.client_streaming:
+                        output["typing_imports"].add("AsyncIterable")
+                        output["typing_imports"].add("Iterable")
+                        output["typing_imports"].add("Union")
                     if method.server_streaming:
-                        output["typing_imports"].add("AsyncGenerator")
+                        output["typing_imports"].add("AsyncIterator")
 
                 output["services"].append(data)
 

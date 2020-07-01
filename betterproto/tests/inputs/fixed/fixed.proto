@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+message Test {
+  fixed32 foo = 1;
+  sfixed32 bar = 2;
+  fixed64 baz = 3;
+  sfixed64 qux = 4;
+}

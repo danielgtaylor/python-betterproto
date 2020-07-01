@@ -46,10 +46,10 @@ First, install the package. Note that the `[compiler]` feature flag tells it to 
 
 ```sh
 # Install both the library and compiler
-$ pip install "betterproto[compiler]"
+pip install "betterproto[compiler]"
 
 # Install just the library (to use the generated code output)
-$ pip install betterproto
+pip install betterproto
 ```
 
 Now, given you installed the compiler and have a proto file, e.g `example.proto`:
@@ -68,8 +68,8 @@ message Greeting {
 You can run the following:
 
 ```sh
-$ mkdir lib
-$ protoc -I . --python_betterproto_out=lib example.proto
+mkdir lib
+protoc -I . --python_betterproto_out=lib example.proto
 ```
 
 This will generate `lib/hello/__init__.py` which looks like:
@@ -298,16 +298,19 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ## Development
 
-First, make sure you have Python 3.6+ and `pipenv` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
+Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
+
+First, make sure you have Python 3.6+ and `poetry` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
 
 ```sh
 # Get set up with the virtual env & dependencies
-$ pipenv install --dev
+poetry install
 
-# Link the local package
-$ pipenv shell
-$ pip install -e .
+# Activate the poetry environment
+poetry shell
 ```
+
+To benefit from the collection of standard development tasks ensure you have make installed and run `make help` to see available tasks.
 
 ### Code style
 
@@ -315,8 +318,8 @@ This project enforces [black](https://github.com/psf/black) python code formatti
 
 Before committing changes run:
 
-```bash
-pipenv run black .
+```sh
+make format
 ```
 
 To avoid merge conflicts later, non-black formatted python code will fail in CI.
@@ -349,11 +352,16 @@ Custom tests are found in `tests/test_*.py` and are run with pytest.
 Here's how to run the tests.
 
 ```sh
-# Generate assets from sample .proto files
-$ pipenv run generate
+# Generate assets from sample .proto files required by the tests
+make generate
+# Run the tests
+make test
+```
 
-# Run all tests
-$ pipenv run test
+To run tests as they are run in CI (with tox) run:
+
+```sh
+make full-test
 ```
 
 ### (Re)compiling Google Well-known Types
@@ -414,6 +422,10 @@ protoc \
 - [x] Python package
 - [x] Automate running tests
 - [ ] Cleanup!
+
+## Community
+
+Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
 
 ## License
 
