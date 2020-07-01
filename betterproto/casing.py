@@ -68,7 +68,9 @@ def snake_case(value: str, strict: bool = True):
         elif is_start:
             delimiter_count = len(symbols)
         elif word.isupper() or word.islower():
-            delimiter_count = max(1, len(symbols))  # Preserve all delimiters if not strict.
+            delimiter_count = max(
+                1, len(symbols)
+            )  # Preserve all delimiters if not strict.
         else:
             delimiter_count = len(symbols) + 1  # Extra underscore for leading capital.
 
