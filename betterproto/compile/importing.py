@@ -121,18 +121,20 @@ def reference_ancestor(
     """
     Returns a reference to a python type in a package which is an ancestor to the current package,
     and adds the required import that is aliased (if possible) to avoid name conflicts.
+
+    Adds trailing __ to avoid name mangling (python.org/dev/peps/pep-0008/#id34).
     """
     distance_up = len(current_package) - len(py_package)
     if py_package:
         string_import = py_package[-1]
-        # Add trailing __ to avoid name mangling (python.org/dev/peps/pep-0008/#id34)
         string_alias = f"_{'_' * distance_up}{string_import}__"
         string_from = f"..{'.' * distance_up}"
         imports.add(f"from {string_from} import {string_import} as {string_alias}")
         return f"{string_alias}.{py_type}"
     else:
-        imports.add(f"from .{'.' * distance_up} import {py_type}")
-        return py_type
+        string_alias = f"{'_' * distance_up}{py_type}__"
+        imports.add(f"from .{'.' * distance_up} import {py_type} as {string_alias}")
+        return string_alias
 
 
 def reference_cousin(

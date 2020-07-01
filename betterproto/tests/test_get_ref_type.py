@@ -214,8 +214,8 @@ def test_reference_root_package_from_child():
         package="package.child", imports=imports, source_type="Message"
     )
 
-    assert imports == {"from ... import Message"}
-    assert name == "Message"
+    assert imports == {"from ... import Message as __Message__"}
+    assert name == "__Message__"
 
 
 def test_reference_root_package_from_deeply_nested_child():
@@ -224,8 +224,8 @@ def test_reference_root_package_from_deeply_nested_child():
         package="package.deeply.nested.child", imports=imports, source_type="Message"
     )
 
-    assert imports == {"from ..... import Message"}
-    assert name == "Message"
+    assert imports == {"from ..... import Message as ____Message__"}
+    assert name == "____Message__"
 
 
 def test_reference_unrelated_package():
