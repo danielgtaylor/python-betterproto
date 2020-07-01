@@ -29,7 +29,7 @@ from betterproto.casing import camel_case, pascal_case, snake_case
     ],
 )
 def test_pascal_case(value, expected):
-    actual = pascal_case(value)
+    actual = pascal_case(value, strict=True)
     assert actual == expected, f"{value} => {expected} (actual: {actual})"
 
 
@@ -56,8 +56,22 @@ def test_pascal_case(value, expected):
         ("1foobar", "1Foobar"),
     ],
 )
-def test_camel_case(value, expected):
-    actual = camel_case(value)
+def test_camel_case_strict(value, expected):
+    actual = camel_case(value, strict=True)
+    assert actual == expected, f"{value} => {expected} (actual: {actual})"
+
+
+@pytest.mark.parametrize(
+    ["value", "expected"],
+    [
+        ("foo_bar", "fooBar"),
+        ("FooBar", "fooBar"),
+        ("foo__bar", "foo_Bar"),
+        ("foo__Bar", "foo__Bar"),
+    ],
+)
+def test_camel_case_not_strict(value, expected):
+    actual = camel_case(value, strict=False)
     assert actual == expected, f"{value} => {expected} (actual: {actual})"
 
 
@@ -71,6 +85,7 @@ def test_camel_case(value, expected):
         ("FooBar", "foo_bar"),
         ("foo.bar", "foo_bar"),
         ("foo_bar", "foo_bar"),
+        ("foo_Bar", "foo_bar"),
         ("FOOBAR", "foobar"),
         ("FOOBar", "foo_bar"),
         ("UInt32", "u_int32"),
@@ -85,8 +100,26 @@ def test_camel_case(value, expected):
         ("foo~bar", "foo_bar"),
         ("foo:bar", "foo_bar"),
         ("1foobar", "1_foobar"),
+        ("GetUInt64", "get_u_int64"),
     ],
 )
-def test_snake_case(value, expected):
+def test_snake_case_strict(value, expected):
     actual = snake_case(value)
+    assert actual == expected, f"{value} => {expected} (actual: {actual})"
+
+
+@pytest.mark.parametrize(
+    ["value", "expected"],
+    [
+        ("fooBar", "foo_bar"),
+        ("FooBar", "foo_bar"),
+        ("foo_Bar", "foo__bar"),
+        ("foo__bar", "foo__bar"),
+        ("FOOBar", "foo_bar"),
+        ("__foo", "__foo"),
+        ("GetUInt64", "get_u_int64"),
+    ],
+)
+def test_snake_case_not_strict(value, expected):
+    actual = snake_case(value, strict=False)
     assert actual == expected, f"{value} => {expected} (actual: {actual})"

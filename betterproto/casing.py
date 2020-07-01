@@ -53,30 +53,65 @@ def safe_snake_case(value: str) -> str:
     return value
 
 
-def snake_case(value: str):
+def snake_case(value: str, strict: bool = True):
     """
     Join words with an underscore into lowercase and remove symbols.
+    @param value: value to convert
+    @param strict: force single underscores
     """
+
+    def substitute_word(symbols, word, is_start):
+        if not word:
+            return ""
+        if strict:
+            delimiter_count = 0 if is_start else 1  # Single underscore if strict.
+        elif is_start:
+            delimiter_count = len(symbols)
+        elif word.isupper() or word.islower():
+            delimiter_count = max(1, len(symbols))  # Preserve all delimiters if not strict.
+        else:
+            delimiter_count = len(symbols) + 1  # Extra underscore for leading capital.
+
+        return ("_" * delimiter_count) + word.lower()
+
     snake = re.sub(
-        f"{SYMBOLS}({WORD_UPPER}|{WORD})", lambda groups: "_" + groups[1].lower(), value
+        f"(^)?({SYMBOLS})({WORD_UPPER}|{WORD})",
+        lambda groups: substitute_word(groups[2], groups[3], groups[1] is not None),
+        value,
     )
-    return snake.strip("_")
+    return snake
 
 
-def pascal_case(value: str):
+def pascal_case(value: str, strict: bool = True):
     """
     Capitalize each word and remove symbols.
+    @param value: value to convert
+    @param strict: output only alphanumeric characters
     """
+
+    def substitute_word(symbols, word):
+        if strict:
+            return word.capitalize()  # Remove all delimiters
+
+        if word.islower():
+            delimiter_length = len(symbols[:-1])  # Lose one delimiter
+        else:
+            delimiter_length = len(symbols)  # Preserve all delimiters
+
+        return ("_" * delimiter_length) + word.capitalize()
+
     return re.sub(
-        f"{SYMBOLS}({WORD_UPPER}|{WORD})", lambda groups: groups[1].capitalize(), value
+        f"({SYMBOLS})({WORD_UPPER}|{WORD})",
+        lambda groups: substitute_word(groups[1], groups[2]),
+        value,
     )
 
 
-def camel_case(value: str):
+def camel_case(value: str, strict: bool = True):
     """
     Capitalize all words except first and remove symbols.
     """
-    return lowercase_first(pascal_case(value))
+    return lowercase_first(pascal_case(value, strict=strict))
 
 
 def lowercase_first(value: str):
