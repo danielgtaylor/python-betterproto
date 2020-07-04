@@ -1,5 +1,5 @@
-import betterproto.tests.output_betterproto.casing.casing as casing
-from betterproto.tests.output_betterproto.casing.casing import Test
+import betterproto.tests.output_betterproto.casing as casing
+from betterproto.tests.output_betterproto.casing import Test
 
 
 def test_message_attributes():
@@ -8,6 +8,7 @@ def test_message_attributes():
         message, "snake_case_message"
     ), "snake_case field name is same in python"
     assert hasattr(message, "camel_case"), "CamelCase field is snake_case in python"
+    assert hasattr(message, "uppercase"), "UPPERCASE field is lowercase in python"
 
 
 def test_message_casing():

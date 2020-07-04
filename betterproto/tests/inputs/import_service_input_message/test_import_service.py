@@ -1,7 +1,7 @@
 import pytest
 
 from betterproto.tests.mocks import MockChannel
-from betterproto.tests.output_betterproto.import_service_input_message.import_service_input_message import (
+from betterproto.tests.output_betterproto.import_service_input_message import (
     RequestResponse,
     TestStub,
 )

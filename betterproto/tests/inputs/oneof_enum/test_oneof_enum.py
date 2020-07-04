@@ -1,7 +1,7 @@
 import pytest
 
 import betterproto
-from betterproto.tests.output_betterproto.oneof_enum.oneof_enum import (
+from betterproto.tests.output_betterproto.oneof_enum import (
     Move,
     Signal,
     Test,

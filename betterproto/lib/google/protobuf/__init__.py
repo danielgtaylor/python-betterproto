@@ -84,7 +84,7 @@ class FieldOptionsCType(betterproto.Enum):
     STRING_PIECE = 2
 
 
-class FieldOptionsJSType(betterproto.Enum):
+class FieldOptionsJsType(betterproto.Enum):
     JS_NORMAL = 0
     JS_STRING = 1
     JS_NUMBER = 2
@@ -717,7 +717,7 @@ class FieldOptions(betterproto.Message):
     # use the JavaScript "number" type.  The behavior of the default option
     # JS_NORMAL is implementation dependent. This option is an enum to permit
     # additional types to be added, e.g. goog.math.Integer.
-    jstype: "FieldOptionsJSType" = betterproto.enum_field(6)
+    jstype: "FieldOptionsJsType" = betterproto.enum_field(6)
     # Should this field be parsed lazily?  Lazy applies only to message-type
     # fields.  It means that when the outer message is initially parsed, the
     # inner message's contents will not be parsed but instead stored in encoded

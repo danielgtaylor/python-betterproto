@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-package ref;
-
 import "repeatedmessage.proto";
 
 message Test {

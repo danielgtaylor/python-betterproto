@@ -10,6 +10,7 @@ message Test {
   int32 camelCase = 1;
   my_enum snake_case = 2;
   snake_case_message snake_case_message = 3;
+  int32 UPPERCASE = 4;
 }
 
 message snake_case_message {

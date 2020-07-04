@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "capitalized.proto";
+
+// Tests that we can import from a package with a capital name, that looks like a nested type, but isn't.
+
+message Test {
+  Capitalized.Message message = 1;
+}

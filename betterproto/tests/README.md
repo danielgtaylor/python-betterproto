@@ -12,12 +12,12 @@ inputs/
 
 ## Test case directory structure
 
-Each testcase has a `<name>.proto` file with a message called `Test`, a matching `.json` file and optionally a custom test file called `test_*.py`.
+Each testcase has a `<name>.proto` file with a message called `Test`, and optionally a matching `.json` file and a custom test called `test_*.py`.
 
 ```bash
 bool/
   bool.proto
-  bool.json
+  bool.json     # optional
   test_bool.py  # optional
 ```
 
@@ -61,21 +61,22 @@ def test_value():
 
 The following tests are automatically executed for all cases:
 
-- [x] Can the generated python code imported?
+- [x] Can the generated python code be imported?
 - [x] Can the generated message class be instantiated?
 - [x] Is the generated code compatible with the Google's `grpc_tools.protoc` implementation?
+  - _when `.json` is present_ 
 
 ## Running the tests
 
-- `pipenv run generate`
-  This generates
+- `pipenv run generate`  
+  This generates:
   - `betterproto/tests/output_betterproto` &mdash; *the plugin generated python classes*
   - `betterproto/tests/output_reference` &mdash; *reference implementation classes*
 - `pipenv run test`
 
 ## Intentionally Failing tests
 
-The standard test suite includes tests that fail by intention. These tests document known bugs and missing features that are intended to be corrented in the future.
+The standard test suite includes tests that fail by intention. These tests document known bugs and missing features that are intended to be corrected in the future.
 
 When running `pytest`, they show up as `x` or  `X` in the test results.
 

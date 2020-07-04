@@ -1,5 +1,5 @@
 import betterproto
-from betterproto.tests.output_betterproto.oneof.oneof import Test
+from betterproto.tests.output_betterproto.oneof import Test
 from betterproto.tests.util import get_test_case_json_data
 
 

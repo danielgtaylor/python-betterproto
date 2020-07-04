@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "package.proto";
+
+message Game {
+    message Player {
+        enum Race {
+            human = 0;
+            orc = 1;
+        }
+    }
+}
+
+message Test {
+    Game game = 1;
+    Game.Player GamePlayer = 2;
+    Game.Player.Race GamePlayerRace = 3;
+    equipment.Weapon Weapon = 4;
+}
