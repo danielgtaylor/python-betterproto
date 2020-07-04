@@ -16,10 +16,6 @@ import betterproto
 import grpclib
 {% endif %}
 
-{% for i in description.imports %}
-{{ i }}
-{% endfor %}
-
 
 {% if description.enums %}{% for enum in description.enums %}
 class {{ enum.py_name }}(betterproto.Enum):
@@ -102,14 +98,14 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             "{{ method.route }}",
             request_iterator,
             {{ method.input }},
-            {{ method.output }},
+            {{ method.output.strip('"') }},
         ):
             yield response
             {% else %}{# i.e. not client streaming #}
         async for response in self._unary_stream(
             "{{ method.route }}",
             request,
-            {{ method.output }},
+            {{ method.output.strip('"') }},
         ):
             yield response
 
@@ -120,16 +116,20 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             "{{ method.route }}",
             request_iterator,
             {{ method.input }},
-            {{ method.output }}
+            {{ method.output.strip('"') }}
         )
             {% else %}{# i.e. not client streaming #}
         return await self._unary_unary(
             "{{ method.route }}",
             request,
-            {{ method.output }}
+            {{ method.output.strip('"') }}
         )
             {% endif %}{# client streaming #}
         {% endif %}
 
     {% endfor %}
+{% endfor %}
+
+{% for i in description.imports %}
+{{ i }}
 {% endfor %}

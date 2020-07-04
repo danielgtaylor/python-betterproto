@@ -329,7 +329,7 @@ def generate_code(request, response):
                                 output["imports"],
                                 method.output_type,
                                 unwrap=False,
-                            ).strip('"'),
+                            ),
                             "client_streaming": method.client_streaming,
                             "server_streaming": method.server_streaming,
                         }
