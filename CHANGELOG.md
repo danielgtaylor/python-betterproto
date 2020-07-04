@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+- Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
+
+## [2.0.0b1] - 2020-07-04
+
+[Upgrade Guide](./docs/upgrading.md) 
+
+> Several bugfixes and improvements required or will require small breaking changes, necessitating a new version.
+> `2.0.0` will be released once the interface is stable.
+
+- Add support for gRPC  and **stream-stream** [#83](https://github.com/danielgtaylor/python-betterproto/pull/83)
+- Switch from  to `poetry` for development [#75](https://github.com/danielgtaylor/python-betterproto/pull/75)
+- Fix No arguments are generated for stub methods when using import with proto definition 
+- Fix two packages with the same name suffix should not cause naming conflict [#25](https://github.com/danielgtaylor/python-betterproto/issues/25)
+
+- Fix Import child package from root [#57](https://github.com/danielgtaylor/python-betterproto/issues/57)
+- Fix Import child package from package [#58](https://github.com/danielgtaylor/python-betterproto/issues/58)
+- Fix Import parent package from child package [#59](https://github.com/danielgtaylor/python-betterproto/issues/59)
+- Fix Import root package from child package [#60](https://github.com/danielgtaylor/python-betterproto/issues/60)
+- Fix Import root package from root [#61](https://github.com/danielgtaylor/python-betterproto/issues/61)
+
+- Fix ALL_CAPS message fields are parsed incorrectly. [#11](https://github.com/danielgtaylor/python-betterproto/issues/11)
+
 ## [1.2.5] - 2020-04-27
 
 - Add .j2 suffix to python template names to avoid confusing certain build tools [#72](https://github.com/danielgtaylor/python-betterproto/pull/72)

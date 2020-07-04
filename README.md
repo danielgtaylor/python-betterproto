@@ -40,7 +40,7 @@ This project exists because I am unhappy with the state of the official Google p
 
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
-## Installation & Getting Started
+## Installation
 
 First, install the package. Note that the `[compiler]` feature flag tells it to install extra dependencies only needed by the `protoc` plugin:
 
@@ -51,6 +51,12 @@ pip install "betterproto[compiler]"
 # Install just the library (to use the generated code output)
 pip install betterproto
 ```
+
+*Betterproto* is under active development. To install the latest beta version, use `pip install --pre betterproto`.
+
+## Getting Started
+
+### Compiling proto files
 
 Now, given you installed the compiler and have a proto file, e.g `example.proto`:
 
@@ -149,7 +155,7 @@ service Echo {
 
 You can use it like so (enable async in the interactive shell first):
 
-```py
+```python
 >>> import echo
 >>> from grpclib.client import Channel
 
@@ -174,8 +180,8 @@ Both serializing and parsing are supported to/from JSON and Python dictionaries 
 
 For compatibility the default is to convert field names to `camelCase`. You can control this behavior by passing a casing value, e.g:
 
-```py
->>> MyMessage().to_dict(casing=betterproto.Casing.SNAKE)
+```python
+MyMessage().to_dict(casing=betterproto.Casing.SNAKE)
 ```
 
 ### Determining if a message was sent
@@ -300,7 +306,22 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
 
-First, make sure you have Python 3.6+ and `poetry` installed, along with the official [Protobuf Compiler](https://github.com/protocolbuffers/protobuf/releases) for your platform. Then:
+### Requirements
+
+- Python (3.6 or higher)
+
+- [protoc](https://grpc.io/docs/protoc-installation/) (3.12 or higher)
+  *Needed to compile `.proto` files and run the tests*
+
+- [poetry](https://python-poetry.org/docs/#installation)
+  *Needed to install dependencies in a virtual environment*
+
+- make ([ubuntu](https://www.howtoinstall.me/ubuntu/18-04/make/), [windows](https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows), [mac](https://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/))
+
+  *Needed to conveniently run development tasks.*
+  *Alternatively, manually run the commands defined in the [Makefile](./Makefile)*
+
+### Setup
 
 ```sh
 # Get set up with the virtual env & dependencies
@@ -310,7 +331,7 @@ poetry install
 poetry shell
 ```
 
-To benefit from the collection of standard development tasks ensure you have make installed and run `make help` to see available tasks.
+Run `make help` to see all available development tasks.
 
 ### Code style
 
