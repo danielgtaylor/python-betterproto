@@ -2,14 +2,19 @@
 
 import itertools
 import os.path
+import pathlib
 import re
-import stringcase
 import sys
 import textwrap
 from typing import List, Union
+
 import betterproto
-from betterproto.casing import safe_snake_case
-from betterproto.compile.importing import get_ref_type
+from betterproto.compile.importing import get_type_reference
+from betterproto.compile.naming import (
+    pythonize_class_name,
+    pythonize_field_name,
+    pythonize_method_name,
+)
 
 try:
     # betterproto[compiler] specific dependencies
@@ -35,27 +40,22 @@ except ImportError as err:
     raise SystemExit(1)
 
 
-def py_type(
-    package: str,
-    imports: set,
-    message: DescriptorProto,
-    descriptor: FieldDescriptorProto,
-) -> str:
-    if descriptor.type in [1, 2]:
+def py_type(package: str, imports: set, field: FieldDescriptorProto) -> str:
+    if field.type in [1, 2]:
         return "float"
-    elif descriptor.type in [3, 4, 5, 6, 7, 13, 15, 16, 17, 18]:
+    elif field.type in [3, 4, 5, 6, 7, 13, 15, 16, 17, 18]:
         return "int"
-    elif descriptor.type == 8:
+    elif field.type == 8:
         return "bool"
-    elif descriptor.type == 9:
+    elif field.type == 9:
         return "str"
-    elif descriptor.type in [11, 14]:
+    elif field.type in [11, 14]:
         # Type referencing another defined Message or a named enum
-        return get_ref_type(package, imports, descriptor.type_name)
-    elif descriptor.type == 12:
+        return get_type_reference(package, imports, field.type_name)
+    elif field.type == 12:
         return "bytes"
     else:
-        raise NotImplementedError(f"Unknown type {descriptor.type}")
+        raise NotImplementedError(f"Unknown type {field.type}")
 
 
 def get_py_zero(type_num: int) -> Union[str, float]:
@@ -131,17 +131,17 @@ def generate_code(request, response):
 
     output_map = {}
     for proto_file in request.proto_file:
-        out = proto_file.package
-
-        if out == "google.protobuf" and "INCLUDE_GOOGLE" not in plugin_options:
+        if (
+            proto_file.package == "google.protobuf"
+            and "INCLUDE_GOOGLE" not in plugin_options
+        ):
             continue
 
-        if not out:
-            out = os.path.splitext(proto_file.name)[0].replace(os.path.sep, ".")
+        output_file = str(pathlib.Path(*proto_file.package.split("."), "__init__.py"))
 
-        if out not in output_map:
-            output_map[out] = {"package": proto_file.package, "files": []}
-        output_map[out]["files"].append(proto_file)
+        if output_file not in output_map:
+            output_map[output_file] = {"package": proto_file.package, "files": []}
+        output_map[output_file]["files"].append(proto_file)
 
     # TODO: Figure out how to handle gRPC request/response messages and add
     # processing below for Service.
@@ -160,17 +160,10 @@ def generate_code(request, response):
             "services": [],
         }
 
-        type_mapping = {}
-
         for proto_file in options["files"]:
-            # print(proto_file.message_type, file=sys.stderr)
-            # print(proto_file.service, file=sys.stderr)
-            # print(proto_file.source_code_info, file=sys.stderr)
-
+            item: DescriptorProto
             for item, path in traverse(proto_file):
-                # print(item, file=sys.stderr)
-                # print(path, file=sys.stderr)
-                data = {"name": item.name, "py_name": stringcase.pascalcase(item.name)}
+                data = {"name": item.name, "py_name": pythonize_class_name(item.name)}
 
                 if isinstance(item, DescriptorProto):
                     # print(item, file=sys.stderr)
@@ -187,7 +180,7 @@ def generate_code(request, response):
                     )
 
                     for i, f in enumerate(item.field):
-                        t = py_type(package, output["imports"], item, f)
+                        t = py_type(package, output["imports"], f)
                         zero = get_py_zero(f.type)
 
                         repeated = False
@@ -222,13 +215,11 @@ def generate_code(request, response):
                                             k = py_type(
                                                 package,
                                                 output["imports"],
-                                                item,
                                                 nested.field[0],
                                             )
                                             v = py_type(
                                                 package,
                                                 output["imports"],
-                                                item,
                                                 nested.field[1],
                                             )
                                             t = f"Dict[{k}, {v}]"
@@ -264,7 +255,7 @@ def generate_code(request, response):
                         data["properties"].append(
                             {
                                 "name": f.name,
-                                "py_name": safe_snake_case(f.name),
+                                "py_name": pythonize_field_name(f.name),
                                 "number": f.number,
                                 "comment": get_comment(proto_file, path + [2, i]),
                                 "proto_type": int(f.type),
@@ -305,14 +296,14 @@ def generate_code(request, response):
 
                 data = {
                     "name": service.name,
-                    "py_name": stringcase.pascalcase(service.name),
+                    "py_name": pythonize_class_name(service.name),
                     "comment": get_comment(proto_file, [6, i]),
                     "methods": [],
                 }
 
                 for j, method in enumerate(service.method):
                     input_message = None
-                    input_type = get_ref_type(
+                    input_type = get_type_reference(
                         package, output["imports"], method.input_type
                     ).strip('"')
                     for msg in output["messages"]:
@@ -326,14 +317,14 @@ def generate_code(request, response):
                     data["methods"].append(
                         {
                             "name": method.name,
-                            "py_name": stringcase.snakecase(method.name),
+                            "py_name": pythonize_method_name(method.name),
                             "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
                             "route": f"/{package}.{service.name}/{method.name}",
-                            "input": get_ref_type(
+                            "input": get_type_reference(
                                 package, output["imports"], method.input_type
                             ).strip('"'),
                             "input_message": input_message,
-                            "output": get_ref_type(
+                            "output": get_type_reference(
                                 package,
                                 output["imports"],
                                 method.output_type,
@@ -359,8 +350,7 @@ def generate_code(request, response):
 
         # Fill response
         f = response.file.add()
-        # print(filename, file=sys.stderr)
-        f.name = filename.replace(".", os.path.sep) + ".py"
+        f.name = filename
 
         # Render and then format the output file.
         f.content = black.format_str(
@@ -368,32 +358,23 @@ def generate_code(request, response):
             mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
         )
 
-    inits = set([""])
-    for f in response.file:
-        # Ensure output paths exist
-        # print(f.name, file=sys.stderr)
-        dirnames = os.path.dirname(f.name)
-        if dirnames:
-            os.makedirs(dirnames, exist_ok=True)
-            base = ""
-            for part in dirnames.split(os.path.sep):
-                base = os.path.join(base, part)
-                inits.add(base)
+    # Make each output directory a package with __init__ file
+    output_paths = set(pathlib.Path(path) for path in output_map.keys())
+    init_files = (
+        set(
+            directory.joinpath("__init__.py")
+            for path in output_paths
+            for directory in path.parents
+        )
+        - output_paths
+    )
 
-    for base in inits:
-        name = os.path.join(base, "__init__.py")
-
-        if os.path.exists(name):
-            # Never overwrite inits as they may have custom stuff in them.
-            continue
-
+    for init_file in init_files:
         init = response.file.add()
-        init.name = name
-        init.content = b""
+        init.name = str(init_file)
 
-    filenames = sorted([f.name for f in response.file])
-    for fname in filenames:
-        print(f"Writing {fname}", file=sys.stderr)
+    for filename in sorted(output_paths.union(init_files)):
+        print(f"Writing {filename}", file=sys.stderr)
 
 
 def main():

@@ -1,10 +1,10 @@
 {
-  "root": {
+  "top": {
     "name": "double-nested",
-    "parent": {
-      "child": [{"foo": "hello"}],
-      "enumChild": ["A"],
-      "rootParentChild": [{"a": "hello"}],
+    "middle": {
+      "bottom": [{"foo": "hello"}],
+      "enumBottom": ["A"],
+      "topMiddleBottom": [{"a": "hello"}],
       "bar": true
     }
   }

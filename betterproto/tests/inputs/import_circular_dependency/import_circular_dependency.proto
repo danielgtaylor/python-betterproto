@@ -3,9 +3,9 @@ syntax = "proto3";
 import "root.proto";
 import "other.proto";
 
-// This test-case verifies that future implementations will support circular dependencies in the generated python files.
+// This test-case verifies support for circular dependencies in the generated python files.
 //
-// This becomes important when generating 1 python file/module per package, rather than 1 file per proto file.
+// This is important because we generate 1 python file/module per package, rather than 1 file per proto file.
 //
 // Scenario:
 //
@@ -24,5 +24,5 @@ import "other.proto";
 //           (root: Test & RootPackageMessage) <-------> (other: OtherPackageMessage)
 message Test {
   RootPackageMessage message = 1;
-  other.OtherPackageMessage other =2;
+  other.OtherPackageMessage other = 2;
 }

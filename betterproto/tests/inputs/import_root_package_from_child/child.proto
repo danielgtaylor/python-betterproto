@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package child;
+
+import "root.proto";
+
+// Verify that we can import root message from child package
+
+message Test {
+    RootMessage message = 1;
+}

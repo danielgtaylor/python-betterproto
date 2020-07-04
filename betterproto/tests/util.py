@@ -1,7 +1,10 @@
 import asyncio
+import importlib
 import os
+import pathlib
 from pathlib import Path
-from typing import Generator, IO, Optional
+from types import ModuleType
+from typing import Callable, Generator, Optional
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -55,3 +58,35 @@ def get_test_case_json_data(test_case_name: str, json_file_name: Optional[str] =
 
     with test_data_file_path.open("r") as fh:
         return fh.read()
+
+
+def find_module(
+    module: ModuleType, predicate: Callable[[ModuleType], bool]
+) -> Optional[ModuleType]:
+    """
+    Recursively search module tree for a module that matches the search predicate.
+    Assumes that the submodules are directories containing __init__.py.
+
+    Example:
+
+        # find module inside foo that contains Test
+        import foo
+        test_module = find_module(foo, lambda m: hasattr(m, 'Test'))
+    """
+    if predicate(module):
+        return module
+
+    module_path = pathlib.Path(*module.__path__)
+
+    for sub in list(sub.parent for sub in module_path.glob("**/__init__.py")):
+        if sub == module_path:
+            continue
+        sub_module_path = sub.relative_to(module_path)
+        sub_module_name = ".".join(sub_module_path.parts)
+
+        sub_module = importlib.import_module(f".{sub_module_name}", module.__name__)
+
+        if predicate(sub_module):
+            return sub_module
+
+    return None

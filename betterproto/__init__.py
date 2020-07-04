@@ -7,27 +7,22 @@ import sys
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
-import stringcase
 from typing import (
     Any,
-    AsyncGenerator,
     Callable,
-    Collection,
     Dict,
     Generator,
-    Iterator,
     List,
-    Mapping,
     Optional,
     Set,
-    SupportsBytes,
     Tuple,
     Type,
     Union,
     get_type_hints,
 )
-from ._types import ST, T
-from .casing import safe_snake_case
+
+from ._types import T
+from .casing import camel_case, safe_snake_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
@@ -124,8 +119,8 @@ DATETIME_ZERO = datetime_default_gen()
 class Casing(enum.Enum):
     """Casing constants for serialization."""
 
-    CAMEL = stringcase.camelcase
-    SNAKE = stringcase.snakecase
+    CAMEL = camel_case
+    SNAKE = snake_case
 
 
 class _PLACEHOLDER:

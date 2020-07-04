@@ -3,6 +3,7 @@ import json
 import os
 import sys
 from collections import namedtuple
+from types import ModuleType
 from typing import Set
 
 import pytest
@@ -10,7 +11,12 @@ import pytest
 import betterproto
 from betterproto.tests.inputs import config as test_input_config
 from betterproto.tests.mocks import MockChannel
-from betterproto.tests.util import get_directories, get_test_case_json_data, inputs_path
+from betterproto.tests.util import (
+    find_module,
+    get_directories,
+    get_test_case_json_data,
+    inputs_path,
+)
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
@@ -50,14 +56,17 @@ class TestCases:
 test_cases = TestCases(
     path=inputs_path,
     services=test_input_config.services,
-    xfail=test_input_config.tests,
+    xfail=test_input_config.xfail,
 )
 
 plugin_output_package = "betterproto.tests.output_betterproto"
 reference_output_package = "betterproto.tests.output_reference"
 
+TestData = namedtuple("TestData", ["plugin_module", "reference_module", "json_data"])
 
-TestData = namedtuple("TestData", "plugin_module, reference_module, json_data")
+
+def module_has_entry_point(module: ModuleType):
+    return any(hasattr(module, attr) for attr in ["Test", "TestStub"])
 
 
 @pytest.fixture
@@ -75,11 +84,19 @@ def test_data(request):
 
     sys.path.append(reference_module_root)
 
+    plugin_module = importlib.import_module(f"{plugin_output_package}.{test_case_name}")
+
+    plugin_module_entry_point = find_module(plugin_module, module_has_entry_point)
+
+    if not plugin_module_entry_point:
+        raise Exception(
+            f"Test case {repr(test_case_name)} has no entry point. "
+            "Please add a proto message or service called Test and recompile."
+        )
+
     yield (
         TestData(
-            plugin_module=importlib.import_module(
-                f"{plugin_output_package}.{test_case_name}.{test_case_name}"
-            ),
+            plugin_module=plugin_module_entry_point,
             reference_module=lambda: importlib.import_module(
                 f"{reference_output_package}.{test_case_name}.{test_case_name}_pb2"
             ),
