@@ -8,22 +8,22 @@ from ..compile.importing import get_type_reference, parse_source_type_name
     [
         (
             ".google.protobuf.Empty",
-            "betterproto_lib_google_protobuf.Empty",
+            '"betterproto_lib_google_protobuf.Empty"',
             "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
         ),
         (
             ".google.protobuf.Struct",
-            "betterproto_lib_google_protobuf.Struct",
+            '"betterproto_lib_google_protobuf.Struct"',
             "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
         ),
         (
             ".google.protobuf.ListValue",
-            "betterproto_lib_google_protobuf.ListValue",
+            '"betterproto_lib_google_protobuf.ListValue"',
             "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
         ),
         (
             ".google.protobuf.Value",
-            "betterproto_lib_google_protobuf.Value",
+            '"betterproto_lib_google_protobuf.Value"',
             "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
         ),
     ],
@@ -67,15 +67,27 @@ def test_referenceing_google_wrappers_unwraps_them(
 @pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
-        (".google.protobuf.DoubleValue", "betterproto_lib_google_protobuf.DoubleValue"),
-        (".google.protobuf.FloatValue", "betterproto_lib_google_protobuf.FloatValue"),
-        (".google.protobuf.Int32Value", "betterproto_lib_google_protobuf.Int32Value"),
-        (".google.protobuf.Int64Value", "betterproto_lib_google_protobuf.Int64Value"),
-        (".google.protobuf.UInt32Value", "betterproto_lib_google_protobuf.UInt32Value"),
-        (".google.protobuf.UInt64Value", "betterproto_lib_google_protobuf.UInt64Value"),
-        (".google.protobuf.BoolValue", "betterproto_lib_google_protobuf.BoolValue"),
-        (".google.protobuf.StringValue", "betterproto_lib_google_protobuf.StringValue"),
-        (".google.protobuf.BytesValue", "betterproto_lib_google_protobuf.BytesValue"),
+        (
+            ".google.protobuf.DoubleValue",
+            '"betterproto_lib_google_protobuf.DoubleValue"',
+        ),
+        (".google.protobuf.FloatValue", '"betterproto_lib_google_protobuf.FloatValue"'),
+        (".google.protobuf.Int32Value", '"betterproto_lib_google_protobuf.Int32Value"'),
+        (".google.protobuf.Int64Value", '"betterproto_lib_google_protobuf.Int64Value"'),
+        (
+            ".google.protobuf.UInt32Value",
+            '"betterproto_lib_google_protobuf.UInt32Value"',
+        ),
+        (
+            ".google.protobuf.UInt64Value",
+            '"betterproto_lib_google_protobuf.UInt64Value"',
+        ),
+        (".google.protobuf.BoolValue", '"betterproto_lib_google_protobuf.BoolValue"'),
+        (
+            ".google.protobuf.StringValue",
+            '"betterproto_lib_google_protobuf.StringValue"',
+        ),
+        (".google.protobuf.BytesValue", '"betterproto_lib_google_protobuf.BytesValue"'),
     ],
 )
 def test_referenceing_google_wrappers_without_unwrapping(
@@ -95,7 +107,7 @@ def test_reference_child_package_from_package():
     )
 
     assert imports == {"from . import child"}
-    assert name == "child.Message"
+    assert name == '"child.Message"'
 
 
 def test_reference_child_package_from_root():
@@ -103,7 +115,7 @@ def test_reference_child_package_from_root():
     name = get_type_reference(package="", imports=imports, source_type="child.Message")
 
     assert imports == {"from . import child"}
-    assert name == "child.Message"
+    assert name == '"child.Message"'
 
 
 def test_reference_camel_cased():
@@ -113,7 +125,7 @@ def test_reference_camel_cased():
     )
 
     assert imports == {"from . import child_package"}
-    assert name == "child_package.ExampleMessage"
+    assert name == '"child_package.ExampleMessage"'
 
 
 def test_reference_nested_child_from_root():
@@ -123,7 +135,7 @@ def test_reference_nested_child_from_root():
     )
 
     assert imports == {"from .nested import child as nested_child"}
-    assert name == "nested_child.Message"
+    assert name == '"nested_child.Message"'
 
 
 def test_reference_deeply_nested_child_from_root():
@@ -133,7 +145,7 @@ def test_reference_deeply_nested_child_from_root():
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
-    assert name == "deeply_nested_child.Message"
+    assert name == '"deeply_nested_child.Message"'
 
 
 def test_reference_deeply_nested_child_from_package():
@@ -145,7 +157,7 @@ def test_reference_deeply_nested_child_from_package():
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
-    assert name == "deeply_nested_child.Message"
+    assert name == '"deeply_nested_child.Message"'
 
 
 def test_reference_root_sibling():
@@ -181,7 +193,7 @@ def test_reference_parent_package_from_child():
     )
 
     assert imports == {"from ... import package as __package__"}
-    assert name == "__package__.Message"
+    assert name == '"__package__.Message"'
 
 
 def test_reference_parent_package_from_deeply_nested_child():
@@ -193,7 +205,7 @@ def test_reference_parent_package_from_deeply_nested_child():
     )
 
     assert imports == {"from ... import nested as __nested__"}
-    assert name == "__nested__.Message"
+    assert name == '"__nested__.Message"'
 
 
 def test_reference_ancestor_package_from_nested_child():
@@ -205,7 +217,7 @@ def test_reference_ancestor_package_from_nested_child():
     )
 
     assert imports == {"from .... import ancestor as ___ancestor__"}
-    assert name == "___ancestor__.Message"
+    assert name == '"___ancestor__.Message"'
 
 
 def test_reference_root_package_from_child():
@@ -215,7 +227,7 @@ def test_reference_root_package_from_child():
     )
 
     assert imports == {"from ... import Message as __Message__"}
-    assert name == "__Message__"
+    assert name == '"__Message__"'
 
 
 def test_reference_root_package_from_deeply_nested_child():
@@ -225,7 +237,7 @@ def test_reference_root_package_from_deeply_nested_child():
     )
 
     assert imports == {"from ..... import Message as ____Message__"}
-    assert name == "____Message__"
+    assert name == '"____Message__"'
 
 
 def test_reference_unrelated_package():
@@ -233,7 +245,7 @@ def test_reference_unrelated_package():
     name = get_type_reference(package="a", imports=imports, source_type="p.Message")
 
     assert imports == {"from .. import p as _p__"}
-    assert name == "_p__.Message"
+    assert name == '"_p__.Message"'
 
 
 def test_reference_unrelated_nested_package():
@@ -241,7 +253,7 @@ def test_reference_unrelated_nested_package():
     name = get_type_reference(package="a.b", imports=imports, source_type="p.q.Message")
 
     assert imports == {"from ...p import q as __p_q__"}
-    assert name == "__p_q__.Message"
+    assert name == '"__p_q__.Message"'
 
 
 def test_reference_unrelated_deeply_nested_package():
@@ -251,7 +263,7 @@ def test_reference_unrelated_deeply_nested_package():
     )
 
     assert imports == {"from .....p.q.r import s as ____p_q_r_s__"}
-    assert name == "____p_q_r_s__.Message"
+    assert name == '"____p_q_r_s__.Message"'
 
 
 def test_reference_cousin_package():
@@ -259,7 +271,7 @@ def test_reference_cousin_package():
     name = get_type_reference(package="a.x", imports=imports, source_type="a.y.Message")
 
     assert imports == {"from .. import y as _y__"}
-    assert name == "_y__.Message"
+    assert name == '"_y__.Message"'
 
 
 def test_reference_cousin_package_different_name():
@@ -269,7 +281,7 @@ def test_reference_cousin_package_different_name():
     )
 
     assert imports == {"from ...cousin import package2 as __cousin_package2__"}
-    assert name == "__cousin_package2__.Message"
+    assert name == '"__cousin_package2__.Message"'
 
 
 def test_reference_cousin_package_same_name():
@@ -279,7 +291,7 @@ def test_reference_cousin_package_same_name():
     )
 
     assert imports == {"from ...cousin import package as __cousin_package__"}
-    assert name == "__cousin_package__.Message"
+    assert name == '"__cousin_package__.Message"'
 
 
 def test_reference_far_cousin_package():
@@ -289,7 +301,7 @@ def test_reference_far_cousin_package():
     )
 
     assert imports == {"from ...b import c as __b_c__"}
-    assert name == "__b_c__.Message"
+    assert name == '"__b_c__.Message"'
 
 
 def test_reference_far_far_cousin_package():
@@ -299,7 +311,7 @@ def test_reference_far_far_cousin_package():
     )
 
     assert imports == {"from ....b.c import d as ___b_c_d__"}
-    assert name == "___b_c_d__.Message"
+    assert name == '"___b_c_d__.Message"'
 
 
 @pytest.mark.parametrize(
