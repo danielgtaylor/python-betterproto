@@ -1,4 +1,4 @@
-from betterproto.tests.output_betterproto.enum_skipped_value.enum_skipped_value import (
+from betterproto.tests.output_betterproto.enum_skipped_value import (
     Test,
     TestMyEnum,
 )
