@@ -386,6 +386,10 @@ def main():
     request = plugin.CodeGeneratorRequest()
     request.ParseFromString(data)
 
+    dump_file = os.getenv("DUMP_FILE")
+    if dump_file:
+        dump_request(dump_file, request)
+
     # Create response
     response = plugin.CodeGeneratorResponse()
 
@@ -397,6 +401,17 @@ def main():
 
     # Write to stdout
     sys.stdout.buffer.write(output)
+
+
+def dump_request(dump_file: str, request: CodeGeneratorRequest):
+    """
+    For developers: Supports running plugin.py standalone so its possible to debug it.
+    Run protoc (or generate.py) with DUMP_FILE="yourfile.bin" to write the request to a file.
+    Then run plugin.py from your IDE in debugging mode, and redirect stdin to the file.
+    """
+    with open(str(dump_file), "wb") as fh:
+        sys.stderr.write(f"\033[31mWriting: {dump_file}\033[0m\n")
+        fh.write(request.SerializeToString())
 
 
 if __name__ == "__main__":
