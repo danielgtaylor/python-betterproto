@@ -76,6 +76,7 @@ def get_py_zero(type_num: int) -> Union[str, float]:
     return zero
 
 
+# Todo: Keep information about nested hierarchy
 def traverse(proto_file):
     def _traverse(path, items, prefix=""):
         for i, item in enumerate(items):
@@ -146,11 +147,10 @@ def generate_code(request, response):
         )
         output_package_files[output_package]["files"].append(proto_file)
 
-    output_paths = set()
+    # Initialize Template data for each package
     for output_package_name, output_package_content in output_package_files.items():
-        input_package_name = output_package_content["input_package"]
         template_data = {
-            "input_package": input_package_name,
+            "input_package": output_package_content["input_package"],
             "files": [f.name for f in output_package_content["files"]],
             "imports": set(),
             "datetime_imports": set(),
@@ -159,15 +159,26 @@ def generate_code(request, response):
             "enums": [],
             "services": [],
         }
+        output_package_content["template_data"] = template_data
 
+    # Read Messages and Enums
+    for output_package_name, output_package_content in output_package_files.items():
         for proto_file in output_package_content["files"]:
-            item: DescriptorProto
             for item, path in traverse(proto_file):
-                read_protobuf_type(input_package_name, item, path, proto_file, template_data)
+                read_protobuf_object(item, path, proto_file, output_package_content)
 
-            for i, service in enumerate(proto_file.service):
-                read_protobuf_service(i, input_package_name, proto_file, service, template_data)
+    # Read Services
+    for output_package_name, output_package_content in output_package_files.items():
+        for proto_file in output_package_content["files"]:
+            for index, service in enumerate(proto_file.service):
+                read_protobuf_service(
+                    service, index, proto_file, output_package_content
+                )
 
+    # Render files
+    output_paths = set()
+    for output_package_name, output_package_content in output_package_files.items():
+        template_data = output_package_content["template_data"]
         template_data["imports"] = sorted(template_data["imports"])
         template_data["datetime_imports"] = sorted(template_data["datetime_imports"])
         template_data["typing_imports"] = sorted(template_data["typing_imports"])
@@ -203,12 +214,14 @@ def generate_code(request, response):
         print(f"Writing {output_package_name}", file=sys.stderr)
 
 
-def read_protobuf_service(i, input_package_name, proto_file, service, template_data):
+def read_protobuf_service(service: DescriptorProto, index, proto_file, content):
+    input_package_name = content["input_package"]
+    template_data = content["template_data"]
     # print(service, file=sys.stderr)
     data = {
         "name": service.name,
         "py_name": pythonize_class_name(service.name),
-        "comment": get_comment(proto_file, [6, i]),
+        "comment": get_comment(proto_file, [6, index]),
         "methods": [],
     }
     for j, method in enumerate(service.method):
@@ -228,7 +241,7 @@ def read_protobuf_service(i, input_package_name, proto_file, service, template_d
             {
                 "name": method.name,
                 "py_name": pythonize_method_name(method.name),
-                "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
+                "comment": get_comment(proto_file, [6, index, 2, j], indent=8),
                 "route": f"/{input_package_name}.{service.name}/{method.name}",
                 "input": get_type_reference(
                     input_package_name, template_data["imports"], method.input_type
@@ -254,7 +267,9 @@ def read_protobuf_service(i, input_package_name, proto_file, service, template_d
     template_data["services"].append(data)
 
 
-def read_protobuf_type(input_package_name, item, path, proto_file, template_data):
+def read_protobuf_object(item: DescriptorProto, path: List[int], proto_file, content):
+    input_package_name = content["input_package"]
+    template_data = content["template_data"]
     data = {"name": item.name, "py_name": pythonize_class_name(item.name)}
     if isinstance(item, DescriptorProto):
         # print(item, file=sys.stderr)
@@ -280,9 +295,7 @@ def read_protobuf_type(input_package_name, item, path, proto_file, template_data
             field_type = f.Type.Name(f.type).lower()[5:]
 
             field_wraps = ""
-            match_wrapper = re.match(
-                r"\.google\.protobuf\.(.+)Value", f.type_name
-            )
+            match_wrapper = re.match(r"\.google\.protobuf\.(.+)Value", f.type_name)
             if match_wrapper:
                 wrapped_type = "TYPE_" + match_wrapper.group(1).upper()
                 if hasattr(betterproto, wrapped_type):
@@ -297,10 +310,7 @@ def read_protobuf_type(input_package_name, item, path, proto_file, template_data
 
                 if message_type == map_entry:
                     for nested in item.nested_type:
-                        if (
-                            nested.name.replace("_", "").lower()
-                            == map_entry
-                        ):
+                        if nested.name.replace("_", "").lower() == map_entry:
                             if nested.options.map_entry:
                                 # print("Found a map!", file=sys.stderr)
                                 k = py_type(
