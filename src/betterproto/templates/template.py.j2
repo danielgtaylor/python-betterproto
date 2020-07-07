@@ -80,6 +80,10 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {{ method.comment }}
 
         {% endif %}
+        {%- for py_name, zero in method.mutable_default_args %}
+        {{ py_name }} = {{ py_name }} or {{ zero }}
+        {% endfor %}
+
         {% if not method.client_streaming %}
         request = {{ method.input }}()
         {% for field in method.input_message.properties %}
