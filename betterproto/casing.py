@@ -20,6 +20,8 @@ def safe_snake_case(value: str) -> str:
         "and",
         "as",
         "assert",
+        "async",
+        "await",
         "break",
         "class",
         "continue",
