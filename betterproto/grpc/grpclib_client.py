@@ -2,7 +2,6 @@ from abc import ABC
 import asyncio
 import grpclib.const
 from typing import (
-    Any,
     AsyncIterable,
     AsyncIterator,
     Collection,
@@ -17,8 +16,8 @@ from typing import (
 from .._types import ST, T
 
 if TYPE_CHECKING:
-    from grpclib._protocols import IProtoMessage
-    from grpclib.client import Channel, Stream
+    from grpclib._typing import IProtoMessage
+    from grpclib.client import Channel
     from grpclib.metadata import Deadline
 
 

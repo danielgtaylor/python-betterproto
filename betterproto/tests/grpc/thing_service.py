@@ -3,10 +3,10 @@ from betterproto.tests.output_betterproto.service.service import (
     DoThingRequest,
     GetThingRequest,
     GetThingResponse,
-    TestStub as ThingServiceClient,
 )
 import grpclib
-from typing import Any, Dict
+import grpclib.server
+from typing import Dict
 
 
 class ThingService:

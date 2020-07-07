@@ -3,7 +3,6 @@ from betterproto.tests.output_betterproto.service.service import (
     DoThingResponse,
     DoThingRequest,
     GetThingRequest,
-    GetThingResponse,
     TestStub as ThingServiceClient,
 )
 import grpclib
@@ -18,14 +17,14 @@ async def _test_client(client, name="clean room", **kwargs):
     assert response.names == [name]
 
 
-def _assert_request_meta_recieved(deadline, metadata):
+def _assert_request_meta_received(deadline, metadata):
     def server_side_test(stream):
         assert stream.deadline._timestamp == pytest.approx(
             deadline._timestamp, 1
-        ), "The provided deadline should be recieved serverside"
+        ), "The provided deadline should be received serverside"
         assert (
             stream.metadata["authorization"] == metadata["authorization"]
-        ), "The provided authorization metadata should be recieved serverside"
+        ), "The provided authorization metadata should be received serverside"
 
     return server_side_test
 
@@ -42,7 +41,7 @@ async def test_service_call_with_upfront_request_params():
     deadline = grpclib.metadata.Deadline.from_timeout(22)
     metadata = {"authorization": "12345"}
     async with ChannelFor(
-        [ThingService(test_hook=_assert_request_meta_recieved(deadline, metadata),)]
+        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata),)]
     ) as channel:
         await _test_client(
             ThingServiceClient(channel, deadline=deadline, metadata=metadata)
@@ -53,7 +52,7 @@ async def test_service_call_with_upfront_request_params():
     deadline = grpclib.metadata.Deadline.from_timeout(timeout)
     metadata = {"authorization": "12345"}
     async with ChannelFor(
-        [ThingService(test_hook=_assert_request_meta_recieved(deadline, metadata),)]
+        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata),)]
     ) as channel:
         await _test_client(
             ThingServiceClient(channel, timeout=timeout, metadata=metadata)
@@ -70,7 +69,7 @@ async def test_service_call_lower_level_with_overrides():
     kwarg_deadline = grpclib.metadata.Deadline.from_timeout(28)
     kwarg_metadata = {"authorization": "12345"}
     async with ChannelFor(
-        [ThingService(test_hook=_assert_request_meta_recieved(deadline, metadata),)]
+        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata),)]
     ) as channel:
         client = ThingServiceClient(channel, deadline=deadline, metadata=metadata)
         response = await client._unary_unary(
@@ -92,7 +91,7 @@ async def test_service_call_lower_level_with_overrides():
     async with ChannelFor(
         [
             ThingService(
-                test_hook=_assert_request_meta_recieved(kwarg_deadline, kwarg_metadata),
+                test_hook=_assert_request_meta_received(kwarg_deadline, kwarg_metadata),
             )
         ]
     ) as channel:
@@ -140,8 +139,8 @@ async def test_async_gen_for_stream_stream_request():
             assert response.version == response_index + 1
             response_index += 1
             if more_things:
-                # Send some more requests as we recieve reponses to be sure coordination of
-                # send/recieve events doesn't matter
+                # Send some more requests as we receive responses to be sure coordination of
+                # send/receive events doesn't matter
                 await request_chan.send(GetThingRequest(more_things.pop(0)))
             elif not send_initial_requests.done():
                 # Make sure the sending task it completed
@@ -151,4 +150,4 @@ async def test_async_gen_for_stream_stream_request():
                 request_chan.close()
         assert response_index == len(
             expected_things
-        ), "Didn't recieve all exptected responses"
+        ), "Didn't receive all expected responses"

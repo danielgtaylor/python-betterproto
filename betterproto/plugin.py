@@ -77,7 +77,7 @@ def get_py_zero(type_num: int) -> Union[str, float]:
 def traverse(proto_file):
     def _traverse(path, items, prefix=""):
         for i, item in enumerate(items):
-            # Adjust the name since we flatten the heirarchy.
+            # Adjust the name since we flatten the hierarchy.
             item.name = next_prefix = prefix + item.name
             yield item, path + [i]
 
@@ -355,7 +355,7 @@ def generate_code(request, response):
         # Render and then format the output file.
         f.content = black.format_str(
             template.render(description=output),
-            mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
+            mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
         )
 
     # Make each output directory a package with __init__ file
