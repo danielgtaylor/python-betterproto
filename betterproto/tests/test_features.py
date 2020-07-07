@@ -14,23 +14,23 @@ def test_has_field():
 
     # Unset by default
     foo = Foo()
-    assert betterproto.serialized_on_wire(foo.bar) == False
+    assert betterproto.serialized_on_wire(foo.bar) is False
 
     # Serialized after setting something
     foo.bar.baz = 1
-    assert betterproto.serialized_on_wire(foo.bar) == True
+    assert betterproto.serialized_on_wire(foo.bar) is True
 
     # Still has it after setting the default value
     foo.bar.baz = 0
-    assert betterproto.serialized_on_wire(foo.bar) == True
+    assert betterproto.serialized_on_wire(foo.bar) is True
 
     # Manual override (don't do this)
     foo.bar._serialized_on_wire = False
-    assert betterproto.serialized_on_wire(foo.bar) == False
+    assert betterproto.serialized_on_wire(foo.bar) is False
 
     # Can manually set it but defaults to false
     foo.bar = Bar()
-    assert betterproto.serialized_on_wire(foo.bar) == False
+    assert betterproto.serialized_on_wire(foo.bar) is False
 
 
 def test_class_init():
@@ -118,7 +118,7 @@ def test_oneof_support():
 
     # Group 1 shouldn't be touched, group 2 should have reset
     assert foo.sub.val == 0
-    assert betterproto.serialized_on_wire(foo.sub) == False
+    assert betterproto.serialized_on_wire(foo.sub) is False
     assert betterproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
@@ -175,8 +175,8 @@ def test_optional_flag():
     assert bytes(Request(flag=False)) == b"\n\x00"
 
     # Differentiate between not passed and the zero-value.
-    assert Request().parse(b"").flag == None
-    assert Request().parse(b"\n\x00").flag == False
+    assert Request().parse(b"").flag is None
+    assert Request().parse(b"\n\x00").flag is False
 
 
 def test_to_dict_default_values():

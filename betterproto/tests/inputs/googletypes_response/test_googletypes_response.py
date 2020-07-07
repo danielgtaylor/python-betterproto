@@ -21,7 +21,7 @@ test_cases = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(["service_method", "wrapper_class", "value"], test_cases)
-async def test_channel_recieves_wrapped_type(
+async def test_channel_receives_wrapped_type(
     service_method: Callable[[TestStub], Any], wrapper_class: Callable, value
 ):
     wrapped_value = wrapper_class()

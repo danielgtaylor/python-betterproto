@@ -22,7 +22,7 @@ from typing import (
 )
 
 from ._types import T
-from .casing import camel_case, safe_snake_case, safe_snake_case, snake_case
+from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
 
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
@@ -378,7 +378,7 @@ def decode_varint(buffer: bytes, pos: int, signed: bool = False) -> Tuple[int, i
         result |= (b & 0x7F) << shift
         pos += 1
         if not (b & 0x80):
-            return (result, pos)
+            return result, pos
         shift += 7
         if shift >= 64:
             raise ValueError("Too many bytes when decoding varint.")
@@ -479,7 +479,7 @@ class ProtoClassMetadata:
                 assert meta.map_types
                 kt = cls._cls_for(field, index=0)
                 vt = cls._cls_for(field, index=1)
-                Entry = dataclasses.make_dataclass(
+                field_cls[field.name] = dataclasses.make_dataclass(
                     "Entry",
                     [
                         ("key", kt, dataclass_field(1, meta.map_types[0])),
@@ -487,7 +487,6 @@ class ProtoClassMetadata:
                     ],
                     bases=(Message,),
                 )
-                field_cls[field.name] = Entry
                 field_cls[field.name + ".value"] = vt
             else:
                 field_cls[field.name] = cls._cls_for(field)
@@ -588,7 +587,7 @@ class Message(ABC):
             serialize_empty = False
             if isinstance(value, Message) and value._serialized_on_wire:
                 # Empty messages can still be sent on the wire if they were
-                # set (or recieved empty).
+                # set (or received empty).
                 serialize_empty = True
 
             if value == self._get_field_default(field_name) and not (
@@ -926,7 +925,7 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
 
 
 # Circular import workaround: google.protobuf depends on base classes defined above.
-from .lib.google.protobuf import (
+from .lib.google.protobuf import (  # noqa
     Duration,
     Timestamp,
     BoolValue,
