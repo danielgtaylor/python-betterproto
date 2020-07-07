@@ -86,7 +86,7 @@ def reference_absolute(imports, py_package, py_type):
     string_import = ".".join(py_package)
     string_alias = safe_snake_case(string_import)
     imports.add(f"import {string_import} as {string_alias}")
-    return f"{string_alias}.{py_type}"
+    return f'"{string_alias}.{py_type}"'
 
 
 def reference_sibling(py_type: str) -> str:
@@ -109,10 +109,10 @@ def reference_descendent(
     if string_from:
         string_alias = "_".join(importing_descendent)
         imports.add(f"from .{string_from} import {string_import} as {string_alias}")
-        return f"{string_alias}.{py_type}"
+        return f'"{string_alias}.{py_type}"'
     else:
         imports.add(f"from . import {string_import}")
-        return f"{string_import}.{py_type}"
+        return f'"{string_import}.{py_type}"'
 
 
 def reference_ancestor(
@@ -130,11 +130,11 @@ def reference_ancestor(
         string_alias = f"_{'_' * distance_up}{string_import}__"
         string_from = f"..{'.' * distance_up}"
         imports.add(f"from {string_from} import {string_import} as {string_alias}")
-        return f"{string_alias}.{py_type}"
+        return f'"{string_alias}.{py_type}"'
     else:
         string_alias = f"{'_' * distance_up}{py_type}__"
         imports.add(f"from .{'.' * distance_up} import {py_type} as {string_alias}")
-        return string_alias
+        return f'"{string_alias}"'
 
 
 def reference_cousin(
@@ -157,4 +157,4 @@ def reference_cousin(
         + "__"
     )
     imports.add(f"from {string_from} import {string_import} as {string_alias}")
-    return f"{string_alias}.{py_type}"
+    return f'"{string_alias}.{py_type}"'
