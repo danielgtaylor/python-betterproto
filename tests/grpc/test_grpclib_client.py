@@ -1,11 +1,14 @@
 import asyncio
+import sys
+
 from tests.output_betterproto.service.service import (
-    DoThingResponse,
     DoThingRequest,
+    DoThingResponse,
     GetThingRequest,
     TestStub as ThingServiceClient,
 )
 import grpclib
+import grpclib.metadata
 from grpclib.testing import ChannelFor
 import pytest
 from betterproto.grpc.util.async_channel import AsyncChannel
@@ -33,6 +36,20 @@ def _assert_request_meta_received(deadline, metadata):
 async def test_simple_service_call():
     async with ChannelFor([ThingService()]) as channel:
         await _test_client(ThingServiceClient(channel))
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(
+    sys.version_info < (3, 8), reason="async mock spy does works for python3.8+"
+)
+async def test_service_call_mutable_defaults(mocker):
+    async with ChannelFor([ThingService()]) as channel:
+        client = ThingServiceClient(channel)
+        spy = mocker.spy(client, "_unary_unary")
+        await _test_client(client)
+        comments = spy.call_args_list[-1].args[1].comments
+        await _test_client(client)
+        assert spy.call_args_list[-1].args[1].comments is not comments
 
 
 @pytest.mark.asyncio

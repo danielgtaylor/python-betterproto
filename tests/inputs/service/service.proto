@@ -4,6 +4,7 @@ package service;
 
 message DoThingRequest {
   string name = 1;
+  repeated string comments = 2;
 }
 
 message DoThingResponse {

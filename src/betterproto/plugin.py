@@ -369,6 +369,10 @@ def lookup_method_input_type(method, types):
             return known_type
 
 
+def is_mutable_field_type(field_type: str) -> bool:
+    return field_type.startswith("List[") or field_type.startswith("Dict[")
+
+
 def read_protobuf_service(
     service: ServiceDescriptorProto, index, proto_file, content, output_types
 ):
@@ -384,8 +388,23 @@ def read_protobuf_service(
     for j, method in enumerate(service.method):
         method_input_message = lookup_method_input_type(method, output_types)
 
+        # This section ensures that method arguments having a default
+        # value that is initialised as a List/Dict (mutable) is replaced
+        # with None and initialisation is deferred to the beginning of the
+        # method definition. This is done so to avoid any side-effects.
+        # Reference: https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
+        mutable_default_args = []
+
         if method_input_message:
             for field in method_input_message["properties"]:
+                if (
+                    not method.client_streaming
+                    and field["zero"] != "None"
+                    and is_mutable_field_type(field["type"])
+                ):
+                    mutable_default_args.append((field["py_name"], field["zero"]))
+                    field["zero"] = "None"
+
                 if field["zero"] == "None":
                     template_data["typing_imports"].add("Optional")
 
@@ -407,6 +426,7 @@ def read_protobuf_service(
                 ),
                 "client_streaming": method.client_streaming,
                 "server_streaming": method.server_streaming,
+                "mutable_default_args": mutable_default_args,
             }
         )
 
