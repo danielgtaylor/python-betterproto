@@ -1,6 +1,6 @@
 import betterproto
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List, Dict
 
 
 def test_has_field():
@@ -31,6 +31,25 @@ def test_has_field():
     # Can manually set it but defaults to false
     foo.bar = Bar()
     assert betterproto.serialized_on_wire(foo.bar) is False
+
+    @dataclass
+    class WithCollections(betterproto.Message):
+        test_list: List[str] = betterproto.string_field(1)
+        test_map: Dict[str, str] = betterproto.map_field(
+            2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
+        )
+
+    # Is always set from parse, even if all collections are empty
+    with_collections_empty = WithCollections().parse(bytes(WithCollections()))
+    assert betterproto.serialized_on_wire(with_collections_empty) == True
+    with_collections_list = WithCollections().parse(
+        bytes(WithCollections(test_list=["a", "b", "c"]))
+    )
+    assert betterproto.serialized_on_wire(with_collections_list) == True
+    with_collections_map = WithCollections().parse(
+        bytes(WithCollections(test_map={"a": "b", "c": "d"}))
+    )
+    assert betterproto.serialized_on_wire(with_collections_map) == True
 
 
 def test_class_init():
