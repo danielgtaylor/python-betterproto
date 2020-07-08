@@ -814,7 +814,14 @@ class Message(ABC):
 
                 if v or include_default_values:
                     output[cased_name] = v
-            elif v != self._get_field_default(field_name) or include_default_values:
+            elif (
+                v != self._get_field_default(field_name)
+                or include_default_values
+                or (
+                    meta.group is not None
+                    and self._group_current.get(meta.group) == field_name
+                )
+            ):
                 if meta.proto_type in INT_64_TYPES:
                     if isinstance(v, list):
                         output[cased_name] = [str(n) for n in v]
