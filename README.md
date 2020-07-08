@@ -310,9 +310,6 @@ Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uol
 
 - Python (3.6 or higher)
 
-- [protoc](https://grpc.io/docs/protoc-installation/) (3.12 or higher)
-  *Needed to compile `.proto` files and run the tests*
-
 - [poetry](https://python-poetry.org/docs/#installation)
   *Needed to install dependencies in a virtual environment*
 
