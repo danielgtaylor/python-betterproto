@@ -31,7 +31,7 @@ clean:              ## - Clean out generated files from the workspace
 o=output
 plugin:             ## - Execute the protoc plugin, with output write to `output` or the value passed to `-o`
 	mkdir -p $(o)
-	protoc --plugin=protoc-gen-custom=betterproto/plugin.py $(i) --custom_out=$(o)
+	poetry run python -m grpc.tools.protoc $(i) --python_betterproto_out=$(o)
 
 # CI tasks
 

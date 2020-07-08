@@ -311,9 +311,6 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 - Python (3.6 or higher)
 
-- [protoc](https://grpc.io/docs/protoc-installation/) (3.12 or higher)
-  *Needed to compile `.proto` files and run the tests*
-
 - [poetry](https://python-poetry.org/docs/#installation)
   *Needed to install dependencies in a virtual environment*
 

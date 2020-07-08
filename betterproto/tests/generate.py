@@ -11,8 +11,7 @@ from betterproto.tests.util import (
     inputs_path,
     output_path_betterproto,
     output_path_reference,
-    protoc_plugin,
-    protoc_reference,
+    protoc,
 )
 
 # Force pure-python implementation instead of C++, otherwise imports
@@ -88,8 +87,8 @@ async def generate_test_case_output(
         (ref_out, ref_err, ref_code),
         (plg_out, plg_err, plg_code),
     ) = await asyncio.gather(
-        protoc_reference(test_case_input_path, test_case_output_path_reference),
-        protoc_plugin(test_case_input_path, test_case_output_path_betterproto),
+        protoc(test_case_input_path, test_case_output_path_reference, True),
+        protoc(test_case_input_path, test_case_output_path_betterproto, False),
     )
 
     message = f"Generated output for {test_case_name!r}"
