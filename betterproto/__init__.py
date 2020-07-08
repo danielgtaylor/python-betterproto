@@ -719,6 +719,13 @@ class Message(ABC):
 
         return value
 
+    def _include_default_value_for_oneof(
+        self, field_name: str, meta: FieldMetadata
+    ) -> bool:
+        return (
+            meta.group is not None and self._group_current.get(meta.group) == field_name
+        )
+
     def parse(self: T, data: bytes) -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
@@ -791,10 +798,22 @@ class Message(ABC):
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == "message":
                 if isinstance(v, datetime):
-                    if v != DATETIME_ZERO or include_default_values:
+                    if (
+                        v != DATETIME_ZERO
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
                         output[cased_name] = _Timestamp.timestamp_to_json(v)
                 elif isinstance(v, timedelta):
-                    if v != timedelta(0) or include_default_values:
+                    if (
+                        v != timedelta(0)
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
                         output[cased_name] = _Duration.delta_to_json(v)
                 elif meta.wraps:
                     if v is not None or include_default_values:
@@ -804,9 +823,14 @@ class Message(ABC):
                     v = [i.to_dict(casing, include_default_values) for i in v]
                     if v or include_default_values:
                         output[cased_name] = v
-                else:
-                    if v._serialized_on_wire or include_default_values:
-                        output[cased_name] = v.to_dict(casing, include_default_values)
+                elif (
+                    v._serialized_on_wire
+                    or include_default_values
+                    or self._include_default_value_for_oneof(
+                        field_name=field_name, meta=meta
+                    )
+                ):
+                    output[cased_name] = v.to_dict(casing, include_default_values,)
             elif meta.proto_type == "map":
                 for k in v:
                     if hasattr(v[k], "to_dict"):
@@ -817,9 +841,8 @@ class Message(ABC):
             elif (
                 v != self._get_field_default(field_name)
                 or include_default_values
-                or (
-                    meta.group is not None
-                    and self._group_current.get(meta.group) == field_name
+                or self._include_default_value_for_oneof(
+                    field_name=field_name, meta=meta
                 )
             ):
                 if meta.proto_type in INT_64_TYPES:
@@ -873,7 +896,9 @@ class Message(ABC):
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
                     else:
-                        v.from_dict(value[key])
+                        v = v.from_dict(value[key])
+                        if v is not None:
+                            setattr(self, field_name, v)
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
                     cls = self._betterproto.cls_by_field[field_name + ".value"]
