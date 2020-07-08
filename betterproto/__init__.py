@@ -591,7 +591,11 @@ class Message(ABC):
                 serialize_empty = True
 
             if value == self._get_field_default(field_name) and not (
-                selected_in_group or serialize_empty
+                selected_in_group
+                or serialize_empty
+                or self._include_default_value_for_oneof(
+                    field_name=field_name, meta=meta
+                )
             ):
                 # Default (zero) values are not serialized. Two exceptions are
                 # if this is the selected oneof item or if we know we have to

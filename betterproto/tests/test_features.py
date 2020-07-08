@@ -263,3 +263,14 @@ def test_to_dict_default_values():
         "someDouble": 1.2,
         "someMessage": {"someOtherInt": 0},
     }
+
+
+def test_oneof_default_value_set_causes_writes_wire():
+    @dataclass
+    class Foo(betterproto.Message):
+        bar: int = betterproto.int32_field(1, group="group1")
+        baz: str = betterproto.string_field(2, group="group1")
+
+    assert bytes(Foo(bar=0)) != b""
+    assert bytes(Foo(baz="")) == b""  # Baz is just an empty string
+    assert bytes(Foo()) == b""
