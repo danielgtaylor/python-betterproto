@@ -199,7 +199,7 @@ def generate_code(request, response):
         # Render and then format the output file.
         f.content = black.format_str(
             template.render(description=template_data),
-            mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
+            mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
         )
 
     # Make each output directory a package with __init__ file

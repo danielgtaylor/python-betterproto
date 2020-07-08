@@ -3,7 +3,6 @@ import asyncio
 import os
 from pathlib import Path
 import shutil
-import subprocess
 import sys
 from typing import Set
 
