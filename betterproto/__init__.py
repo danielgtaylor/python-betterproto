@@ -580,22 +580,18 @@ class Message(ABC):
             # Being selected in a a group means this field is the one that is
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
-            selected_in_group = False
-            if meta.group and self._group_current[meta.group] == field_name:
-                selected_in_group = True
+            selected_in_group =meta.group and self._group_current[meta.group] == field_name 
 
-            serialize_empty = False
-            if isinstance(value, Message) and value._serialized_on_wire:
-                # Empty messages can still be sent on the wire if they were
-                # set (or received empty).
-                serialize_empty = True
+            # Empty messages can still be sent on the wire if they were
+            # set (or received empty).
+            serialize_empty = isinstance(value, Message) and value._serialized_on_wire
+
+            include_default_value_for_oneof =self._include_default_value_for_oneof( field_name=field_name, meta=meta) 
 
             if value == self._get_field_default(field_name) and not (
                 selected_in_group
                 or serialize_empty
-                or self._include_default_value_for_oneof(
-                    field_name=field_name, meta=meta
-                )
+                or include_default_value_for_oneof
             ):
                 # Default (zero) values are not serialized. Two exceptions are
                 # if this is the selected oneof item or if we know we have to
@@ -624,6 +620,9 @@ class Message(ABC):
                     sv = _serialize_single(2, meta.map_types[1], v)
                     output += _serialize_single(meta.number, meta.proto_type, sk + sv)
             else:
+                if isinstance(value, str) and value == "" and include_default_value_for_oneof:
+                    serialize_empty = True
+
                 output += _serialize_single(
                     meta.number,
                     meta.proto_type,
