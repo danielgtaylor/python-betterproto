@@ -900,9 +900,7 @@ class Message(ABC):
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
                     else:
-                        v = v.from_dict(value[key])
-                        if v is not None:
-                            setattr(self, field_name, v)
+                        v.from_dict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
                     cls = self._betterproto.cls_by_field[field_name + ".value"]
@@ -927,8 +925,8 @@ class Message(ABC):
                         elif isinstance(v, str):
                             v = enum_cls.from_string(v)
 
-                    if v is not None:
-                        setattr(self, field_name, v)
+                if v is not None:
+                    setattr(self, field_name, v)
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:
