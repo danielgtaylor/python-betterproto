@@ -220,22 +220,6 @@ def generate_code(request, response):
         print(f"Writing {output_package_name}", file=sys.stderr)
 
 
-def lookup_method_input_type(method, types):
-    package, name = parse_source_type_name(method.input_type)
-
-    for known_type in types:
-        if known_type["type"] != "Message":
-            continue
-
-        # Nested types are currently flattened without dots.
-        # Todo: keep a fully quantified name in types, that is comparable with method.input_type
-        if (
-            package == known_type["package"]
-            and name.replace(".", "") == known_type["name"]
-        ):
-            return known_type
-
-
 def read_protobuf_type(item: DescriptorProto, path: List[int], proto_file, content):
     input_package_name = content["input_package"]
     template_data = content["template_data"]
@@ -369,6 +353,22 @@ def read_protobuf_type(item: DescriptorProto, path: List[int], proto_file, conte
         return data
 
 
+def lookup_method_input_type(method, types):
+    package, name = parse_source_type_name(method.input_type)
+
+    for known_type in types:
+        if known_type["type"] != "Message":
+            continue
+
+        # Nested types are currently flattened without dots.
+        # Todo: keep a fully quantified name in types, that is comparable with method.input_type
+        if (
+            package == known_type["package"]
+            and name.replace(".", "") == known_type["name"]
+        ):
+            return known_type
+
+
 def read_protobuf_service(
     service: ServiceDescriptorProto, index, proto_file, content, output_types
 ):
@@ -428,7 +428,7 @@ def main():
     request = plugin.CodeGeneratorRequest()
     request.ParseFromString(data)
 
-    dump_file = os.getenv("DUMP_FILE")
+    dump_file = os.getenv("BETTERPROTO_DUMP")
     if dump_file:
         dump_request(dump_file, request)
 
@@ -448,11 +448,11 @@ def main():
 def dump_request(dump_file: str, request: CodeGeneratorRequest):
     """
     For developers: Supports running plugin.py standalone so its possible to debug it.
-    Run protoc (or generate.py) with DUMP_FILE="yourfile.bin" to write the request to a file.
+    Run protoc (or generate.py) with BETTERPROTO_DUMP="yourfile.bin" to write the request to a file.
     Then run plugin.py from your IDE in debugging mode, and redirect stdin to the file.
     """
     with open(str(dump_file), "wb") as fh:
-        sys.stderr.write(f"\033[31mWriting: {dump_file}\033[0m\n")
+        sys.stderr.write(f"\033[31mWriting input from protoc to: {dump_file}\033[0m\n")
         fh.write(request.SerializeToString())
 
 
