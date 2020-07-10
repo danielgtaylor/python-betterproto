@@ -3,8 +3,8 @@ from typing import Any, Callable, Optional
 import betterproto.lib.google.protobuf as protobuf
 import pytest
 
-from betterproto.tests.mocks import MockChannel
-from betterproto.tests.output_betterproto.googletypes_response import TestStub
+from tests.mocks import MockChannel
+from tests.output_betterproto.googletypes_response import TestStub
 
 test_cases = [
     (TestStub.get_double, protobuf.DoubleValue, 2.5),

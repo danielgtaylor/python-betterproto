@@ -9,9 +9,9 @@ from typing import Set
 import pytest
 
 import betterproto
-from betterproto.tests.inputs import config as test_input_config
-from betterproto.tests.mocks import MockChannel
-from betterproto.tests.util import (
+from tests.inputs import config as test_input_config
+from tests.mocks import MockChannel
+from tests.util import (
     find_module,
     get_directories,
     get_test_case_json_data,
@@ -59,8 +59,8 @@ test_cases = TestCases(
     xfail=test_input_config.xfail,
 )
 
-plugin_output_package = "betterproto.tests.output_betterproto"
-reference_output_package = "betterproto.tests.output_reference"
+plugin_output_package = "tests.output_betterproto"
+reference_output_package = "tests.output_reference"
 
 TestData = namedtuple("TestData", ["plugin_module", "reference_module", "json_data"])
 

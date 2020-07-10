@@ -6,7 +6,7 @@ help:               ## - Show this help.
 # Dev workflow tasks
 
 generate:           ## - Generate test cases (do this once before running test)
-	poetry run ./betterproto/tests/generate.py
+	poetry run ./tests/generate.py
 
 test:               ## - Run tests
 	poetry run pytest --cov betterproto
@@ -23,7 +23,7 @@ clean:              ## - Clean out generated files from the workspace
 	       .pytest_cache \
 	       dist \
 	       **/__pycache__ \
-	       betterproto/tests/output_*
+	       tests/output_*
 
 # Manual testing
 

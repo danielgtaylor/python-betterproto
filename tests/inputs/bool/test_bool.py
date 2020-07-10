@@ -1,4 +1,4 @@
-from betterproto.tests.output_betterproto.bool import Test
+from tests.output_betterproto.bool import Test
 
 
 def test_value():

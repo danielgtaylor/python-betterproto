@@ -1,5 +1,5 @@
 import asyncio
-from betterproto.tests.output_betterproto.service.service import (
+from tests.output_betterproto.service.service import (
     DoThingResponse,
     DoThingRequest,
     GetThingRequest,
