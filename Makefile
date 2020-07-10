@@ -23,7 +23,8 @@ clean:              ## - Clean out generated files from the workspace
 	       .pytest_cache \
 	       dist \
 	       **/__pycache__ \
-	       tests/output_*
+	       tests/output_* \
+	       **/*.egg-info
 
 # Manual testing
 
