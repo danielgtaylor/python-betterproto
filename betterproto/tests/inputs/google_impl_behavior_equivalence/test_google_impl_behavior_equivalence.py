@@ -3,11 +3,11 @@ import pytest
 from google.protobuf import json_format
 import betterproto
 from betterproto.tests.output_betterproto.google_impl_behavior_equivalence import (
-    OneOfTest,
+    Test,
     Foo,
 )
 from betterproto.tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
-    OneOfTest as ReferenceOneOfTest,
+    Test as ReferenceTest,
     Foo as ReferenceFoo,
 )
 
@@ -15,13 +15,13 @@ from betterproto.tests.output_reference.google_impl_behavior_equivalence.google_
 def test_oneof_serializes_similar_to_google_oneof():
 
     tests = [
-        (OneOfTest(string="abc"), ReferenceOneOfTest(string="abc")),
-        (OneOfTest(integer=2), ReferenceOneOfTest(integer=2)),
-        (OneOfTest(foo=Foo(bar=1)), ReferenceOneOfTest(foo=ReferenceFoo(bar=1))),
+        (Test(string="abc"), ReferenceTest(string="abc")),
+        (Test(integer=2), ReferenceTest(integer=2)),
+        (Test(foo=Foo(bar=1)), ReferenceTest(foo=ReferenceFoo(bar=1))),
         # Default values should also behave the same within oneofs
-        (OneOfTest(string=""), ReferenceOneOfTest(string="")),
-        (OneOfTest(integer=0), ReferenceOneOfTest(integer=0)),
-        (OneOfTest(foo=Foo(bar=0)), ReferenceOneOfTest(foo=ReferenceFoo(bar=0))),
+        (Test(string=""), ReferenceTest(string="")),
+        (Test(integer=0), ReferenceTest(integer=0)),
+        (Test(foo=Foo(bar=0)), ReferenceTest(foo=ReferenceFoo(bar=0))),
     ]
     for message, message_reference in tests:
         # NOTE: As of July 2020, MessageToJson inserts newlines in the output string so,
@@ -31,16 +31,16 @@ def test_oneof_serializes_similar_to_google_oneof():
 
 def test_bytes_are_the_same_for_oneof():
 
-    message = OneOfTest(string="")
-    message_reference = ReferenceOneOfTest(string="")
+    message = Test(string="")
+    message_reference = ReferenceTest(string="")
 
     message_bytes = bytes(message)
     message_reference_bytes = message_reference.SerializeToString()
 
     assert message_bytes == message_reference_bytes
 
-    message2 = OneOfTest().parse(message_reference_bytes)
-    message_reference2 = ReferenceOneOfTest()
+    message2 = Test().parse(message_reference_bytes)
+    message_reference2 = ReferenceTest()
     message_reference2.ParseFromString(message_reference_bytes)
 
     assert message == message2
