@@ -622,6 +622,10 @@ class Message(ABC):
                     sv = _serialize_single(2, meta.map_types[1], v)
                     output += _serialize_single(meta.number, meta.proto_type, sk + sv)
             else:
+                # If we have an empty string and we're including the default value for
+                # a oneof, make sure we serialize it. This ensures that the byte string
+                # output isn't simply an empty string. This also ensures that round trip
+                # serialization will keep `which_one_of` calls consistent.
                 if (
                     isinstance(value, str)
                     and value == ""
@@ -905,6 +909,8 @@ class Message(ABC):
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
                     else:
+                        # NOTE: `from_dict` mutates the underlying message, so no
+                        # assignment here is necessary.
                         v.from_dict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
