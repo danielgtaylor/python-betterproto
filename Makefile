@@ -6,13 +6,13 @@ help:               ## - Show this help.
 # Dev workflow tasks
 
 generate:           ## - Generate test cases (do this once before running test)
-	poetry run ./tests/generate.py
+	poetry run python -m tests.generate
 
 test:               ## - Run tests
 	poetry run pytest --cov betterproto
 
 types:              ## - Check types with mypy
-	poetry run mypy betterproto --ignore-missing-imports
+	poetry run mypy src/betterproto --ignore-missing-imports
 
 format:             ## - Apply black formatting to source code
 	poetry run black . --exclude tests/output_

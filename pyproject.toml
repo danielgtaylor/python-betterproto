@@ -7,8 +7,9 @@ readme = "README.md"
 repository = "https://github.com/danielgtaylor/python-betterproto"
 keywords = ["protobuf", "gRPC"]
 license = "MIT"
-
-exclude = ["betterproto/tests"]
+packages = [
+    { include = "betterproto", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
