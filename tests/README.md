@@ -50,7 +50,7 @@ You can add multiple `.proto` files to the test case, as long as one file matche
 `test_<name>.py` &mdash; *Custom test to validate specific aspects of the generated class*
 
 ```python
-from betterproto.tests.output_betterproto.bool.bool import Test
+from tests.output_betterproto.bool.bool import Test
 
 def test_value():
     message = Test()

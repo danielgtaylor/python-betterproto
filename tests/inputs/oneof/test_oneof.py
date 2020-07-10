@@ -1,6 +1,6 @@
 import betterproto
-from betterproto.tests.output_betterproto.oneof import Test
-from betterproto.tests.util import get_test_case_json_data
+from tests.output_betterproto.oneof import Test
+from tests.util import get_test_case_json_data
 
 
 def test_which_count():

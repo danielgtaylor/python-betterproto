@@ -1,12 +1,12 @@
 import pytest
 
 import betterproto
-from betterproto.tests.output_betterproto.oneof_enum import (
+from tests.output_betterproto.oneof_enum import (
     Move,
     Signal,
     Test,
 )
-from betterproto.tests.util import get_test_case_json_data
+from tests.util import get_test_case_json_data
 
 
 @pytest.mark.xfail

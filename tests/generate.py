@@ -6,7 +6,7 @@ import shutil
 import sys
 from typing import Set
 
-from betterproto.tests.util import (
+from tests.util import (
     get_directories,
     inputs_path,
     output_path_betterproto,

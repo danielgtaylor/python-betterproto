@@ -1,6 +1,6 @@
 import pytest
 
-from ..compile.importing import get_type_reference, parse_source_type_name
+from betterproto.compile.importing import get_type_reference, parse_source_type_name
 
 
 @pytest.mark.parametrize(
