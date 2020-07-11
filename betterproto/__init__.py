@@ -1,5 +1,4 @@
 import dataclasses
-import enum
 import inspect
 import json
 import struct
@@ -21,6 +20,7 @@ from typing import (
     get_type_hints,
 )
 
+from .enums import Casing, Enum
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
@@ -114,13 +114,6 @@ def datetime_default_gen():
 
 
 DATETIME_ZERO = datetime_default_gen()
-
-
-class Casing(enum.Enum):
-    """Casing constants for serialization."""
-
-    CAMEL = camel_case
-    SNAKE = snake_case
 
 
 class _PLACEHOLDER:
@@ -249,18 +242,6 @@ def map_field(
     return dataclass_field(
         number, TYPE_MAP, map_types=(key_type, value_type), group=group
     )
-
-
-class Enum(int, enum.Enum):
-    """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
-
-    @classmethod
-    def from_string(cls, name: str) -> int:
-        """Return the value which corresponds to the string name."""
-        try:
-            return cls.__members__[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
 
 def _pack_fmt(proto_type: str) -> str:
@@ -833,9 +814,9 @@ class Message(ABC):
                         self._betterproto.cls_by_field[field_name]
                     )  # type: ignore
                     if isinstance(v, list):
-                        output[cased_name] = [enum_values[e].name for e in v]
+                        output[cased_name] = [e.name for e in v]
                     else:
-                        output[cased_name] = enum_values[v].name
+                        output[cased_name] = enum_values[0].from_value(v).name
                 else:
                     output[cased_name] = v
         return output
