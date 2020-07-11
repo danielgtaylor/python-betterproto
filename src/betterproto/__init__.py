@@ -1,5 +1,4 @@
 import dataclasses
-import enum
 import inspect
 import json
 import struct
@@ -24,6 +23,7 @@ from typing import (
 
 import typing
 
+from .enum import Enum, EnumMeta as _EnumMeta
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
@@ -252,18 +252,6 @@ def map_field(
     return dataclass_field(
         number, TYPE_MAP, map_types=(key_type, value_type), group=group
     )
-
-
-class Enum(enum.IntEnum):
-    """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
-
-    @classmethod
-    def from_string(cls, name: str) -> int:
-        """Return the value which corresponds to the string name."""
-        try:
-            return cls.__members__[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
 
 def _pack_fmt(proto_type: str) -> str:
