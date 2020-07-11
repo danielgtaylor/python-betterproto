@@ -771,7 +771,7 @@ class Message(ABC):
         return cls().parse(data)
 
     def to_dict(
-        self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
+        self, casing: Optional[Casing] = None, include_default_values: bool = False
     ) -> Dict[str, Any]:
         """
         Returns a dict representation of this message instance which can be
@@ -783,6 +783,7 @@ class Message(ABC):
         not be in returned dict if `include_default_values` is set to
         `False`.
         """
+        casing = casing or Casing.CAMEL
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
         for field_name, meta in self._betterproto.meta_by_field_name.items():
@@ -995,7 +996,7 @@ class _WrappedMessage(Message):
 
     value: Any
 
-    def to_dict(self, casing: Casing = Casing.CAMEL) -> Any:
+    def to_dict(self, casing: Optional[Casing] = None) -> Any:
         return self.value
 
     def from_dict(self: T, value: Any) -> T:
