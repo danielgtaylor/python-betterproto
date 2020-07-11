@@ -669,7 +669,7 @@ class Message(ABC):
             elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
                 return list
-            elif t.__origin__ == Union and t.__args__[1] == type(None):
+            elif t.__origin__ == Union and t.__args__[1] is type(None):
                 # This is an optional (wrapped) field. For setting the default we
                 # really don't care what kind of field it is.
                 return type(None)
