@@ -49,6 +49,7 @@ jobs:
             ${{ runner.os }}-poetry-
       - name: Install dependencies
         run: |
+          poetry run pip install --upgrade pip
           poetry install
       - name: Run tests
         run: |
