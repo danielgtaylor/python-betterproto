@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+// Tests that enums are correctly serialized and that it correctly handles skipped and out-of-order enum values
+message Test {
+  Choice choice = 1;
+  repeated Choice choices = 2;
+}
+
+enum Choice {
+  ZERO = 0;
+  ONE = 1;
+  // TWO = 2;
+  FOUR = 4;
+  THREE = 3;
+}
