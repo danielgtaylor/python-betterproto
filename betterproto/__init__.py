@@ -256,9 +256,17 @@ class Enum(int, enum.Enum):
 
     @classmethod
     def from_string(cls, name: str) -> int:
-        """Return the value which corresponds to the string name."""
+        """Return the member which corresponds to the string name."""
         try:
             return cls.__members__[name]
+        except KeyError as e:
+            raise ValueError(f"Unknown member {name} for enum {cls.__name__}") from e
+
+    @classmethod
+    def from_value(cls, value: int) -> int:
+        """Return the value which corresponds to the integer value."""
+        try:
+            return cls._value2member_map_[value]
         except KeyError as e:
             raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
@@ -694,6 +702,12 @@ class Message(ABC):
             elif meta.proto_type == TYPE_BOOL:
                 # Booleans use a varint encoding, so convert it to true/false.
                 value = value > 0
+            elif meta.proto_type == TYPE_ENUM:
+                enum: Enum = self._type_hint(field_name)
+                try:
+                    value = enum.from_value(value)
+                except ValueError:
+                    pass
         elif wire_type in [WIRE_FIXED_32, WIRE_FIXED_64]:
             fmt = _pack_fmt(meta.proto_type)
             value = struct.unpack(fmt, value)[0]
