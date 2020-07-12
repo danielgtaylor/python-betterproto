@@ -1,4 +1,4 @@
-from enum import EnumMeta as _EnumMeta
+from enum import EnumMeta as _EnumMeta, _is_dunder
 from types import MappingProxyType
 from typing import Any, Dict, Iterable, List, Mapping, NoReturn, Tuple
 
@@ -100,17 +100,51 @@ class EnumMeta(type):
     def __getitem__(cls, key: Any) -> "EnumMember":
         return cls._enum_member_map_[key]
 
+    def __getattr__(cls, name):
+        if _is_dunder(name):
+            raise AttributeError(name)
+        try:
+            return cls._member_map_[name]
+        except KeyError:
+            raise AttributeError(name) from None
+
     def __setattr__(cls, name: str, value: Any) -> NoReturn:
-        raise TypeError("Enums are immutable.")
+        if name in cls._enum_member_map_:
+            raise AttributeError("Cannot reassign members.")
+        super().__setattr__(name, value)
 
     def __delattr__(cls, attr: Any) -> NoReturn:
-        raise TypeError("Enums are immutable")
+        if attr in cls._enum_member_map_:
+            raise AttributeError(f"{cls.__name__}: cannot delete Enum member.")
+        super().__delattr__(attr)
 
     def __instancecheck__(self, instance: Any):
         try:
             return instance._actual_enum_cls_ is self
         except AttributeError:
             return False
+
+    def __dir__(cls):
+        return [
+            "__class__",
+            "__doc__",
+            "__members__",
+            "__module__",
+        ] + cls._enum_member_names_
+
+    def __contains__(cls, member: "Enum"):
+        if not isinstance(member, Enum):
+            raise TypeError(
+                "unsupported operand type(s) for 'in':"
+                f" '{member.__class__.__qualname__}' and '{cls.__class__.__qualname__}'"
+            )
+        return isinstance(member, EnumMember) and member.name in cls._enum_member_map_
+
+    def __bool__(self):
+        """
+        classes/types should always be True.
+        """
+        return True
 
     @property
     def __members__(cls) -> Mapping[str, "EnumMember"]:
