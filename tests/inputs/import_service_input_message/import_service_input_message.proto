@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "request_message.proto";
+import "child_package_request_message.proto";
+
+// Tests generated service correctly imports the RequestMessage
+
+service Test {
+    rpc DoThing (RequestMessage) returns (RequestResponse);
+    rpc DoThing2 (child.ChildRequestMessage) returns (RequestResponse);
+    rpc DoThing3 (Nested.RequestMessage) returns (RequestResponse);
+}
+
+
+message RequestResponse {
+    int32 value = 1;
+}
+
+message Nested {
+    message RequestMessage {
+        int32 nestedArgument = 1;
+    }
+}

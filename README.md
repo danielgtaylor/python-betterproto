@@ -304,14 +304,12 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ## Development
 
-Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
+- _Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!_
+- _See how you can help &rarr; [Contributing](CONTRIBUTING.md)_
 
 ### Requirements
 
 - Python (3.6 or higher)
-
-- [protoc](https://grpc.io/docs/protoc-installation/) (3.12 or higher)
-  *Needed to compile `.proto` files and run the tests*
 
 - [poetry](https://python-poetry.org/docs/#installation)
   *Needed to install dependencies in a virtual environment*
@@ -434,10 +432,10 @@ protoc \
   - [x] Enum strings
   - [x] Well known types support (timestamp, duration, wrappers)
   - [x] Support different casing (orig vs. camel vs. others?)
-- [ ] Async service stubs
+- [x] Async service stubs
   - [x] Unary-unary
   - [x] Server streaming response
-  - [ ] Client streaming request
+  - [x] Client streaming request
 - [x] Renaming messages and fields to conform to Python name standards
 - [x] Renaming clashes with language keywords
 - [x] Python package
