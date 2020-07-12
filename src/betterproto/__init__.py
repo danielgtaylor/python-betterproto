@@ -844,7 +844,7 @@ class Message(ABC):
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
                     if field_is_repeated:
-                        enum_class: Type[Enum] = getattr(field_type, "__args__")[0]
+                        enum_class: Type[Enum] = field_type.__args__[0]
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
                         ):
