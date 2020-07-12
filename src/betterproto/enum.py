@@ -141,9 +141,6 @@ class EnumMeta(type):
         return isinstance(member, EnumMember) and member.name in cls._enum_member_map_
 
     def __bool__(self):
-        """
-        classes/types should always be True.
-        """
         return True
 
     @property
