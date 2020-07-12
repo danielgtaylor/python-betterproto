@@ -56,7 +56,7 @@ def test_enum():
         e = Season(i)
         assert e == getattr(Season, season)
         assert e.value == i
-        assert e == i
+        assert e != i
         assert e.name == season
         assert e in Season
         assert isinstance(e, Season)
