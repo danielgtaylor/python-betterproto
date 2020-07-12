@@ -1,14 +1,8 @@
-from enum import EnumMeta as _EnumMeta, _is_dunder
+from enum import EnumMeta as _EnumMeta, _is_dunder, _is_descriptor
 from types import MappingProxyType
 from typing import Any, Dict, Iterable, List, Mapping, NoReturn, Tuple
 
 from .casing import camel_case, snake_case
-
-
-def _is_descriptor(obj: Any) -> bool:
-    return (
-        hasattr(obj, "__get__") or hasattr(obj, "__set__") or hasattr(obj, "__delete__")
-    )
 
 
 class EnumMember:
