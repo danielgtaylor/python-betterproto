@@ -10,9 +10,9 @@ def _is_descriptor(obj: Any) -> bool:
 
 
 class EnumMember:
-    _actual_enum_cls_: 'EnumMeta'
+    _actual_enum_cls_: "EnumMeta"
 
-    def __new__(cls, *, name, value) -> 'EnumMember':
+    def __new__(cls, *, name, value) -> "EnumMember":
         cls.name = name
         cls.value = value
         return super().__new__(cls)
@@ -25,7 +25,7 @@ class EnumMember:
 
 
 class IntEnumMember(int, EnumMember):
-    def __new__(cls, *, name: str = None, value: int = None) -> 'IntEnumMember':
+    def __new__(cls, *, name: str = None, value: int = None) -> "IntEnumMember":
         if name is None:
             return super().__new__(cls)
         self = super().__new__(cls, value)
@@ -71,7 +71,7 @@ class EnumMeta(type):
         attrs["_enum_value_map_"] = value_mapping
         attrs["_enum_member_map_"] = member_mapping
         attrs["_enum_member_names_"] = member_names
-        enum_class: 'EnumMeta' = super().__new__(mcs, name, bases, attrs)
+        enum_class: "EnumMeta" = super().__new__(mcs, name, bases, attrs)
         value_cls._actual_enum_cls_ = enum_class
         for member in member_mapping.values():
             member._actual_enum_cls_ = enum_class
