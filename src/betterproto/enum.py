@@ -30,7 +30,7 @@ class EnumMember:
 
     def __eq__(self, other: Any):
         try:
-            if isinstance(other._actual_enum_cls_, self._actual_enum_cls_):
+            if other._actual_enum_cls_ is self._actual_enum_cls_:
                 return self.value == other.value
             return False
         except AttributeError:
