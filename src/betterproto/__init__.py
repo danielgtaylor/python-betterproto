@@ -898,9 +898,9 @@ class Message(ABC):
                     elif meta.proto_type == TYPE_ENUM:
                         enum_cls = self._betterproto.cls_by_field[field_name]
                         if isinstance(v, list):
-                            v = [enum_cls.from_string(e) for e in v]
+                            v = [enum_cls[e] for e in v]
                         elif isinstance(v, str):
-                            v = enum_cls.from_string(v)
+                            v = enum_cls[v]
 
                     if v is not None:
                         setattr(self, field_name, v)

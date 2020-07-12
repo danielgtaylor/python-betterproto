@@ -47,10 +47,6 @@ class EnumMeta(type):
             if key[0] == "_" and not is_descriptor:
                 continue
 
-            # special case for classmethods to pass through
-            if isinstance(value, classmethod):
-                continue
-
             if is_descriptor:
                 setattr(value_cls, key, value)
                 del attrs[key]
