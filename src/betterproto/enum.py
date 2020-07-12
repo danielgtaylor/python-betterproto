@@ -2,6 +2,8 @@ from enum import EnumMeta as _EnumMeta, _is_dunder
 from types import MappingProxyType
 from typing import Any, Dict, Iterable, List, Mapping, NoReturn, Tuple
 
+from .casing import camel_case, snake_case
+
 
 def _is_descriptor(obj: Any) -> bool:
     return (
@@ -11,11 +13,14 @@ def _is_descriptor(obj: Any) -> bool:
 
 class EnumMember:
     _actual_enum_cls_: "EnumMeta"
+    name: str
+    value: Any
 
-    def __new__(cls, *, name, value) -> "EnumMember":
-        cls.name = name
-        cls.value = value
-        return super().__new__(cls)
+    def __new__(cls, *, name: str, value: Any) -> "EnumMember":
+        self = super().__new__(cls)
+        self.name = name
+        self.value = value
+        return self
 
     def __repr__(self):
         return f"<{self._actual_enum_cls_.__name__}.{self.name}: {self.value!r}>"
@@ -23,11 +28,12 @@ class EnumMember:
     def __str__(self):
         return f"{self._actual_enum_cls_.__name__}.{self.name}"
 
+    def __call__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
+        return self.value(*args, **kwargs)
+
 
 class IntEnumMember(int, EnumMember):
-    def __new__(cls, *, name: str = None, value: int = None) -> "IntEnumMember":
-        if name is None:
-            return super().__new__(cls)
+    def __new__(cls, *, name: str, value: int) -> "IntEnumMember":
         self = super().__new__(cls, value)
         self.name = name
         self.value = value
@@ -45,7 +51,6 @@ class EnumMeta(type):
         value_mapping: Dict[Any, EnumMember] = {}
         member_mapping: Dict[str, EnumMember] = {}
         member_names: List[str] = []
-
         value_cls = IntEnumMember if int in bases else EnumMember
 
         for key, value in tuple(attrs.items()):
@@ -54,9 +59,10 @@ class EnumMeta(type):
                 continue
 
             if is_descriptor:
-                setattr(value_cls, key, value)
-                del attrs[key]
-                continue
+                if value not in (camel_case, snake_case):
+                    setattr(value_cls, key, value)
+                    del attrs[key]
+                    continue
 
             try:
                 new_value = value_mapping[value]
@@ -104,7 +110,7 @@ class EnumMeta(type):
         if _is_dunder(name):
             raise AttributeError(name)
         try:
-            return cls._member_map_[name]
+            return cls._enum_value_map_[name]
         except KeyError:
             raise AttributeError(name) from None
 
@@ -148,7 +154,11 @@ class EnumMeta(type):
         return MappingProxyType(cls._enum_member_map_)
 
 
-class Enum(int, metaclass=EnumMeta):
+class Enum(metaclass=EnumMeta):
+    """Protocol buffers enumeration base base class. Acts like `enum.Enum`."""
+
+
+class IntEnum(int, Enum):
     """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
 
 

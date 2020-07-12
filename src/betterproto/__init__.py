@@ -23,7 +23,7 @@ from typing import (
 
 import typing
 
-from .enum import Enum, EnumMeta as _EnumMeta
+from .enum import IntEnum as Enum, Enum as _Enum
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
@@ -119,7 +119,7 @@ def datetime_default_gen():
 DATETIME_ZERO = datetime_default_gen()
 
 
-class Casing(metaclass=_EnumMeta):
+class Casing(_Enum):
     """Casing constants for serialization."""
 
     CAMEL = camel_case
