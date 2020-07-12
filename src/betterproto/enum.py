@@ -46,6 +46,14 @@ class IntEnumMember(int, EnumMember):
         self.value = value
         return self
 
+    def __eq__(self, other: Any):
+        if isinstance(other, int):
+            value = self.value
+            while type(value) is IntEnumMember:
+                value = value.value
+            return int(value) == int(other)
+        return EnumMember.__eq__(self, other)
+
 
 class EnumMeta(type):
     _enum_value_map_: Dict[Any, EnumMember]
