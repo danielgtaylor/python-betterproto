@@ -26,10 +26,10 @@ class EnumMember:
         return self.value(*args, **kwargs)
 
     def __delattr__(self, item) -> NoReturn:
-        raise ValueError('Enums are immutable.')
+        raise ValueError("Enums are immutable.")
 
     def __setattr__(self, key, value) -> NoReturn:
-        raise ValueError('Enums are immutable.')
+        raise ValueError("Enums are immutable.")
 
 
 class IntEnumMember(int, EnumMember):
