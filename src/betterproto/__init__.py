@@ -674,7 +674,7 @@ class Message(ABC):
             elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
                 return list
-            elif t.__origin__ == Union and t.__args__[1] == type(None):
+            elif t.__origin__ is Union and t.__args__[1] is type(None):
                 # This is an optional (wrapped) field. For setting the default we
                 # really don't care what kind of field it is.
                 return type(None)
@@ -754,10 +754,10 @@ class Message(ABC):
                 pos = 0
                 value = []
                 while pos < len(parsed.value):
-                    if meta.proto_type in ["float", "fixed32", "sfixed32"]:
+                    if meta.proto_type in [TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32]:
                         decoded, pos = parsed.value[pos : pos + 4], pos + 4
                         wire_type = WIRE_FIXED_32
-                    elif meta.proto_type in ["double", "fixed64", "sfixed64"]:
+                    elif meta.proto_type in [TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64]:
                         decoded, pos = parsed.value[pos : pos + 8], pos + 8
                         wire_type = WIRE_FIXED_64
                     else:
