@@ -119,7 +119,7 @@ def datetime_default_gen():
 DATETIME_ZERO = datetime_default_gen()
 
 
-class Casing(enum.Enum):
+class Casing(metaclass=_EnumMeta):
     """Casing constants for serialization."""
 
     CAMEL = camel_case
