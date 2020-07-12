@@ -844,17 +844,16 @@ class Message(ABC):
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
                     if field_is_repeated:
-                        enum_class = field_type.__args__[0]
-                        if isinstance(value, typing.Iterable):
-                            output[cased_name] = [
-                                enum_class(element).name for element in value
-                            ]
+                        enum_class: Type[Enum] = getattr(field_type, "__args__")[0]
+                        if isinstance(value, typing.Iterable) and not isinstance(
+                            value, str
+                        ):
+                            output[cased_name] = [enum_class(el).name for el in value]
                         else:
-                            warnings.warn(
-                                f"Non-iterable value for repeated enum field {field_name}"
-                            )
+                            # transparently upgrade single value to repeated
+                            output[cased_name] = [enum_class(value).name]
                     else:
-                        enum_class = field_type
+                        enum_class: Type[Enum] = field_type  # noqa
                         output[cased_name] = enum_class(value).name
                 else:
                     output[cased_name] = value
