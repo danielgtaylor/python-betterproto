@@ -138,13 +138,13 @@ class EnumMeta(type):
             "__module__",
         ] + cls._enum_member_names_
 
-    def __contains__(cls, member: "EnumMeta"):
-        if not isinstance(member, EnumMeta):
+    def __contains__(cls, member: "EnumMember"):
+        if not isinstance(member, EnumMember):
             raise TypeError(
                 "unsupported operand type(s) for 'in':"
                 f" '{member.__class__.__qualname__}' and '{cls.__class__.__qualname__}'"
             )
-        return isinstance(member, EnumMember) and member.name in cls._enum_member_map_
+        return member.name in cls._enum_member_map_
 
     def __bool__(self):
         return True
