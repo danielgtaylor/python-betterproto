@@ -132,7 +132,8 @@ class EnumMeta(type):
 
     def __instancecheck__(self, instance: Any):
         try:
-            return instance._actual_enum_cls_ is self
+            cls = instance._actual_enum_cls_
+            return cls is self or issubclass(cls, self)
         except AttributeError:
             return False
 
