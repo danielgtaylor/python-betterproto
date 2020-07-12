@@ -1,6 +1,6 @@
 import pytest
 
-from betterproto.enums import Enum, IntEnum
+from betterproto.enum import Enum, IntEnum
 
 
 class Season(IntEnum):
