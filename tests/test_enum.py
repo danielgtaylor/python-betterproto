@@ -59,7 +59,6 @@ def test_enum():
         assert e == i
         assert e.name == season
         assert e in Season
-        assert type(e) is Season
         assert isinstance(e, Season)
         assert str(e) == f"Season.{season}"
         assert repr(e) == f"<Season.{season}: {i}>"
@@ -125,14 +124,6 @@ def test_bool():
 
     assert RealLogic.true
     assert not RealLogic.false
-
-    # mixed Enums depend on mixed-in type
-    class IntLogic(int, Enum):
-        true = 1
-        false = 0
-
-    assert IntLogic.true
-    assert not IntLogic.false
 
 
 def test_contains():
@@ -237,6 +228,5 @@ def test_intenum():
         assert e in WeekDay
         assert lst.index(e) + 1 == i
         assert 0 < e < 8
-        assert type(e) is WeekDay
         assert isinstance(e, int)
         assert isinstance(e, Enum)
