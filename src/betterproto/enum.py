@@ -29,7 +29,12 @@ class EnumMember:
         return hash((self.name, self.value))
 
     def __eq__(self, other: Any):
-        return self.value == other
+        try:
+            if isinstance(other._actual_enum_cls_, self._actual_enum_cls_):
+                return self.value == other
+            return False
+        except AttributeError:
+            return NotImplemented
 
 
 class IntEnumMember(int, EnumMember):
