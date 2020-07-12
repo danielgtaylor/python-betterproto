@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import inspect
 import json
 import struct
@@ -116,6 +117,13 @@ def datetime_default_gen():
 
 
 DATETIME_ZERO = datetime_default_gen()
+
+
+class Casing(enum.Enum):
+    """Casing constants for serialization."""
+
+    CAMEL = camel_case
+    SNAKE = snake_case
 
 
 class _PLACEHOLDER:
