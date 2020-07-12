@@ -168,8 +168,4 @@ def patched_instance_check(self: _EnumMeta, instance: Any) -> bool:
     return type.__instancecheck__(self, instance)
 
 
-class MyEnum(IntEnum):
-    pass
-
-
 _EnumMeta.__instancecheck__ = patched_instance_check  # fake it till you make it
