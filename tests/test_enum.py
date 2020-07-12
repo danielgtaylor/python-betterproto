@@ -26,11 +26,26 @@ class Directional(Enum):
 
 
 def test_dir_on_class():
-    assert set(dir(Season)) == {"__class__", "__doc__", "__members__", "__module__", "SPRING", "SUMMER", "AUTUMN", "WINTER"}
+    assert set(dir(Season)) == {
+        "__class__",
+        "__doc__",
+        "__members__",
+        "__module__",
+        "SPRING",
+        "SUMMER",
+        "AUTUMN",
+        "WINTER",
+    }
 
 
 def test_dir_on_item():
-    assert set(dir(Season.WINTER)) == {"__class__", "__doc__", "__module__", "name", "value"}
+    assert set(dir(Season.WINTER)) == {
+        "__class__",
+        "__doc__",
+        "__module__",
+        "name",
+        "value",
+    }
 
 
 def test_dir_with_added_behavior():
@@ -41,8 +56,22 @@ def test_dir_with_added_behavior():
         def wowser(self):
             return f"Wowser! I'm {name}!"
 
-    assert set(dir(Test)) == {"__class__", "__doc__", "__members__", "__module__", "this", "these"}
-    assert set(dir(Test.this)) == {"__class__", "__doc__", "__module__", "name", "value", "wowser"}
+    assert set(dir(Test)) == {
+        "__class__",
+        "__doc__",
+        "__members__",
+        "__module__",
+        "this",
+        "these",
+    }
+    assert set(dir(Test.this)) == {
+        "__class__",
+        "__doc__",
+        "__module__",
+        "name",
+        "value",
+        "wowser",
+    }
 
 
 def test_dir_on_sub_with_behavior_on_super():
@@ -53,7 +82,14 @@ def test_dir_on_sub_with_behavior_on_super():
     class SubEnum(SuperEnum):
         sample = 5
 
-    assert set(dir(SubEnum.sample)) == {"__class__", "__doc__", "__module__", "name", "value", "invisible"}
+    assert set(dir(SubEnum.sample)) == {
+        "__class__",
+        "__doc__",
+        "__module__",
+        "name",
+        "value",
+        "invisible",
+    }
 
 
 def test_enum_in_enum_out():
@@ -67,7 +103,7 @@ def test_enum_value():
 def test_enum():
     lst = list(Season)
     assert len(lst) == len(Season)
-    assert (len(Season) == 4)
+    assert len(Season) == 4
     assert [Season.SPRING, Season.SUMMER, Season.AUTUMN, Season.WINTER] == lst
 
     for i, season in enumerate("SPRING SUMMER AUTUMN WINTER".split(), 1):
@@ -75,7 +111,7 @@ def test_enum():
         assert e == getattr(Season, season)
         assert e.value == i
         assert e != i
-        assert (e.name == season)
+        assert e.name == season
         assert e in Season
         assert type(e) is Season
         assert isinstance(e, Season)
@@ -134,7 +170,7 @@ def test_bool_of_member():
         two = 2
 
     for member in Count:
-        assert (bool(member))
+        assert bool(member)
 
 
 def test_bool():
@@ -174,13 +210,13 @@ def test_contains():
         "AUTUMN" in Season
 
     val = Season(3)
-    assert (val in Season)
+    assert val in Season
 
     class OtherEnum(Enum):
         one = 1
         two = 2
 
-    assert (OtherEnum.two not in Season)
+    assert OtherEnum.two not in Season
 
 
 def test_comparisons():
@@ -189,14 +225,14 @@ def test_comparisons():
     with pytest.raises(TypeError):
         Season.SPRING > 4
 
-    assert (Season.SPRING != 1)
+    assert Season.SPRING != 1
 
     class Part(Enum):
         SPRING = 1
         CLIP = 2
         BARREL = 3
 
-    assert (Season.SPRING != Part.SPRING)
+    assert Season.SPRING != Part.SPRING
     with pytest.raises(TypeError):
         Season.SPRING < Part.CLIP
 
@@ -210,14 +246,17 @@ def test_enum_duplicates():
         ANOTHER_SPRING = 1
 
     lst = list(Season)
-    assert (lst == [Season.SPRING, Season.SUMMER, Season.AUTUMN, Season.WINTER])
-    assert (Season.FALL is Season.AUTUMN)
-    assert (Season.FALL.value == 3)
-    assert (Season.AUTUMN.value == 3)
-    assert (Season(3) is Season.AUTUMN)
-    assert (Season(1) is Season.SPRING)
-    assert (Season.FALL.name == "AUTUMN")
-    assert [k for k, v in Season.__members__.items() if v.name != k] == ["FALL", "ANOTHER_SPRING"]
+    assert lst == [Season.SPRING, Season.SUMMER, Season.AUTUMN, Season.WINTER]
+    assert Season.FALL is Season.AUTUMN
+    assert Season.FALL.value == 3
+    assert Season.AUTUMN.value == 3
+    assert Season(3) is Season.AUTUMN
+    assert Season(1) is Season.SPRING
+    assert Season.FALL.name == "AUTUMN"
+    assert [k for k, v in Season.__members__.items() if v.name != k] == [
+        "FALL",
+        "ANOTHER_SPRING",
+    ]
 
 
 def test_enum_with_value_name():
@@ -226,18 +265,18 @@ def test_enum_with_value_name():
         value = 2
 
     assert list(Huh) == [Huh.name, Huh.value]
-    assert (type(Huh.name) is Huh)
-    assert (Huh.name.name == "name")
-    assert (Huh.name.value == 1)
+    assert type(Huh.name) is Huh
+    assert Huh.name.name == "name"
+    assert Huh.name.value == 1
 
 
 def test_format_enum():
-    assert ("{}".format(Season.SPRING) == "{}".format(str(Season.SPRING)))
-    assert ("{:}".format(Season.SPRING) == "{:}".format(str(Season.SPRING)))
-    assert ("{:20}".format(Season.SPRING) == "{:20}".format(str(Season.SPRING)))
-    assert ("{:^20}".format(Season.SPRING) == "{:^20}".format(str(Season.SPRING)))
-    assert ("{:>20}".format(Season.SPRING) == "{:>20}".format(str(Season.SPRING)))
-    assert ("{:<20}".format(Season.SPRING) == "{:<20}".format(str(Season.SPRING)))
+    assert "{}".format(Season.SPRING) == "{}".format(str(Season.SPRING))
+    assert "{:}".format(Season.SPRING) == "{:}".format(str(Season.SPRING))
+    assert "{:20}".format(Season.SPRING) == "{:20}".format(str(Season.SPRING))
+    assert "{:^20}".format(Season.SPRING) == "{:^20}".format(str(Season.SPRING))
+    assert "{:>20}".format(Season.SPRING) == "{:>20}".format(str(Season.SPRING))
+    assert "{:<20}".format(Season.SPRING) == "{:<20}".format(str(Season.SPRING))
 
 
 def test_format_override_enum():
@@ -248,8 +287,8 @@ def test_format_override_enum():
         def __format__(self, spec):
             return "Format!!"
 
-    assert (str(EnumWithFormatOverride.one) == "EnumWithFormatOverride.one")
-    assert ("{}".format(EnumWithFormatOverride.one) == "Format!!")
+    assert str(EnumWithFormatOverride.one) == "EnumWithFormatOverride.one"
+    assert "{}".format(EnumWithFormatOverride.one) == "Format!!"
 
 
 def test_str_override_mixin():
@@ -260,8 +299,8 @@ def test_str_override_mixin():
         def __str__(self):
             return "Overridden!"
 
-    assert (str(MixinEnumWithStrOverride.one) == "Overridden!")
-    assert ("{}".format(MixinEnumWithStrOverride.one) == "Overridden!")
+    assert str(MixinEnumWithStrOverride.one) == "Overridden!"
+    assert "{}".format(MixinEnumWithStrOverride.one) == "Overridden!"
 
 
 def test_str_and_format_override_mixin():
@@ -275,8 +314,8 @@ def test_str_and_format_override_mixin():
         def __format__(self, spec):
             return "Format!"
 
-    assert (str(MixinWithStrFormatOverrides.one) == "Str!")
-    assert ("{}".format(MixinWithStrFormatOverrides.one) == "Format!")
+    assert str(MixinWithStrFormatOverrides.one) == "Str!"
+    assert "{}".format(MixinWithStrFormatOverrides.one) == "Format!"
 
 
 def test_format_override_mixin():
@@ -287,12 +326,12 @@ def test_format_override_mixin():
         def __format__(self, spec):
             return "TestFloat success!"
 
-    assert (str(TestFloat.one) == "TestFloat.one")
-    assert ("{}".format(TestFloat.one) == "TestFloat success!")
+    assert str(TestFloat.one) == "TestFloat.one"
+    assert "{}".format(TestFloat.one) == "TestFloat success!"
 
 
 def assert_format_is_value(spec, member):
-    assert (spec.format(member) == spec.format(member.value))
+    assert spec.format(member) == spec.format(member.value)
 
 
 def test_format_enum_int():
@@ -322,7 +361,7 @@ def test_hash():
     dates[Season.SPRING] = "0315"
     dates[Season.SUMMER] = "0704"
     dates[Season.AUTUMN] = "1031"
-    assert (dates[Season.AUTUMN] == "1031")
+    assert dates[Season.AUTUMN] == "1031"
 
 
 def test_intenum_from_scratch():
@@ -330,7 +369,7 @@ def test_intenum_from_scratch():
         pi = 3
         tau = 2 * pi
 
-    assert (phy.pi < phy.tau)
+    assert phy.pi < phy.tau
 
 
 def test_intenum_inherited():
@@ -341,7 +380,7 @@ def test_intenum_inherited():
         pi = 3
         tau = 2 * pi
 
-    assert (phy.pi < phy.tau)
+    assert phy.pi < phy.tau
 
 
 def test_intenum():
@@ -354,22 +393,22 @@ def test_intenum():
         FRIDAY = 6
         SATURDAY = 7
 
-    assert (["a", "b", "c"][WeekDay.MONDAY] == "c")
-    assert ([i for i in range(WeekDay.TUESDAY)] == [0, 1, 2])
+    assert ["a", "b", "c"][WeekDay.MONDAY] == "c"
+    assert [i for i in range(WeekDay.TUESDAY)] == [0, 1, 2]
 
     lst = list(WeekDay)
-    assert (len(lst) == len(WeekDay))
-    assert (len(WeekDay) == 7)
+    assert len(lst) == len(WeekDay)
+    assert len(WeekDay) == 7
     target = "SUNDAY MONDAY TUESDAY WEDNESDAY THURSDAY FRIDAY SATURDAY"
     target = target.split()
     for i, weekday in enumerate(target, 1):
         e = WeekDay(i)
-        assert (e == i)
-        assert (int(e) == i)
-        assert (e.name == weekday)
-        assert(e in WeekDay)
-        assert(lst.index(e) + 1 == i)
-        assert(0 < e < 8)
-        assert(type(e) is WeekDay)
-        assert(isinstance(e, int))
-        assert (isinstance(e, Enum))
+        assert e == i
+        assert int(e) == i
+        assert e.name == weekday
+        assert e in WeekDay
+        assert lst.index(e) + 1 == i
+        assert 0 < e < 8
+        assert type(e) is WeekDay
+        assert isinstance(e, int)
+        assert isinstance(e, Enum)
