@@ -149,8 +149,6 @@ def test_comparisons():
     with pytest.raises(TypeError):
         Season.SPRING > 4
 
-    assert Season.SPRING != 1
-
     class Part(Enum):
         SPRING = 1
         CLIP = 2

@@ -25,6 +25,9 @@ class EnumMember:
     def __call__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
         return self.value(*args, **kwargs)
 
+    def __hash__(self):
+        return hash((self.name, self.value))
+
     def __eq__(self, other: Any):
         return self.value == other
 
