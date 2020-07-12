@@ -68,10 +68,6 @@ def test_enum():
 def test_value_name():
     assert Season.SPRING.name == "SPRING"
     assert Season.SPRING.value == 1
-    with pytest.raises(AttributeError):
-        Season.SPRING.name = "invierno"
-    with pytest.raises(AttributeError):
-        Season.SPRING.value = 2
 
 
 def test_changing_member():

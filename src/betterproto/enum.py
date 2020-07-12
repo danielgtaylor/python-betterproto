@@ -25,12 +25,6 @@ class EnumMember:
     def __call__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
         return self.value(*args, **kwargs)
 
-    def __delattr__(self, item) -> NoReturn:
-        raise ValueError("Enums are immutable.")
-
-    def __setattr__(self, key, value) -> NoReturn:
-        raise ValueError("Enums are immutable.")
-
 
 class IntEnumMember(int, EnumMember):
     value: int
