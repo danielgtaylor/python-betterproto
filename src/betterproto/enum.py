@@ -25,8 +25,16 @@ class EnumMember:
     def __call__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
         return self.value(*args, **kwargs)
 
+    def __delattr__(self, item) -> NoReturn:
+        raise ValueError('Enums are immutable.')
+
+    def __setattr__(self, key, value) -> NoReturn:
+        raise ValueError('Enums are immutable.')
+
 
 class IntEnumMember(int, EnumMember):
+    value: int
+
     def __new__(cls, *, name: str, value: int) -> "IntEnumMember":
         self = super().__new__(cls, value)
         self.name = name
@@ -75,7 +83,6 @@ class EnumMeta(type):
         attrs["_enum_member_map_"] = member_mapping
         attrs["_enum_member_names_"] = member_names
         enum_class: "EnumMeta" = super().__new__(mcs, name, bases, attrs)
-        value_cls._actual_enum_cls_ = enum_class
         for member in member_mapping.values():
             member._actual_enum_cls_ = enum_class
         return enum_class
@@ -137,8 +144,8 @@ class EnumMeta(type):
             "__module__",
         ] + cls._enum_member_names_
 
-    def __contains__(cls, member: "Enum"):
-        if not isinstance(member, Enum):
+    def __contains__(cls, member: "EnumMeta"):
+        if not isinstance(member, EnumMeta):
             raise TypeError(
                 "unsupported operand type(s) for 'in':"
                 f" '{member.__class__.__qualname__}' and '{cls.__class__.__qualname__}'"
