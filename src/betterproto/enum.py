@@ -45,7 +45,10 @@ class EnumMeta(type):
         value_mapping: Dict[Any, EnumMember] = {}
         member_mapping: Dict[str, EnumMember] = {}
         member_names: List[str] = []
-        value_cls = IntEnumMember if int in bases else EnumMember
+        try:
+            value_cls = IntEnumMember if IntEnum in bases else EnumMember
+        except NameError:
+            value_cls = EnumMember
 
         for key, value in tuple(attrs.items()):
             is_descriptor = _is_descriptor(value)
@@ -163,6 +166,10 @@ def patched_instance_check(self: _EnumMeta, instance: Any) -> bool:
         return True
 
     return type.__instancecheck__(self, instance)
+
+
+class MyEnum(IntEnum):
+    pass
 
 
 _EnumMeta.__instancecheck__ = patched_instance_check  # fake it till you make it
