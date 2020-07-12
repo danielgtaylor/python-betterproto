@@ -10,7 +10,9 @@ def _is_descriptor(obj: Any) -> bool:
 
 
 class EnumMember:
-    def __new__(cls, *, name, value):
+    _actual_enum_cls_: 'EnumMeta'
+
+    def __new__(cls, *, name, value) -> 'EnumMember':
         cls.name = name
         cls.value = value
         return super().__new__(cls)
@@ -23,7 +25,7 @@ class EnumMember:
 
 
 class IntEnumMember(int, EnumMember):
-    def __new__(cls, *, name: str = None, value: int = None) -> 'EnumMember':
+    def __new__(cls, *, name: str = None, value: int = None) -> 'IntEnumMember':
         if name is None:
             return super().__new__(cls)
         self = super().__new__(cls, value)
@@ -33,6 +35,10 @@ class IntEnumMember(int, EnumMember):
 
 
 class EnumMeta(type):
+    _enum_value_map_: Dict[Any, EnumMember]
+    _enum_member_map_: Dict[str, EnumMember]
+    _enum_member_names_: List[str]
+
     def __new__(
         mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]
     ) -> "EnumMeta":
@@ -65,7 +71,7 @@ class EnumMeta(type):
         attrs["_enum_value_map_"] = value_mapping
         attrs["_enum_member_map_"] = member_mapping
         attrs["_enum_member_names_"] = member_names
-        enum_class = super().__new__(mcs, name, bases, attrs)
+        enum_class: 'EnumMeta' = super().__new__(mcs, name, bases, attrs)
         value_cls._actual_enum_cls_ = enum_class
         for member in member_mapping.values():
             member._actual_enum_cls_ = enum_class
@@ -115,7 +121,7 @@ class Enum(int, metaclass=EnumMeta):
     """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
 
 
-def patched_instance_check(self, instance):
+def patched_instance_check(self: _EnumMeta, instance: Any) -> bool:
     if isinstance(instance, (EnumMeta, EnumMember)):
         return True
 
