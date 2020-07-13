@@ -29,11 +29,11 @@ class EnumMember:
     @classmethod
     def __call__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
         try:
-            kwargs['_is_enum__call__']
+            kwargs["_is_enum__call__"]
         except KeyError:
             return cls.value(*args, **kwargs)
         else:
-            return cls.__new__(cls, name=kwargs['name'], value=kwargs['value'])
+            return cls.__new__(cls, name=kwargs["name"], value=kwargs["value"])
 
     def __hash__(self):
         return hash((self.name, self.value))
@@ -74,7 +74,9 @@ class EnumMeta(type):
         member_mapping: Dict[str, EnumMember] = {}
         member_names: List[str] = []
         try:
-            value_cls = IntEnumMember(name=name) if IntEnum in bases else EnumMember(name=name)
+            value_cls = (
+                IntEnumMember(name=name) if IntEnum in bases else EnumMember(name=name)
+            )
         except NameError:
             value_cls = EnumMember(name=name)
 
