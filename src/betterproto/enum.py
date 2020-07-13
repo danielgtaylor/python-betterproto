@@ -6,31 +6,41 @@ from .casing import camel_case, snake_case
 
 
 class EnumMember:
-    _actual_enum_cls_: "EnumMeta"
+    _enum_cls_: "Enum"
     name: str
     value: Any
 
-    def __new__(cls, *, name: str, value: Any) -> "EnumMember":
+    def __new__(cls, **kwargs: Dict[str, Any]) -> "EnumMember":
         self = super().__new__(cls)
-        self.name = name
-        self.value = value
-        return self
+        try:
+            self.name = kwargs["name"]
+            self.value = kwargs["value"]
+        except KeyError:
+            pass
+        finally:
+            return self
 
     def __repr__(self):
-        return f"<{self._actual_enum_cls_.__name__}.{self.name}: {self.value!r}>"
+        return f"<{self._enum_cls_.__name__}.{self.name}: {self.value!r}>"
 
     def __str__(self):
-        return f"{self._actual_enum_cls_.__name__}.{self.name}"
+        return f"{self._enum_cls_.__name__}.{self.name}"
 
-    def __call__(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
-        return self.value(*args, **kwargs)
+    @classmethod
+    def __call__(cls, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> Any:
+        try:
+            kwargs['_is_enum__call__']
+        except KeyError:
+            return cls.value(*args, **kwargs)
+        else:
+            return cls.__new__(cls, name=kwargs['name'], value=kwargs['value'])
 
     def __hash__(self):
         return hash((self.name, self.value))
 
     def __eq__(self, other: Any):
         try:
-            if other._actual_enum_cls_ is self._actual_enum_cls_:
+            if other._enum_cls_ is self._enum_cls_:
                 return self.value == other.value
             return False
         except AttributeError:
@@ -38,13 +48,18 @@ class EnumMember:
 
 
 class IntEnumMember(int, EnumMember):
+    _enum_cls_: "IntEnum"
     value: int
 
-    def __new__(cls, *, name: str, value: int) -> "IntEnumMember":
-        self = super().__new__(cls, value)
-        self.name = name
-        self.value = value
-        return self
+    def __new__(cls, **kwargs: Dict[str, Any]) -> "IntEnumMember":
+        try:
+            value = kwargs["value"]
+            self = super().__new__(cls, value)
+            self.name = kwargs["name"]
+            self.value = value
+            return self
+        except KeyError:
+            return super().__new__(cls)
 
 
 class EnumMeta(type):
@@ -59,9 +74,9 @@ class EnumMeta(type):
         member_mapping: Dict[str, EnumMember] = {}
         member_names: List[str] = []
         try:
-            value_cls = IntEnumMember if IntEnum in bases else EnumMember
+            value_cls = IntEnumMember(name=name) if IntEnum in bases else EnumMember(name=name)
         except NameError:
-            value_cls = EnumMember
+            value_cls = EnumMember(name=name)
 
         for key, value in tuple(attrs.items()):
             is_descriptor = _is_descriptor(value)
@@ -77,7 +92,7 @@ class EnumMeta(type):
             try:
                 new_value = value_mapping[value]
             except KeyError:
-                new_value = value_cls(name=key, value=value)
+                new_value = value_cls(name=key, value=value, _is_enum__call__=True)
                 value_mapping[value] = new_value
                 member_names.append(key)
 
@@ -89,7 +104,7 @@ class EnumMeta(type):
         attrs["_enum_member_names_"] = member_names
         enum_class: "EnumMeta" = super().__new__(mcs, name, bases, attrs)
         for member in member_mapping.values():
-            member._actual_enum_cls_ = enum_class
+            member._enum_cls_ = enum_class
         return enum_class
 
     def __call__(cls, value: Any) -> "EnumMember":
@@ -117,7 +132,7 @@ class EnumMeta(type):
     def __getitem__(cls, key: Any) -> "EnumMember":
         return cls._enum_member_map_[key]
 
-    def __getattr__(cls, name):
+    def __getattr__(cls, name: str):
         if _is_dunder(name):
             raise AttributeError(name)
         try:
@@ -137,7 +152,7 @@ class EnumMeta(type):
 
     def __instancecheck__(self, instance: Any):
         try:
-            cls = instance._actual_enum_cls_
+            cls = instance._enum_cls_
             return cls is self or issubclass(cls, self)
         except AttributeError:
             return False
