@@ -6,13 +6,13 @@ help:               ## - Show this help.
 # Dev workflow tasks
 
 generate:           ## - Generate test cases (do this once before running test)
-	poetry run ./betterproto/tests/generate.py
+	poetry run python -m tests.generate
 
 test:               ## - Run tests
 	poetry run pytest --cov betterproto
 
 types:              ## - Check types with mypy
-	poetry run mypy betterproto --ignore-missing-imports
+	poetry run mypy src/betterproto --ignore-missing-imports
 
 format:             ## - Apply black formatting to source code
 	poetry run black . --exclude tests/output_
@@ -23,7 +23,8 @@ clean:              ## - Clean out generated files from the workspace
 	       .pytest_cache \
 	       dist \
 	       **/__pycache__ \
-	       betterproto/tests/output_*
+	       tests/output_* \
+	       **/*.egg-info
 
 # Manual testing
 
@@ -31,7 +32,7 @@ clean:              ## - Clean out generated files from the workspace
 o=output
 plugin:             ## - Execute the protoc plugin, with output write to `output` or the value passed to `-o`
 	mkdir -p $(o)
-	protoc --plugin=protoc-gen-custom=betterproto/plugin.py $(i) --custom_out=$(o)
+	poetry run python -m grpc.tools.protoc $(i) --python_betterproto_out=$(o)
 
 # CI tasks
 

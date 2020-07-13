@@ -49,7 +49,7 @@ jobs:
             ${{ runner.os }}-poetry-
       - name: Install dependencies
         run: |
-          sudo apt install protobuf-compiler libprotobuf-dev
+          poetry run pip install --upgrade pip
           poetry install
       - name: Run tests
         run: |

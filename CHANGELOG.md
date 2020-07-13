@@ -15,8 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > `2.0.0` will be released once the interface is stable.
 
 - Add support for gRPC  and **stream-stream** [#83](https://github.com/danielgtaylor/python-betterproto/pull/83)
-- Switch from  to `poetry` for development [#75](https://github.com/danielgtaylor/python-betterproto/pull/75)
-- Fix No arguments are generated for stub methods when using import with proto definition 
+- Switch from `pipenv` to `poetry` for development [#75](https://github.com/danielgtaylor/python-betterproto/pull/75)
 - Fix two packages with the same name suffix should not cause naming conflict [#25](https://github.com/danielgtaylor/python-betterproto/issues/25)
 
 - Fix Import child package from root [#57](https://github.com/danielgtaylor/python-betterproto/issues/57)
