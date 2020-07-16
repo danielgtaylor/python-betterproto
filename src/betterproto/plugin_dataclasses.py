@@ -226,7 +226,7 @@ def is_map(
 ) -> bool:
     """True if proto_field_obj is a map, otherwise False.
     """
-    if proto_field_obj.type is FieldDescriptorProto.TYPE_MESSAGE:
+    if proto_field_obj.type == FieldDescriptorProto.TYPE_MESSAGE:
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
         map_entry = f"{proto_field_obj.name.replace('_', '').lower()}entry"
