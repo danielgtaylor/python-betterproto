@@ -8,7 +8,6 @@ from typing import (
     Union,
     Type,
     List,
-    Tuple,
     Set,
     Text,
 )
@@ -319,9 +318,8 @@ class Field(Message):
     @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
-        return self.field_type.startswith(
-            "List["
-        ) or self.field_type.startswith("Dict[")
+        annotation = self.annotation
+        return annotation.startswith("List[") or annotation.startswith("Dict[")
 
     @property
     def field_type(self) -> str:
@@ -553,7 +551,7 @@ class ServiceMethod(ProtoContentBase):
         super().__post_init__()  # check for unset fields
 
     @property
-    def mutable_default_arguments(self) -> List[Tuple[str, str]]:
+    def mutable_default_args(self) -> Dict[str, str]:
         """Handle mutable default arguments.
 
         Returns a list of tuples containing the name and default value
@@ -565,11 +563,17 @@ class ServiceMethod(ProtoContentBase):
 
         Returns
         -------
-        List[Tuple[str, str]]
-            Each tuple contains the name and actual default value (as a string)
+        Dict[str, str]
+            Name and actual default value (as a string)
             for each argument with mutable default values.
         """
-        mutable_default_arguments = []
+        mutable_default_args = dict()
+
+        # if self.py_name == "do_thing" and self.py_input_message_type == "DoThingRequest":
+        #     import ptvsd
+        #     ptvsd.enable_attach()
+        #     ptvsd.wait_for_attach()  # blocks execution until debugger is attached
+        #     print("done")
 
         if self.py_input_message:
             for f in self.py_input_message.fields:
@@ -578,11 +582,10 @@ class ServiceMethod(ProtoContentBase):
                     and f.default_value_string != "None"
                     and f.mutable
                 ):
-                    mutable_default_arguments.append(
-                        (f.py_name, f.default_value_string)
-                    )
+                    mutable_default_args[f.py_name] = f.default_value_string
                     self.output_file.typing_imports.add("Optional")
-        return mutable_default_arguments
+        
+        return mutable_default_args
 
     @property
     def py_name(self) -> str:

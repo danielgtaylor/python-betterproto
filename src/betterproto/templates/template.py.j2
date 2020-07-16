@@ -67,7 +67,12 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
                                             Optional[{{ field.py_type }}]
                                          {%- else -%}
                                             {{ field.py_type }}
-                                         {%- endif -%} = {{ field.default_value_string }}
+                                         {%- endif -%} = 
+                                            {%- if field.py_name not in method.mutable_default_args -%}
+                                                {{ field.default_value_string }}
+                                            {%- else -%}
+                                                None
+                                            {% endif -%}
                     {%- if not loop.last %}, {% endif -%}
                 {%- endfor -%}
             {%- endif -%}
@@ -80,7 +85,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {{ method.comment }}
 
         {% endif %}
-        {%- for py_name, zero in method.mutable_default_args %}
+        {%- for py_name, zero in method.mutable_default_args.items() %}
         {{ py_name }} = {{ py_name }} or {{ zero }}
         {% endfor %}
 
