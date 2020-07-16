@@ -594,8 +594,10 @@ class ServiceMethod(ProtoContentBase):
 
     @property
     def route(self) -> str:
-        return f"/{self.output_file.input_package}.\
-            {self.parent.proto_name}/{self.proto_name}"
+        return (
+            f"/{self.output_file.input_package}."
+            f"{self.parent.proto_name}/{self.proto_name}"
+        )
 
     @property
     def py_input_message(self) -> Union[None, Message]:
