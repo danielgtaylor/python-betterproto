@@ -246,6 +246,7 @@ def read_protobuf_service(
 
 
 def main():
+
     """The plugin's main entry point."""
     # Read request message from stdin
     data = sys.stdin.buffer.read()

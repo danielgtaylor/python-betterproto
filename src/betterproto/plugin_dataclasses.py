@@ -539,6 +539,7 @@ class ServiceMethod(ProtoContentBase):
                     self.output_file.typing_imports.add("Optional")
         if "Optional" in self.py_output_message_type:
             self.output_file.typing_imports.add("Optional")
+        self.mutable_default_args  # ensure this is called before rendering
 
         # Check for Async imports
         if self.client_streaming:
@@ -578,7 +579,7 @@ class ServiceMethod(ProtoContentBase):
                 ):
                     mutable_default_args[f.py_name] = f.default_value_string
                     self.output_file.typing_imports.add("Optional")
-        
+
         return mutable_default_args
 
     @property
