@@ -75,7 +75,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {# Client streaming: need a request iterator instead #}
             , request_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
         {%- endif -%}
-            ) -> {% if method.server_streaming %}AsyncIterator[{{ method.py_output_message_type }}]{% else %}{{ method.py_output_message_type }}{% endif %}:
+            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 

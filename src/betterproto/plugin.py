@@ -240,7 +240,6 @@ def read_protobuf_service(service: ServiceDescriptorProto, index: int, proto_fil
         path=[6, index],
     )
     for j, method in enumerate(service.method):
-
         ServiceMethod(
             parent=service_data,
             proto_obj=method,

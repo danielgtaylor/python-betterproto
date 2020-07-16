@@ -617,7 +617,7 @@ class ServiceMethod(ProtoContentBase):
         # comparable with method.input_type
         for msg in self.output_file.messages:
             if (
-                msg.proto_name == self.proto_name
+                msg.py_name == self.py_input_message_type
                 and msg.output_file.input_package == package
             ):
                 return msg
