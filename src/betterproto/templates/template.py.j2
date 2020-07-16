@@ -3,11 +3,11 @@
 # plugin: python-betterproto
 from dataclasses import dataclass
 {% if description.datetime_imports %}
-from datetime import {% for i in description.datetime_imports %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
+from datetime import {% for i in description.datetime_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif%}
 {% if description.typing_imports %}
-from typing import {% for i in description.typing_imports %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
+from typing import {% for i in description.typing_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif %}
 
@@ -134,6 +134,6 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% endfor %}
 {% endfor %}
 
-{% for i in description.imports %}
+{% for i in description.imports|sort %}
 {{ i }}
 {% endfor %}

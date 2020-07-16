@@ -185,9 +185,6 @@ def generate_code(request, response):
     output_paths = set()
     for output_package_name, output_package_content in output_package_files.items():
         template_data = output_package_content["template_data"]
-        template_data.imports = sorted(template_data.imports)
-        template_data.datetime_imports = sorted(template_data.datetime_imports)
-        template_data.typing_imports = sorted(template_data.typing_imports)
 
         # Fill response
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")

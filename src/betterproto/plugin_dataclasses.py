@@ -282,7 +282,7 @@ class Field(Message):
     def betterproto_field_args(self):
         args = ""
         if self.field_wraps:
-            args.append(f", wraps={self.field_wraps}")
+            args = args + f", wraps={self.field_wraps}"
         return args
     
     @property
@@ -393,8 +393,8 @@ class OneOfField(Field):
 
     @property
     def betterproto_field_args(self):
-        args = super().betterproto_field_args()
-        args = args + f', group="{self.parent.oneof_decl[self.proto_obj.oneof_index].name}"'
+        args = super().betterproto_field_args
+        args = args + f', group="{self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name}"'
         return args
 
 
@@ -562,6 +562,7 @@ class ServiceMethod(ProtoContentBase):
                     mutable_default_arguments.append(
                         (field.py_name, field.default_value_string)
                     )
+                    self.output_file.typing_imports.add("Optional")
         return mutable_default_arguments
 
     @property
@@ -598,6 +599,7 @@ class ServiceMethod(ProtoContentBase):
                 msg.output_file.input_package == package:
                 return msg
         return None
+
 
     @property
     def py_input_message_type(self) -> str:
