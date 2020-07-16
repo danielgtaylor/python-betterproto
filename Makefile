@@ -8,8 +8,8 @@ help:               ## - Show this help.
 generate:           ## - Generate test cases (do this once before running test)
 	poetry run python -m tests.generate
 
-test:               ## - Run tests
-	poetry run pytest --cov betterproto
+test:               ## - Run tests, ingoring collection errors (ex from missing imports)
+	poetry run pytest --cov betterproto --continue-on-collection-errors
 
 types:              ## - Check types with mypy
 	poetry run mypy src/betterproto --ignore-missing-imports

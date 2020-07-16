@@ -523,7 +523,9 @@ class ServiceMethod(ProtoContentBase):
             for field in self.py_input_message.fields:
                 if field.default_value_string == "None":
                     self.output_file.typing_imports.add("Optional")
-    
+        if "Optional" in self.py_output_message_type:
+            self.output_file.typing_imports.add("Optional")
+
         # Check for Async imports
         if self.client_streaming:
             self.output_file.typing_imports.add("AsyncIterable")
