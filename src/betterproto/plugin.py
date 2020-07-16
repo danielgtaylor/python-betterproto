@@ -45,7 +45,7 @@ from .plugin_dataclasses import (
     Service,
     ServiceMethod,
     is_map,
-    is_oneof
+    is_oneof,
 )
 
 
@@ -157,7 +157,9 @@ def generate_code(request, response):
 
     # Initialize Template data for each package
     for output_package_name, output_package_content in output_package_files.items():
-        template_data = OutputTemplate(input_package=output_package_content["input_package"])
+        template_data = OutputTemplate(
+            input_package=output_package_content["input_package"]
+        )
         for input_proto_file in output_package_content["files"]:
             ProtoInputFile(parent=template_data, proto_obj=input_proto_file)
         output_package_content["template_data"] = template_data
@@ -166,7 +168,9 @@ def generate_code(request, response):
     for output_package_name, output_package_content in output_package_files.items():
         for proto_file_data in output_package_content["template_data"].input_files:
             for item, path in traverse(proto_file_data.proto_obj):
-                read_protobuf_type(item=item, path=path, proto_file_data=proto_file_data)
+                read_protobuf_type(
+                    item=item, path=path, proto_file_data=proto_file_data
+                )
 
     # Read Services
     for output_package_name, output_package_content in output_package_files.items():
@@ -210,40 +214,34 @@ def generate_code(request, response):
         print(f"Writing {output_package_name}", file=sys.stderr)
 
 
-def read_protobuf_type(item: DescriptorProto, path: List[int], proto_file_data: ProtoInputFile):
+def read_protobuf_type(
+    item: DescriptorProto, path: List[int], proto_file_data: ProtoInputFile
+):
     if isinstance(item, DescriptorProto):
         if item.options.map_entry:
             # Skip generated map entry messages since we just use dicts
             return
         # Process Message
-        message_data = Message(
-            parent=proto_file_data,
-            proto_obj=item,
-            path=path
-        )
+        message_data = Message(parent=proto_file_data, proto_obj=item, path=path)
         for index, field in enumerate(item.field):
             if is_map(field, item):
-                MapField(parent=message_data, proto_obj=field, path=path+[2, index])
+                MapField(parent=message_data, proto_obj=field, path=path + [2, index])
             elif is_oneof(field):
-                OneOfField(parent=message_data, proto_obj=field, path=path+[2, index])
+                OneOfField(parent=message_data, proto_obj=field, path=path + [2, index])
             else:
-                Field(parent=message_data, proto_obj=field, path=path+[2, index])
+                Field(parent=message_data, proto_obj=field, path=path + [2, index])
     elif isinstance(item, EnumDescriptorProto):
         # Enum
         EnumDefinition(proto_obj=item, parent=proto_file_data, path=path)
 
 
-def read_protobuf_service(service: ServiceDescriptorProto, index: int, proto_file_data: ProtoInputFile):
-    service_data = Service(
-        parent=proto_file_data,
-        proto_obj=service,
-        path=[6, index],
-    )
+def read_protobuf_service(
+    service: ServiceDescriptorProto, index: int, proto_file_data: ProtoInputFile
+):
+    service_data = Service(parent=proto_file_data, proto_obj=service, path=[6, index],)
     for j, method in enumerate(service.method):
         ServiceMethod(
-            parent=service_data,
-            proto_obj=method,
-            path=[6, index, 2, j],
+            parent=service_data, proto_obj=method, path=[6, index, 2, j],
         )
 
 
