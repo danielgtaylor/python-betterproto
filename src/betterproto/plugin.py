@@ -3,21 +3,13 @@ import collections
 import itertools
 import os.path
 import pathlib
-import re
 import sys
 import textwrap
 from typing import List, Union
 
-from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest
 
-import betterproto
-from betterproto.compile.importing import get_type_reference, parse_source_type_name
-from betterproto.compile.naming import (
-    pythonize_class_name,
-    pythonize_field_name,
-    pythonize_method_name,
-)
 from betterproto.lib.google.protobuf import ServiceDescriptorProto
+from betterproto.compile.importing import get_type_reference
 
 try:
     # betterproto[compiler] specific dependencies
@@ -28,7 +20,7 @@ try:
         EnumDescriptorProto,
         FieldDescriptorProto,
     )
-    import google.protobuf.wrappers_pb2 as google_wrappers
+    from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest
     import jinja2
 except ImportError as err:
     missing_import = err.args[0][17:-1]
@@ -55,6 +47,7 @@ from .plugin_dataclasses import (
     is_map,
     is_oneof
 )
+
 
 def py_type(package: str, imports: set, field: FieldDescriptorProto) -> str:
     if field.type in [1, 2]:
@@ -166,7 +159,7 @@ def generate_code(request, response):
     for output_package_name, output_package_content in output_package_files.items():
         template_data = OutputTemplate(input_package=output_package_content["input_package"])
         for input_proto_file in output_package_content["files"]:
-            input_proto_file_data = ProtoInputFile(parent=template_data, proto_obj=input_proto_file)
+            ProtoInputFile(parent=template_data, proto_obj=input_proto_file)
         output_package_content["template_data"] = template_data
 
     # Read Messages and Enums
@@ -216,6 +209,7 @@ def generate_code(request, response):
     for output_package_name in sorted(output_paths.union(init_files)):
         print(f"Writing {output_package_name}", file=sys.stderr)
 
+
 def read_protobuf_type(item: DescriptorProto, path: List[int], proto_file_data: ProtoInputFile):
     if isinstance(item, DescriptorProto):
         if item.options.map_entry:
@@ -235,8 +229,8 @@ def read_protobuf_type(item: DescriptorProto, path: List[int], proto_file_data: 
             else:
                 Field(parent=message_data, proto_obj=field, path=path+[2, index])
     elif isinstance(item, EnumDescriptorProto):
-                # Enum
-                EnumDefinition(proto_obj=item, parent=proto_file_data, path=path)
+        # Enum
+        EnumDefinition(proto_obj=item, parent=proto_file_data, path=path)
 
 
 def read_protobuf_service(service: ServiceDescriptorProto, index: int, proto_file_data: ProtoInputFile):

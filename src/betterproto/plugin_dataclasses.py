@@ -8,13 +8,17 @@ from typing import (
     Union,
     Type,
     List,
+    Tuple,
     Set,
     Text,
 )
 import textwrap
 
 import betterproto
-from betterproto.compile.importing import get_type_reference, parse_source_type_name
+from betterproto.compile.importing import (
+    get_type_reference,
+    parse_source_type_name,
+)
 from betterproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -23,15 +27,17 @@ from betterproto.compile.naming import (
 
 try:
     # betterproto[compiler] specific dependencies
-    from google.protobuf.compiler import plugin_pb2 as plugin
     from google.protobuf.descriptor_pb2 import (
         DescriptorProto,
         EnumDescriptorProto,
         FieldDescriptorProto,
         FileDescriptorProto,
+        MethodDescriptorProto,
     )
 except ImportError as err:
-    missing_import = re.match(r".*(cannot import name .*$)", err.args[0]).group(1)
+    missing_import = re.match(
+        r".*(cannot import name .*$)", err.args[0]
+    ).group(1)
     print(
         "\033[31m"
         f"Unable to import `{missing_import}` from betterproto plugin! "
@@ -124,7 +130,7 @@ class ProtoContentBase:
         for field_name, field_val in self.__dataclass_fields__.items():
             if field_val is PLACEHOLDER:
                 raise ValueError(
-                    f"`{field_name}` is a required field with no default value."
+                    f"`{field_name}` is a required field."
                 )
 
     @property
@@ -143,7 +149,9 @@ class ProtoContentBase:
 
     @property
     def comment(self) -> str:
-        """Crawl the proto source code and retrieve comments for this object."""
+        """Crawl the proto source code and retrieve comments
+        for this object.
+        """
         return get_comment(
             proto_file=self.proto_file,
             path=self.path,
@@ -162,7 +170,7 @@ class OutputTemplate:
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
     messages: List[Message] = field(default_factory=list)
-    enums: List[Enum] = field(default_factory=list)
+    enums: List[EnumDefinition] = field(default_factory=list)
     services: List[Service] = field(default_factory=list)
 
     @property
@@ -272,19 +280,20 @@ class Field(Message):
         """Construct string representation of this field as a field."""
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
-        betterproto_field_type = \
-            f"betterproto.{self.field_type}_field({self.proto_obj.number}" + \
-                f"{self.betterproto_field_args}" + \
-                    ")"
+        betterproto_field_type = (
+            f"betterproto.{self.field_type}_field({self.proto_obj.number}"
+            + f"{self.betterproto_field_args}"
+            + ")"
+        )
         return name + annotations + " = " + betterproto_field_type
-    
+
     @property
     def betterproto_field_args(self):
         args = ""
         if self.field_wraps:
             args = args + f", wraps={self.field_wraps}"
         return args
-    
+
     @property
     def field_wraps(self) -> Union[str, None]:
         """Returns betterproto wrapped field type or None.
@@ -306,11 +315,13 @@ class Field(Message):
         ):
             return True
         return False
-    
+
     @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
-        return self.field_type.startswith("List[") or self.field_type.startswith("Dict[")
+        return self.field_type.startswith(
+            "List["
+        ) or self.field_type.startswith("Dict[")
 
     @property
     def field_type(self) -> str:
@@ -390,11 +401,16 @@ class Field(Message):
 
 @dataclass
 class OneOfField(Field):
-
     @property
     def betterproto_field_args(self):
         args = super().betterproto_field_args
-        args = args + f', group="{self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name}"'
+        group = self.parent.proto_obj.oneof_decl[
+            self.proto_obj.oneof_index
+        ].name
+        args = (
+            args
+            + f', group="{group}"'
+        )
         return args
 
 
@@ -520,8 +536,8 @@ class ServiceMethod(ProtoContentBase):
 
         # Check for Optional import
         if self.py_input_message:
-            for field in self.py_input_message.fields:
-                if field.default_value_string == "None":
+            for f in self.py_input_message.fields:
+                if f.default_value_string == "None":
                     self.output_file.typing_imports.add("Optional")
         if "Optional" in self.py_output_message_type:
             self.output_file.typing_imports.add("Optional")
@@ -535,34 +551,35 @@ class ServiceMethod(ProtoContentBase):
             self.output_file.typing_imports.add("AsyncIterator")
 
         super().__post_init__()  # check for unset fields
-    
+
     @property
     def mutable_default_arguments(self) -> List[Tuple[str, str]]:
         """Handle mutable default arguments.
-        
+
         Returns a list of tuples containing the name and default value
         for arguments to this message who's default value is mutable.
         The defaults are swapped out for None and replaced back inside
         the method's body.
-        Reference: https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
+        Reference:
+        https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
 
         Returns
         -------
         List[Tuple[str, str]]
-            Each tuple contains the name and actual default value (as a string) for each
-            argument with mutable default values.
+            Each tuple contains the name and actual default value (as a string)
+            for each argument with mutable default values.
         """
         mutable_default_arguments = []
-        
+
         if self.py_input_message:
-            for field in self.py_input_message.fields:
+            for f in self.py_input_message.fields:
                 if (
                     not self.client_streaming
-                    and field.default_value_string != "None"
-                    and field.mutable
+                    and f.default_value_string != "None"
+                    and f.mutable
                 ):
                     mutable_default_arguments.append(
-                        (field.py_name, field.default_value_string)
+                        (f.py_name, f.default_value_string)
                     )
                     self.output_file.typing_imports.add("Optional")
         return mutable_default_arguments
@@ -579,7 +596,8 @@ class ServiceMethod(ProtoContentBase):
 
     @property
     def route(self) -> str:
-        return f"/{self.output_file.input_package}.{self.parent.proto_name}/{self.proto_name}"
+        return f"/{self.output_file.input_package}.\
+            {self.parent.proto_name}/{self.proto_name}"
 
     @property
     def py_input_message(self) -> Union[None, Message]:
@@ -595,13 +613,15 @@ class ServiceMethod(ProtoContentBase):
         package, name = parse_source_type_name(self.proto_obj.input_type)
 
         # Nested types are currently flattened without dots.
-        # Todo: keep a fully quantified name in types, that is comparable with method.input_type
+        # Todo: keep a fully quantified name in types, that is
+        # comparable with method.input_type
         for msg in self.output_file.messages:
-            if msg.proto_name == self.proto_name and \
-                msg.output_file.input_package == package:
+            if (
+                msg.proto_name == self.proto_name
+                and msg.output_file.input_package == package
+            ):
                 return msg
         return None
-
 
     @property
     def py_input_message_type(self) -> str:
