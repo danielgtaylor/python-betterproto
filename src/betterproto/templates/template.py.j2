@@ -63,10 +63,10 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
         {%- if not method.client_streaming -%}
             {%- if method.py_input_message and method.py_input_message.fields -%}, *,
                 {%- for field in method.py_input_message.fields -%}
-                    {{ field.py_name }}: {% if field.default_value_string == "None" and not field.annotation.startswith("Optional[") -%}
-                                            Optional[{{ field.py_type }}]
+                    {{ field.py_name }}: {% if field.py_name in method.mutable_default_args and not field.annotation.startswith("Optional[") -%}
+                                            Optional[{{ field.annotation }}]
                                          {%- else -%}
-                                            {{ field.py_type }}
+                                            {{ field.annotation }}
                                          {%- endif -%} = 
                                             {%- if field.py_name not in method.mutable_default_args -%}
                                                 {{ field.default_value_string }}

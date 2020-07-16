@@ -569,12 +569,6 @@ class ServiceMethod(ProtoContentBase):
         """
         mutable_default_args = dict()
 
-        # if self.py_name == "do_thing" and self.py_input_message_type == "DoThingRequest":
-        #     import ptvsd
-        #     ptvsd.enable_attach()
-        #     ptvsd.wait_for_attach()  # blocks execution until debugger is attached
-        #     print("done")
-
         if self.py_input_message:
             for f in self.py_input_message.fields:
                 if (
