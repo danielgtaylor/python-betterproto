@@ -1,15 +1,9 @@
-#!/usr/bin/env python
-import collections
 import itertools
 import os.path
 import pathlib
 import sys
 import textwrap
-from typing import List, Union
-
-
-from betterproto.lib.google.protobuf import ServiceDescriptorProto
-from betterproto.compile.importing import get_type_reference
+from typing import List, Union, Iterator
 
 try:
     # betterproto[compiler] specific dependencies
@@ -19,8 +13,8 @@ try:
         DescriptorProto,
         EnumDescriptorProto,
         FieldDescriptorProto,
+        ServiceDescriptorProto
     )
-    from google.protobuf.compiler.plugin_pb2 import CodeGeneratorRequest
     import jinja2
 except ImportError as err:
     missing_import = err.args[0][17:-1]
@@ -34,7 +28,7 @@ except ImportError as err:
     )
     raise SystemExit(1)
 
-from .plugin_dataclasses import (
+from betterproto.plugin.models import (
     Request,
     OutputTemplate,
     Message,
@@ -49,41 +43,7 @@ from .plugin_dataclasses import (
 )
 
 
-def py_type(package: str, imports: set, field: FieldDescriptorProto) -> str:
-    if field.type in [1, 2]:
-        return "float"
-    elif field.type in [3, 4, 5, 6, 7, 13, 15, 16, 17, 18]:
-        return "int"
-    elif field.type == 8:
-        return "bool"
-    elif field.type == 9:
-        return "str"
-    elif field.type in [11, 14]:
-        # Type referencing another defined Message or a named enum
-        return get_type_reference(package, imports, field.type_name)
-    elif field.type == 12:
-        return "bytes"
-    else:
-        raise NotImplementedError(f"Unknown type {field.type}")
-
-
-def get_py_zero(type_num: int) -> Union[str, float]:
-    zero: Union[str, float] = 0
-    if type_num in []:
-        zero = 0.0
-    elif type_num == 8:
-        zero = "False"
-    elif type_num == 9:
-        zero = '""'
-    elif type_num == 11:
-        zero = "None"
-    elif type_num == 12:
-        zero = 'b""'
-
-    return zero
-
-
-def traverse(proto_file):
+def traverse(proto_file: FieldDescriptorProto) -> Iterator:
     # Todo: Keep information about nested hierarchy
     def _traverse(path, items, prefix=""):
         for i, item in enumerate(items):
@@ -106,37 +66,18 @@ def traverse(proto_file):
     )
 
 
-def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
-    pad = " " * indent
-    for sci in proto_file.source_code_info.location:
-        # print(list(sci.path), path, file=sys.stderr)
-        if list(sci.path) == path and sci.leading_comments:
-            lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""), width=79 - indent
-            )
-
-            if path[-2] == 2 and path[-4] != 6:
-                # This is a field
-                return f"{pad}# " + f"\n{pad}# ".join(lines)
-            else:
-                # This is a message, enum, service, or method
-                if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
-                    lines[0] = lines[0].strip('"')
-                    return f'{pad}"""{lines[0]}"""'
-                else:
-                    joined = f"\n{pad}".join(lines)
-                    return f'{pad}"""\n{pad}{joined}\n{pad}"""'
-
-    return ""
-
-
-def generate_code(request, response):
+def generate_code(
+    request: plugin.CodeGeneratorRequest,
+    response: plugin.CodeGeneratorResponse
+) -> None:
     plugin_options = request.parameter.split(",") if request.parameter else []
+
+    templates_folder = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'templates'))
 
     env = jinja2.Environment(
         trim_blocks=True,
         lstrip_blocks=True,
-        loader=jinja2.FileSystemLoader("%s/templates/" % os.path.dirname(__file__)),
+        loader=jinja2.FileSystemLoader(templates_folder),
     )
     template = env.get_template("template.py.j2")
     request_data = Request(plugin_request_obj=request)
@@ -174,18 +115,18 @@ def generate_code(request, response):
                 read_protobuf_service(service, index, output_package)
 
     # Generate output files
-    output_paths = set()
+    output_paths: pathlib.Path = set()
     for output_package_name, template_data in request_data.output_packages.items():
 
         # Add files to the response object
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
         output_paths.add(output_path)
 
-        f = response.file.add()
-        f.name = str(output_path)
+        f: response.File = response.file.add()
+        f.name: str = str(output_path)
 
         # Render and then format the output file
-        f.content = black.format_str(
+        f.content: str = black.format_str(
             template.render(description=template_data),
             mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
         )
@@ -210,7 +151,7 @@ def generate_code(request, response):
 
 def read_protobuf_type(
     item: DescriptorProto, path: List[int], output_package: OutputTemplate
-):
+) -> None:
     if isinstance(item, DescriptorProto):
         if item.options.map_entry:
             # Skip generated map entry messages since we just use dicts
@@ -231,51 +172,9 @@ def read_protobuf_type(
 
 def read_protobuf_service(
     service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
-):
+) -> None:
     service_data = Service(parent=output_package, proto_obj=service, path=[6, index],)
     for j, method in enumerate(service.method):
         ServiceMethod(
             parent=service_data, proto_obj=method, path=[6, index, 2, j],
         )
-
-
-def main():
-
-    """The plugin's main entry point."""
-    # Read request message from stdin
-    data = sys.stdin.buffer.read()
-
-    # Parse request
-    request = plugin.CodeGeneratorRequest()
-    request.ParseFromString(data)
-
-    dump_file = os.getenv("BETTERPROTO_DUMP")
-    if dump_file:
-        dump_request(dump_file, request)
-
-    # Create response
-    response = plugin.CodeGeneratorResponse()
-
-    # Generate code
-    generate_code(request, response)
-
-    # Serialise response message
-    output = response.SerializeToString()
-
-    # Write to stdout
-    sys.stdout.buffer.write(output)
-
-
-def dump_request(dump_file: str, request: CodeGeneratorRequest):
-    """
-    For developers: Supports running plugin.py standalone so its possible to debug it.
-    Run protoc (or generate.py) with BETTERPROTO_DUMP="yourfile.bin" to write the request to a file.
-    Then run plugin.py from your IDE in debugging mode, and redirect stdin to the file.
-    """
-    with open(str(dump_file), "wb") as fh:
-        sys.stderr.write(f"\033[31mWriting input from protoc to: {dump_file}\033[0m\n")
-        fh.write(request.SerializeToString())
-
-
-if __name__ == "__main__":
-    main()
