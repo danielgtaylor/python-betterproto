@@ -1,3 +1,34 @@
+"""Plugin model dataclasses.
+
+These classes are meant to be an intermediate representation
+of protbuf objects. They are used to organize the data collected during parsing.
+
+The general intention is to create a doubly-linked tree-like structure
+with the following types of references:
+- Downwards references: from message -> fields, from output package -> messages
+or from service -> service methods
+- Upwards references: from field -> message, message -> package.
+- Input/ouput message references: from a service method to it's corresponding
+input/output messages, which may even be in another package.
+
+There are convenience methods to allow climbing up and down this tree, for
+example to retrieve the list of all messages that are in the same package as
+the current message.
+
+Most of these classes take as inputs:
+- proto_obj: A reference to it's corresponding protobuf object as
+presented by the protoc plugin.
+- parent: a reference to the parent object in the tree.
+
+With this information, the class is able to expose attributes,
+such as a pythonized name, that will be calculated from proto_obj.
+
+The instantiation should also attach a reference to the new object
+into the corresponding place within it's parent object. For example,
+instantiating field `A` with parent message `B` should add a
+reference to `A` to `B`'s `fields` attirbute.
+"""
+
 import re
 from dataclasses import dataclass
 from dataclasses import field

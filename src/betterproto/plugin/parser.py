@@ -2,8 +2,7 @@ import itertools
 import os.path
 import pathlib
 import sys
-import textwrap
-from typing import List, Union, Iterator
+from typing import List, Iterator
 
 try:
     # betterproto[compiler] specific dependencies
@@ -13,7 +12,7 @@ try:
         DescriptorProto,
         EnumDescriptorProto,
         FieldDescriptorProto,
-        ServiceDescriptorProto
+        ServiceDescriptorProto,
     )
     import jinja2
 except ImportError as err:
@@ -67,12 +66,13 @@ def traverse(proto_file: FieldDescriptorProto) -> Iterator:
 
 
 def generate_code(
-    request: plugin.CodeGeneratorRequest,
-    response: plugin.CodeGeneratorResponse
+    request: plugin.CodeGeneratorRequest, response: plugin.CodeGeneratorResponse
 ) -> None:
     plugin_options = request.parameter.split(",") if request.parameter else []
 
-    templates_folder = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'templates'))
+    templates_folder = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "templates")
+    )
 
     env = jinja2.Environment(
         trim_blocks=True,
