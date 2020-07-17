@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
 from dataclasses import field
@@ -8,6 +6,7 @@ from typing import (
     Union,
     Type,
     List,
+    Dict,
     Set,
     Text,
 )
@@ -128,7 +127,7 @@ class ProtoContentBase:
                 raise ValueError(f"`{field_name}` is a required field.")
 
     @property
-    def output_file(self) -> OutputTemplate:
+    def output_file(self) -> "OutputTemplate":
         current = self
         while not isinstance(current, OutputTemplate):
             current = current.parent
@@ -142,7 +141,7 @@ class ProtoContentBase:
         return current.package_proto_obj
 
     @property
-    def request(self) -> Request:
+    def request(self) -> "Request":
         current = self
         while not isinstance(current, OutputTemplate):
             current = current.parent
@@ -163,10 +162,10 @@ class Request:
     from typing import Any
 
     plugin_request_obj: Any
-    output_packages: Dict[str, OutputTemplate] = field(default_factory=dict)
+    output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
     @property
-    def all_messages(self) -> List[Message]:
+    def all_messages(self) -> List["Message"]:
         """All of the messages in this request.
 
         Returns
@@ -194,9 +193,9 @@ class OutputTemplate:
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
-    messages: List[Message] = field(default_factory=list)
-    enums: List[EnumDefinition] = field(default_factory=list)
-    services: List[Service] = field(default_factory=list)
+    messages: List["Message"] = field(default_factory=list)
+    enums: List["EnumDefinition"] = field(default_factory=list)
+    services: List["Service"] = field(default_factory=list)
 
     @property
     def package(self) -> str:
@@ -226,10 +225,10 @@ class Message(ProtoContentBase):
     """Representation of a protobuf message.
     """
 
-    parent: Union[Message, OutputTemplate] = PLACEHOLDER
+    parent: Union["Message", OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
-    fields: List[Union[Field, Message]] = field(default_factory=list)
+    fields: List[Union["Field", "Message"]] = field(default_factory=list)
 
     def __post_init__(self):
         # Add message to output file
@@ -481,7 +480,7 @@ class EnumDefinition(Message):
     """Representation of a proto Enum definition."""
 
     proto_obj: EnumDescriptorProto = PLACEHOLDER
-    entries: List[EnumDefinition.EnumEntry] = PLACEHOLDER
+    entries: List["EnumDefinition.EnumEntry"] = PLACEHOLDER
 
     @dataclass(unsafe_hash=True)
     class EnumEntry:
@@ -519,7 +518,7 @@ class Service(ProtoContentBase):
     parent: OutputTemplate = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
-    methods: List[ServiceMethod] = field(default_factory=list)
+    methods: List["ServiceMethod"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         # Add service to output file
