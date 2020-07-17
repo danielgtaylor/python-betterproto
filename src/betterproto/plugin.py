@@ -154,8 +154,7 @@ def generate_code(request, response):
         if output_package_name not in request_data.output_packages:
             # Create a new output if there is no output for this package
             request_data.output_packages[output_package_name] = OutputTemplate(
-                parent_request=request_data,
-                package_proto_obj=proto_file
+                parent_request=request_data, package_proto_obj=proto_file
             )
         # Add this input file to the output corresponding to this package
         request_data.output_packages[output_package_name].input_files.append(proto_file)

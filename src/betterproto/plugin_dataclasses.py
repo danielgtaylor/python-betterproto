@@ -34,9 +34,7 @@ try:
         MethodDescriptorProto,
     )
 except ImportError as err:
-    missing_import = re.match(
-        r".*(cannot import name .*$)", err.args[0]
-    ).group(1)
+    missing_import = re.match(r".*(cannot import name .*$)", err.args[0]).group(1)
     print(
         "\033[31m"
         f"Unable to import `{missing_import}` from betterproto plugin! "
@@ -99,8 +97,7 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
         # print(list(sci.path), path, file=sys.stderr)
         if list(sci.path) == path and sci.leading_comments:
             lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""),
-                width=79 - indent,
+                sci.leading_comments.strip().replace("\n", ""), width=79 - indent,
             )
 
             if path[-2] == 2 and path[-4] != 6:
@@ -128,9 +125,7 @@ class ProtoContentBase:
         """Checks that no fake default fields were left as placeholders."""
         for field_name, field_val in self.__dataclass_fields__.items():
             if field_val is PLACEHOLDER:
-                raise ValueError(
-                    f"`{field_name}` is a required field."
-                )
+                raise ValueError(f"`{field_name}` is a required field.")
 
     @property
     def output_file(self) -> OutputTemplate:
@@ -145,7 +140,7 @@ class ProtoContentBase:
         while not isinstance(current, OutputTemplate):
             current = current.parent
         return current.package_proto_obj
-    
+
     @property
     def request(self) -> Request:
         current = self
@@ -159,17 +154,17 @@ class ProtoContentBase:
         for this object.
         """
         return get_comment(
-            proto_file=self.proto_file,
-            path=self.path,
-            indent=self.comment_indent,
+            proto_file=self.proto_file, path=self.path, indent=self.comment_indent,
         )
+
 
 @dataclass
 class Request:
     from typing import Any
+
     plugin_request_obj: Any
     output_packages: Dict[str, OutputTemplate] = field(default_factory=dict)
-    
+
     @property
     def all_messages(self) -> List[Message]:
         """All of the messages in this request.
@@ -180,9 +175,7 @@ class Request:
             List of all of the messages in this request.
         """
         return [
-            msg
-            for output in self.output_packages.values()
-            for msg in output.messages
+            msg for output in self.output_packages.values() for msg in output.messages
         ]
 
 
@@ -194,6 +187,7 @@ class OutputTemplate:
     but may need references to other .proto files to be
     built.
     """
+
     parent_request: Request
     package_proto_obj: FileDescriptorProto
     input_files: List[str] = field(default_factory=list)
@@ -231,6 +225,7 @@ class OutputTemplate:
 class Message(ProtoContentBase):
     """Representation of a protobuf message.
     """
+
     parent: Union[Message, OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
@@ -340,9 +335,8 @@ class Field(Message):
 
     @property
     def repeated(self) -> bool:
-        if (
-            self.proto_obj.label == FieldDescriptorProto.LABEL_REPEATED
-            and not is_map(self.proto_obj, self.parent)
+        if self.proto_obj.label == FieldDescriptorProto.LABEL_REPEATED and not is_map(
+            self.proto_obj, self.parent
         ):
             return True
         return False
@@ -357,9 +351,7 @@ class Field(Message):
     def field_type(self) -> str:
         """String representation of proto field type."""
         return (
-            self.proto_obj.Type.Name(self.proto_obj.type)
-            .lower()
-            .replace("type_", "")
+            self.proto_obj.Type.Name(self.proto_obj.type).lower().replace("type_", "")
         )
 
     @property
@@ -434,13 +426,8 @@ class OneOfField(Field):
     @property
     def betterproto_field_args(self):
         args = super().betterproto_field_args
-        group = self.parent.proto_obj.oneof_decl[
-            self.proto_obj.oneof_index
-        ].name
-        args = (
-            args
-            + f', group="{group}"'
-        )
+        group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
+        args = args + f', group="{group}"'
         return args
 
 
@@ -465,12 +452,8 @@ class MapField(Field):
                         parent=self, proto_obj=nested.field[1],  # key
                     ).py_type
                     # Get proto types
-                    self.proto_k_type = self.proto_obj.Type.Name(
-                        nested.field[0].type
-                    )
-                    self.proto_v_type = self.proto_obj.Type.Name(
-                        nested.field[1].type
-                    )
+                    self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
+                    self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
         super().__post_init__()  # call Field -> Message __post_init__
 
     def get_field_string(self, indent: int = 4) -> str:
