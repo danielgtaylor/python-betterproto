@@ -35,8 +35,8 @@ except ImportError as err:
     raise SystemExit(1)
 
 from .plugin_dataclasses import (
+    Request,
     OutputTemplate,
-    ProtoInputFile,
     Message,
     Field,
     OneOfField,
@@ -139,58 +139,53 @@ def generate_code(request, response):
         loader=jinja2.FileSystemLoader("%s/templates/" % os.path.dirname(__file__)),
     )
     template = env.get_template("template.py.j2")
-
+    request_data = Request(plugin_request_obj=request)
     # Gather output packages
-    output_package_files = collections.defaultdict()
     for proto_file in request.proto_file:
         if (
             proto_file.package == "google.protobuf"
             and "INCLUDE_GOOGLE" not in plugin_options
         ):
+            # If not INCLUDE_GOOGLE,
+            # skip re-compiling Google's well-known types
             continue
 
-        output_package = proto_file.package
-        output_package_files.setdefault(
-            output_package, {"input_package": proto_file.package, "files": []}
-        )
-        output_package_files[output_package]["files"].append(proto_file)
-
-    # Initialize Template data for each package
-    for output_package_name, output_package_content in output_package_files.items():
-        template_data = OutputTemplate(
-            input_package=output_package_content["input_package"]
-        )
-        for input_proto_file in output_package_content["files"]:
-            ProtoInputFile(parent=template_data, proto_obj=input_proto_file)
-        output_package_content["template_data"] = template_data
+        output_package_name = proto_file.package
+        if output_package_name not in request_data.output_packages:
+            # Create a new output if there is no output for this package
+            request_data.output_packages[output_package_name] = OutputTemplate(
+                parent_request=request_data,
+                package_proto_obj=proto_file
+            )
+        # Add this input file to the output corresponding to this package
+        request_data.output_packages[output_package_name].input_files.append(proto_file)
 
     # Read Messages and Enums
-    for output_package_name, output_package_content in output_package_files.items():
-        for proto_file_data in output_package_content["template_data"].input_files:
-            for item, path in traverse(proto_file_data.proto_obj):
-                read_protobuf_type(
-                    item=item, path=path, proto_file_data=proto_file_data
-                )
+    # We need to read Messages before Services in so that we can
+    # get the references to input/output messages for each service
+    for output_package_name, output_package in request_data.output_packages.items():
+        for proto_input_file in output_package.input_files:
+            for item, path in traverse(proto_input_file):
+                read_protobuf_type(item=item, path=path, output_package=output_package)
 
     # Read Services
-    for output_package_name, output_package_content in output_package_files.items():
-        for proto_file_data in output_package_content["template_data"].input_files:
-            for index, service in enumerate(proto_file_data.proto_obj.service):
-                read_protobuf_service(service, index, proto_file_data)
+    for output_package_name, output_package in request_data.output_packages.items():
+        for proto_input_file in output_package.input_files:
+            for index, service in enumerate(proto_input_file.service):
+                read_protobuf_service(service, index, output_package)
 
-    # Render files
+    # Generate output files
     output_paths = set()
-    for output_package_name, output_package_content in output_package_files.items():
-        template_data = output_package_content["template_data"]
+    for output_package_name, template_data in request_data.output_packages.items():
 
-        # Fill response
+        # Add files to the response object
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
         output_paths.add(output_path)
 
         f = response.file.add()
         f.name = str(output_path)
 
-        # Render and then format the output file.
+        # Render and then format the output file
         f.content = black.format_str(
             template.render(description=template_data),
             mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
@@ -215,14 +210,14 @@ def generate_code(request, response):
 
 
 def read_protobuf_type(
-    item: DescriptorProto, path: List[int], proto_file_data: ProtoInputFile
+    item: DescriptorProto, path: List[int], output_package: OutputTemplate
 ):
     if isinstance(item, DescriptorProto):
         if item.options.map_entry:
             # Skip generated map entry messages since we just use dicts
             return
         # Process Message
-        message_data = Message(parent=proto_file_data, proto_obj=item, path=path)
+        message_data = Message(parent=output_package, proto_obj=item, path=path)
         for index, field in enumerate(item.field):
             if is_map(field, item):
                 MapField(parent=message_data, proto_obj=field, path=path + [2, index])
@@ -232,13 +227,13 @@ def read_protobuf_type(
                 Field(parent=message_data, proto_obj=field, path=path + [2, index])
     elif isinstance(item, EnumDescriptorProto):
         # Enum
-        EnumDefinition(proto_obj=item, parent=proto_file_data, path=path)
+        EnumDefinition(parent=output_package, proto_obj=item, path=path)
 
 
 def read_protobuf_service(
-    service: ServiceDescriptorProto, index: int, proto_file_data: ProtoInputFile
+    service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
 ):
-    service_data = Service(parent=proto_file_data, proto_obj=service, path=[6, index],)
+    service_data = Service(parent=output_package, proto_obj=service, path=[6, index],)
     for j, method in enumerate(service.method):
         ServiceMethod(
             parent=service_data, proto_obj=method, path=[6, index, 2, j],

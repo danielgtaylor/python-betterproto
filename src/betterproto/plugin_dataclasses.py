@@ -134,7 +134,7 @@ class ProtoContentBase:
 
     @property
     def output_file(self) -> OutputTemplate:
-        current = self.parent
+        current = self
         while not isinstance(current, OutputTemplate):
             current = current.parent
         return current
@@ -142,9 +142,16 @@ class ProtoContentBase:
     @property
     def proto_file(self) -> FieldDescriptorProto:
         current = self
-        while not isinstance(current, ProtoInputFile):
+        while not isinstance(current, OutputTemplate):
             current = current.parent
-        return current.proto_obj
+        return current.package_proto_obj
+    
+    @property
+    def request(self) -> Request:
+        current = self
+        while not isinstance(current, OutputTemplate):
+            current = current.parent
+        return current.parent_request
 
     @property
     def comment(self) -> str:
@@ -157,14 +164,39 @@ class ProtoContentBase:
             indent=self.comment_indent,
         )
 
+@dataclass
+class Request:
+    from typing import Any
+    plugin_request_obj: Any
+    output_packages: Dict[str, OutputTemplate] = field(default_factory=dict)
+    
+    @property
+    def all_messages(self) -> List[Message]:
+        """All of the messages in this request.
+
+        Returns
+        -------
+        List[Message]
+            List of all of the messages in this request.
+        """
+        return [
+            msg
+            for output in self.output_packages.values()
+            for msg in output.messages
+        ]
+
 
 @dataclass
 class OutputTemplate:
     """Representation of an output .py file.
-    """
 
-    input_package: str
-    input_files: List[ProtoInputFile] = field(default_factory=list)
+    Each output file corresponds to a .proto input file,
+    but may need references to other .proto files to be
+    built.
+    """
+    parent_request: Request
+    package_proto_obj: FileDescriptorProto
+    input_files: List[str] = field(default_factory=list)
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
@@ -173,40 +205,40 @@ class OutputTemplate:
     services: List[Service] = field(default_factory=list)
 
     @property
-    def input_filenames(self) -> List[str]:
-        return [f.name for f in self.input_files]
+    def package(self) -> str:
+        """Name of input package.
 
-
-@dataclass
-class ProtoInputFile:
-    """Representation of an input .proto file.
-    """
-
-    parent: OutputTemplate
-    proto_obj: FileDescriptorProto
+        Returns
+        -------
+        str
+            Name of input package.
+        """
+        return self.package_proto_obj.package
 
     @property
-    def name(self) -> str:
-        return self.proto_obj.name
+    def input_filenames(self) -> List[str]:
+        """Names of the input files used to build this output.
 
-    def __post_init__(self):
-        # Add proto file to output file
-        self.parent.input_files.append(self)
+        Returns
+        -------
+        List[str]
+            Names of the input files used to build this output.
+        """
+        return [f.name for f in self.input_files]
 
 
 @dataclass
 class Message(ProtoContentBase):
     """Representation of a protobuf message.
     """
-
-    parent: Union[ProtoInputFile, Message] = PLACEHOLDER
+    parent: Union[Message, OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
     fields: List[Union[Field, Message]] = field(default_factory=list)
 
     def __post_init__(self):
         # Add message to output file
-        if isinstance(self.parent, ProtoInputFile):
+        if isinstance(self.parent, OutputTemplate):
             if isinstance(self, EnumDefinition):
                 self.output_file.enums.append(self)
             else:
@@ -383,7 +415,7 @@ class Field(Message):
         elif self.proto_obj.type in PROTO_MESSAGE_TYPES:
             # Type referencing another defined Message or a named enum
             return get_type_reference(
-                package=self.output_file.input_package,
+                package=self.output_file.package,
                 imports=self.output_file.imports,
                 source_type=self.proto_obj.type_name,
             )
@@ -501,7 +533,7 @@ class EnumDefinition(Message):
 
 @dataclass
 class Service(ProtoContentBase):
-    parent: ProtoInputFile = PLACEHOLDER
+    parent: OutputTemplate = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
     methods: List[ServiceMethod] = field(default_factory=list)
@@ -595,7 +627,7 @@ class ServiceMethod(ProtoContentBase):
     @property
     def route(self) -> str:
         return (
-            f"/{self.output_file.input_package}."
+            f"/{self.output_file.package}."
             f"{self.parent.proto_name}/{self.proto_name}"
         )
 
@@ -615,10 +647,10 @@ class ServiceMethod(ProtoContentBase):
         # Nested types are currently flattened without dots.
         # Todo: keep a fully quantified name in types, that is
         # comparable with method.input_type
-        for msg in self.output_file.messages:
+        for msg in self.request.all_messages:
             if (
-                msg.py_name == self.py_input_message_type
-                and msg.output_file.input_package == package
+                msg.py_name == name.replace(".", "")
+                and msg.output_file.package == package
             ):
                 return msg
         return None
@@ -635,7 +667,7 @@ class ServiceMethod(ProtoContentBase):
         input message.
         """
         return get_type_reference(
-            package=self.output_file.input_package,
+            package=self.output_file.package,
             imports=self.output_file.imports,
             source_type=self.proto_obj.input_type,
         ).strip('"')
@@ -652,9 +684,10 @@ class ServiceMethod(ProtoContentBase):
         output message.
         """
         return get_type_reference(
-            package=self.output_file.input_package,
+            package=self.output_file.package,
             imports=self.output_file.imports,
             source_type=self.proto_obj.output_type,
+            unwrap=False,
         ).strip('"')
 
     @property
