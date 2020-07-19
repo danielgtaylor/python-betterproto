@@ -169,9 +169,8 @@ async def main():
 
     # don't forget to close the channel when done!
     channel.close()
-
-
-asyncio.run(main())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
 
 ```
 
