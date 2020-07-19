@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 import os
 
@@ -41,3 +42,7 @@ def dump_request(dump_file: str, request: plugin.CodeGeneratorRequest):
     with open(str(dump_file), "wb") as fh:
         sys.stderr.write(f"\033[31mWriting input from protoc to: {dump_file}\033[0m\n")
         fh.write(request.SerializeToString())
+
+
+if __name__ == "__main__":
+    main()

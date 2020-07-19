@@ -55,6 +55,7 @@ from betterproto.compile.naming import (
 
 try:
     # betterproto[compiler] specific dependencies
+    from google.protobuf.compiler import plugin_pb2 as plugin
     from google.protobuf.descriptor_pb2 import (
         DescriptorProto,
         EnumDescriptorProto,
@@ -145,7 +146,7 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
 
 
 class ProtoContentBase:
-    """Methods common to Message, Service and ServiceMethod."""
+    """Methods common to MessageCompiler, ServiceCompiler and ServiceMethodCompiler."""
 
     path: List[int]
     comment_indent: int = 4
@@ -171,7 +172,7 @@ class ProtoContentBase:
         return current.package_proto_obj
 
     @property
-    def request(self) -> "Request":
+    def request(self) -> "PluginRequestCompiler":
         current = self
         while not isinstance(current, OutputTemplate):
             current = current.parent
@@ -188,19 +189,18 @@ class ProtoContentBase:
 
 
 @dataclass
-class Request:
-    from typing import Any
+class PluginRequestCompiler:
 
-    plugin_request_obj: Any
+    plugin_request_obj: plugin.CodeGeneratorRequest
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
     @property
-    def all_messages(self) -> List["Message"]:
+    def all_messages(self) -> List["MessageCompiler"]:
         """All of the messages in this request.
 
         Returns
         -------
-        List[Message]
+        List[MessageCompiler]
             List of all of the messages in this request.
         """
         return [
@@ -217,15 +217,15 @@ class OutputTemplate:
     built.
     """
 
-    parent_request: Request
+    parent_request: PluginRequestCompiler
     package_proto_obj: FileDescriptorProto
     input_files: List[str] = field(default_factory=list)
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
-    messages: List["Message"] = field(default_factory=list)
-    enums: List["EnumDefinition"] = field(default_factory=list)
-    services: List["Service"] = field(default_factory=list)
+    messages: List["MessageCompiler"] = field(default_factory=list)
+    enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
+    services: List["ServiceCompiler"] = field(default_factory=list)
 
     @property
     def package(self) -> str:
@@ -251,19 +251,21 @@ class OutputTemplate:
 
 
 @dataclass
-class Message(ProtoContentBase):
+class MessageCompiler(ProtoContentBase):
     """Representation of a protobuf message.
     """
 
-    parent: Union["Message", OutputTemplate] = PLACEHOLDER
+    parent: Union["MessageCompiler", OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
-    fields: List[Union["Field", "Message"]] = field(default_factory=list)
+    fields: List[Union["FieldCompiler", "MessageCompiler"]] = field(
+        default_factory=list
+    )
 
     def __post_init__(self):
         # Add message to output file
         if isinstance(self.parent, OutputTemplate):
-            if isinstance(self, EnumDefinition):
+            if isinstance(self, EnumDefinitionCompiler):
                 self.output_file.enums.append(self)
             else:
                 self.output_file.messages.append(self)
@@ -310,8 +312,8 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
 
 
 @dataclass
-class Field(Message):
-    parent: Message = PLACEHOLDER
+class FieldCompiler(MessageCompiler):
+    parent: MessageCompiler = PLACEHOLDER
     proto_obj: FieldDescriptorProto = PLACEHOLDER
 
     def __post_init__(self):
@@ -329,7 +331,7 @@ class Field(Message):
             self.output_file.datetime_imports.add("timedelta")
         if "datetime" in annotation:
             self.output_file.datetime_imports.add("datetime")
-        super().__post_init__()  # call Field -> Message __post_init__
+        super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     def get_field_string(self, indent: int = 4) -> str:
         """Construct string representation of this field as a field."""
@@ -451,9 +453,9 @@ class Field(Message):
 
 
 @dataclass
-class OneOfField(Field):
+class OneOfFieldCompiler(FieldCompiler):
     @property
-    def betterproto_field_args(self):
+    def betterproto_field_args(self) -> "str":
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
         args = args + f', group="{group}"'
@@ -461,7 +463,7 @@ class OneOfField(Field):
 
 
 @dataclass
-class MapField(Field):
+class MapEntryCompiler(FieldCompiler):
     py_k_type: Type = PLACEHOLDER
     py_v_type: Type = PLACEHOLDER
     proto_k_type: str = PLACEHOLDER
@@ -474,16 +476,16 @@ class MapField(Field):
             if nested.name.replace("_", "").lower() == map_entry:
                 if nested.options.map_entry:
                     # Get Python types
-                    self.py_k_type = Field(
+                    self.py_k_type = FieldCompiler(
                         parent=self, proto_obj=nested.field[0],  # key
                     ).py_type
-                    self.py_v_type = Field(
+                    self.py_v_type = FieldCompiler(
                         parent=self, proto_obj=nested.field[1],  # key
                     ).py_type
                     # Get proto types
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
                     self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
-        super().__post_init__()  # call Field -> Message __post_init__
+        super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     def get_field_string(self, indent: int = 4) -> str:
         """Construct string representation of this field."""
@@ -506,11 +508,11 @@ class MapField(Field):
 
 
 @dataclass
-class EnumDefinition(Message):
+class EnumDefinitionCompiler(MessageCompiler):
     """Representation of a proto Enum definition."""
 
     proto_obj: EnumDescriptorProto = PLACEHOLDER
-    entries: List["EnumDefinition.EnumEntry"] = PLACEHOLDER
+    entries: List["EnumDefinitionCompiler.EnumEntry"] = PLACEHOLDER
 
     @dataclass(unsafe_hash=True)
     class EnumEntry:
@@ -532,7 +534,7 @@ class EnumDefinition(Message):
             )
             for i, v in enumerate(self.proto_obj.value)
         ]
-        super().__post_init__()  # call Message __post_init__
+        super().__post_init__()  # call MessageCompiler __post_init__
 
     @property
     def default_value_string(self) -> int:
@@ -544,11 +546,11 @@ class EnumDefinition(Message):
 
 
 @dataclass
-class Service(ProtoContentBase):
+class ServiceCompiler(ProtoContentBase):
     parent: OutputTemplate = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
-    methods: List["ServiceMethod"] = field(default_factory=list)
+    methods: List["ServiceMethodCompiler"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         # Add service to output file
@@ -565,9 +567,9 @@ class Service(ProtoContentBase):
 
 
 @dataclass
-class ServiceMethod(ProtoContentBase):
+class ServiceMethodCompiler(ProtoContentBase):
 
-    parent: Service
+    parent: ServiceCompiler
     proto_obj: MethodDescriptorProto
     path: List[int] = PLACEHOLDER
     comment_indent: int = 8
@@ -644,12 +646,12 @@ class ServiceMethod(ProtoContentBase):
         )
 
     @property
-    def py_input_message(self) -> Union[None, Message]:
+    def py_input_message(self) -> Union[None, MessageCompiler]:
         """Find the input message object.
 
         Returns
         -------
-        Union[None, Message]
+        Union[None, MessageCompiler]
             Method instance representing the input message.
             If not input message could be found or there are no
             input messages, None is returned.

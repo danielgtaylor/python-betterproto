@@ -28,15 +28,15 @@ except ImportError as err:
     raise SystemExit(1)
 
 from betterproto.plugin.models import (
-    Request,
+    PluginRequestCompiler,
     OutputTemplate,
-    Message,
-    Field,
-    OneOfField,
-    MapField,
-    EnumDefinition,
-    Service,
-    ServiceMethod,
+    MessageCompiler,
+    FieldCompiler,
+    OneOfFieldCompiler,
+    MapEntryCompiler,
+    EnumDefinitionCompiler,
+    ServiceCompiler,
+    ServiceMethodCompiler,
     is_map,
     is_oneof,
 )
@@ -80,7 +80,7 @@ def generate_code(
         loader=jinja2.FileSystemLoader(templates_folder),
     )
     template = env.get_template("template.py.j2")
-    request_data = Request(plugin_request_obj=request)
+    request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
     for proto_file in request.proto_file:
         if (
@@ -157,24 +157,32 @@ def read_protobuf_type(
             # Skip generated map entry messages since we just use dicts
             return
         # Process Message
-        message_data = Message(parent=output_package, proto_obj=item, path=path)
+        message_data = MessageCompiler(parent=output_package, proto_obj=item, path=path)
         for index, field in enumerate(item.field):
             if is_map(field, item):
-                MapField(parent=message_data, proto_obj=field, path=path + [2, index])
+                MapEntryCompiler(
+                    parent=message_data, proto_obj=field, path=path + [2, index]
+                )
             elif is_oneof(field):
-                OneOfField(parent=message_data, proto_obj=field, path=path + [2, index])
+                OneOfFieldCompiler(
+                    parent=message_data, proto_obj=field, path=path + [2, index]
+                )
             else:
-                Field(parent=message_data, proto_obj=field, path=path + [2, index])
+                FieldCompiler(
+                    parent=message_data, proto_obj=field, path=path + [2, index]
+                )
     elif isinstance(item, EnumDescriptorProto):
         # Enum
-        EnumDefinition(parent=output_package, proto_obj=item, path=path)
+        EnumDefinitionCompiler(parent=output_package, proto_obj=item, path=path)
 
 
 def read_protobuf_service(
     service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
 ) -> None:
-    service_data = Service(parent=output_package, proto_obj=service, path=[6, index],)
+    service_data = ServiceCompiler(
+        parent=output_package, proto_obj=service, path=[6, index],
+    )
     for j, method in enumerate(service.method):
-        ServiceMethod(
+        ServiceMethodCompiler(
             parent=service_data, proto_obj=method, path=[6, index, 2, j],
         )
