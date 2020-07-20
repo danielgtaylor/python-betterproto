@@ -59,7 +59,7 @@ author = 'danielgtaylor'
 #
 # The short X.Y version.
 
-pyproject = toml.load(open("...pyproject.toml"))
+pyproject = toml.load(open("../../python-betterproto/pyproject.toml"))
 
 
 # The full version, including alpha/beta/rc tags.
