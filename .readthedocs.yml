@@ -14,4 +14,6 @@ python:
     - method: pip
         path: .
         extra_requirements:
-          - docs/requirements.txt
+          - toml
+          - sphinx==3.1.2
+          - sphinx_iowmd_theme
