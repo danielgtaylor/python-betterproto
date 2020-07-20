@@ -1,3 +1,0 @@
-toml
-sphinx==3.1.2
-sphinx_iowmd_theme
