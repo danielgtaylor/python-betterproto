@@ -50,7 +50,8 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "betterproto"
+project = 'betterproto'
+author = 'danielgtaylor'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -95,9 +96,6 @@ html_theme = "basic"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-# The name of a javascript file (relative to the configuration directory) that
-# implements a search results scorer. If empty, the default will be used.
-html_search_scorer = ""
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "betterprotodoc"
