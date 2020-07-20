@@ -8,6 +8,8 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
+import pathlib
+
 import toml
 
 
@@ -16,7 +18,7 @@ import toml
 project = 'betterproto'
 copyright = '2020, danielgtaylor'
 author = 'danielgtaylor'
-pyproject = toml.load(open("../../python-betterproto/pyproject.toml"))
+pyproject = toml.load(open(pathlib.Path(__file__).parent.parent / 'pyproject.toml'))
 
 
 # The full version, including alpha/beta/rc tags.
