@@ -122,8 +122,8 @@ DATETIME_ZERO = datetime_default_gen()
 class Casing(enum.Enum):
     """Casing constants for serialization."""
 
-    CAMEL = camel_case  #: A camelCase serialization function.
-    SNAKE = snake_case  #: A snake_case serialization function.
+    CAMEL = camel_case  #: A camelCase sterilization function.
+    SNAKE = snake_case  #: A snake_case sterilization function.
 
 
 class _PLACEHOLDER:
