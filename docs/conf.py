@@ -16,7 +16,7 @@ import toml
 # -- Project information -----------------------------------------------------
 
 project = "betterproto"
-copyright = "2020, danielgtaylor"
+copyright = "2019 Daniel G. Taylor"
 author = "danielgtaylor"
 pyproject = toml.load(open(pathlib.Path(__file__).parent.parent / "pyproject.toml"))
 
