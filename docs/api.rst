@@ -10,3 +10,4 @@ Message
 --------
 
 .. autoclass:: betterproto.Message
+    :members:
