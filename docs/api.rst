@@ -15,7 +15,9 @@ Message
 Enumerations
 -------------
 
-.. autoclass:: betterproto.Enum
+.. autoclass:: betterproto.Enum()
+    :members:
 
 
-.. autoclass:: betterproto.Casing
+.. autoclass:: betterproto.Casing()
+    :members:
