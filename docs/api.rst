@@ -11,3 +11,11 @@ Message
 
 .. autoclass:: betterproto.Message
     :members:
+
+Enumerations
+-------------
+
+.. autoclass:: betterproto.Enum
+
+
+.. autoclass:: betterproto.Casing

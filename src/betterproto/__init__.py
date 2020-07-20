@@ -122,8 +122,8 @@ DATETIME_ZERO = datetime_default_gen()
 class Casing(enum.Enum):
     """Casing constants for serialization."""
 
-    CAMEL = camel_case
-    SNAKE = snake_case
+    CAMEL = camel_case  #: A camelCase serialization function.
+    SNAKE = snake_case  #: A snake_case serialization function.
 
 
 class _PLACEHOLDER:
@@ -255,7 +255,10 @@ def map_field(
 
 
 class Enum(enum.IntEnum):
-    """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
+    """
+    The base class for protobuf enumerations, all generated enumerations will inherit
+    from this.
+    """
 
     @classmethod
     def from_string(cls, name: str) -> int:
@@ -499,8 +502,8 @@ class ProtoClassMetadata:
 
 class Message(ABC):
     """
-    The base class for protobuf messages, all generated code will inherit from this.
-    This class registers the message fields which are used by the serializers and
+    The base class for protobuf messages, all generated messages will inherit from
+    this. This class registers the message fields which are used by the serializers and
     parsers to go between the Python, binary and JSON representations of the message.
 
     .. container:: operations
@@ -640,7 +643,19 @@ class Message(ABC):
         return output + self._unknown_fields
 
     # For compatibility with other libraries
-    SerializeToString = __bytes__
+    def SerializeToString(self: T) -> bytes:
+        """
+        Get the binary encoded Protobuf representation of this message instance.
+
+        .. note::
+            This is a method for compatibility with other libraries,
+            you should really use ``bytes(x)``.
+
+        Returns
+        --------
+        :class:`bytes`
+        """
+        return bytes(self)
 
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
