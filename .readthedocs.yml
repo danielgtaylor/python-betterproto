@@ -15,4 +15,4 @@ python:
     - method: pip
       path: .
       extra_requirements:
-        - ["sphinx==3.0.1", "sphinxcontrib_trio==1.1.1", "sphinxcontrib-websupport"]
+        - ["sphinx==3.0.1"]
