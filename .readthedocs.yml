@@ -12,8 +12,8 @@ python:
   version: 3.7
   install:
     - method: pip
-        path: .
-        extra_requirements:
-          - toml
-          - sphinx==3.1.2
-          - sphinx_iowmd_theme
+      path: .
+      extra_requirements:
+        - toml
+        - sphinx
+        - sphinx_iowmd_theme
