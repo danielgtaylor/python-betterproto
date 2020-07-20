@@ -499,9 +499,15 @@ class ProtoClassMetadata:
 
 class Message(ABC):
     """
-    A protobuf message base class. Generated code will inherit from this and
-    register the message fields which get used by the serializers and parsers
-    to go between Python, binary and JSON protobuf message representations.
+    The base class for protobuf messages, all generated code will inherit from this.
+    This class registers the message fields which are used by the serializers and
+    parsers to go between the Python, binary and JSON representations of the message.
+
+    .. container:: operations
+
+        .. describe:: bytes(x)
+
+            Get the binary encoded Protobuf representation of this message instance.
     """
 
     _serialized_on_wire: bool
@@ -569,7 +575,7 @@ class Message(ABC):
 
     def __bytes__(self) -> bytes:
         """
-        Get the binary encoded Protobuf representation of this instance.
+        Get the binary encoded Protobuf representation of this message instance.
         """
         output = b""
         for field_name, meta in self._betterproto.meta_by_field_name.items():
@@ -730,6 +736,15 @@ class Message(ABC):
         """
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
+
+        Parameters
+        -----------
+        data: :class:`bytes`
+            The data to parse the protobuf from.
+
+        Returns
+        --------
+        :class:`Message`
         """
         # Got some data over the wire
         self._serialized_on_wire = True
@@ -780,20 +795,46 @@ class Message(ABC):
     # For compatibility with other libraries.
     @classmethod
     def FromString(cls: Type[T], data: bytes) -> T:
+        """
+        Parse the binary encoded Protobuf into this message instance. This
+        returns the instance itself and is therefore assignable and chainable.
+
+        .. note::
+            This is a method for compatibility with other libraries,
+            you should really use :meth:`parse`.
+
+
+        Parameters
+        -----------
+        data: :class:`bytes`
+            The data to parse the protobuf from.
+
+        Returns
+        --------
+        :class:`Message`
+        """
         return cls().parse(data)
 
     def to_dict(
         self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
     ) -> Dict[str, Any]:
         """
-        Returns a dict representation of this message instance which can be
-        used to serialize to e.g. JSON. Defaults to camel casing for
-        compatibility but can be set to other modes.
+        Returns a dict representation of this message instance which can be used to
+        serialize to e.g. JSON.
 
-        `include_default_values` can be set to `True` to include default
-        values of fields. E.g. an `int32` type field with `0` value will
-        not be in returned dict if `include_default_values` is set to
-        `False`.
+        Parameters
+        -----------
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        Returns
+        --------
+        Dict[:class:`str`, Any]
         """
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
@@ -859,10 +900,19 @@ class Message(ABC):
                     output[cased_name] = value
         return output
 
-    def from_dict(self: T, value: dict) -> T:
+    def from_dict(self: T, value: Dict[str, Any]) -> T:
         """
-        Parse the key/value pairs in `value` into this message instance. This
+        Parse the key/value pairs in ``value`` into the current message instance. This
         returns the instance itself and is therefore assignable and chainable.
+
+        Parameters
+        -----------
+        value: Dict[:class:`str`, Any]
+            The dictionary to parse from.
+
+        Returns
+        --------
+        :class:`Message`
         """
         self._serialized_on_wire = True
         fields_by_name = {f.name: f for f in dataclasses.fields(self)}
@@ -918,13 +968,41 @@ class Message(ABC):
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:
-        """Returns the encoded JSON representation of this message instance."""
+        """A helper function to parse the message instance into its JSON
+        representation.
+
+        This is equivalent to::
+
+            >>> return json.dumps(message.to_dict(), indent=indent)
+
+        Parameters
+        -----------
+        indent: Union[None, :class:`int`, :class:`str`]
+            The indent to pass to :py:func:`json.dumps`.
+
+        Returns
+        --------
+        :class:`str`
+        """
         return json.dumps(self.to_dict(), indent=indent)
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
-        """
-        Parse the key/value pairs in `value` into this message instance. This
-        returns the instance itself and is therefore assignable and chainable.
+        """A helper function to return the message instance from its JSON
+        representation. This returns the instance itself and is therefore assignable
+        and chainable.
+
+        This is equivalent to::
+
+            >>> return message.from_dict(json.loads(value))
+
+        Parameters
+        -----------
+        value: Union[:class:`str`, :class:`bytes`]
+            The value to pass to :py:func:`json.loads`.
+
+        Returns
+        --------
+        :class:`Message`
         """
         return self.from_dict(json.loads(value))
 
