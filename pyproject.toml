@@ -36,11 +36,6 @@ pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
 tox = "^3.15.1"
 
-[tool.poetry.docs-dependencies]
-toml = "0.10.1"
-sphinx = "3.1.2"
-sphinx_iowmd_theme = "0.0.7"
-
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
