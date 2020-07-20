@@ -98,3 +98,44 @@ html_static_path = ["_static"]
 # The name of a javascript file (relative to the configuration directory) that
 # implements a search results scorer. If empty, the default will be used.
 html_search_scorer = ""
+
+# Output file base name for HTML help builder.
+htmlhelp_basename = "betterprotodoc"
+
+# -- Options for LaTeX output ---------------------------------------------
+
+latex_elements = {}
+
+# Grouping the document tree into LaTeX files. List of tuples
+# (source start file, target name, title,
+#  author, documentclass [howto, manual, or own class]).
+latex_documents = [
+    ("index", "betterproto.pytex", "betterproto Documentation", "danielgtaylor", "manual"),
+]
+
+# -- Options for manual page output ---------------------------------------
+
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
+man_pages = [("index", "betterproto", "betterproto Documentation", ["danielgtaylor"], 1)]
+
+# If true, show URL addresses after external links.
+# man_show_urls = False
+
+
+# -- Options for Texinfo output -------------------------------------------
+
+# Grouping the document tree into Texinfo files. List of tuples
+# (source start file, target name, title, author,
+#  dir menu entry, description, category)
+texinfo_documents = [
+    (
+        "index",
+        "betterproto",
+        "betterproto Documentation",
+        "danielgtaylor",
+        "betterproto",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
+]
