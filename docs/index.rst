@@ -1,21 +1,22 @@
 Welcome to betterproto's documentation!
-=======================================
+========================================
 
 betterproto is a protobuf compiler and interpreter. It was written for the modern age making use of
 Python 3.6+ features to generate readable, understandable and idiomatic Python code.
 
 
-**Features:**
+Features:
+^^^^^^^^^^
 
-- Protobuf 3 & gRPC code generation
-   - Both binary & JSON serialization built-in
-- Python 3.6+ making use of:
-   - Enums
-   - Dataclasses
-   - async gRPC stubs
-   - Timezone-aware datetime and timedelta objects
-   - Relative imports
-   - Mypy type checking
+- **Protobuf 3 & gRPC code generation**
+- Both binary & JSON serialization built-in
+- **Python 3.6+ making use of:**
+- Enums
+- Dataclasses
+- async gRPC stubs
+- Timezone-aware datetime and timedelta objects
+- Relative imports
+- Mypy type checking
 
 
 .. toctree::
