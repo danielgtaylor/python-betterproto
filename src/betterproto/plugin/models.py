@@ -480,7 +480,7 @@ class MapEntryCompiler(FieldCompiler):
                         parent=self, proto_obj=nested.field[0],  # key
                     ).py_type
                     self.py_v_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[1],  # key
+                        parent=self, proto_obj=nested.field[1],  # value
                     ).py_type
                     # Get proto types
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
