@@ -1,5 +1,12 @@
-Upgrade Guide
-=============
+Migrating Guide
+===============
+
+Google's protocolbuffers
+------------------------
+
+.. TODO notes about compatibility
+
+
 
 [1.2.5] to [2.0.0b1]
 --------------------

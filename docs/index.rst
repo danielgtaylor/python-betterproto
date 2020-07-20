@@ -1,5 +1,5 @@
 Welcome to betterproto's documentation!
-========================================
+=======================================
 
 betterproto is a protobuf compiler and interpreter. It was written for the modern age making use of
 Python 3.6+ features to generate readable, understandable and idiomatic Python code.
@@ -17,8 +17,8 @@ Features:
 
 - Enums
 - Dataclasses
-- async gRPC stubs
-- Timezone-aware datetime and timedelta objects
+- ``async``/``await`` with gRPC stubs
+- Timezone-aware ``datetime`` and ``timedelta`` objects
 - Relative imports
 - Mypy type checking
 
@@ -28,8 +28,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   api
-   upgrading
+    quick-start
+    api
+    migrating
 
 
 If you still can't find what you're looking for, try in one of the following pages:
