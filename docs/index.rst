@@ -1,33 +1,20 @@
+.. betterproto documentation master file, created by
+   sphinx-quickstart on Mon Jul 20 02:12:05 2020.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
 Welcome to betterproto's documentation!
 =======================================
 
-betterproto is a protobuf compiler and interpreter. It was written for the modern age making use of
-Python 3.6+ features to generate readable, understandable and idiomatic Python code.
-
-
-**Features:**
-
-- Protobuf 3 & gRPC code generation
-   - Both binary & JSON serialization built-in
-- Python 3.6+ making use of:
-   - Enums
-   - Dataclasses
-   - async gRPC stubs
-   - Timezone-aware datetime and timedelta objects
-   - Relative imports
-   - Mypy type checking
-
-
-Documentation Contents
------------------------
-
 .. toctree::
    :maxdepth: 2
+   :caption: Contents:
 
-   api
 
 
-If you still can't find what you're looking for, try in one of the following pages:
+Indices and tables
+==================
 
 * :ref:`genindex`
+* :ref:`modindex`
 * :ref:`search`
