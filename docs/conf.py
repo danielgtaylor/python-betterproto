@@ -99,7 +99,7 @@ html_theme_options = {
     # For details see link.
     # https://getmdl.io/components/index.html#layout-section
     'fixed_drawer': False,
-    'fixed_header': True,
+    'fixed_header': False,
     'header_waterfall': False,
     'header_scroll': True,
 
