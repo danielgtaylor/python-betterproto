@@ -8,15 +8,11 @@ Python 3.6+ features to generate readable, understandable and idiomatic Python c
 Features:
 ^^^^^^^^^^
 
-- **Protobuf 3 & gRPC code generation**
-
-
+**Protobuf 3 & gRPC code generation**
 - Both binary & JSON serialization built-in
 
 
-- **Python 3.6+ making use of:**
-
-
+**Python 3.6+ making use of:**
 - Enums
 - Dataclasses
 - async gRPC stubs
