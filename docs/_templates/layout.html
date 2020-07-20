@@ -4,26 +4,41 @@
 {% set style = 'style.css' %}
 
 {%- block extrahead %}
-  {{ super() }}
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+{{ super() }}
+<meta content="width=device-width, initial-scale=0.9, maximum-scale=0.9" name="viewport">
 {% endblock %}
 
 {%- block relbar2 %}{% endblock %}
 
 {% block header %}
-  {{ super() }}
-  {% if pagename == 'index' %}
-  <div class="indexwrapper">
-  {% endif %}
-{% endblock %}
+{{ super() }}
+{% if pagename == 'index' %}
+<div class="indexwrapper">
+    {% endif %}
+    {% endblock %}
 
 
-{%- block footer %}
-  <div class="footer">
-    &copy; Copyright {{ copyright }}.
-    {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}
-  </div>
-  {% if pagename == 'index' %}
-  </div>
-  {% endif %}
+    {%- block footer %}
+    <div class="footer">
+        &copy; Copyright {{ copyright }}.
+        {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{
+        sphinx_version }}.{% endtrans %}
+    </div>
+    {% if pagename == 'index' %}
+</div>
+{% endif %}
+
+{%- if READTHEDOCS %}
+<script>
+    if (typeof READTHEDOCS_DATA !== 'undefined') {
+        if (!READTHEDOCS_DATA.features) {
+          READTHEDOCS_DATA.features = {};
+        }
+        READTHEDOCS_DATA.features.docsearch_disabled = true;
+      }
+
+
+
+</script>
+{%- endif %}
 {%- endblock %}
