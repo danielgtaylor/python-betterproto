@@ -9,10 +9,12 @@ Features:
 ^^^^^^^^^^
 
 **Protobuf 3 & gRPC code generation**
+
 - Both binary & JSON serialization built-in
 
 
 **Python 3.6+ making use of:**
+
 - Enums
 - Dataclasses
 - async gRPC stubs
