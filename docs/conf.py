@@ -82,7 +82,7 @@ html_theme_options = {
     'header_links' : [
         ('Home', 'index', False, 'home'),
         ("Slack", "https://betterproto.slack.com/", True, 'chat_bubble_outline'),
-        ("GitHub", "https://github.com/danielgtaylor/python-betterproto", True, 'polymer')
+        ("GitHub", "https://github.com/danielgtaylor/python-betterproto", True, 'code')
     ],
 
     # Customize css colors.
