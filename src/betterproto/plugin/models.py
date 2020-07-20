@@ -523,16 +523,16 @@ class EnumDefinitionCompiler(MessageCompiler):
         comment: str
 
     def __post_init__(self):
-        # Get entries
+        # Get entries/allowed values for this Enum
         self.entries = [
             self.EnumEntry(
-                name=v.name,
-                value=v.number,
+                name=entry_proto_value.name,
+                value=entry_proto_value.number,
                 comment=get_comment(
-                    proto_file=self.proto_file, path=self.path + [2, i]
+                    proto_file=self.proto_file, path=self.path + [2, entry_number]
                 ),
             )
-            for i, v in enumerate(self.proto_obj.value)
+            for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
         ]
         super().__post_init__()  # call MessageCompiler __post_init__
 
@@ -542,7 +542,7 @@ class EnumDefinitionCompiler(MessageCompiler):
 
         As per the spec, this is the first value of the Enum.
         """
-        return str(self.entries[0].value)  # should ALWAYS be int(0)!
+        return str(self.entries[0].value)  # ideally, should ALWAYS be int(0)!
 
 
 @dataclass
