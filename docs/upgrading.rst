@@ -5,7 +5,7 @@ Upgrade Guide
 --------------------
 
 Updated package structures
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Generated code now strictly follows the *package structure* of the ``.proto`` files.
 Consequently ``.proto`` files without a package will be combined in a single ``__init__.py`` file.
