@@ -9,8 +9,11 @@ Features:
 ^^^^^^^^^^
 
 - **Protobuf 3 & gRPC code generation**
+
 - Both binary & JSON serialization built-in
+
 - **Python 3.6+ making use of:**
+
 - Enums
 - Dataclasses
 - async gRPC stubs
@@ -18,10 +21,11 @@ Features:
 - Relative imports
 - Mypy type checking
 
+Contents:
+^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    api
    upgrading
