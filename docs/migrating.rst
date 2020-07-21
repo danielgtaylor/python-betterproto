@@ -66,6 +66,8 @@ fields was set. It returns a tuple of the field name and value, or a blank strin
 ``None`` if unset. Again this is a little different than the official Google code
 generator:
 
+.. code-block:: python
+
     # Old way (official Google protobuf package)
     >>> message.WhichOneof("group")
     "foo"
