@@ -78,7 +78,7 @@ That said, this project also includes support for async gRPC stub generation wit
 better static type checking and code completion support. It is enabled by default.
 
 
-Given an example similar to the one below:
+Given an example service definition similar to the one below:
 
 .. code-block:: proto
 
@@ -105,23 +105,33 @@ Given an example similar to the one below:
       rpc EchoStream(EchoRequest) returns (stream EchoStreamResponse);
     }
 
-You can then use it like so (enable async in the interactive shell first):
+You can then implement a client like so:
 
 .. code-block:: python
 
-    >>> import echo
-    >>> from grpclib.client import Channel
+    import asyncio
+    from grpclib.client import Channel
+    import echo
 
-    >>> channel = Channel(host="127.0.0.1", port=1234)
-    >>> service = echo.EchoStub(channel)
-    >>> await service.echo(value="hello", extra_times=1)
-    EchoResponse(values=["hello", "hello"])
 
-    >>> async for response in service.echo_stream(value="hello", extra_times=1)
+    async def main():
+        channel = Channel(host="127.0.0.1", port=50051)
+        service = echo.EchoStub(channel)
+        response = await service.echo(value="hello", extra_times=1)
+        print(response)
+
+        async for response in service.echo_stream(value="hello", extra_times=1):
             print(response)
 
-    EchoStreamResponse(value="hello")
-    EchoStreamResponse(value="hello")
+        # don't forget to close the channel when you're done!
+        channel.close()
+
+    asyncio.run(main())  # python 3.7 only
+
+    # outputs
+    EchoResponse(values=['hello', 'hello'])
+    EchoStreamResponse(value='hello')
+    EchoStreamResponse(value='hello')
 
 
 JSON
