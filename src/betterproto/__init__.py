@@ -993,7 +993,7 @@ class Message(ABC):
         Parameters
         -----------
         indent: Optional[Union[:class:`int`, :class:`str`]]
-            The indent to pass to :py:func:`json.dumps`.
+            The indent to pass to :func:`json.dumps`.
 
         Returns
         --------
@@ -1013,7 +1013,7 @@ class Message(ABC):
         Parameters
         -----------
         value: Union[:class:`str`, :class:`bytes`]
-            The value to pass to :py:func:`json.loads`.
+            The value to pass to :func:`json.loads`.
 
         Returns
         --------
