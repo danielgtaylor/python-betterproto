@@ -257,12 +257,24 @@ def map_field(
 class Enum(enum.IntEnum):
     """
     The base class for protobuf enumerations, all generated enumerations will inherit
-    from this.
+    from this. Bases :class:`enum.IntEnum`.
     """
 
     @classmethod
-    def from_string(cls, name: str) -> int:
-        """Return the value which corresponds to the string name."""
+    def from_string(cls, name: str) -> "Enum":
+        """
+        Return the value which corresponds to the string name.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the enum member to get
+
+        Raises
+        -------
+        :exc:`ValueError`
+            The member was not found in the Enum.
+        """
         try:
             return cls.__members__[name]
         except KeyError as e:
