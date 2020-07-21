@@ -90,7 +90,7 @@ mapping for these is as follows:
 +-------------------------------+-----------------------------------------------+--------------------------+
 | ``google.protobuf.duration``  | :class:`datetime.timedelta`                   | ``0``                    |
 | ``google.protobuf.timestamp`` | ``Timezone-aware`` :class:`datetime.datetime` | ``1970-01-01T00:00:00Z`` |
-| ``google.protobuf.*Value``    | ``Optional[...]``	``None``                    | ``None``                 |
+| ``google.protobuf.*Value``    | ``Optional[...]`` ``None``                    | ``None``                 |
 | ``google.protobuf.*``         | ``betterproto.lib.google.protobuf.*``         | ``None``                 |
 +-------------------------------+-----------------------------------------------+--------------------------+
 
