@@ -145,7 +145,7 @@ JSON: ``Message().to_json()``, ``Message().from_json(...)``
 
 
 For compatibility the default is to convert field names to
-:attr:`betterproto.Casing.camelCase`. You can control this behavior by passing a
+:attr:`betterproto.Casing.CAMEL`. You can control this behavior by passing a
 different casing value, e.g:
 
 .. code-block:: python
