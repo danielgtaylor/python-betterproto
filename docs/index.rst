@@ -6,7 +6,7 @@ Python 3.6+ features to generate readable, understandable and idiomatic Python c
 
 
 Features:
-^^^^^^^^^^
+~~~~~~~~~
 
 **Protobuf 3 & gRPC code generation**
 
@@ -23,7 +23,7 @@ Features:
 - Mypy type checking
 
 Contents:
-^^^^^^^^^^
+~~~~~~~~~
 
 .. toctree::
     :maxdepth: 2
