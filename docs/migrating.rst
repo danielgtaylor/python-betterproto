@@ -16,7 +16,7 @@ regenerating your protobufs of course) although there are some minor differences
 
     for compatibility purposes, however it is important to note that these are
     effectively aliases for :meth:`betterproto.Message.parse` and
-    :meth:``betterproto.Message__bytes__`` respectively.
+    :meth:``betterproto.Message.__bytes__`` respectively.
 
 
 Determining if a message was sent

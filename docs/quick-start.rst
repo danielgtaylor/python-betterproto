@@ -139,9 +139,9 @@ JSON
 Both serializing and parsing are supported to/from JSON and Python
 dictionaries using the following methods:
 
-Dictionaries: ``Message().to_dict()``, ``Message().from_dict(...)``
+Dictionaries: :meth:`betterproto.Message.to_dict`, :meth:`betterproto.Message.from_dict`
 
-JSON: ``Message().to_json()``, ``Message().from_json(...)``
+JSON: :meth:`betterproto.Message.to_json`, :meth:`betterproto.Message.from_json`
 
 
 For compatibility the default is to convert field names to
@@ -149,4 +149,5 @@ For compatibility the default is to convert field names to
 different casing value, e.g:
 
 .. code-block:: python
+
     MyMessage().to_dict(casing=betterproto.Casing.SNAKE)
