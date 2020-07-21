@@ -11,7 +11,7 @@ regenerating your protobufs of course) although there are some minor differences
 
     betterproto implements the same basic methods including:
 
-        - :meth:`betterproto.Message.ParseFromString`
+        - :meth:`betterproto.Message.FromString`
         - :meth:`betterproto.Message.SerializeToString`
 
     for compatibility purposes, however it is important to note that these are
