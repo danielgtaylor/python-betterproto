@@ -11,6 +11,7 @@ Message
 
 .. autoclass:: betterproto.Message
     :members:
+    :special-members: __bytes__
 
 Enumerations
 -------------

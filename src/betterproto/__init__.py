@@ -522,7 +522,7 @@ class Message(ABC):
 
         .. describe:: bytes(x)
 
-            Get the binary encoded Protobuf representation of this message instance.
+            Calls :meth:`__bytes__`.
     """
 
     _serialized_on_wire: bool
