@@ -83,20 +83,20 @@ wrappers used to provide optional zero value support. Each of these has a specia
 representation and is handled a little differently from normal messages. The Python
 mapping for these is as follows:
 
-+-------------------------------+-------------------------------------------+----------------------+
-| ``Google Message``            | ``Python Type``                           | ``Default``          |
-+-------------------------------+-------------------------------------------+----------------------+
-| ``google.protobuf.duration``  | :class:`datetime.timedelta`               | ``0``                |
-| ``google.protobuf.timestamp`` | Timezone-aware :class:`datetime.datetime` | 1970-01-01T00:00:00Z |
-| ``google.protobuf.*Value``    | Optional[...]	``None``                    | ``None``             |
-| ``google.protobuf.*``         | betterproto.lib.google.protobuf.*         | ``None``             |
-+-------------------------------+-------------------------------------------+----------------------+
++-------------------------------+-----------------------------------------------+--------------------------+
+| ``Google Message``            | ``Python Type``                               | ``Default``              |
++-------------------------------+-----------------------------------------------+--------------------------+
+| ``google.protobuf.duration``  | :class:`datetime.timedelta`                   | ``0``                    |
+| ``google.protobuf.timestamp`` | ``Timezone-aware`` :class:`datetime.datetime` | ``1970-01-01T00:00:00Z`` |
+| ``google.protobuf.*Value``    | ``Optional[...]``	``None``                    | ``None``                 |
+| ``google.protobuf.*``         | ``betterproto.lib.google.protobuf.*``         | ``None``                 |
++-------------------------------+-----------------------------------------------+--------------------------+
 
 
 For the wrapper types, the Python type corresponds to the wrapped type, e.g.
-google.protobuf.BoolValue becomes ``Optional[bool]`` while google.protobuf.Int32Value
-becomes ``Optional[int]``. All of the optional values default to None, so don't forget
-to check for that possible state.
+``google.protobuf.BoolValue`` becomes ``Optional[bool]`` while
+``google.protobuf.Int32Value`` becomes ``Optional[int]``. All of the optional values
+default to None, so don't forget to check for that possible state.
 
 Given:
 
