@@ -797,10 +797,10 @@ testing = ["jaraco.itertools", "func-timeout"]
 
 [extras]
 compiler = ["black", "jinja2", "protobuf"]
-docs = ["toml", "sphinx", "sphinx-iowmd-theme"]
+docs = ["toml", "sphinx", "sphinx_iowmd_theme"]
 
 [metadata]
-content-hash = "fa159ed748797ef59d6d4ff1bc77674e532807f0caa8c7b88574a415682a8dc0"
+content-hash = "554851b2202756de72ab90b44df73ff5fa1f0a50c64e5c5d0f95d36ad73d38fb"
 lock-version = "1.0"
 python-versions = "^3.6"
 
