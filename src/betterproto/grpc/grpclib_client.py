@@ -76,8 +76,8 @@ class ServiceStub(ABC):
         ) as stream:
             await stream.send_message(request, end=True)
             response = await stream.recv_message()
-            assert response is not None
-            return response
+        assert response is not None
+        return response
 
     async def _unary_stream(
         self,
@@ -122,8 +122,8 @@ class ServiceStub(ABC):
         ) as stream:
             await self._send_messages(stream, request_iterator)
             response = await stream.recv_message()
-            assert response is not None
-            return response
+        assert response is not None
+        return response
 
     async def _stream_stream(
         self,
