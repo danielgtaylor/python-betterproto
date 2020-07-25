@@ -37,7 +37,6 @@ This project exists because I am unhappy with the state of the official Google p
   - Uses `SerializeToString()` rather than the built-in `__bytes__()`
   - Special wrapped types don't use Python's `None`
   - Timestamp/duration types don't use Python's built-in `datetime` module
-
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
 ## Installation
@@ -126,7 +125,7 @@ Greeting(message="Hey!")
 
 The generated Protobuf `Message` classes are compatible with [grpclib](https://github.com/vmagamedov/grpclib) so you are free to use it if you like. That said, this project also includes support for async gRPC stub generation with better static type checking and code completion support. It is enabled by default.
 
-Given an example like:
+Given an example service definition:
 
 ```protobuf
 syntax = "proto3";
@@ -153,22 +152,37 @@ service Echo {
 }
 ```
 
-You can use it like so (enable async in the interactive shell first):
-
+A client can be implemented as follows:
 ```python
->>> import echo
->>> from grpclib.client import Channel
+import asyncio
+import echo
 
->>> channel = Channel(host="127.0.0.1", port=1234)
->>> service = echo.EchoStub(channel)
->>> await service.echo(value="hello", extra_times=1)
-EchoResponse(values=["hello", "hello"])
+from grpclib.client import Channel
 
->>> async for response in service.echo_stream(value="hello", extra_times=1)
+
+async def main():
+    channel = Channel(host="127.0.0.1", port=50051)
+    service = echo.EchoStub(channel)
+    response = await service.echo(value="hello", extra_times=1)
+    print(response)
+
+    async for response in service.echo_stream(value="hello", extra_times=1):
         print(response)
 
-EchoStreamResponse(value="hello")
-EchoStreamResponse(value="hello")
+    # don't forget to close the channel when done!
+    channel.close()
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+```
+which would output
+```python
+EchoResponse(values=['hello', 'hello'])
+EchoStreamResponse(value='hello')
+EchoStreamResponse(value='hello')
 ```
 
 ### JSON
