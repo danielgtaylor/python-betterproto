@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+message Message{
+  int64 value = 1;
+}
+
+message NestedMessage{
+  int64 id = 1;
+  oneof value_type{
+    Message wrapped_message_value = 2;
+  }
+}
+
+message Test{
+  oneof value_type {
+      bool bool_value = 1;
+      int64 int64_value = 2;
+      google.protobuf.Timestamp timestamp_value = 3;
+      google.protobuf.Duration duration_value = 4;
+      Message wrapped_message_value = 5;
+      NestedMessage wrapped_nested_message_value = 6;
+      google.protobuf.BoolValue wrapped_bool_value = 7;
+  }
+}

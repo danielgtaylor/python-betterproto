@@ -589,18 +589,20 @@ class Message(ABC):
             # Being selected in a a group means this field is the one that is
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
-            selected_in_group = False
-            if meta.group and self._group_current[meta.group] == field_name:
-                selected_in_group = True
+            selected_in_group = (
+                meta.group and self._group_current[meta.group] == field_name
+            )
 
-            serialize_empty = False
-            if isinstance(value, Message) and value._serialized_on_wire:
-                # Empty messages can still be sent on the wire if they were
-                # set (or received empty).
-                serialize_empty = True
+            # Empty messages can still be sent on the wire if they were
+            # set (or received empty).
+            serialize_empty = isinstance(value, Message) and value._serialized_on_wire
+
+            include_default_value_for_oneof = self._include_default_value_for_oneof(
+                field_name=field_name, meta=meta
+            )
 
             if value == self._get_field_default(field_name) and not (
-                selected_in_group or serialize_empty
+                selected_in_group or serialize_empty or include_default_value_for_oneof
             ):
                 # Default (zero) values are not serialized. Two exceptions are
                 # if this is the selected oneof item or if we know we have to
@@ -629,6 +631,17 @@ class Message(ABC):
                     sv = _serialize_single(2, meta.map_types[1], v)
                     output += _serialize_single(meta.number, meta.proto_type, sk + sv)
             else:
+                # If we have an empty string and we're including the default value for
+                # a oneof, make sure we serialize it. This ensures that the byte string
+                # output isn't simply an empty string. This also ensures that round trip
+                # serialization will keep `which_one_of` calls consistent.
+                if (
+                    isinstance(value, str)
+                    and value == ""
+                    and include_default_value_for_oneof
+                ):
+                    serialize_empty = True
+
                 output += _serialize_single(
                     meta.number,
                     meta.proto_type,
@@ -732,6 +745,13 @@ class Message(ABC):
 
         return value
 
+    def _include_default_value_for_oneof(
+        self, field_name: str, meta: FieldMetadata
+    ) -> bool:
+        return (
+            meta.group is not None and self._group_current.get(meta.group) == field_name
+        )
+
     def parse(self: T, data: bytes) -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
@@ -810,10 +830,22 @@ class Message(ABC):
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
                 if isinstance(value, datetime):
-                    if value != DATETIME_ZERO or include_default_values:
+                    if (
+                        value != DATETIME_ZERO
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
                         output[cased_name] = _Timestamp.timestamp_to_json(value)
                 elif isinstance(value, timedelta):
-                    if value != timedelta(0) or include_default_values:
+                    if (
+                        value != timedelta(0)
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
                         output[cased_name] = _Duration.delta_to_json(value)
                 elif meta.wraps:
                     if value is not None or include_default_values:
@@ -823,19 +855,28 @@ class Message(ABC):
                     value = [i.to_dict(casing, include_default_values) for i in value]
                     if value or include_default_values:
                         output[cased_name] = value
-                else:
-                    if value._serialized_on_wire or include_default_values:
-                        output[cased_name] = value.to_dict(
-                            casing, include_default_values
-                        )
-            elif meta.proto_type == TYPE_MAP:
+                elif (
+                    value._serialized_on_wire
+                    or include_default_values
+                    or self._include_default_value_for_oneof(
+                        field_name=field_name, meta=meta
+                    )
+                ):
+                    output[cased_name] = value.to_dict(casing, include_default_values,)
+            elif meta.proto_type == "map":
                 for k in value:
                     if hasattr(value[k], "to_dict"):
                         value[k] = value[k].to_dict(casing, include_default_values)
 
                 if value or include_default_values:
                     output[cased_name] = value
-            elif value != self._get_field_default(field_name) or include_default_values:
+            elif (
+                value != self._get_field_default(field_name)
+                or include_default_values
+                or self._include_default_value_for_oneof(
+                    field_name=field_name, meta=meta
+                )
+            ):
                 if meta.proto_type in INT_64_TYPES:
                     if field_is_repeated:
                         output[cased_name] = [str(n) for n in value]
@@ -894,6 +935,8 @@ class Message(ABC):
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
                     else:
+                        # NOTE: `from_dict` mutates the underlying message, so no
+                        # assignment here is necessary.
                         v.from_dict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
@@ -919,8 +962,8 @@ class Message(ABC):
                         elif isinstance(v, str):
                             v = enum_cls.from_string(v)
 
-                    if v is not None:
-                        setattr(self, field_name, v)
+                if v is not None:
+                    setattr(self, field_name, v)
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:

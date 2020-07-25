@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message Foo{
+  int64 bar = 1;
+}
+
+message Test{
+  oneof group{
+    string string = 1;
+    int64 integer = 2;
+    Foo foo = 3;
+  }
+}
