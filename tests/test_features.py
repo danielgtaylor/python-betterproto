@@ -282,3 +282,38 @@ def test_to_dict_default_values():
         "someDouble": 1.2,
         "someMessage": {"someOtherInt": 0},
     }
+
+
+def test_oneof_default_value_set_causes_writes_wire():
+    @dataclass
+    class Foo(betterproto.Message):
+        bar: int = betterproto.int32_field(1, group="group1")
+        baz: str = betterproto.string_field(2, group="group1")
+
+    def _round_trip_serialization(foo: Foo) -> Foo:
+        return Foo().parse(bytes(foo))
+
+    foo1 = Foo(bar=0)
+    foo2 = Foo(baz="")
+    foo3 = Foo()
+
+    assert bytes(foo1) == b"\x08\x00"
+    assert (
+        betterproto.which_one_of(foo1, "group1")
+        == betterproto.which_one_of(_round_trip_serialization(foo1), "group1")
+        == ("bar", 0)
+    )
+
+    assert bytes(foo2) == b"\x12\x00"  # Baz is just an empty string
+    assert (
+        betterproto.which_one_of(foo2, "group1")
+        == betterproto.which_one_of(_round_trip_serialization(foo2), "group1")
+        == ("baz", "")
+    )
+
+    assert bytes(foo3) == b""
+    assert (
+        betterproto.which_one_of(foo3, "group1")
+        == betterproto.which_one_of(_round_trip_serialization(foo3), "group1")
+        == ("", None)
+    )
