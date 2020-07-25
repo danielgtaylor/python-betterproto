@@ -26,6 +26,7 @@ bpython = "^0.19"
 grpcio-tools = "^1.30.0"
 jinja2 = "^2.11.2"
 mypy = "^0.770"
+poethepoet = "^0.4.0"
 protobuf = "^3.12.2"
 pytest = "^5.4.2"
 pytest-asyncio = "^0.12.0"
@@ -38,6 +39,18 @@ protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
 compiler = ["black", "jinja2", "protobuf"]
+
+[tool.poe.tasks]
+# Dev workflow tasks
+generate    = { script = "tests.generate:main", help = "Generate test cases (do this once before running test)" }
+test        = { cmd = "pytest --cov src", help = "Run tests" }
+types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
+format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
+clean       = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
+
+# CI tasks
+full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
+check-style = { cmd = "black . --check --diff --exclude tests/output_", help = "Check if code style is correct"}
 
 [tool.black]
 target-version = ['py36']
