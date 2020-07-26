@@ -317,3 +317,20 @@ def test_oneof_default_value_set_causes_writes_wire():
         == betterproto.which_one_of(_round_trip_serialization(foo3), "group1")
         == ("", None)
     )
+
+
+@dataclass(eq=False)
+class RecursiveMessage(betterproto.Message):
+    child: "RecursiveMessage" = betterproto.message_field(1)
+
+
+def test_recursive_message():
+    msg = RecursiveMessage()
+
+    assert msg.child == RecursiveMessage()
+
+    # Lazily-created zero-value children must not affect equality.
+    assert msg == RecursiveMessage()
+
+    # Lazily-created zero-value children must not affect serialization.
+    assert bytes(msg) == b""
