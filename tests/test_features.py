@@ -319,9 +319,10 @@ def test_oneof_default_value_set_causes_writes_wire():
     )
 
 
-@dataclass(eq=False)
+@dataclass(eq=False, repr=False)
 class RecursiveMessage(betterproto.Message):
     child: "RecursiveMessage" = betterproto.message_field(1)
+    foo: int = betterproto.int32_field(2)
 
 
 def test_recursive_message():
@@ -334,3 +335,11 @@ def test_recursive_message():
 
     # Lazily-created zero-value children must not affect serialization.
     assert bytes(msg) == b""
+
+
+def test_message_repr():
+    assert repr(RecursiveMessage(foo=1)) == "RecursiveMessage(foo=1)"
+    assert (
+        repr(RecursiveMessage(child=RecursiveMessage(), foo=1))
+        == "RecursiveMessage(child=RecursiveMessage(),foo=1)"
+    )
