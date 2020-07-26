@@ -704,7 +704,7 @@ class Message(ABC):
                     meta.number,
                     meta.proto_type,
                     value,
-                    serialize_empty=serialize_empty,
+                    serialize_empty=serialize_empty or selected_in_group,
                     wraps=meta.wraps or "",
                 )
 
