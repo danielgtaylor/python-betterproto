@@ -37,7 +37,7 @@ class {{ enum.py_name }}(betterproto.Enum):
 {% endfor %}
 {% endif %}
 {% for message in output_file.messages %}
-@dataclass(eq=False)
+@dataclass(eq=False, repr=False)
 class {{ message.py_name }}(betterproto.Message):
     {% if message.comment %}
 {{ message.comment }}
