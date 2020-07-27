@@ -82,7 +82,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
                                             Optional[{{ field.annotation }}]
                                          {%- else -%}
                                             {{ field.annotation }}
-                                         {%- endif -%} =
+                                         {%- endif -%} = 
                                             {%- if field.py_name not in method.mutable_default_args -%}
                                                 {{ field.default_value_string }}
                                             {%- else -%}
