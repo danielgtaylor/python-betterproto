@@ -846,7 +846,7 @@ class Message(ABC):
         self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
     ) -> Dict[str, Any]:
         """
-        Returns a dict representation of this message instance which can be used to
+        Returns a JSON serializable dict representation of this object
         serialize to e.g. JSON.
 
         Parameters
