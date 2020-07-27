@@ -666,6 +666,7 @@ class Message(ABC):
         Returns
         --------
         :class:`bytes`
+            The binary encoded Protobuf representation of this message instance
         """
         return bytes(self)
 
@@ -772,6 +773,7 @@ class Message(ABC):
         Returns
         --------
         :class:`Message`
+            The initialized message.
         """
         # Got some data over the wire
         self._serialized_on_wire = True
@@ -839,6 +841,7 @@ class Message(ABC):
         Returns
         --------
         :class:`Message`
+            The initialized message.
         """
         return cls().parse(data)
 
@@ -846,8 +849,7 @@ class Message(ABC):
         self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
     ) -> Dict[str, Any]:
         """
-        Returns a JSON serializable dict representation of this object
-        serialize to e.g. JSON.
+        Returns a JSON serializable dict representation of this object.
 
         Parameters
         -----------
@@ -862,6 +864,7 @@ class Message(ABC):
         Returns
         --------
         Dict[:class:`str`, Any]
+            The JSON serializable dict representation of this object.
         """
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
@@ -929,8 +932,8 @@ class Message(ABC):
 
     def from_dict(self: T, value: Dict[str, Any]) -> T:
         """
-        Parse the key/value pairs in ``value`` into the current message instance. This
-        returns the instance itself and is therefore assignable and chainable.
+        Parse the key/value pairs into the current message instance. This returns the
+        instance itself and is therefore assignable and chainable.
 
         Parameters
         -----------
@@ -940,6 +943,7 @@ class Message(ABC):
         Returns
         --------
         :class:`Message`
+            The initialized message.
         """
         self._serialized_on_wire = True
         fields_by_name = {f.name: f for f in dataclasses.fields(self)}
@@ -1010,6 +1014,7 @@ class Message(ABC):
         Returns
         --------
         :class:`str`
+            The JSON representation of the message.
         """
         return json.dumps(self.to_dict(), indent=indent)
 
@@ -1030,6 +1035,7 @@ class Message(ABC):
         Returns
         --------
         :class:`Message`
+            The initialized message.
         """
         return self.from_dict(json.loads(value))
 
