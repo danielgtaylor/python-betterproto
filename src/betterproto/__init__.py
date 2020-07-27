@@ -1000,7 +1000,7 @@ class Message(ABC):
 
         This is equivalent to::
 
-            >>> return json.dumps(message.to_dict(), indent=indent)
+            json.dumps(message.to_dict(), indent=indent)
 
         Parameters
         -----------
@@ -1020,7 +1020,7 @@ class Message(ABC):
 
         This is equivalent to::
 
-            >>> return message.from_dict(json.loads(value))
+            return message.from_dict(json.loads(value))
 
         Parameters
         -----------
