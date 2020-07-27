@@ -125,8 +125,13 @@ class Casing(enum.Enum):
     CAMEL = camel_case  #: A camelCase sterilization function.
     SNAKE = snake_case  #: A snake_case sterilization function.
 
-    def __repr__(self):
-        return f"<Casing: {self.value.__name__}>"
+
+def _Casing__repr__(self) -> str:
+    return f"<casing: {self.__name__}>"
+
+
+Casing.CAMEL.__repr__ = _Casing__repr__  # type: ignore
+Casing.SNAKE.__repr__ = _Casing__repr__  # type: ignore
 
 
 class _PLACEHOLDER:
