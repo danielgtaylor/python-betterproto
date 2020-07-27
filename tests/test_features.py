@@ -341,5 +341,5 @@ def test_message_repr():
     assert repr(RecursiveMessage(foo=1)) == "RecursiveMessage(foo=1)"
     assert (
         repr(RecursiveMessage(child=RecursiveMessage(), foo=1))
-        == "RecursiveMessage(child=RecursiveMessage(),foo=1)"
+        == "RecursiveMessage(child=RecursiveMessage(), foo=1)"
     )

@@ -530,7 +530,7 @@ class Message(ABC):
         return super().__getattribute__(name)
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
 
         equal = True
@@ -558,7 +558,7 @@ class Message(ABC):
             if value is PLACEHOLDER:
                 continue
             found = True
-            parts.extend([field_name, "=", repr(value), ","])
+            parts.extend([field_name, "=", repr(value), ", "])
 
         if found:
             parts.pop()
