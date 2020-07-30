@@ -2,6 +2,7 @@
 import asyncio
 import os
 from pathlib import Path
+import platform
 import shutil
 import sys
 from typing import Set
@@ -134,6 +135,10 @@ def main():
     else:
         verbose = False
         whitelist = set(sys.argv[1:])
+
+    if platform.system() == "Windows":
+        asyncio.set_event_loop(asyncio.ProactorEventLoop())
+
     asyncio.get_event_loop().run_until_complete(generate(whitelist, verbose))
 
 
