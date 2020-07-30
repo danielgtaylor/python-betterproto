@@ -33,6 +33,7 @@ import re
 from dataclasses import dataclass
 from dataclasses import field
 from typing import (
+    Iterator,
     Union,
     Type,
     List,
@@ -249,6 +250,13 @@ class OutputTemplate:
         """
         return [f.name for f in self.input_files]
 
+    @property
+    def python_module_imports(self) -> Set[str]:
+        imports = set()
+        if any(x for x in self.messages if any(x.deprecated_fields)):
+            imports.add("warnings")
+        return imports
+
 
 @dataclass
 class MessageCompiler(ProtoContentBase):
@@ -261,6 +269,7 @@ class MessageCompiler(ProtoContentBase):
     fields: List[Union["FieldCompiler", "MessageCompiler"]] = field(
         default_factory=list
     )
+    deprecated: bool = field(default=False, init=False)
 
     def __post_init__(self):
         # Add message to output file
@@ -269,6 +278,7 @@ class MessageCompiler(ProtoContentBase):
                 self.output_file.enums.append(self)
             else:
                 self.output_file.messages.append(self)
+        self.deprecated = self.proto_obj.options.deprecated
         super().__post_init__()
 
     @property
@@ -284,6 +294,12 @@ class MessageCompiler(ProtoContentBase):
         if self.repeated:
             return f"List[{self.py_name}]"
         return self.py_name
+
+    @property
+    def deprecated_fields(self) -> Iterator[str]:
+        for f in self.fields:
+            if f.deprecated:
+                yield f.py_name
 
 
 def is_map(
