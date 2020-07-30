@@ -283,7 +283,7 @@ class MessageCompiler(ProtoContentBase):
                 self.output_file.messages.append(self)
         self.deprecated = self.proto_obj.options.deprecated
         super().__post_init__()
-    
+
     def compile(self, indent_level: int = 0) -> str:
         """Construct Python code from MessageCompiler instance."""
         out = f"class {self.py_name}(betterproto.Message):"
@@ -294,23 +294,29 @@ class MessageCompiler(ProtoContentBase):
         if self.fields:
             out += "\n"
             for field in self.fields:
-                out += field.compile(indent_level=indent_level+1)
+                out += field.compile(indent_level=indent_level + 1)
         else:
-            out += INDENT*(indent_level+1) + "pass"
+            out += INDENT * (indent_level + 1) + "pass"
             out += "\n"
         if self.deprecated or list(self.deprecated_fields):
             out += "\n"
-            out += INDENT*(indent_level+1) + "def __post_init__(self) -> None:"
+            out += INDENT * (indent_level + 1) + "def __post_init__(self) -> None:"
             out += "\n"
-            out += INDENT*(indent_level+2) + "super().__post_init__()"
+            out += INDENT * (indent_level + 2) + "super().__post_init__()"
             out += "\n"
             if self.deprecated:
-                out += INDENT*(indent_level+2) + f'warnings.warn("{self.py_name} is deprecated", DeprecationWarning)'
+                out += (
+                    INDENT * (indent_level + 2)
+                    + f'warnings.warn("{self.py_name} is deprecated", DeprecationWarning)'
+                )
                 out += "\n"
             for field in self.deprecated_fields:
-                out += INDENT*(indent_level+2) + f"if self.{field}:"
+                out += INDENT * (indent_level + 2) + f"if self.{field}:"
                 out += "\n"
-                out += INDENT*(indent_level+3) + f'warnings.warn("{self.py_name}.{field} is deprecated", DeprecationWarning)'
+                out += (
+                    INDENT * (indent_level + 3)
+                    + f'warnings.warn("{self.py_name}.{field} is deprecated", DeprecationWarning)'
+                )
                 out += "\n"
         return out
 
@@ -391,7 +397,9 @@ class FieldCompiler(MessageCompiler):
             + f"{self.betterproto_field_args}"
             + ")"
         )
-        out = INDENT * indent_level + name + annotations + " = " + betterproto_field_type
+        out = (
+            INDENT * indent_level + name + annotations + " = " + betterproto_field_type
+        )
         out += "\n"
         return out
 
@@ -537,7 +545,7 @@ class MapEntryCompiler(FieldCompiler):
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
                     self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
-    
+
     def compile(self, indent_level: int = 0) -> str:
         """Construct string representation of this field."""
         name = f"{self.py_name}"
@@ -547,7 +555,9 @@ class MapEntryCompiler(FieldCompiler):
             f"{self.proto_obj.number}, betterproto.{self.proto_k_type}, "
             f"betterproto.{self.proto_v_type})"
         )
-        out = INDENT * indent_level + name + annotations + " = " + betterproto_field_type
+        out = (
+            INDENT * indent_level + name + annotations + " = " + betterproto_field_type
+        )
         out += "\n"
         return out
 
@@ -580,7 +590,7 @@ class EnumDefinitionCompiler(MessageCompiler):
             out = ""
             if self.comment:
                 out += self.comment + "\n"
-            out +=  INDENT*indent_level + f"{self.name} = {self.value}"
+            out += INDENT * indent_level + f"{self.name} = {self.value}"
             out += "\n"
             return out
 
@@ -602,13 +612,13 @@ class EnumDefinitionCompiler(MessageCompiler):
         """Compile enum to Python code."""
         out = f"class {self.py_name}(betterproto.Enum):\n"
         if self.comment:
-            out += INDENT*indent_level + self.comment
+            out += INDENT * indent_level + self.comment
             out += "\n"
         if self.entries:
             for entry in self.entries:
-                out += entry.compile(indent_level=indent_level+1)
+                out += entry.compile(indent_level=indent_level + 1)
         else:
-            out += INDENT*indent_level + "pass"
+            out += INDENT * indent_level + "pass"
             out += "\n"
         out += "\n"
         return out
