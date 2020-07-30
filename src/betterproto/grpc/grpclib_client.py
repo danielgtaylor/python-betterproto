@@ -13,17 +13,17 @@ from typing import (
     Type,
     Union,
 )
-from .._types import ST, T
+from betterproto._types import ST, T
 
 if TYPE_CHECKING:
-    from grpclib._typing import IProtoMessage
     from grpclib.client import Channel
     from grpclib.metadata import Deadline
 
 
 _Value = Union[str, bytes]
 _MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
-_MessageSource = Union[Iterable["IProtoMessage"], AsyncIterable["IProtoMessage"]]
+_MessageLike = Union[T, ST]
+_MessageSource = Union[Iterable[ST], AsyncIterable[ST]]
 
 
 class ServiceStub(ABC):
@@ -59,7 +59,7 @@ class ServiceStub(ABC):
     async def _unary_unary(
         self,
         route: str,
-        request: "IProtoMessage",
+        request: _MessageLike,
         response_type: Type[T],
         *,
         timeout: Optional[float] = None,
@@ -82,7 +82,7 @@ class ServiceStub(ABC):
     async def _unary_stream(
         self,
         route: str,
-        request: "IProtoMessage",
+        request: _MessageLike,
         response_type: Type[T],
         *,
         timeout: Optional[float] = None,
