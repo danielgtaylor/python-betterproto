@@ -11,7 +11,6 @@ from datetime import {% for i in description.datetime_imports|sort %}{{ i }}{% i
 {% endif%}
 {% if description.typing_imports %}
 from typing import {% for i in description.typing_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
-
 {% endif %}
 
 import betterproto
@@ -20,52 +19,14 @@ import grpclib
 {% endif %}
 
 
-{% if description.enums %}{% for enum in description.enums %}
-class {{ enum.py_name }}(betterproto.Enum):
-    {% if enum.comment %}
-{{ enum.comment }}
-
-    {% endif %}
-    {% for entry in enum.entries %}
-        {% if entry.comment %}
-{{ entry.comment }}
-        {% endif %}
-    {{ entry.name }} = {{ entry.value }}
-    {% endfor %}
-
-
+{% if description.enums %}
+{% for enum in description.enums %}
+{{enum.compile(indent_level=0)}}
 {% endfor %}
 {% endif %}
 {% for message in description.messages %}
 @dataclass
-class {{ message.py_name }}(betterproto.Message):
-    {% if message.comment %}
-{{ message.comment }}
-
-    {% endif %}
-    {% for field in message.fields %}
-        {% if field.comment %}
-{{ field.comment }}
-        {% endif %}
-    {{ field.get_field_string() }}
-    {% endfor %}
-    {% if not message.fields %}
-    pass
-    {% endif %}
-
-    {% if message.deprecated or message.deprecated_fields %}
-    def __post_init__(self) -> None:
-        {% if message.deprecated %}
-        warnings.warn("{{ message.py_name }} is deprecated", DeprecationWarning)
-        {% endif %}
-        super().__post_init__()
-        {% for field in message.deprecated_fields %}
-        if self.{{ field }}:
-            warnings.warn("{{ message.py_name }}.{{ field }} is deprecated", DeprecationWarning)
-        {% endfor %}
-    {%  endif %}
-
-
+{{ message.compile(indent_level=0) }}
 {% endfor %}
 {% for service in description.services %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):

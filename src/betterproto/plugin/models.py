@@ -121,6 +121,9 @@ PROTO_PACKED_TYPES = (
     FieldDescriptorProto.TYPE_SINT64,  # 18
 )
 
+# Define indent size
+INDENT = " " * 4
+
 
 def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
     pad = " " * indent
@@ -280,6 +283,34 @@ class MessageCompiler(ProtoContentBase):
                 self.output_file.messages.append(self)
         self.deprecated = self.proto_obj.options.deprecated
         super().__post_init__()
+    
+    def compile(self, indent_level: int = 0) -> str:
+        """Construct Python code from MessageCompiler instance."""
+        out = f"class {self.py_name}(betterproto.Message):"
+        out += "\n"
+        if self.comment:
+            out += self.comment
+            out += "\n"
+        if self.fields:
+            out += "\n"
+            for field in self.fields:
+                out += field.compile(indent_level=indent_level+1)
+        else:
+            out += INDENT*(indent_level+1) + "pass"
+            out += "\n"
+        if self.deprecated or list(self.deprecated_fields):
+            out += "\n"
+            out += INDENT*(indent_level+1) + "def __post_init__(self) -> None:"
+            out += "\n"
+            if self.deprecated:
+                out += INDENT*(indent_level+2) + f'warnings.warn("{self.py_name} is deprecated", DeprecationWarning)'
+                out += "\n"
+            for field in self.deprecated_fields:
+                out += INDENT*(indent_level+2) + f"if self.{field}:"
+                out += "\n"
+                out += INDENT*(indent_level+3) + f'warnings.warn("{self.py_name}.{field} is deprecated", DeprecationWarning)'
+                out += "\n"
+        return out
 
     @property
     def proto_name(self) -> str:
@@ -349,7 +380,7 @@ class FieldCompiler(MessageCompiler):
             self.output_file.datetime_imports.add("datetime")
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
-    def get_field_string(self, indent: int = 4) -> str:
+    def compile(self, indent_level: int = 0) -> str:
         """Construct string representation of this field as a field."""
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
@@ -358,7 +389,9 @@ class FieldCompiler(MessageCompiler):
             + f"{self.betterproto_field_args}"
             + ")"
         )
-        return name + annotations + " = " + betterproto_field_type
+        out = INDENT * indent_level + name + annotations + " = " + betterproto_field_type
+        out += "\n"
+        return out
 
     @property
     def betterproto_field_args(self):
@@ -502,8 +535,8 @@ class MapEntryCompiler(FieldCompiler):
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
                     self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
-
-    def get_field_string(self, indent: int = 4) -> str:
+    
+    def compile(self, indent_level: int = 0) -> str:
         """Construct string representation of this field."""
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
@@ -512,7 +545,9 @@ class MapEntryCompiler(FieldCompiler):
             f"{self.proto_obj.number}, betterproto.{self.proto_k_type}, "
             f"betterproto.{self.proto_v_type})"
         )
-        return name + annotations + " = " + betterproto_field_type
+        out = INDENT * indent_level + name + annotations + " = " + betterproto_field_type
+        out += "\n"
+        return out
 
     @property
     def annotation(self):
@@ -538,6 +573,15 @@ class EnumDefinitionCompiler(MessageCompiler):
         value: int
         comment: str
 
+        def compile(self, indent_level: int = 0) -> str:
+            """Compile enum entry to Python code."""
+            out = ""
+            if self.comment:
+                out += self.comment + "\n"
+            out +=  INDENT*indent_level + f"{self.name} = {self.value}"
+            out += "\n"
+            return out
+
     def __post_init__(self):
         # Get entries/allowed values for this Enum
         self.entries = [
@@ -551,6 +595,21 @@ class EnumDefinitionCompiler(MessageCompiler):
             for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
         ]
         super().__post_init__()  # call MessageCompiler __post_init__
+
+    def compile(self, indent_level: int = 0) -> str:
+        """Compile enum to Python code."""
+        out = f"class {self.py_name}(betterproto.Enum):\n"
+        if self.comment:
+            out += INDENT*indent_level + self.comment
+            out += "\n"
+        if self.entries:
+            for entry in self.entries:
+                out += entry.compile(indent_level=indent_level+1)
+        else:
+            out += INDENT*indent_level + "pass"
+            out += "\n"
+        out += "\n"
+        return out
 
     @property
     def default_value_string(self) -> int:
