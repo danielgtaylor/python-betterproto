@@ -302,6 +302,8 @@ class MessageCompiler(ProtoContentBase):
             out += "\n"
             out += INDENT*(indent_level+1) + "def __post_init__(self) -> None:"
             out += "\n"
+            out += INDENT*(indent_level+2) + "super().__post_init__()"
+            out += "\n"
             if self.deprecated:
                 out += INDENT*(indent_level+2) + f'warnings.warn("{self.py_name} is deprecated", DeprecationWarning)'
                 out += "\n"
