@@ -151,6 +151,7 @@ class ProtoContentBase:
 
     path: List[int]
     comment_indent: int = 4
+    parent: Union["Messsage", "OutputTemplate"]
 
     def __post_init__(self):
         """Checks that no fake default fields were left as placeholders."""
@@ -503,16 +504,13 @@ class MapEntryCompiler(FieldCompiler):
                     self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
-    def get_field_string(self, indent: int = 4) -> str:
-        """Construct string representation of this field."""
-        name = f"{self.py_name}"
-        annotations = f": {self.annotation}"
-        betterproto_field_type = (
-            f"betterproto.map_field("
-            f"{self.proto_obj.number}, betterproto.{self.proto_k_type}, "
-            f"betterproto.{self.proto_v_type})"
-        )
-        return name + annotations + " = " + betterproto_field_type
+    @property
+    def betterproto_field_args(self):
+        return f", betterproto.{self.proto_k_type}, betterproto.{self.proto_v_type}"
+
+    @property
+    def field_type(self) -> str:
+        return "map"
 
     @property
     def annotation(self):
