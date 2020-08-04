@@ -18,6 +18,7 @@ except ImportError as err:
 
 from betterproto.plugin.models import OutputTemplate
 
+
 def outputfile_compiler(output_file: OutputTemplate) -> str:
 
     templates_folder = os.path.abspath(
@@ -30,7 +31,6 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
         loader=jinja2.FileSystemLoader(templates_folder),
     )
     template = env.get_template("template.py.j2")
-
 
     res = black.format_str(
         template.render(output_file=output_file),
