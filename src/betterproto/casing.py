@@ -17,7 +17,7 @@ WORD_UPPER = "[A-Z]+(?![a-z])[0-9]*"
 def safe_snake_case(value: str) -> str:
     """Snake case a value taking into account Python keywords."""
     value = snake_case(value)
-    value = safen(value)
+    value = sanitize_name(value)
     return value
 
 
