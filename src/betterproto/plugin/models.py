@@ -54,7 +54,7 @@ from betterproto.compile.naming import (
     pythonize_method_name,
 )
 
-from ..casing import safen
+from ..casing import sanitize_name
 
 try:
     # betterproto[compiler] specific dependencies
@@ -544,7 +544,7 @@ class EnumDefinitionCompiler(MessageCompiler):
         # Get entries/allowed values for this Enum
         self.entries = [
             self.EnumEntry(
-                name=safen(entry_proto_value.name),
+                name=sanitize_name(entry_proto_value.name),
                 value=entry_proto_value.number,
                 comment=get_comment(
                     proto_file=self.proto_file, path=self.path + [2, entry_number]
