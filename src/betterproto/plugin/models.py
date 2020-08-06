@@ -505,7 +505,7 @@ class MapEntryCompiler(FieldCompiler):
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     @property
-    def betterproto_field_args(self):
+    def betterproto_field_args(self) -> str:
         return f", betterproto.{self.proto_k_type}, betterproto.{self.proto_v_type}"
 
     @property
