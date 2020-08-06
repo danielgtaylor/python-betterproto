@@ -54,6 +54,8 @@ from betterproto.compile.naming import (
     pythonize_method_name,
 )
 
+from ..casing import safe_snake_case
+
 try:
     # betterproto[compiler] specific dependencies
     from google.protobuf.compiler import plugin_pb2 as plugin
@@ -542,7 +544,7 @@ class EnumDefinitionCompiler(MessageCompiler):
         # Get entries/allowed values for this Enum
         self.entries = [
             self.EnumEntry(
-                name=entry_proto_value.name,
+                name=safe_snake_case(entry_proto_value.name),
                 value=entry_proto_value.number,
                 comment=get_comment(
                     proto_file=self.proto_file, path=self.path + [2, entry_number]
