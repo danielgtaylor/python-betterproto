@@ -1,3 +1,4 @@
+import keyword
 import re
 
 # Word delimiters and symbols that will not be preserved when re-casing.
@@ -16,42 +17,7 @@ WORD_UPPER = "[A-Z]+(?![a-z])[0-9]*"
 def safe_snake_case(value: str) -> str:
     """Snake case a value taking into account Python keywords."""
     value = snake_case(value)
-    if value in [
-        "and",
-        "as",
-        "assert",
-        "async",
-        "await",
-        "break",
-        "class",
-        "continue",
-        "def",
-        "del",
-        "elif",
-        "else",
-        "except",
-        "finally",
-        "for",
-        "from",
-        "global",
-        "if",
-        "import",
-        "in",
-        "is",
-        "lambda",
-        "nonlocal",
-        "not",
-        "or",
-        "pass",
-        "raise",
-        "return",
-        "try",
-        "while",
-        "with",
-        "yield",
-    ]:
-        # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
-        value += "_"
+    value = sanitize_name(value)
     return value
 
 
@@ -120,3 +86,8 @@ def camel_case(value: str, strict: bool = True):
 
 def lowercase_first(value: str):
     return value[0:1].lower() + value[1:]
+
+
+def sanitize_name(value: str) -> str:
+    # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
+    return f"{value}_" if keyword.iskeyword(value) else value
