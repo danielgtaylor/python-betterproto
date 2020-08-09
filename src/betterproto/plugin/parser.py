@@ -1,12 +1,10 @@
 import itertools
-import os.path
 import pathlib
 import sys
 from typing import List, Iterator
 
 try:
     # betterproto[compiler] specific dependencies
-    import black
     from google.protobuf.compiler import plugin_pb2 as plugin
     from google.protobuf.descriptor_pb2 import (
         DescriptorProto,
@@ -14,7 +12,6 @@ try:
         FieldDescriptorProto,
         ServiceDescriptorProto,
     )
-    import jinja2
 except ImportError as err:
     missing_import = err.args[0][17:-1]
     print(
@@ -40,6 +37,8 @@ from betterproto.plugin.models import (
     is_map,
     is_oneof,
 )
+
+from betterproto.plugin.compiler import outputfile_compiler
 
 
 def traverse(proto_file: FieldDescriptorProto) -> Iterator:
@@ -70,16 +69,6 @@ def generate_code(
 ) -> None:
     plugin_options = request.parameter.split(",") if request.parameter else []
 
-    templates_folder = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "templates")
-    )
-
-    env = jinja2.Environment(
-        trim_blocks=True,
-        lstrip_blocks=True,
-        loader=jinja2.FileSystemLoader(templates_folder),
-    )
-    template = env.get_template("template.py.j2")
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
     for proto_file in request.proto_file:
@@ -116,7 +105,7 @@ def generate_code(
 
     # Generate output files
     output_paths: pathlib.Path = set()
-    for output_package_name, template_data in request_data.output_packages.items():
+    for output_package_name, output_package in request_data.output_packages.items():
 
         # Add files to the response object
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
@@ -126,10 +115,7 @@ def generate_code(
         f.name: str = str(output_path)
 
         # Render and then format the output file
-        f.content: str = black.format_str(
-            template.render(description=template_data),
-            mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
-        )
+        f.content: str = outputfile_compiler(output_file=output_package)
 
     # Make each output directory a package with __init__ file
     init_files = (
