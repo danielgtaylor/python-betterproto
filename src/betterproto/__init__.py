@@ -551,6 +551,12 @@ class Message(ABC):
 
         super().__setattr__(attr, value)
 
+    def __bool__(self):
+        for field_name in self._betterproto.meta_by_field_name:
+            if getattr(self, field_name):
+                return True
+        return False
+
     @property
     def _betterproto(self):
         """
