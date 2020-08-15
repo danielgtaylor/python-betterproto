@@ -4,7 +4,7 @@ import inspect
 import json
 import struct
 import sys
-import warnings
+import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
@@ -21,8 +21,6 @@ from typing import (
     Union,
     get_type_hints,
 )
-
-import typing
 
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
@@ -126,11 +124,7 @@ class Casing(enum.Enum):
     SNAKE = snake_case
 
 
-class _PLACEHOLDER:
-    pass
-
-
-PLACEHOLDER: Any = _PLACEHOLDER()
+PLACEHOLDER: Any = object()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -261,7 +255,7 @@ class Enum(enum.IntEnum):
     def from_string(cls, name: str) -> int:
         """Return the value which corresponds to the string name."""
         try:
-            return cls.__members__[name]
+            return cls._member_map_[name]
         except KeyError as e:
             raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
@@ -349,7 +343,7 @@ def _serialize_single(
     """Serializes a single field and value."""
     value = _preprocess_single(proto_type, wraps, value)
 
-    output = b""
+    output = bytearray()
     if proto_type in WIRE_VARINT_TYPES:
         key = encode_varint(field_number << 3)
         output += key + value
@@ -366,10 +360,10 @@ def _serialize_single(
     else:
         raise NotImplementedError(proto_type)
 
-    return output
+    return bytes(output)
 
 
-def decode_varint(buffer: bytes, pos: int, signed: bool = False) -> Tuple[int, int]:
+def decode_varint(buffer: bytes, pos: int) -> Tuple[int, int]:
     """
     Decode a single varint value from a byte buffer. Returns the value and the
     new position in the buffer.
@@ -513,11 +507,11 @@ class Message(ABC):
         all_sentinel = True
 
         # Set current field of each group after `__init__` has already been run.
-        group_current: Dict[str, str] = {}
+        group_current: Dict[str, Optional[str]] = {}
         for field_name, meta in self._betterproto.meta_by_field_name.items():
 
-            if meta.group:
-                group_current.setdefault(meta.group)
+            if meta.group and group_current.get(meta.group) is None:
+                group_current[meta.group] = None
 
             if getattr(self, field_name) != PLACEHOLDER:
                 # Skip anything not set to the sentinel value
@@ -571,7 +565,7 @@ class Message(ABC):
         """
         Get the binary encoded Protobuf representation of this instance.
         """
-        output = b""
+        output = bytearray()
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             value = getattr(self, field_name)
 
@@ -609,7 +603,7 @@ class Message(ABC):
                     # Packed lists look like a length-delimited field. First,
                     # preprocess/encode each value into a buffer and then
                     # treat it like a field of raw bytes.
-                    buf = b""
+                    buf = bytearray()
                     for item in value:
                         buf += _preprocess_single(meta.proto_type, "", item)
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
@@ -644,7 +638,8 @@ class Message(ABC):
                     wraps=meta.wraps or "",
                 )
 
-        return output + self._unknown_fields
+        output += self._unknown_fields
+        return bytes(output)
 
     # For compatibility with other libraries
     SerializeToString = __bytes__
@@ -907,7 +902,6 @@ class Message(ABC):
         returns the instance itself and is therefore assignable and chainable.
         """
         self._serialized_on_wire = True
-        fields_by_name = {f.name: f for f in dataclasses.fields(self)}
         for key in value:
             field_name = safe_snake_case(key)
             meta = self._betterproto.meta_by_field_name.get(field_name)
