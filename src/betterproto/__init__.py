@@ -818,9 +818,10 @@ class Message(ABC):
         """
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
+        proto_meta = self._betterproto
+        for field_name, meta in proto_meta.meta_by_field_name.items():
             field_type = field_types[field_name]
-            field_is_repeated = type(field_type) is type(typing.List)
+            field_is_repeated = proto_meta.default_gen[field_name] is list
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
