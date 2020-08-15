@@ -751,12 +751,13 @@ class Message(ABC):
         self._serialized_on_wire = True
 
         for parsed in parse_fields(data):
-            field_name = self._betterproto.field_name_by_number.get(parsed.number)
+            proto_meta = self._betterproto
+            field_name = proto_meta.field_name_by_number.get(parsed.number)
             if not field_name:
                 self._unknown_fields += parsed.raw
                 continue
 
-            meta = self._betterproto.meta_by_field_name[field_name]
+            meta = proto_meta.meta_by_field_name[field_name]
 
             value: Any
             if parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
