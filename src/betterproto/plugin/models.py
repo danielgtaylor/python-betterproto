@@ -67,10 +67,9 @@ try:
         MethodDescriptorProto,
     )
 except ImportError as err:
-    missing_import = re.match(r".*(cannot import name .*$)", err.args[0]).group(1)
     print(
         "\033[31m"
-        f"Unable to import `{missing_import}` from betterproto plugin! "
+        f"Unable to import `{err.name}` from betterproto plugin! "
         "Please ensure that you've installed betterproto as "
         '`pip install "betterproto[compiler]"` so that compiler dependencies '
         "are included."
