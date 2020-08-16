@@ -402,15 +402,15 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
         wire_type = num_wire & 0x7
 
         decoded: Any = None
-        if wire_type == 0:
+        if wire_type == WIRE_VARINT:
             decoded, i = decode_varint(value, i)
-        elif wire_type == 1:
+        elif wire_type == WIRE_FIXED_64:
             decoded, i = value[i : i + 8], i + 8
-        elif wire_type == 2:
+        elif wire_type == WIRE_LEN_DELIM:
             length, i = decode_varint(value, i)
             decoded = value[i : i + length]
             i += length
-        elif wire_type == 5:
+        elif wire_type == WIRE_FIXED_32:
             decoded, i = value[i : i + 4], i + 4
 
         yield ParsedField(
@@ -851,7 +851,7 @@ class Message(ABC):
                     )
                 ):
                     output[cased_name] = value.to_dict(casing, include_default_values,)
-            elif meta.proto_type == "map":
+            elif meta.proto_type == TYPE_MAP:
                 for k in value:
                     if hasattr(value[k], "to_dict"):
                         value[k] = value[k].to_dict(casing, include_default_values)
@@ -908,7 +908,7 @@ class Message(ABC):
                 continue
 
             if value[key] is not None:
-                if meta.proto_type == "message":
+                if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
