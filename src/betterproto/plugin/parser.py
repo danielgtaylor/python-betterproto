@@ -41,10 +41,13 @@ from .models import (
 )
 
 
-
-def traverse(proto_file: FieldDescriptorProto) -> Iterator:
+def traverse(
+    proto_file: FieldDescriptorProto,
+) -> itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
     # Todo: Keep information about nested hierarchy
-    def _traverse(path, items, prefix=""):
+    def _traverse(
+        path: List[int], items: List[Descriptor], prefix=""
+    ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple

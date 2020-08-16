@@ -110,7 +110,7 @@ WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
 
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
-def datetime_default_gen():
+def datetime_default_gen() -> datetime:
     return datetime(1970, 1, 1, tzinfo=timezone.utc)
 
 
@@ -256,7 +256,7 @@ class Enum(enum.IntEnum):
     """Protocol buffers enumeration base class. Acts like `enum.IntEnum`."""
 
     @classmethod
-    def from_string(cls, name: str) -> int:
+    def from_string(cls, name: str) -> "Enum":
         """Return the value which corresponds to the string name."""
         try:
             return cls.__members__[name]
@@ -419,12 +419,6 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
 
 
 class ProtoClassMetadata:
-    oneof_group_by_field: Dict[str, str]
-    oneof_field_by_group: Dict[str, Set[dataclasses.Field]]
-    default_gen: Dict[str, Callable]
-    cls_by_field: Dict[str, Type]
-    field_name_by_number: Dict[int, str]
-    meta_by_field_name: Dict[str, FieldMetadata]
     __slots__ = (
         "oneof_group_by_field",
         "oneof_field_by_group",
@@ -453,25 +447,26 @@ class ProtoClassMetadata:
             by_field_name[field.name] = meta
             by_field_number[meta.number] = field.name
 
-        self.oneof_group_by_field = by_field
-        self.oneof_field_by_group = by_group
-        self.field_name_by_number = by_field_number
-        self.meta_by_field_name = by_field_name
+        self.oneof_group_by_field: Dict[str, str] = by_field
+        self.oneof_field_by_group: Dict[str, Set[dataclasses.Field]] = by_group
+        self.field_name_by_number: Dict[int, str] = by_field_number
+        self.meta_by_field_name: Dict[str, FieldMetadata] = by_field_name
 
-        self.default_gen = self._get_default_gen(cls, fields)
-        self.cls_by_field = self._get_cls_by_field(cls, fields)
-
-    @staticmethod
-    def _get_default_gen(cls, fields):
-        default_gen = {}
-
-        for field in fields:
-            default_gen[field.name] = cls._get_field_default_gen(field)
-
-        return default_gen
+        self.default_gen: Dict[str, Callable[[], Any]] = self._get_default_gen(
+            cls, fields
+        )
+        self.cls_by_field: Dict[str, Type] = self._get_cls_by_field(cls, fields)
 
     @staticmethod
-    def _get_cls_by_field(cls, fields):
+    def _get_default_gen(
+        cls: Type["Message"], fields: List[dataclasses.Field]
+    ) -> Dict[str, Callable[[], Any]]:
+        return {field.name: cls._get_field_default_gen(field) for field in fields}
+
+    @staticmethod
+    def _get_cls_by_field(
+        cls: Type["Message"], fields: List[dataclasses.Field]
+    ) -> Dict[str, Type]:
         field_cls = {}
 
         for field in fields:
@@ -553,7 +548,7 @@ class Message(ABC):
         super().__setattr__(attr, value)
 
     @property
-    def _betterproto(self):
+    def _betterproto(self) -> ProtoClassMetadata:
         """
         Lazy initialize metadata for each protobuf class.
         It may be initialized multiple times in a multi-threaded environment,
@@ -666,7 +661,7 @@ class Message(ABC):
                 field_cls = field_cls.__args__[index]
         return field_cls
 
-    def _get_field_default(self, field_name):
+    def _get_field_default(self, field_name: str) -> Any:
         return self._betterproto.default_gen[field_name]()
 
     @classmethod
@@ -980,7 +975,7 @@ def serialized_on_wire(message: Message) -> bool:
     return message._serialized_on_wire
 
 
-def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
+def which_one_of(message: Message, group_name: str) -> Tuple[str, Optional[Any]]:
     """Return the name and value of a message's one-of field group."""
     field_name = message._group_current.get(group_name)
     if not field_name:

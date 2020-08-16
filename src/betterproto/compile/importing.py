@@ -19,7 +19,7 @@ WRAPPER_TYPES: Dict[str, Type] = {
 }
 
 
-def parse_source_type_name(field_type_name):
+def parse_source_type_name(field_type_name: str) -> Tuple[str, str]:
     """
     Split full source type name into package and type name.
     E.g. 'root.package.Message' -> ('root.package', 'Message')
@@ -79,7 +79,7 @@ def get_type_reference(
     return reference_cousin(current_package, imports, py_package, py_type)
 
 
-def reference_absolute(imports, py_package, py_type):
+def reference_absolute(imports: Set[str], py_package: List[str], py_type: str) -> str:
     """
     Returns a reference to a python type located in the root, i.e. sys.path.
     """

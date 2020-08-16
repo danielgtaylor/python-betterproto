@@ -111,7 +111,9 @@ PROTO_PACKED_TYPES = (
 )
 
 
-def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
+def get_comment(
+    proto_file: "FileDescriptorProto", path: List[int], indent: int = 4
+) -> str:
     pad = " " * indent
     for sci in proto_file.source_code_info.location:
         # print(list(sci.path), path, file=sys.stderr)
@@ -141,7 +143,7 @@ class ProtoContentBase:
     path: List[int]
     comment_indent: int = 4
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
         for field_name, field_val in self.__dataclass_fields__.items():
             if field_val is PLACEHOLDER:
@@ -260,7 +262,7 @@ class MessageCompiler(ProtoContentBase):
     )
     deprecated: bool = field(default=False, init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Add message to output file
         if isinstance(self.parent, OutputTemplate):
             if isinstance(self, EnumDefinitionCompiler):
@@ -321,7 +323,7 @@ class FieldCompiler(MessageCompiler):
     parent: MessageCompiler = PLACEHOLDER
     proto_obj: FieldDescriptorProto = PLACEHOLDER
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Add field to message
         self.parent.fields.append(self)
         # Check for new imports
@@ -357,9 +359,8 @@ class FieldCompiler(MessageCompiler):
         return args
 
     @property
-    def field_wraps(self) -> Union[str, None]:
-        """Returns betterproto wrapped field type or None.
-        """
+    def field_wraps(self) -> Optional[str]:
+        """Returns betterproto wrapped field type or None."""
         match_wrapper = re.match(
             r"\.google\.protobuf\.(.+)Value", self.proto_obj.type_name
         )
@@ -460,7 +461,7 @@ class FieldCompiler(MessageCompiler):
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
     @property
-    def betterproto_field_args(self) -> "str":
+    def betterproto_field_args(self) -> str:
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
         args = args + f', group="{group}"'
@@ -474,7 +475,7 @@ class MapEntryCompiler(FieldCompiler):
     proto_k_type: str = PLACEHOLDER
     proto_v_type: str = PLACEHOLDER
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Explore nested types and set k_type and v_type if unset."""
         map_entry = f"{self.proto_obj.name.replace('_', '').lower()}entry"
         for nested in self.parent.proto_obj.nested_type:
@@ -504,11 +505,11 @@ class MapEntryCompiler(FieldCompiler):
         return name + annotations + " = " + betterproto_field_type
 
     @property
-    def annotation(self):
+    def annotation(self) -> str:
         return f"Dict[{self.py_k_type}, {self.py_v_type}]"
 
     @property
-    def repeated(self):
+    def repeated(self) -> bool:
         return False  # maps cannot be repeated
 
 
@@ -527,7 +528,7 @@ class EnumDefinitionCompiler(MessageCompiler):
         value: int
         comment: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Get entries/allowed values for this Enum
         self.entries = [
             self.EnumEntry(
@@ -542,7 +543,7 @@ class EnumDefinitionCompiler(MessageCompiler):
         super().__post_init__()  # call MessageCompiler __post_init__
 
     @property
-    def default_value_string(self) -> int:
+    def default_value_string(self) -> str:
         """Python representation of the default value for Enums.
 
         As per the spec, this is the first value of the Enum.
@@ -563,11 +564,11 @@ class ServiceCompiler(ProtoContentBase):
         super().__post_init__()  # check for unset fields
 
     @property
-    def proto_name(self):
+    def proto_name(self) -> str:
         return self.proto_obj.name
 
     @property
-    def py_name(self):
+    def py_name(self) -> str:
         return pythonize_class_name(self.proto_name)
 
 
@@ -651,7 +652,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         )
 
     @property
-    def py_input_message(self) -> Union[None, MessageCompiler]:
+    def py_input_message(self) -> Optional[MessageCompiler]:
         """Find the input message object.
 
         Returns
