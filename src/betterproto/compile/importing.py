@@ -1,10 +1,10 @@
 import os
 import re
-from typing import Dict, List, Set, Type
+from typing import Dict, List, Set, Tuple, Type
 
-from betterproto import safe_snake_case
-from betterproto.compile.naming import pythonize_class_name
-from betterproto.lib.google import protobuf as google_protobuf
+from ..casing import safe_snake_case
+from ..lib.google import protobuf as google_protobuf
+from .naming import pythonize_class_name
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,

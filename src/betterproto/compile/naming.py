@@ -1,4 +1,4 @@
-from betterproto import casing
+from ...betterproto import casing
 
 
 def pythonize_class_name(name):

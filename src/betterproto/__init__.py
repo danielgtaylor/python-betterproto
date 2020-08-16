@@ -4,7 +4,7 @@ import inspect
 import json
 import struct
 import sys
-import warnings
+import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
@@ -21,8 +21,6 @@ from typing import (
     Union,
     get_type_hints,
 )
-
-import typing
 
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
@@ -992,15 +990,15 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
 
 # Circular import workaround: google.protobuf depends on base classes defined above.
 from .lib.google.protobuf import (  # noqa
-    Duration,
-    Timestamp,
     BoolValue,
     BytesValue,
     DoubleValue,
+    Duration,
     FloatValue,
     Int32Value,
     Int64Value,
     StringValue,
+    Timestamp,
     UInt32Value,
     UInt64Value,
 )

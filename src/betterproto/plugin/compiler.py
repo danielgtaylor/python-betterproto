@@ -15,7 +15,7 @@ except ImportError as err:
     )
     raise SystemExit(1)
 
-from betterproto.plugin.models import OutputTemplate
+from .models import OutputTemplate
 
 
 def outputfile_compiler(output_file: OutputTemplate) -> str:

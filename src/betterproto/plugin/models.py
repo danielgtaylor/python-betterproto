@@ -30,31 +30,19 @@ reference to `A` to `B`'s `fields` attirbute.
 """
 
 import re
-from dataclasses import dataclass
-from dataclasses import field
-from typing import (
-    Iterator,
-    Union,
-    Type,
-    List,
-    Dict,
-    Set,
-    Text,
-)
 import textwrap
+from dataclasses import dataclass, field
+from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
 
 import betterproto
-from betterproto.compile.importing import (
-    get_type_reference,
-    parse_source_type_name,
-)
-from betterproto.compile.naming import (
+
+from ..casing import sanitize_name
+from ..compile.importing import get_type_reference, parse_source_type_name
+from ..compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
     pythonize_method_name,
 )
-
-from ..casing import sanitize_name
 
 try:
     # betterproto[compiler] specific dependencies

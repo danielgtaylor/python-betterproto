@@ -1,7 +1,9 @@
 import itertools
 import pathlib
 import sys
-from typing import List, Iterator
+from typing import Iterator, List, Tuple, Union
+
+from google.protobuf.descriptor import Descriptor
 
 try:
     # betterproto[compiler] specific dependencies
@@ -23,21 +25,21 @@ except ImportError as err:
     )
     raise SystemExit(1)
 
-from betterproto.plugin.models import (
-    PluginRequestCompiler,
-    OutputTemplate,
-    MessageCompiler,
-    FieldCompiler,
-    OneOfFieldCompiler,
-    MapEntryCompiler,
+from .compiler import outputfile_compiler
+from .models import (
     EnumDefinitionCompiler,
+    FieldCompiler,
+    MapEntryCompiler,
+    MessageCompiler,
+    OneOfFieldCompiler,
+    OutputTemplate,
+    PluginRequestCompiler,
     ServiceCompiler,
     ServiceMethodCompiler,
     is_map,
     is_oneof,
 )
 
-from betterproto.plugin.compiler import outputfile_compiler
 
 
 def traverse(proto_file: FieldDescriptorProto) -> Iterator:

@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import sys
+
 import os
+import sys
 
 from google.protobuf.compiler import plugin_pb2 as plugin
 
-from betterproto.plugin.parser import generate_code
+from .parser import generate_code
 
 
 def main():
