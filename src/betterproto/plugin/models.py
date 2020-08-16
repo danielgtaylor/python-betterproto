@@ -339,18 +339,15 @@ class FieldCompiler(MessageCompiler):
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
         betterproto_field_type = (
-            f"betterproto.{self.field_type}_field({self.proto_obj.number}"
-            + f"{self.betterproto_field_args}"
-            + ")"
+            f"betterproto.{self.field_type}_field("
+            f"{self.proto_obj.number}"
+            f"{self.betterproto_field_args})"
         )
-        return name + annotations + " = " + betterproto_field_type
+        return f"{name}{annotations} = {betterproto_field_type}"
 
     @property
-    def betterproto_field_args(self):
-        args = ""
-        if self.field_wraps:
-            args = args + f", wraps={self.field_wraps}"
-        return args
+    def betterproto_field_args(self) -> str:
+        return f", wraps={self.field_wraps}" if self.field_wraps else ""
 
     @property
     def field_wraps(self) -> Optional[str]:
@@ -366,17 +363,15 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def repeated(self) -> bool:
-        if self.proto_obj.label == FieldDescriptorProto.LABEL_REPEATED and not is_map(
-            self.proto_obj, self.parent
-        ):
-            return True
-        return False
+        return (
+            self.proto_obj.label == FieldDescriptorProto.LABEL_REPEATED
+            and not is_map(self.proto_obj, self.parent)
+        )
 
     @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
-        annotation = self.annotation
-        return annotation.startswith("List[") or annotation.startswith("Dict[")
+        return self.annotation.startswith(("List[", "Dict["))
 
     @property
     def field_type(self) -> str:
@@ -407,9 +402,7 @@ class FieldCompiler(MessageCompiler):
     @property
     def packed(self) -> bool:
         """True if the wire representation is a packed format."""
-        if self.repeated and self.proto_obj.type in PROTO_PACKED_TYPES:
-            return True
-        return False
+        return self.repeated and self.proto_obj.type in PROTO_PACKED_TYPES
 
     @property
     def py_name(self) -> str:
@@ -457,8 +450,7 @@ class OneOfFieldCompiler(FieldCompiler):
     def betterproto_field_args(self) -> str:
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
-        args = args + f', group="{group}"'
-        return args
+        return f'{args}, group="{group}"'
 
 
 @dataclass
@@ -491,11 +483,11 @@ class MapEntryCompiler(FieldCompiler):
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
         betterproto_field_type = (
-            f"betterproto.map_field("
+            "betterproto.map_field("
             f"{self.proto_obj.number}, betterproto.{self.proto_k_type}, "
             f"betterproto.{self.proto_v_type})"
         )
-        return name + annotations + " = " + betterproto_field_type
+        return f"{name}{annotations} = {betterproto_field_type}"
 
     @property
     def annotation(self) -> str:
@@ -639,10 +631,7 @@ class ServiceMethodCompiler(ProtoContentBase):
 
     @property
     def route(self) -> str:
-        return (
-            f"/{self.output_file.package}."
-            f"{self.parent.proto_name}/{self.proto_name}"
-        )
+        return f"/{self.output_file.package}.{self.parent.proto_name}/{self.proto_name}"
 
     @property
     def py_input_message(self) -> Optional[MessageCompiler]:

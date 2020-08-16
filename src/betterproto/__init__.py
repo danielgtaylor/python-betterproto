@@ -26,7 +26,7 @@ from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
 
-if not (sys.version_info.major == 3 and sys.version_info.minor >= 7):
+if sys.version_info < (3, 7):
     # Apply backport of datetime.fromisoformat from 3.7
     from backports.datetime_fromisoformat import MonkeyPatch
 
@@ -979,8 +979,8 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Optional[Any]]
     """Return the name and value of a message's one-of field group."""
     field_name = message._group_current.get(group_name)
     if not field_name:
-        return ("", None)
-    return (field_name, getattr(message, field_name))
+        return "", None
+    return field_name, getattr(message, field_name)
 
 
 # Circular import workaround: google.protobuf depends on base classes defined above.
