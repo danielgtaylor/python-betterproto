@@ -116,7 +116,6 @@ def get_comment(
 ) -> str:
     pad = " " * indent
     for sci in proto_file.source_code_info.location:
-        # print(list(sci.path), path, file=sys.stderr)
         if list(sci.path) == path and sci.leading_comments:
             lines = textwrap.wrap(
                 sci.leading_comments.strip().replace("\n", ""), width=79 - indent,
@@ -251,8 +250,7 @@ class OutputTemplate:
 
 @dataclass
 class MessageCompiler(ProtoContentBase):
-    """Representation of a protobuf message.
-    """
+    """Representation of a protobuf message."""
 
     parent: Union["MessageCompiler", OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
@@ -296,8 +294,7 @@ class MessageCompiler(ProtoContentBase):
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
 ) -> bool:
-    """True if proto_field_obj is a map, otherwise False.
-    """
+    """True if proto_field_obj is a map, otherwise False."""
     if proto_field_obj.type == FieldDescriptorProto.TYPE_MESSAGE:
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
@@ -311,11 +308,8 @@ def is_map(
 
 
 def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
-    """True if proto_field_obj is a OneOf, otherwise False.
-    """
-    if proto_field_obj.HasField("oneof_index"):
-        return True
-    return False
+    """True if proto_field_obj is a OneOf, otherwise False."""
+    return proto_field_obj.HasField("oneof_index")
 
 
 @dataclass
@@ -393,8 +387,7 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def default_value_string(self) -> Union[Text, None, float, int]:
-        """Python representation of the default proto value.
-        """
+        """Python representation of the default proto value."""
         if self.repeated:
             return "[]"
         if self.py_type == "int":
@@ -657,7 +650,7 @@ class ServiceMethodCompiler(ProtoContentBase):
 
         Returns
         -------
-        Union[None, MessageCompiler]
+        Optional[MessageCompiler]
             Method instance representing the input message.
             If not input message could be found or there are no
             input messages, None is returned.
@@ -677,14 +670,13 @@ class ServiceMethodCompiler(ProtoContentBase):
 
     @property
     def py_input_message_type(self) -> str:
-        """String representation of the Python type correspoding to the
+        """String representation of the Python type corresponding to the
         input message.
 
         Returns
         -------
         str
-            String representation of the Python type correspoding to the
-        input message.
+            String representation of the Python type corresponding to the input message.
         """
         return get_type_reference(
             package=self.output_file.package,
@@ -694,14 +686,13 @@ class ServiceMethodCompiler(ProtoContentBase):
 
     @property
     def py_output_message_type(self) -> str:
-        """String representation of the Python type correspoding to the
+        """String representation of the Python type corresponding to the
         output message.
 
         Returns
         -------
         str
-            String representation of the Python type correspoding to the
-        output message.
+            String representation of the Python type corresponding to the output message.
         """
         return get_type_reference(
             package=self.output_file.package,
