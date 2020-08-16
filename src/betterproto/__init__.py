@@ -553,7 +553,8 @@ class Message(ABC):
 
     def __bool__(self) -> bool:
         return any(
-            getattr(self, field_name) for field_name in self._betterproto.meta_by_field_name
+            getattr(self, field_name)
+            for field_name in self._betterproto.meta_by_field_name
         )
 
     @property
