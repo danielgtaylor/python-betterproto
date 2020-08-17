@@ -43,7 +43,7 @@ from .models import (
 
 def traverse(
     proto_file: FieldDescriptorProto,
-) -> itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
+) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
     # Todo: Keep information about nested hierarchy
     def _traverse(
         path: List[int], items: List[Descriptor], prefix=""
