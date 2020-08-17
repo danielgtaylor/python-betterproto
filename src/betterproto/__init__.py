@@ -928,7 +928,7 @@ class Message(ABC):
                         v.from_dict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[field_name + ".value"]
+                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
                     for k in value[key]:
                         v[k] = cls().from_dict(value[key][k])
                 else:
