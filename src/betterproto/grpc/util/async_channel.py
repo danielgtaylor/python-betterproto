@@ -17,7 +17,6 @@ class ChannelDone(Exception):
     """
 
 
-
 class AsyncChannel(AsyncIterable[T]):
     """
     A buffered async channel for sending items between coroutines with FIFO ordering.
