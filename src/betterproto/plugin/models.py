@@ -355,8 +355,7 @@ class FieldCompiler(MessageCompiler):
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
         field_args = ", ".join(
-            ([""] + self.betterproto_field_args)
-            if self.betterproto_field_args else []
+            ([""] + self.betterproto_field_args) if self.betterproto_field_args else []
         )
         betterproto_field_type = (
             f"betterproto.{self.field_type}_field({self.proto_obj.number}"
@@ -510,10 +509,7 @@ class MapEntryCompiler(FieldCompiler):
 
     @property
     def betterproto_field_args(self) -> List[str]:
-        return [
-            f"betterproto.{self.proto_k_type}",
-            f"betterproto.{self.proto_v_type}"
-        ]
+        return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
 
     @property
     def field_type(self) -> str:
