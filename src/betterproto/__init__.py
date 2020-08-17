@@ -483,7 +483,7 @@ class ProtoClassMetadata:
                     ],
                     bases=(Message,),
                 )
-                field_cls[field.name + ".value"] = vt
+                field_cls[f"{field.name}.value"] = vt
             else:
                 field_cls[field.name] = cls._cls_for(field)
 
@@ -1008,8 +1008,8 @@ class _Duration(Duration):
         parts = str(delta.total_seconds()).split(".")
         if len(parts) > 1:
             while len(parts[1]) not in [3, 6, 9]:
-                parts[1] = parts[1] + "0"
-        return ".".join(parts) + "s"
+                parts[1] = f"{parts[1]}0"
+        return f"{'.'.join(parts)}s"
 
 
 class _Timestamp(Timestamp):
@@ -1025,15 +1025,15 @@ class _Timestamp(Timestamp):
         if (nanos % 1e9) == 0:
             # If there are 0 fractional digits, the fractional
             # point '.' should be omitted when serializing.
-            return result + "Z"
+            return f"{result}Z"
         if (nanos % 1e6) == 0:
             # Serialize 3 fractional digits.
-            return result + ".%03dZ" % (nanos / 1e6)
+            return f"{result}.{nanos / 1e6:3f}Z"
         if (nanos % 1e3) == 0:
             # Serialize 6 fractional digits.
-            return result + ".%06dZ" % (nanos / 1e3)
+            return f"{result}.{nanos / 1e3:6f}Z"
         # Serialize 9 fractional digits.
-        return result + ".%09dZ" % nanos
+        return f"{result}.{nanos:9f}Z"
 
 
 class _WrappedMessage(Message):
