@@ -9,8 +9,6 @@ class ChannelClosed(Exception):
     An exception raised on an attempt to send through a closed channel
     """
 
-    pass
-
 
 class ChannelDone(Exception):
     """
@@ -18,7 +16,6 @@ class ChannelDone(Exception):
     and empty.
     """
 
-    pass
 
 
 class AsyncChannel(AsyncIterable[T]):
