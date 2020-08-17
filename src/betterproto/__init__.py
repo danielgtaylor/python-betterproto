@@ -1028,12 +1028,12 @@ class _Timestamp(Timestamp):
             return f"{result}Z"
         if (nanos % 1e6) == 0:
             # Serialize 3 fractional digits.
-            return f"{result}.{nanos / 1e6:3f}Z"
+            return f"{result}.%03dZ" % (nanos / 1e6)
         if (nanos % 1e3) == 0:
             # Serialize 6 fractional digits.
-            return f"{result}.{nanos / 1e3:6f}Z"
+            return f"{result}.%06dZ" % (nanos / 1e3)
         # Serialize 9 fractional digits.
-        return f"{result}.{nanos:9f}Z"
+        return f"{result}.%09dZ" % nanos
 
 
 class _WrappedMessage(Message):
