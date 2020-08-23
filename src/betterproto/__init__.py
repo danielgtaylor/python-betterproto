@@ -751,7 +751,6 @@ class Message(ABC):
         self._serialized_on_wire = True
         proto_meta = self._betterproto
         for parsed in parse_fields(data):
-
             field_name = proto_meta.field_name_by_number.get(parsed.number)
             if not field_name:
                 self._unknown_fields += parsed.raw
