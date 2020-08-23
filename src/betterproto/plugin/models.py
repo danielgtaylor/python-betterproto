@@ -141,6 +141,7 @@ class ProtoContentBase:
 
     path: List[int]
     comment_indent: int = 4
+    parent: Union["Messsage", "OutputTemplate"]
 
     def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
@@ -338,6 +339,9 @@ class FieldCompiler(MessageCompiler):
         """Construct string representation of this field as a field."""
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
+        field_args = ", ".join(
+            ([""] + self.betterproto_field_args) if self.betterproto_field_args else []
+        )
         betterproto_field_type = (
             f"betterproto.{self.field_type}_field("
             f"{self.proto_obj.number}"
@@ -346,8 +350,11 @@ class FieldCompiler(MessageCompiler):
         return f"{name}{annotations} = {betterproto_field_type}"
 
     @property
-    def betterproto_field_args(self) -> str:
-        return f", wraps={self.field_wraps}" if self.field_wraps else ""
+    def betterproto_field_args(self) -> List[str]:
+        args = []
+        if self.field_wraps:
+            args.append(f"wraps={self.field_wraps}")
+        return args
 
     @property
     def field_wraps(self) -> Optional[str]:
@@ -447,10 +454,11 @@ class FieldCompiler(MessageCompiler):
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
     @property
-    def betterproto_field_args(self) -> str:
+    def betterproto_field_args(self) -> List[str]:
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
-        return f'{args}, group="{group}"'
+        args.append(f'group="{group}"')
+        return args
 
 
 @dataclass
@@ -478,16 +486,13 @@ class MapEntryCompiler(FieldCompiler):
                     self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
-    def get_field_string(self, indent: int = 4) -> str:
-        """Construct string representation of this field."""
-        name = f"{self.py_name}"
-        annotations = f": {self.annotation}"
-        betterproto_field_type = (
-            "betterproto.map_field("
-            f"{self.proto_obj.number}, betterproto.{self.proto_k_type}, "
-            f"betterproto.{self.proto_v_type})"
-        )
-        return f"{name}{annotations} = {betterproto_field_type}"
+    @property
+    def betterproto_field_args(self) -> List[str]:
+        return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+
+    @property
+    def field_type(self) -> str:
+        return "map"
 
     @property
     def annotation(self) -> str:
