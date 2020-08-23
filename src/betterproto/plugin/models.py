@@ -343,9 +343,7 @@ class FieldCompiler(MessageCompiler):
             ([""] + self.betterproto_field_args) if self.betterproto_field_args else []
         )
         betterproto_field_type = (
-            f"betterproto.{self.field_type}_field("
-            f"{self.proto_obj.number}"
-            f"{self.betterproto_field_args})"
+            f"betterproto.{self.field_type}_field({self.proto_obj.number}{field_args})"
         )
         return f"{name}{annotations} = {betterproto_field_type}"
 
