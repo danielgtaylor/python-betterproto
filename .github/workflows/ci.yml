@@ -72,3 +72,16 @@ jobs:
         run: poetry publish -n
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.pypi }}
+
+  check-docs:
+    runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-python@v2
+          with:
+            python-version: 3.7
+        - name: Install dependcies
+          run: pip install restructuredtext_lint
+        - name: Lint documentation for errors
+          run: rst-lint docs
