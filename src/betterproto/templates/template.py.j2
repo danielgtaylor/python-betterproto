@@ -15,6 +15,7 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 {% endif %}
 
 import betterproto
+from betterproto.utils import dataslots
 {% if output_file.services %}
 import grpclib
 {% endif %}
@@ -37,6 +38,7 @@ class {{ enum.py_name }}(betterproto.Enum):
 {% endfor %}
 {% endif %}
 {% for message in output_file.messages %}
+@dataslots
 @dataclass
 class {{ message.py_name }}(betterproto.Message):
     {% if message.comment %}
