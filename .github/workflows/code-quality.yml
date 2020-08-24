@@ -22,5 +22,4 @@ jobs:
     - name: Install rST dependcies
       run: pip install restructuredtext_lint
     - name: Lint documentation for errors
-      run: rst-lint docs
-
+      run: python3 -m rst-lint docs
