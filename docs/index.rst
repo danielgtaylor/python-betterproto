@@ -10,11 +10,15 @@ Features:
 ~~~~~~~~~
 
 - Generated messages are both binary & JSON serializable
-- Messages use relevant python types, e.g. ``Enum``, ``datetime`` and ``timedelta`` objects
+- Messages use relevant python types, e.g. ``Enum``, ``datetime`` and ``timedelta``
+  objects
 - ``async``/``await`` support for gRPC Clients
-- Relative imports, mocking protobuf package structure
-- Mypy type checkable with full type annotations
-- Modern idiomatic python naming conventions
+- Generates modern idiomatic python code
+  - Easy to understand and read due to the use of dataclasses
+  - Fully typed-hinted/annotated
+  - Looks like Python code built for Python rather than a 1:1 port of C++ or Java
+  - Standard snake case naming conventions and use of magic methods e.g.
+    :meth:`betteproto.Message.__bytes__()`
 
 Contents:
 ~~~~~~~~~
