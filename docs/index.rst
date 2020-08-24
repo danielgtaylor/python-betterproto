@@ -17,8 +17,7 @@ Features:
   - Easy to understand and read due to the use of dataclasses
   - Fully typed-hinted/annotated
   - Looks like Python code built for Python rather than a 1:1 port of C++ or Java
-  - Standard snake case naming conventions and use of magic methods e.g.
-    :meth:`betteproto.Message.__bytes__()`
+  - Standard snake case naming conventions and use of magic methods e.g. ``__bytes__``
 
 Contents:
 ~~~~~~~~~
