@@ -518,9 +518,11 @@ class Message(ABC):
             Calls :meth:`__bytes__`.
     """
 
-    _serialized_on_wire: bool
-    _unknown_fields: bytes
-    _group_current: Dict[str, str]
+    __slots__ = (
+        "_serialized_on_wire",
+        "_unknown_fields",
+        "_group_current",
+    )
 
     def __post_init__(self) -> None:
         # Keep track of whether every field was default
@@ -542,9 +544,9 @@ class Message(ABC):
                     group_current[meta.group] = field_name
 
         # Now that all the defaults are set, reset it!
-        self.__dict__["_serialized_on_wire"] = not all_sentinel
-        self.__dict__["_unknown_fields"] = b""
-        self.__dict__["_group_current"] = group_current
+        self._serialized_on_wire: bool = not all_sentinel
+        self._unknown_fields: bytes = b""
+        self._group_current: Dict[str, str] = group_current
 
     def __raw_get(self, name: str) -> Any:
         return super().__getattribute__(name)
@@ -593,7 +595,7 @@ class Message(ABC):
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
-            self.__dict__["_serialized_on_wire"] = True
+            self._serialized_on_wire = True
 
         if hasattr(self, "_group_current"):  # __post_init__ had already run
             if attr in self._betterproto.oneof_group_by_field:
