@@ -20,6 +20,7 @@ jobs:
         args: --check src/ tests/
 
     - name: Install rST dependcies
-      run: pip install restructuredtext_lint
+      run: pip install doc8
     - name: Lint documentation for errors
-      run: python3 rst-lint/cli.py docs
+      run: doc8 docs --max-line-length 88 --ignore-path-errors "docs/migrating.rst;D001"
+      # it has a table which is longer than 88 characters long
