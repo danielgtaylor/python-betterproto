@@ -64,6 +64,34 @@ jobs:
         shell: bash
         run: poetry run python -m tests.generate -v
 
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - uses: Gr1N/setup-poetry@v2
+      - name: Build package
+        run: poetry build
+      - name: Publish package to PyPI
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+        run: poetry publish -n
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.pypi }}
+
       - name: Execute test suite
         shell: bash
         run: poetry run pytest tests/
+
+  check-docs:
+    runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v2
+        - uses: actions/setup-python@v2
+          with:
+            python-version: 3.7
+        - name: Install dependcies
+          run: pip install restructuredtext_lint
+        - name: Lint documentation for errors
+          run: rst-lint docs
