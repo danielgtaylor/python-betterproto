@@ -556,7 +556,7 @@ class Message(ABC):
 
     def __bool__(self) -> bool:
         return any(
-            getattr(self, field_name)
+            self.__raw_get(field_name) is not PLACEHOLDER
             for field_name in self._betterproto.meta_by_field_name
         )
 
