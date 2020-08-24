@@ -37,7 +37,6 @@ This project exists because I am unhappy with the state of the official Google p
   - Uses `SerializeToString()` rather than the built-in `__bytes__()`
   - Special wrapped types don't use Python's `None`
   - Timestamp/duration types don't use Python's built-in `datetime` module
-
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
 ## Installation
@@ -126,7 +125,7 @@ Greeting(message="Hey!")
 
 The generated Protobuf `Message` classes are compatible with [grpclib](https://github.com/vmagamedov/grpclib) so you are free to use it if you like. That said, this project also includes support for async gRPC stub generation with better static type checking and code completion support. It is enabled by default.
 
-Given an example like:
+Given an example service definition:
 
 ```protobuf
 syntax = "proto3";
@@ -153,22 +152,37 @@ service Echo {
 }
 ```
 
-You can use it like so (enable async in the interactive shell first):
-
+A client can be implemented as follows:
 ```python
->>> import echo
->>> from grpclib.client import Channel
+import asyncio
+import echo
 
->>> channel = Channel(host="127.0.0.1", port=1234)
->>> service = echo.EchoStub(channel)
->>> await service.echo(value="hello", extra_times=1)
-EchoResponse(values=["hello", "hello"])
+from grpclib.client import Channel
 
->>> async for response in service.echo_stream(value="hello", extra_times=1)
+
+async def main():
+    channel = Channel(host="127.0.0.1", port=50051)
+    service = echo.EchoStub(channel)
+    response = await service.echo(value="hello", extra_times=1)
+    print(response)
+
+    async for response in service.echo_stream(value="hello", extra_times=1):
         print(response)
 
-EchoStreamResponse(value="hello")
-EchoStreamResponse(value="hello")
+    # don't forget to close the channel when done!
+    channel.close()
+
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+```
+which would output
+```python
+EchoResponse(values=['hello', 'hello'])
+EchoStreamResponse(value='hello')
+EchoStreamResponse(value='hello')
 ```
 
 ### JSON
@@ -314,10 +328,9 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 - [poetry](https://python-poetry.org/docs/#installation)
   *Needed to install dependencies in a virtual environment*
 
-- make ([ubuntu](https://www.howtoinstall.me/ubuntu/18-04/make/), [windows](https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows), [mac](https://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/))
-
-  *Needed to conveniently run development tasks.*
-  *Alternatively, manually run the commands defined in the [Makefile](./Makefile)*
+- [poethepoet](https://github.com/nat-n/poethepoet) for running development tasks as defined in pyproject.toml
+  - Can be installed to your host environment via `pip install poethepoet` then executed as simple `poe`
+  - or run from the poetry venv as `poetry run poe`
 
 ### Setup
 
@@ -330,8 +343,6 @@ poetry install
 poetry shell
 ```
 
-Run `make help` to see all available development tasks.
-
 ### Code style
 
 This project enforces [black](https://github.com/psf/black) python code formatting.
@@ -339,7 +350,7 @@ This project enforces [black](https://github.com/psf/black) python code formatti
 Before committing changes run:
 
 ```sh
-make format
+poe format
 ```
 
 To avoid merge conflicts later, non-black formatted python code will fail in CI.
@@ -373,15 +384,15 @@ Here's how to run the tests.
 
 ```sh
 # Generate assets from sample .proto files required by the tests
-make generate
+poe generate
 # Run the tests
-make test
+poe test
 ```
 
 To run tests as they are run in CI (with tox) run:
 
 ```sh
-make full-test
+poe full-test
 ```
 
 ### (Re)compiling Google Well-known Types
@@ -401,7 +412,6 @@ protoc \
     -I /usr/local/include/ \
     /usr/local/include/google/protobuf/*.proto
 ```
-
 
 ### TODO
 
