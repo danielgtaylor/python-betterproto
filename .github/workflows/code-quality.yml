@@ -9,8 +9,8 @@ on:
       - '**'
 
 jobs:
-  black:
-    name: Black
+  check-quailty:
+    name: Check code/doc quailty
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -18,3 +18,9 @@ jobs:
       uses: lgeiger/black-action@master
       with:
         args: --check src/ tests/
+
+    - name: Install rST dependcies
+      run: pip install restructuredtext_lint
+    - name: Lint documentation for errors
+      run: rst-lint docs
+
