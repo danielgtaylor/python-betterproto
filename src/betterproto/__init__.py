@@ -5,7 +5,7 @@ import json
 import struct
 import sys
 import typing
-from abc import ABC
+from abc import ABCMeta
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
 from typing import (
@@ -505,7 +505,54 @@ class ProtoClassMetadata:
         return field_cls
 
 
-class Message(ABC):
+class MessageMeta(ABCMeta):
+    """Meta class for all messages.
+
+    Abstracts away any @dataclass decorators with a custom specialized dataclass
+    implementation for generated messages, mixes in a dataslots implementation as well
+    for __slot__ed classes with relatively low overhead.
+    """
+
+    def __new__(mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]):
+        # constants for all Messages
+        INIT = False
+        REPR = False
+        EQ = False
+        ORDER = False
+        UNSAFE_HASH = False
+        FROZEN = False
+
+        annotations = attrs.get("__annotations__", {})
+        attrs["__slots__"] = (tuple(annotations)) + attrs.get("__slots__", ())
+        # slot the class
+        # TODO check works for none dataclass subclasses
+
+        fields = {}
+        for annotation, type in annotations.items():
+            field = attrs.pop(annotation, None)
+            # field class variables from the class namespace
+            if field is not None:
+                field.name = annotation
+                field.type = type
+                field._field_type = dataclasses._FIELD
+                fields[annotation] = field
+
+        message_class = super().__new__(mcs, name, bases, attrs)
+
+        # set __dataclass_fields__
+        setattr(
+            message_class, dataclasses._FIELDS, fields,
+        )
+        # set __dataclass_params__
+        setattr(
+            message_class,
+            dataclasses._PARAMS,
+            dataclasses._DataclassParams(INIT, REPR, EQ, ORDER, UNSAFE_HASH, FROZEN),
+        )
+        return message_class
+
+
+class Message(metaclass=MessageMeta):
     """
     The base class for protobuf messages, all generated messages will inherit from
     this. This class registers the message fields which are used by the serializers and
@@ -524,7 +571,18 @@ class Message(ABC):
         "_group_current",
     )
 
-    def __post_init__(self) -> None:
+    def __init__(self, **kwargs: Any) -> None:
+        for field in getattr(self, dataclasses._FIELDS).values():
+            # have to set these here to allow for them to be editable
+            setattr(self, field.name, field.default)
+
+        for key, value in kwargs.items():
+            if key not in self.__annotations__:
+                raise TypeError(
+                    f"__init__() got an unexpected keyword argument '{key}'"
+                )
+            super().__setattr__(key, value)
+
         # Keep track of whether every field was default
         all_sentinel = True
 
@@ -597,7 +655,7 @@ class Message(ABC):
             # Track when a field has been set.
             self._serialized_on_wire = True
 
-        if hasattr(self, "_group_current"):  # __post_init__ had already run
+        if hasattr(self, "_group_current"):  # __init__ had already run
             if attr in self._betterproto.oneof_group_by_field:
                 group = self._betterproto.oneof_group_by_field[attr]
                 for field in self._betterproto.oneof_field_by_group[group]:
