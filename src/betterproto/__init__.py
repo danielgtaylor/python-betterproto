@@ -540,10 +540,6 @@ class MessageMeta(ABCMeta):
         setattr(
             message_class, dataclasses._FIELDS, fields,
         )
-        # set __dataclass_params__ (for now I don't think we need them)
-        setattr(
-            message_class, dataclasses._PARAMS, fields,
-        )
         # we don't need to set __dataclass_params__ as its only use appears to be for
         # checking if any base classes are frozen
         return message_class
@@ -573,16 +569,15 @@ class Message(metaclass=MessageMeta):
     )
 
     def __init__(self, **kwargs: Any) -> None:
-        set_attribute = super().__setattr__
-        # Keep track of whether every field was default
-        all_sentinel = True
+        set_attribute = super().__setattr__  # Save a super() call every time
+        all_sentinel = True  # Keep track of whether every field was default
         group_current: Dict[str, str] = {}
 
         for field in getattr(self, dataclasses._FIELDS).values():
             # have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
-        for key, value in kwargs.items():
+        for key, value in kwargs.items():  # TODO add support for singular arg calls
             if key not in self.__annotations__:
                 raise TypeError(
                     f"__init__() got an unexpected keyword argument '{key}'"
