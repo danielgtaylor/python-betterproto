@@ -565,6 +565,10 @@ class Message(metaclass=MessageMeta):
             Calls :meth:`__bytes__`.
     """
 
+    _serialized_on_wire: bool
+    _unknown_fields: bytes
+    _group_current: Dict[str, str]
+
     __slots__ = (
         "_serialized_on_wire",
         "_unknown_fields",
@@ -602,9 +606,9 @@ class Message(metaclass=MessageMeta):
                     group_current[meta.group] = field_name
 
         # Now that all the defaults are set, reset it!
-        self._serialized_on_wire: bool = not all_sentinel
-        self._unknown_fields: bytes = b""
-        self._group_current: Dict[str, str] = group_current
+        self._serialized_on_wire = not all_sentinel
+        self._unknown_fields = b""
+        self._group_current = group_current
 
     def __raw_get(self, name: str) -> Any:
         return super().__getattribute__(name)
