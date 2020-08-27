@@ -596,7 +596,6 @@ class Message(metaclass=MessageMeta):
         self._group_current = group_current
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        print("setting", attr)
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
             self._serialized_on_wire = True
