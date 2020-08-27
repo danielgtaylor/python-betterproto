@@ -551,6 +551,10 @@ class Message(metaclass=MessageMeta):
     to go between Python, binary and JSON protobuf message representations.
     """
 
+    _serialized_on_wire: bool
+    _unknown_fields: bytes
+    _group_current: Dict[str, str]
+
     __slots__ = (
         "_serialized_on_wire",
         "_unknown_fields",
@@ -591,9 +595,9 @@ class Message(metaclass=MessageMeta):
             setattr(self, field_name, self._get_field_default(field_name))
 
         # Now that all the defaults are set, reset it!
-        self._serialized_on_wire: bool = not all_sentinel
-        self._unknown_fields: bytes = b""
-        self._group_current: Dict[str, str] = group_current
+        self._serialized_on_wire = not all_sentinel
+        self._unknown_fields = b""
+        self._group_current = group_current
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
