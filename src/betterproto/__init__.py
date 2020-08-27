@@ -14,6 +14,7 @@ from typing import (
     Dict,
     Generator,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -505,15 +506,11 @@ class MessageMeta(ABCMeta):
     for __slot__ed classes with relatively low overhead.
     """
 
-    def __new__(mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]):
-        # constants for all Messages
-        INIT = False
-        REPR = False
-        EQ = False
-        ORDER = False
-        UNSAFE_HASH = False
-        FROZEN = False
+    __dataclass_fields__: Mapping[str, Any]
 
+    def __new__(
+        mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]
+    ) -> "Message":
         annotations = attrs.get("__annotations__", {})
         attrs["__slots__"] = tuple(annotations) + attrs.get("__slots__", ())
         # slot the class
@@ -522,25 +519,21 @@ class MessageMeta(ABCMeta):
         fields = {}
         for annotation, type in annotations.items():
             field = attrs.pop(annotation, None)
-            # field class variables from the class namespace
+            # remove field class variables from the class namespace
             if field is not None:
                 field.name = annotation
                 field.type = type
                 field._field_type = dataclasses._FIELD
                 fields[annotation] = field
 
-        message_class = super().__new__(mcs, name, bases, attrs)
+        message_class: "Message" = super().__new__(mcs, name, bases, attrs)
 
         # set __dataclass_fields__
         setattr(
             message_class, dataclasses._FIELDS, fields,
         )
-        # set __dataclass_params__
-        setattr(
-            message_class,
-            dataclasses._PARAMS,
-            dataclasses._DataclassParams(INIT, REPR, EQ, ORDER, UNSAFE_HASH, FROZEN),
-        )
+        # we don't need to set __dataclass_params__ as its only use appears to be for
+        # checking if any base clasess are frozen
         return message_class
 
 
