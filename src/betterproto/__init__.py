@@ -532,8 +532,11 @@ class MessageMeta(ABCMeta):
         setattr(
             message_class, dataclasses._FIELDS, fields,
         )
+        setattr(
+            message_class, dataclasses._PARAMS, fields,
+        )
         # we don't need to set __dataclass_params__ as its only use appears to be for
-        # checking if any base clasess are frozen
+        # checking if any base classes are frozen
         return message_class
 
 
@@ -593,6 +596,7 @@ class Message(metaclass=MessageMeta):
         self._group_current = group_current
 
     def __setattr__(self, attr: str, value: Any) -> None:
+        print("setting", attr)
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
             self._serialized_on_wire = True
