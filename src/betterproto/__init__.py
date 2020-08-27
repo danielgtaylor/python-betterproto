@@ -515,7 +515,7 @@ class MessageMeta(ABCMeta):
         FROZEN = False
 
         annotations = attrs.get("__annotations__", {})
-        attrs["__slots__"] = (tuple(annotations)) + attrs.get("__slots__", ())
+        attrs["__slots__"] = tuple(annotations) + attrs.get("__slots__", ())
         # slot the class
         # TODO check works for none dataclass subclasses
 
