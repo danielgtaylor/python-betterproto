@@ -540,6 +540,7 @@ class MessageMeta(ABCMeta):
         setattr(
             message_class, dataclasses._FIELDS, fields,
         )
+        # set __dataclass_params__ (for now I don't think we need them)
         setattr(
             message_class, dataclasses._PARAMS, fields,
         )
@@ -572,22 +573,23 @@ class Message(metaclass=MessageMeta):
     )
 
     def __init__(self, **kwargs: Any) -> None:
+        set_attribute = super().__setattr__
+        # Keep track of whether every field was default
+        all_sentinel = True
+        group_current: Dict[str, str] = {}
+
         for field in getattr(self, dataclasses._FIELDS).values():
             # have to set these here to allow for them to be editable
-            setattr(self, field.name, field.default)
+            set_attribute(field.name, field.default)
 
         for key, value in kwargs.items():
             if key not in self.__annotations__:
                 raise TypeError(
                     f"__init__() got an unexpected keyword argument '{key}'"
                 )
-            super().__setattr__(key, value)
+            set_attribute(key, value)
 
-        # Keep track of whether every field was default
-        all_sentinel = True
-
-        # Set current field of each group after `__init__` has already been run.
-        group_current: Dict[str, Optional[str]] = {}
+        # TODO optimization: could this be merged with above iter somehow?
         for field_name, meta in self._betterproto.meta_by_field_name.items():
 
             if meta.group:
@@ -602,9 +604,9 @@ class Message(metaclass=MessageMeta):
                     group_current[meta.group] = field_name
 
         # Now that all the defaults are set, reset it!
-        self._serialized_on_wire = not all_sentinel
-        self._unknown_fields = b""
-        self._group_current = group_current
+        set_attribute("_serialized_on_wire", not all_sentinel)
+        set_attribute("_unknown_fields", b"")
+        set_attribute("_group_current", group_current)
 
     def __raw_get(self, name: str) -> Any:
         return super().__getattribute__(name)
