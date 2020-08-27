@@ -52,11 +52,11 @@ class {{ message.py_name }}(betterproto.Message):
     {% endif %}
 
     {% if message.deprecated or message.deprecated_fields %}
-    def __post_init__(self) -> None:
+    def __init__(self) -> None:
         {% if message.deprecated %}
         warnings.warn("{{ message.py_name }} is deprecated", DeprecationWarning)
         {% endif %}
-        super().__post_init__()
+        super().__init__()
         {% for field in message.deprecated_fields %}
         if self.{{ field }}:
             warnings.warn("{{ message.py_name }}.{{ field }} is deprecated", DeprecationWarning)
@@ -80,7 +80,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
                                             Optional[{{ field.annotation }}]
                                          {%- else -%}
                                             {{ field.annotation }}
-                                         {%- endif -%} = 
+                                         {%- endif -%} =
                                             {%- if field.py_name not in method.mutable_default_args -%}
                                                 {{ field.default_value_string }}
                                             {%- else -%}
