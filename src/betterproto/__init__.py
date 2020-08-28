@@ -506,8 +506,6 @@ class MessageMeta(ABCMeta):
     for __slot__ed classes with relatively low overhead.
     """
 
-    __dataclass_fields__: Mapping[str, Any]
-
     def __new__(
         mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]
     ) -> "Message":
@@ -547,6 +545,7 @@ class Message(metaclass=MessageMeta):
     _serialized_on_wire: bool
     _unknown_fields: bytes
     _group_current: Dict[str, str]
+    __dataclass_fields__: Mapping[Dict[str, dataclasses.Field]]
 
     __slots__ = (
         "_serialized_on_wire",
@@ -596,7 +595,7 @@ class Message(metaclass=MessageMeta):
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
-            self._serialized_on_wire = True
+            super().__setattr__("_serialized_on_wire", True)
 
         if hasattr(self, "_group_current"):  # __init__ had already run
             if attr in self._betterproto.oneof_group_by_field:
