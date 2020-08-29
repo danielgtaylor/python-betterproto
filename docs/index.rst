@@ -15,7 +15,7 @@ Features:
 - ``async``/``await`` support for gRPC Clients
 - Generates modern idiomatic python code
   - Easy to understand and read due to the use of dataclasses
-  - Fully typed-hinted/annotated
+  - Complete type annotations
   - Looks like Python code built for Python rather than a 1:1 port of C++ or Java
   - Standard snake case naming conventions and use of magic methods e.g. ``__bytes__``
 
