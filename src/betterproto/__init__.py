@@ -562,20 +562,11 @@ class Message(metaclass=MessageMeta):
             # have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
-        for key, value in kwargs.items():  # TODO add support for singular arg calls
-            if key not in self.__annotations__:
-                raise TypeError(
-                    f"__init__() got an unexpected keyword argument '{key}'"
-                )
-            set_attribute(key, value)
-
-        # TODO optimization: could this be merged with above iter somehow?
         for field_name, meta in self._betterproto.meta_by_field_name.items():
+            if field_name in kwargs:
+                set_attribute(field_name, kwargs[field_name])
+                del kwargs[field_name]
 
-            if meta.group:
-                group_current.setdefault(meta.group)
-
-            if getattr(self, field_name) != PLACEHOLDER:
                 # Skip anything not set to the sentinel value
                 all_sentinel = False
 
@@ -585,7 +576,15 @@ class Message(metaclass=MessageMeta):
 
                 continue
 
+            if meta.group:
+                group_current.setdefault(meta.group)
+
             setattr(self, field_name, self._get_field_default(field_name))
+
+        if kwargs:
+            raise TypeError(
+                f"__init__() got unexpected keyword argument(s) '{list(kwargs.keys())}'"
+            )
 
         # Now that all the defaults are set, reset it!
         set_attribute("_serialized_on_wire", not all_sentinel)
