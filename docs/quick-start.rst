@@ -16,7 +16,7 @@ If you are using Windows, then the following should be used instead:
 
     py -3 -m pip install -U betterproto
 
-To get compiling support, you should use betterproto[compiler] instead of betterproto,
+To include the protoc plugin, install betterproto[compiler] instead of betterproto,
 e.g.
 
 .. code-block:: sh
