@@ -61,14 +61,9 @@ Then to use it:
 
     >>> bytes(test)
     b'\n\x04Hey!'
-
     >>> Greeting().parse(serialized)
     Greeting(message="Hey!")
 
-    >>> another.to_dict()
-    {"message": "Hey!"}
-    >>> another.to_json(indent=2)
-    '{\n  "message": "Hey!"\n}'
 
 Async gRPC Support
 ++++++++++++++++++
@@ -136,13 +131,10 @@ The generated client can be used like so:
 
 JSON
 ++++
-Both serializing and parsing are supported to/from JSON and Python
-dictionaries using the following methods:
-
-Dictionaries: :meth:`betterproto.Message.to_dict`, :meth:`betterproto.Message.from_dict`
-
-JSON: :meth:`betterproto.Message.to_json`, :meth:`betterproto.Message.from_json`
-
+Message objects include :meth:`betterproto.Message.to_json` and
+:meth:`betterproto.Message.from_json` methods for JSON (de)serialisation, and
+:meth:`betterproto.Message.to_dict`, :meth:`betterproto.Message.from_dict` for
+converting back and forth from JSON serializable dicts.
 
 For compatibility the default is to convert field names to
 :attr:`betterproto.Casing.CAMEL`. You can control this behavior by passing a
@@ -150,4 +142,20 @@ different casing value, e.g:
 
 .. code-block:: python
 
-    MyMessage().to_dict(casing=betterproto.Casing.SNAKE)
+    @dataclass
+    class MyMessage(betterproto.Message):
+        a_long_field_name: str = betterproto.string_field(1)
+
+
+    >>> test = MyMessage(a_long_field_name="Hello World!")
+    >>> test.to_dict(betterproto.Casing.SNAKE)
+    {"a_long_field_name": "Hello World!"}
+    >>> test.to_dict(betterproto.Casing.CAMEL)
+    {"aLongFieldName": "Hello World!"}
+
+    >>> test.to_json(indent=2)
+    '{\n  "aLongFieldName": "Hello World!"\n}'
+
+    >>> test.from_dict({"aLongFieldName": "Goodbye World!"})
+    >>> test.a_long_field_name
+    "Goodbye World!"
