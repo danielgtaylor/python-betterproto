@@ -491,13 +491,17 @@ class ProtoClassMetadata:
                 assert meta.map_types
                 kt = cls._cls_for(field, index=0)
                 vt = cls._cls_for(field, index=1)
-                field_cls[field.name] = dataclasses.make_dataclass(
+                field_cls[field.name] = MessageMeta(
                     "Entry",
-                    [
-                        ("key", kt, dataclass_field(1, meta.map_types[0])),
-                        ("value", vt, dataclass_field(2, meta.map_types[1])),
-                    ],
-                    bases=(Message,),
+                    (Message,),
+                    {
+                        "__annotations__": {
+                            "key": kt,
+                            "value": vt,
+                        },
+                        "key": dataclass_field(1, meta.map_types[0]),
+                        "value": dataclass_field(2, meta.map_types[1]),
+                    }
                 )
                 field_cls[f"{field.name}.value"] = vt
             else:
@@ -506,7 +510,7 @@ class ProtoClassMetadata:
         return field_cls
 
 
-class MessageMeta(ABCMeta):
+class MessageMeta(type):
     """Meta class for all messages.
 
     Abstracts away any @dataclass decorators with a custom specialized dataclass
@@ -567,7 +571,8 @@ class Message(metaclass=MessageMeta):
         "_group_current",
     )
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, *args, **kwargs: Any) -> None:
+        args = list(args)
         set_attribute = super().__setattr__  # Save a super() call every time
         all_sentinel = True  # Keep track of whether every field was default
         group_current: Dict[str, str] = {}
@@ -576,7 +581,15 @@ class Message(metaclass=MessageMeta):
             # have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
+        for i, (field_name, meta) in enumerate(
+            self._betterproto.meta_by_field_name.items()
+        ):
+            if args:
+                try:
+                    kwargs[field_name] = args.pop(i)
+                    # pretend it is a kwarg to save on duplication
+                except IndexError:
+                    pass
             if field_name in kwargs:
                 set_attribute(field_name, kwargs[field_name])
                 del kwargs[field_name]
