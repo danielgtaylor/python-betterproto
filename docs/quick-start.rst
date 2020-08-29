@@ -105,7 +105,7 @@ Given an example service definition similar to the one below:
       rpc EchoStream(EchoRequest) returns (stream EchoStreamResponse);
     }
 
-You can then implement a client like so:
+The generated client can be used like so:
 
 .. code-block:: python
 
