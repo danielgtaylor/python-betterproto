@@ -11,7 +11,6 @@ on:
 jobs:
   check-formatting:
     name: Check code/doc formatting
-    name: Check code/doc quailty
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
