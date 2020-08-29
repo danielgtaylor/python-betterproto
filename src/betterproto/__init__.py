@@ -510,8 +510,8 @@ class Message(ABC):
         group_current: Dict[str, Optional[str]] = {}
         for field_name, meta in self._betterproto.meta_by_field_name.items():
 
-            if meta.group and group_current.get(meta.group) is None:
-                group_current[meta.group] = None
+            if meta.group:
+                group_current.setdefault(meta.group)
 
             if getattr(self, field_name) != PLACEHOLDER:
                 # Skip anything not set to the sentinel value
