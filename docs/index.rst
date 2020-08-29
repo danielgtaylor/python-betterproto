@@ -13,11 +13,7 @@ Features:
 - Messages use relevant python types, e.g. ``Enum``, ``datetime`` and ``timedelta``
   objects
 - ``async``/``await`` support for gRPC Clients
-- Generates modern idiomatic python code
-  - Easy to understand and read due to the use of dataclasses
-  - Complete type annotations
-  - Looks like Python code built for Python rather than a 1:1 port of C++ or Java
-  - Standard snake case naming conventions and use of magic methods e.g. ``__bytes__``
+- Generates modern, readable, idiomatic python code
 
 Contents:
 ~~~~~~~~~
