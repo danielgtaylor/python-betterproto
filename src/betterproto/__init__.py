@@ -559,7 +559,7 @@ class Message(metaclass=MessageMeta):
     _serialized_on_wire: bool
     _unknown_fields: bytes
     _group_current: Dict[str, str]
-    __dataclass_fields__: Mapping[Dict[str, dataclasses.Field]]
+    __dataclass_fields__: Mapping[str, dataclasses.Field]  # technically should be Final
 
     __slots__ = (
         "_serialized_on_wire",
