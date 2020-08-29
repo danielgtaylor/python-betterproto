@@ -1,6 +1,27 @@
 Getting Started
 ===============
 
+Installation
+++++++++++++
+
+Installation from PyPI is as simple as running:
+
+.. code-block:: sh
+
+    python3 -m pip install -U betterproto
+
+If you are using Windows, then the following should be used instead:
+
+.. code-block:: sh
+
+    py -3 -m pip install -U betterproto
+
+To get compiling support, you should use betterproto[compiler] instead of betterproto,
+e.g.
+
+.. code-block:: sh
+
+    python3 -m pip install -U "betterproto[compiler]"
 
 Compiling proto files
 +++++++++++++++++++++
