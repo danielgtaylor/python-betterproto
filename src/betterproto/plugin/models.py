@@ -118,7 +118,7 @@ def get_comment(
     for sci in proto_file.source_code_info.location:
         if list(sci.path) == path and sci.leading_comments:
             lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""), width=79 - indent,
+                sci.leading_comments.strip().replace("\n", ""), width=79 - indent
             )
 
             if path[-2] == 2 and path[-4] != 6:
@@ -176,7 +176,7 @@ class ProtoContentBase:
         for this object.
         """
         return get_comment(
-            proto_file=self.proto_file, path=self.path, indent=self.comment_indent,
+            proto_file=self.proto_file, path=self.path, indent=self.comment_indent
         )
 
 
@@ -474,10 +474,10 @@ class MapEntryCompiler(FieldCompiler):
                 if nested.options.map_entry:
                     # Get Python types
                     self.py_k_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[0],  # key
+                        parent=self, proto_obj=nested.field[0]  # key
                     ).py_type
                     self.py_v_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[1],  # value
+                        parent=self, proto_obj=nested.field[1]  # value
                     ).py_type
                     # Get proto types
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)

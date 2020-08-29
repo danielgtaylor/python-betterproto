@@ -36,7 +36,7 @@ def parse_source_type_name(field_type_name: str) -> Tuple[str, str]:
 
 
 def get_type_reference(
-    package: str, imports: set, source_type: str, unwrap: bool = True,
+    package: str, imports: set, source_type: str, unwrap: bool = True
 ) -> str:
     """
     Return a Python type name for a proto type reference. Adds the import if

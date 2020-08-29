@@ -170,9 +170,9 @@ def read_protobuf_service(
     service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
 ) -> None:
     service_data = ServiceCompiler(
-        parent=output_package, proto_obj=service, path=[6, index],
+        parent=output_package, proto_obj=service, path=[6, index]
     )
     for j, method in enumerate(service.method):
         ServiceMethodCompiler(
-            parent=service_data, proto_obj=method, path=[6, index, 2, j],
+            parent=service_data, proto_obj=method, path=[6, index, 2, j]
         )

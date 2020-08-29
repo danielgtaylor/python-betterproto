@@ -69,9 +69,7 @@ class AsyncChannel(AsyncIterable[T]):
         or immediately if no source is provided.
     """
 
-    def __init__(
-        self, *, buffer_limit: int = 0, close: bool = False,
-    ):
+    def __init__(self, *, buffer_limit: int = 0, close: bool = False):
         self._queue: asyncio.Queue[Union[T, object]] = asyncio.Queue(buffer_limit)
         self._closed = False
         self._waiting_receivers: int = 0
