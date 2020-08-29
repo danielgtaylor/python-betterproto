@@ -130,7 +130,7 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
         # print(list(sci.path), path, file=sys.stderr)
         if list(sci.path) == path and sci.leading_comments:
             lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""), width=79 - indent,
+                sci.leading_comments.strip().replace("\n", ""), width=79 - indent
             )
 
             if path[-2] == 2 and path[-4] != 6:
@@ -188,7 +188,7 @@ class ProtoContentBase:
         for this object.
         """
         return get_comment(
-            proto_file=self.proto_file, path=self.path, indent=self.comment_indent,
+            proto_file=self.proto_file, path=self.path, indent=self.comment_indent
         )
 
 
@@ -263,8 +263,7 @@ class OutputTemplate:
 
 @dataclass
 class MessageCompiler(ProtoContentBase):
-    """Representation of a protobuf message.
-    """
+    """Representation of a protobuf message."""
 
     parent: Union["MessageCompiler", OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
@@ -308,8 +307,7 @@ class MessageCompiler(ProtoContentBase):
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
 ) -> bool:
-    """True if proto_field_obj is a map, otherwise False.
-    """
+    """True if proto_field_obj is a map, otherwise False."""
     if proto_field_obj.type == FieldDescriptorProto.TYPE_MESSAGE:
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
@@ -323,8 +321,7 @@ def is_map(
 
 
 def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
-    """True if proto_field_obj is a OneOf, otherwise False.
-    """
+    """True if proto_field_obj is a OneOf, otherwise False."""
     if proto_field_obj.HasField("oneof_index"):
         return True
     return False
@@ -375,8 +372,7 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def field_wraps(self) -> Union[str, None]:
-        """Returns betterproto wrapped field type or None.
-        """
+        """Returns betterproto wrapped field type or None."""
         match_wrapper = re.match(
             r"\.google\.protobuf\.(.+)Value", self.proto_obj.type_name
         )
@@ -409,8 +405,7 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def default_value_string(self) -> Union[Text, None, float, int]:
-        """Python representation of the default proto value.
-        """
+        """Python representation of the default proto value."""
         if self.repeated:
             return "[]"
         if self.py_type == "int":
@@ -499,10 +494,10 @@ class MapEntryCompiler(FieldCompiler):
                 if nested.options.map_entry:
                     # Get Python types
                     self.py_k_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[0],  # key
+                        parent=self, proto_obj=nested.field[0]  # key
                     ).py_type
                     self.py_v_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[1],  # value
+                        parent=self, proto_obj=nested.field[1]  # value
                     ).py_type
                     # Get proto types
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
