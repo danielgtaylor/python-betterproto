@@ -9,7 +9,8 @@ on:
       - '**'
 
 jobs:
-  check-quailty:
+  check-formatting:
+    name: Check code/doc formatting
     name: Check code/doc quailty
     runs-on: ubuntu-latest
     steps:
