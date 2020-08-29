@@ -570,7 +570,7 @@ class Message(ABC):
                         self._group_current[group] = field.name
                     else:
                         super().__setattr__(
-                            field.name, self._get_field_default(field.name),
+                            field.name, self._get_field_default(field.name)
                         )
 
         super().__setattr__(attr, value)
@@ -928,7 +928,7 @@ class Message(ABC):
                         field_name=field_name, meta=meta
                     )
                 ):
-                    output[cased_name] = value.to_dict(casing, include_default_values,)
+                    output[cased_name] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == "map":
                 for k in value:
                     if hasattr(value[k], "to_dict"):
