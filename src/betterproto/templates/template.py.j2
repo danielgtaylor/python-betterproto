@@ -52,11 +52,11 @@ class {{ message.py_name }}(betterproto.Message):
     {% endif %}
 
     {% if message.deprecated or message.deprecated_fields %}
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         {% if message.deprecated %}
         warnings.warn("{{ message.py_name }} is deprecated", DeprecationWarning)
         {% endif %}
-        super().__init__()
+        super().__init__(**kwargs)
         {% for field in message.deprecated_fields %}
         if self.{{ field }}:
             warnings.warn("{{ message.py_name }}.{{ field }} is deprecated", DeprecationWarning)
