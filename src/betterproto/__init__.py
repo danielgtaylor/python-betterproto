@@ -493,7 +493,7 @@ class ProtoClassMetadata:
                         },
                         "key": dataclass_field(1, meta.map_types[0]),
                         "value": dataclass_field(2, meta.map_types[1]),
-                    }
+                    },
                 )
                 field_cls[field.name + ".value"] = vt
             else:
@@ -531,9 +531,7 @@ class MessageMeta(type):
         message_class: "Message" = super().__new__(mcs, name, bases, attrs)
 
         # set __dataclass_fields__
-        setattr(
-            message_class, dataclasses._FIELDS, fields,
-        )
+        setattr(message_class, dataclasses._FIELDS, fields)
         # we don't need to set __dataclass_params__ as its only use appears to be for
         # checking if any base classes are frozen
         return message_class
@@ -617,7 +615,7 @@ class Message(metaclass=MessageMeta):
                         self._group_current[group] = field.name
                     else:
                         super().__setattr__(
-                            field.name, self._get_field_default(field.name),
+                            field.name, self._get_field_default(field.name)
                         )
 
         super().__setattr__(attr, value)
@@ -925,7 +923,7 @@ class Message(metaclass=MessageMeta):
                         field_name=field_name, meta=meta
                     )
                 ):
-                    output[cased_name] = value.to_dict(casing, include_default_values,)
+                    output[cased_name] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == "map":
                 for k in value:
                     if hasattr(value[k], "to_dict"):
