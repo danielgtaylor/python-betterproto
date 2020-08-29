@@ -1,14 +1,11 @@
 import betterproto
-from dataclasses import dataclass
 from typing import Optional, List, Dict
 
 
 def test_has_field():
-    @dataclass
     class Bar(betterproto.Message):
         baz: int = betterproto.int32_field(1)
 
-    @dataclass
     class Foo(betterproto.Message):
         bar: Bar = betterproto.message_field(1)
 
@@ -32,7 +29,6 @@ def test_has_field():
     foo.bar = Bar()
     assert betterproto.serialized_on_wire(foo.bar) is False
 
-    @dataclass
     class WithCollections(betterproto.Message):
         test_list: List[str] = betterproto.string_field(1)
         test_map: Dict[str, str] = betterproto.map_field(
@@ -41,23 +37,21 @@ def test_has_field():
 
     # Is always set from parse, even if all collections are empty
     with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == True
+    assert betterproto.serialized_on_wire(with_collections_empty)
     with_collections_list = WithCollections().parse(
         bytes(WithCollections(test_list=["a", "b", "c"]))
     )
-    assert betterproto.serialized_on_wire(with_collections_list) == True
+    assert betterproto.serialized_on_wire(with_collections_list)
     with_collections_map = WithCollections().parse(
         bytes(WithCollections(test_map={"a": "b", "c": "d"}))
     )
-    assert betterproto.serialized_on_wire(with_collections_map) == True
+    assert betterproto.serialized_on_wire(with_collections_map)
 
 
 def test_class_init():
-    @dataclass
     class Bar(betterproto.Message):
         name: str = betterproto.string_field(1)
 
-    @dataclass
     class Foo(betterproto.Message):
         name: str = betterproto.string_field(1)
         child: Bar = betterproto.message_field(2)
@@ -72,7 +66,6 @@ def test_enum_as_int_json():
         ZERO = 0
         ONE = 1
 
-    @dataclass
     class Foo(betterproto.Message):
         bar: TestEnum = betterproto.enum_field(1)
 
@@ -86,13 +79,11 @@ def test_enum_as_int_json():
 
 
 def test_unknown_fields():
-    @dataclass
     class Newer(betterproto.Message):
         foo: bool = betterproto.bool_field(1)
         bar: int = betterproto.int32_field(2)
         baz: str = betterproto.string_field(3)
 
-    @dataclass
     class Older(betterproto.Message):
         foo: bool = betterproto.bool_field(1)
 
@@ -108,11 +99,9 @@ def test_unknown_fields():
 
 
 def test_oneof_support():
-    @dataclass
     class Sub(betterproto.Message):
         val: int = betterproto.int32_field(1)
 
-    @dataclass
     class Foo(betterproto.Message):
         bar: int = betterproto.int32_field(1, group="group1")
         baz: str = betterproto.string_field(2, group="group1")
@@ -153,7 +142,6 @@ def test_oneof_support():
 
 
 def test_json_casing():
-    @dataclass
     class CasingTest(betterproto.Message):
         pascal_case: int = betterproto.int32_field(1)
         camel_case: int = betterproto.int32_field(2)
@@ -184,7 +172,6 @@ def test_json_casing():
 
 
 def test_optional_flag():
-    @dataclass
     class Request(betterproto.Message):
         flag: Optional[bool] = betterproto.message_field(1, wraps=betterproto.TYPE_BOOL)
 
@@ -199,7 +186,6 @@ def test_optional_flag():
 
 
 def test_to_dict_default_values():
-    @dataclass
     class TestMessage(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
@@ -229,7 +215,6 @@ def test_to_dict_default_values():
     }
 
     # Some default and some other values
-    @dataclass
     class TestMessage2(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
@@ -265,11 +250,9 @@ def test_to_dict_default_values():
     }
 
     # Nested messages
-    @dataclass
     class TestChildMessage(betterproto.Message):
         some_other_int: int = betterproto.int32_field(1)
 
-    @dataclass
     class TestParentMessage(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
@@ -285,7 +268,6 @@ def test_to_dict_default_values():
 
 
 def test_oneof_default_value_set_causes_writes_wire():
-    @dataclass
     class Foo(betterproto.Message):
         bar: int = betterproto.int32_field(1, group="group1")
         baz: str = betterproto.string_field(2, group="group1")
