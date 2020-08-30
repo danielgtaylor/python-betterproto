@@ -529,26 +529,25 @@ class Message(ABC):
     def __raw_get(self, name: str) -> Any:
         return super().__getattribute__(name)
 
-    def __eq__(self, other):
+    def __eq__(self, other: T) -> bool:
         if type(self) is not type(other):
             return False
 
-        equal = True
         for field_name in self._betterproto.meta_by_field_name:
             self_val = self.__raw_get(field_name)
             other_val = other.__raw_get(field_name)
             if self_val is PLACEHOLDER and other_val is PLACEHOLDER:
                 continue
-            elif self_val is PLACEHOLDER:
+
+            if self_val is PLACEHOLDER:
                 self_val = self._get_field_default(field_name)
             elif other_val is PLACEHOLDER:
                 other_val = other._get_field_default(field_name)
 
             if self_val != other_val:
-                equal = False
-                break
+                return False
 
-        return equal
+        return True
 
     def __repr__(self) -> str:
         parts = []
