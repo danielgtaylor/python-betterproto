@@ -550,20 +550,15 @@ class Message(ABC):
 
         return equal
 
-    def __repr__(self):
-        parts = [self.__class__.__name__, "("]
-        found = False
+    def __repr__(self) -> str:
+        parts = []
         for field_name in self._betterproto.meta_by_field_name:
             value = self.__raw_get(field_name)
             if value is PLACEHOLDER:
                 continue
-            found = True
-            parts.extend([field_name, "=", repr(value), ", "])
+            parts.append(f"{field_name}={value!r}")
 
-        if found:
-            parts.pop()
-        parts.append(")")
-        return "".join(parts)
+        return f"{self.__class__.__name__}({', '.join(parts)})"
 
     def __getattribute__(self, name: str) -> Any:
         value = super().__getattribute__(name)
