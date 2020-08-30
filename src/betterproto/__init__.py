@@ -428,6 +428,7 @@ class ProtoClassMetadata:
         "cls_by_field",
         "field_name_by_number",
         "meta_by_field_name",
+        "sorted_field_names",
     )
 
     def __init__(self, cls: Type["Message"]):
@@ -453,6 +454,9 @@ class ProtoClassMetadata:
         self.oneof_field_by_group = by_group
         self.field_name_by_number = by_field_number
         self.meta_by_field_name = by_field_name
+        self.sorted_field_names = tuple(
+            by_field_number[number] for number in sorted(by_field_number.keys())
+        )
 
         self.default_gen = self._get_default_gen(cls, fields)
         self.cls_by_field = self._get_cls_by_field(cls, fields)
@@ -529,17 +533,16 @@ class Message(ABC):
     def __raw_get(self, name: str) -> Any:
         return super().__getattribute__(name)
 
-    def __eq__(self, other: T) -> bool:
+    def __eq__(self, other) -> bool:
         if type(self) is not type(other):
             return False
 
         for field_name in self._betterproto.meta_by_field_name:
             self_val = self.__raw_get(field_name)
             other_val = other.__raw_get(field_name)
-            if self_val is PLACEHOLDER and other_val is PLACEHOLDER:
-                continue
-
             if self_val is PLACEHOLDER:
+                if other_val is PLACEHOLDER:
+                    continue
                 self_val = self._get_field_default(field_name)
             elif other_val is PLACEHOLDER:
                 other_val = other._get_field_default(field_name)
@@ -550,16 +553,19 @@ class Message(ABC):
         return True
 
     def __repr__(self) -> str:
-        parts = []
-        for field_name in self._betterproto.meta_by_field_name:
-            value = self.__raw_get(field_name)
-            if value is PLACEHOLDER:
-                continue
-            parts.append(f"{field_name}={value!r}")
-
+        parts = [
+            f"{field_name}={value!r}"
+            for field_name in self._betterproto.sorted_field_names
+            for value in (self.__raw_get(field_name),)
+            if value is not PLACEHOLDER
+        ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
     def __getattribute__(self, name: str) -> Any:
+        """
+        Lazily initialize default values to avoid infinite recursion for recursive
+        message types
+        """
         value = super().__getattribute__(name)
         if value is not PLACEHOLDER:
             return value

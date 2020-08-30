@@ -319,13 +319,9 @@ def test_oneof_default_value_set_causes_writes_wire():
     )
 
 
-@dataclass(eq=False, repr=False)
-class RecursiveMessage(betterproto.Message):
-    child: "RecursiveMessage" = betterproto.message_field(1)
-    foo: int = betterproto.int32_field(2)
-
-
 def test_recursive_message():
+    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
+
     msg = RecursiveMessage()
 
     assert msg.child == RecursiveMessage()
@@ -337,9 +333,35 @@ def test_recursive_message():
     assert bytes(msg) == b""
 
 
-def test_message_repr():
-    assert repr(RecursiveMessage(foo=1)) == "RecursiveMessage(foo=1)"
-    assert (
-        repr(RecursiveMessage(child=RecursiveMessage(), foo=1))
-        == "RecursiveMessage(child=RecursiveMessage(), foo=1)"
+def test_recursive_message_defaults():
+    from tests.output_betterproto.recursivemessage import (
+        Test as RecursiveMessage,
+        Intermediate,
     )
+
+    msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
+
+    # set values are as expected
+    assert msg == RecursiveMessage(name="bob", intermediate=Intermediate(42))
+
+    # lazy initialized works modifies the message
+    assert msg != RecursiveMessage(
+        name="bob", intermediate=Intermediate(42), child=RecursiveMessage(name="jude")
+    )
+    msg.child.child.name = "jude"
+    assert msg == RecursiveMessage(
+        name="bob",
+        intermediate=Intermediate(42),
+        child=RecursiveMessage(child=RecursiveMessage(name="jude")),
+    )
+
+    # lazily initialization recurses as needed
+    assert msg.child.child.child.child.child.child.child == RecursiveMessage()
+    assert msg.intermediate.child.intermediate == Intermediate()
+
+
+def test_message_repr():
+    from tests.output_betterproto.recursivemessage import Test
+
+    assert repr(Test(name="Loki")) == "Test(name='Loki')"
+    assert repr(Test(child=Test(), name="Loki")) == "Test(name='Loki', child=Test())"
