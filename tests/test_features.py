@@ -317,4 +317,3 @@ def test_oneof_default_value_set_causes_writes_wire():
         == betterproto.which_one_of(_round_trip_serialization(foo3), "group1")
         == ("", None)
     )
-
