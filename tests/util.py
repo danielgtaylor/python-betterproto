@@ -42,7 +42,7 @@ async def protoc(
         *[p.as_posix() for p in path.glob("*.proto")],
     ]
     proc = await asyncio.create_subprocess_exec(
-        *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
     stdout, stderr = await proc.communicate()
     return stdout, stderr, proc.returncode

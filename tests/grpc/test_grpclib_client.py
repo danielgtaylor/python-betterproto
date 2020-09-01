@@ -106,7 +106,7 @@ async def test_service_call_with_upfront_request_params():
     deadline = grpclib.metadata.Deadline.from_timeout(22)
     metadata = {"authorization": "12345"}
     async with ChannelFor(
-        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata),)]
+        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata))]
     ) as channel:
         await _test_client(
             ThingServiceClient(channel, deadline=deadline, metadata=metadata)
@@ -117,7 +117,7 @@ async def test_service_call_with_upfront_request_params():
     deadline = grpclib.metadata.Deadline.from_timeout(timeout)
     metadata = {"authorization": "12345"}
     async with ChannelFor(
-        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata),)]
+        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata))]
     ) as channel:
         await _test_client(
             ThingServiceClient(channel, timeout=timeout, metadata=metadata)
@@ -134,7 +134,7 @@ async def test_service_call_lower_level_with_overrides():
     kwarg_deadline = grpclib.metadata.Deadline.from_timeout(28)
     kwarg_metadata = {"authorization": "12345"}
     async with ChannelFor(
-        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata),)]
+        [ThingService(test_hook=_assert_request_meta_received(deadline, metadata))]
     ) as channel:
         client = ThingServiceClient(channel, deadline=deadline, metadata=metadata)
         response = await client._unary_unary(
