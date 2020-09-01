@@ -657,9 +657,7 @@ class Message(metaclass=MessageMeta):
                 if field.name == attr:
                     self._group_current[group] = field.name
                 else:
-                    super().__setattr__(
-                        field.name, self._get_field_default(field.name)
-                    )
+                    super().__setattr__(field.name, self._get_field_default(field.name))
 
         super().__setattr__(attr, value)
 
