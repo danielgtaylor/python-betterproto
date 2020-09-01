@@ -595,7 +595,7 @@ class Message(metaclass=MessageMeta):
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            if self.__raw_get(field_name) != PLACEHOLDER:
+            if self.__raw_get(field_name) is not PLACEHOLDER:
                 # Found a non-sentinel value
                 # Skip anything not set to the sentinel value
                 all_sentinel = False
@@ -648,8 +648,7 @@ class Message(metaclass=MessageMeta):
         parts = [
             f"{field_name}={value!r}"
             for field_name in self._betterproto.sorted_field_names
-            for value in (self.__raw_get(field_name),)
-            if value is not PLACEHOLDER
+            if self.__raw_get(field_name) is not PLACEHOLDER
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
