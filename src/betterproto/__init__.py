@@ -5,7 +5,7 @@ import json
 import struct
 import sys
 import typing
-from abc import ABC
+from abc import ABCMeta
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
 from typing import (
@@ -553,7 +553,6 @@ class Message(metaclass=MessageMeta):
         "_group_current",
     )
 
-
     def __init__(self, *args, **kwargs: Any) -> None:
         args = list(args)
         set_attribute = super().__setattr__  # Save a super() call every time
@@ -578,7 +577,7 @@ class Message(metaclass=MessageMeta):
                 del kwargs[field_name]
 
                 # Skip anything not set to the sentinel value
-            if self.__raw_get(field_name) != PLACEHOLDER:
+            if self.__raw_get(field_name) is not PLACEHOLDER:
                 # Found a non-sentinel value
                 all_sentinel = False
 
@@ -630,8 +629,7 @@ class Message(metaclass=MessageMeta):
         parts = [
             f"{field_name}={value!r}"
             for field_name in self._betterproto.sorted_field_names
-            for value in (self.__raw_get(field_name),)
-            if value is not PLACEHOLDER
+            if self.__raw_get(field_name) is not PLACEHOLDER
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
