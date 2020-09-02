@@ -553,7 +553,7 @@ class Message(metaclass=MessageMeta):
         "_group_current",
     )
 
-    def __init__(self, *args, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         args = list(args)
         set_attribute = super().__setattr__  # Save a super() call every time
         all_sentinel = True  # Keep track of whether every field was default
@@ -563,40 +563,36 @@ class Message(metaclass=MessageMeta):
             # have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
-        for i, (field_name, meta) in enumerate(
-            self._betterproto.meta_by_field_name.items()
-        ):
-            if args:
+        for field_name, meta in self._betterproto.meta_by_field_name.items():
+            if args or kwargs:
                 try:
-                    set_attribute(field_name, args.pop(i))
-                except IndexError:
+                    set_attribute(field_name, (args or kwargs).pop(0 if args else field_name))
+                except (IndexError, KeyError):
                     pass
-            if kwargs:
-                try:
-                    set_attribute(field_name, kwargs.pop(field_name))
-                except KeyError:
-                    pass
+                else:
+                    # Found a non-sentinel value
+                    all_sentinel = False
 
-                # Skip anything not set to the sentinel value
-            if self.__raw_get(field_name) is not PLACEHOLDER:
-                # Found a non-sentinel value
-                all_sentinel = False
+                    if meta.group:
+                        # This was set, so make it the selected value of the one-of.
+                        group_current[meta.group] = field_name
 
-                if meta.group:
-                    # This was set, so make it the selected value of the one-of.
-                    group_current[meta.group] = field_name
-
-                continue
+                    continue
 
             if meta.group:
                 group_current.setdefault(meta.group)
 
             setattr(self, field_name, self._get_field_default(field_name))
 
-        if args or kwargs:
-            unexpected_args = args + list(kwargs.keys())
+        if args:
+            default_args = len(self._betterproto.meta_by_field_name) + 1
             raise TypeError(
-                f"__init__() got unexpected argument(s) '{', '.join(str(arg) for arg in unexpected_args)}'"
+                f"__init__() takes {default_args} positional argument{'s' if default_args != 1 else ''} but"
+                f" {len(args) + default_args} were given"
+            )
+        if kwargs:
+            raise TypeError(
+                f"__init__() got an unexpected keyword argument {repr(list(kwargs)[0])}"
             )
 
         # Now that all the defaults are set, reset it!
