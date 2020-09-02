@@ -14,7 +14,7 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.6"
 backports-datetime-fromisoformat = { version = "^1.0.0", python = "<3.7" }
-black = { version = "^20.8b1", optional = true }
+black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.3.1"
 jinja2 = { version = "^2.11.2", optional = true }
