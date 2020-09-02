@@ -319,7 +319,6 @@ def test_oneof_default_value_set_causes_writes_wire():
     )
 
 
-
 def test_bool():
     # evaluates similarly to a collection
     # >>> bool(list())
