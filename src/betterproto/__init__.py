@@ -4,7 +4,7 @@ import inspect
 import json
 import struct
 import sys
-import warnings
+import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
@@ -21,8 +21,6 @@ from typing import (
     Union,
     get_type_hints,
 )
-
-import typing
 
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
@@ -126,11 +124,7 @@ class Casing(enum.Enum):
     SNAKE = snake_case  #: A snake_case sterilization function.
 
 
-class _PLACEHOLDER:
-    pass
-
-
-PLACEHOLDER: Any = _PLACEHOLDER()
+PLACEHOLDER: Any = object()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -276,7 +270,7 @@ class Enum(enum.IntEnum):
             The member was not found in the Enum.
         """
         try:
-            return cls.__members__[name]
+            return cls._member_map_[name]
         except KeyError as e:
             raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
@@ -364,7 +358,7 @@ def _serialize_single(
     """Serializes a single field and value."""
     value = _preprocess_single(proto_type, wraps, value)
 
-    output = b""
+    output = bytearray()
     if proto_type in WIRE_VARINT_TYPES:
         key = encode_varint(field_number << 3)
         output += key + value
@@ -381,10 +375,10 @@ def _serialize_single(
     else:
         raise NotImplementedError(proto_type)
 
-    return output
+    return bytes(output)
 
 
-def decode_varint(buffer: bytes, pos: int, signed: bool = False) -> Tuple[int, int]:
+def decode_varint(buffer: bytes, pos: int) -> Tuple[int, int]:
     """
     Decode a single varint value from a byte buffer. Returns the value and the
     new position in the buffer.
@@ -449,6 +443,7 @@ class ProtoClassMetadata:
         "cls_by_field",
         "field_name_by_number",
         "meta_by_field_name",
+        "sorted_field_names",
     )
 
     def __init__(self, cls: Type["Message"]):
@@ -474,6 +469,9 @@ class ProtoClassMetadata:
         self.oneof_field_by_group = by_group
         self.field_name_by_number = by_field_number
         self.meta_by_field_name = by_field_name
+        self.sorted_field_names = tuple(
+            by_field_number[number] for number in sorted(by_field_number.keys())
+        )
 
         self.default_gen = self._get_default_gen(cls, fields)
         self.cls_by_field = self._get_cls_by_field(cls, fields)
@@ -534,28 +532,68 @@ class Message(ABC):
         all_sentinel = True
 
         # Set current field of each group after `__init__` has already been run.
-        group_current: Dict[str, str] = {}
+        group_current: Dict[str, Optional[str]] = {}
         for field_name, meta in self._betterproto.meta_by_field_name.items():
 
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            if getattr(self, field_name) != PLACEHOLDER:
-                # Skip anything not set to the sentinel value
+            if self.__raw_get(field_name) != PLACEHOLDER:
+                # Found a non-sentinel value
                 all_sentinel = False
 
                 if meta.group:
                     # This was set, so make it the selected value of the one-of.
                     group_current[meta.group] = field_name
 
-                continue
-
-            setattr(self, field_name, self._get_field_default(field_name))
-
         # Now that all the defaults are set, reset it!
         self.__dict__["_serialized_on_wire"] = not all_sentinel
         self.__dict__["_unknown_fields"] = b""
         self.__dict__["_group_current"] = group_current
+
+    def __raw_get(self, name: str) -> Any:
+        return super().__getattribute__(name)
+
+    def __eq__(self, other) -> bool:
+        if type(self) is not type(other):
+            return False
+
+        for field_name in self._betterproto.meta_by_field_name:
+            self_val = self.__raw_get(field_name)
+            other_val = other.__raw_get(field_name)
+            if self_val is PLACEHOLDER:
+                if other_val is PLACEHOLDER:
+                    continue
+                self_val = self._get_field_default(field_name)
+            elif other_val is PLACEHOLDER:
+                other_val = other._get_field_default(field_name)
+
+            if self_val != other_val:
+                return False
+
+        return True
+
+    def __repr__(self) -> str:
+        parts = [
+            f"{field_name}={value!r}"
+            for field_name in self._betterproto.sorted_field_names
+            for value in (self.__raw_get(field_name),)
+            if value is not PLACEHOLDER
+        ]
+        return f"{self.__class__.__name__}({', '.join(parts)})"
+
+    def __getattribute__(self, name: str) -> Any:
+        """
+        Lazily initialize default values to avoid infinite recursion for recursive
+        message types
+        """
+        value = super().__getattribute__(name)
+        if value is not PLACEHOLDER:
+            return value
+
+        value = self._get_field_default(name)
+        super().__setattr__(name, value)
+        return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
@@ -569,9 +607,7 @@ class Message(ABC):
                     if field.name == attr:
                         self._group_current[group] = field.name
                     else:
-                        super().__setattr__(
-                            field.name, self._get_field_default(field.name)
-                        )
+                        super().__setattr__(field.name, PLACEHOLDER)
 
         super().__setattr__(attr, value)
 
@@ -592,7 +628,7 @@ class Message(ABC):
         """
         Get the binary encoded Protobuf representation of this message instance.
         """
-        output = b""
+        output = bytearray()
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             value = getattr(self, field_name)
 
@@ -630,7 +666,7 @@ class Message(ABC):
                     # Packed lists look like a length-delimited field. First,
                     # preprocess/encode each value into a buffer and then
                     # treat it like a field of raw bytes.
-                    buf = b""
+                    buf = bytearray()
                     for item in value:
                         buf += _preprocess_single(meta.proto_type, "", item)
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
@@ -665,7 +701,8 @@ class Message(ABC):
                     wraps=meta.wraps or "",
                 )
 
-        return output + self._unknown_fields
+        output += self._unknown_fields
+        return bytes(output)
 
     # For compatibility with other libraries
     def SerializeToString(self: T) -> bytes:
@@ -798,14 +835,14 @@ class Message(ABC):
         """
         # Got some data over the wire
         self._serialized_on_wire = True
-
+        proto_meta = self._betterproto
         for parsed in parse_fields(data):
-            field_name = self._betterproto.field_name_by_number.get(parsed.number)
+            field_name = proto_meta.field_name_by_number.get(parsed.number)
             if not field_name:
                 self._unknown_fields += parsed.raw
                 continue
 
-            meta = self._betterproto.meta_by_field_name[field_name]
+            meta = proto_meta.meta_by_field_name[field_name]
 
             value: Any
             if parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
@@ -988,7 +1025,6 @@ class Message(ABC):
             The initialized message.
         """
         self._serialized_on_wire = True
-        fields_by_name = {f.name: f for f in dataclasses.fields(self)}
         for key in value:
             field_name = safe_snake_case(key)
             meta = self._betterproto.meta_by_field_name.get(field_name)
