@@ -1,12 +1,10 @@
 import asyncio
 import betterproto
 from betterproto.grpc.util.async_channel import AsyncChannel
-from dataclasses import dataclass
 import pytest
 from typing import AsyncIterator
 
 
-@dataclass
 class Message(betterproto.Message):
     body: str = betterproto.string_field(1)
 
