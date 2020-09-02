@@ -566,7 +566,9 @@ class Message(metaclass=MessageMeta):
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             if args or kwargs:
                 try:
-                    set_attribute(field_name, (args or kwargs).pop(0 if args else field_name))
+                    set_attribute(
+                        field_name, (args or kwargs).pop(0 if args else field_name)
+                    )
                 except (IndexError, KeyError):
                     pass
                 else:
@@ -577,12 +579,8 @@ class Message(metaclass=MessageMeta):
                         # This was set, so make it the selected value of the one-of.
                         group_current[meta.group] = field_name
 
-                    continue
-
             if meta.group:
                 group_current.setdefault(meta.group)
-
-            setattr(self, field_name, self._get_field_default(field_name))
 
         if args:
             default_args = len(self._betterproto.meta_by_field_name) + 1
@@ -649,7 +647,7 @@ class Message(metaclass=MessageMeta):
             # Track when a field has been set.
             super().__setattr__("_serialized_on_wire", True)
 
-        if hasattr(self, '_group_current'):
+        if hasattr(self, "_group_current"):
             if attr in self._betterproto.oneof_group_by_field:
                 group = self._betterproto.oneof_group_by_field[attr]
                 for field in self._betterproto.oneof_field_by_group[group]:
