@@ -521,10 +521,11 @@ class MessageMeta(ABCMeta):
     def __new__(
         mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]
     ) -> "Message":
-        annotations = attrs.get("__annotations__", {})
+        annotations = attrs.get("__annotations__") or bases[0].__annotations__
+        # I think this is the best way to handle _Timestamp and _Duration and normal
+        # messages should be handled by the first clause
         attrs["__slots__"] = tuple(annotations) + attrs.get("__slots__", ())
         # slot the class
-        # TODO check works for none dataclass subclasses
 
         fields = {}
         for annotation, type in annotations.items():
@@ -576,7 +577,7 @@ class Message(metaclass=MessageMeta):
         group_current: Dict[str, str] = {}
 
         for field in getattr(self, dataclasses._FIELDS).values():
-            # have to set these here to allow for them to be editable
+            # We have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
         for field_name, meta in self._betterproto.meta_by_field_name.items():
@@ -584,7 +585,7 @@ class Message(metaclass=MessageMeta):
                 try:
                     set_attribute(
                         field_name, (args or kwargs).pop(0 if args else field_name)
-                    )
+                    )  # Prioritise args before kwargs as python normally does
                 except (IndexError, KeyError):
                     pass
                 else:
