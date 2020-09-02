@@ -511,9 +511,7 @@ class MessageMeta(ABCMeta):
     def __new__(
         mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]
     ) -> "Message":
-        annotations = attrs.get("__annotations__") or bases[0].__annotations__
-        # I think this is the best way to handle _Timestamp and _Duration and normal
-        # messages should be handled by the first clause
+        annotations = attrs.get("__annotations__", {})
         attrs["__slots__"] = tuple(annotations) + attrs.get("__slots__", ())
         # slot the class
 
@@ -1114,6 +1112,9 @@ from .lib.google.protobuf import (  # noqa
 
 
 class _Duration(Duration):
+    seconds: int = int64_field(1)
+    nanos: int = int32_field(2)
+
     def to_timedelta(self) -> timedelta:
         return timedelta(seconds=self.seconds, microseconds=self.nanos / 1e3)
 
@@ -1127,6 +1128,9 @@ class _Duration(Duration):
 
 
 class _Timestamp(Timestamp):
+    seconds: int = int64_field(1)
+    nanos: int = int32_field(2)
+
     def to_datetime(self) -> datetime:
         ts = self.seconds + (self.nanos / 1e9)
         return datetime.fromtimestamp(ts, tz=timezone.utc)
