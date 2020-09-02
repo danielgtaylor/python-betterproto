@@ -1,0 +1,12 @@
+{
+  "name": "Zues",
+  "child": {
+    "name": "Hercules"
+  },
+  "intermediate": {
+    "child": {
+      "name": "Douglas Adams"
+    },
+    "number": 42
+  }
+}
