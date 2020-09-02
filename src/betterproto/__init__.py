@@ -568,13 +568,14 @@ class Message(metaclass=MessageMeta):
         ):
             if args:
                 try:
-                    kwargs[field_name] = args.pop(i)
-                    # pretend it is a kwarg to save on duplication
+                    set_attribute(field_name, args.pop(i))
                 except IndexError:
                     pass
-            if field_name in kwargs:
-                set_attribute(field_name, kwargs[field_name])
-                del kwargs[field_name]
+            if kwargs:
+                try:
+                    set_attribute(field_name, kwargs.pop(field_name))
+                except KeyError:
+                    pass
 
                 # Skip anything not set to the sentinel value
             if self.__raw_get(field_name) is not PLACEHOLDER:
@@ -595,7 +596,7 @@ class Message(metaclass=MessageMeta):
         if args or kwargs:
             unexpected_args = args + list(kwargs.keys())
             raise TypeError(
-                f"__init__() got unexpected argument(s) '{', '.join(unexpected_args)}'"
+                f"__init__() got unexpected argument(s) '{', '.join(str(arg) for arg in unexpected_args)}'"
             )
 
         # Now that all the defaults are set, reset it!
@@ -652,13 +653,16 @@ class Message(metaclass=MessageMeta):
             # Track when a field has been set.
             super().__setattr__("_serialized_on_wire", True)
 
-        if attr in self._betterproto.oneof_group_by_field:
-            group = self._betterproto.oneof_group_by_field[attr]
-            for field in self._betterproto.oneof_field_by_group[group]:
-                if field.name == attr:
-                    self._group_current[group] = field.name
-                else:
-                    super().__setattr__(field.name, self._get_field_default(field.name))
+        if hasattr(self, '_group_current'):
+            if attr in self._betterproto.oneof_group_by_field:
+                group = self._betterproto.oneof_group_by_field[attr]
+                for field in self._betterproto.oneof_field_by_group[group]:
+                    if field.name == attr:
+                        self._group_current[group] = field.name
+                    else:
+                        super().__setattr__(
+                            field.name, self._get_field_default(field.name)
+                        )
 
         super().__setattr__(attr, value)
 
