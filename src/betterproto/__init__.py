@@ -518,7 +518,7 @@ class MessageMeta(ABCMeta):
 
         fields = {}
         for annotation, type in annotations.items():
-            field = attrs.pop(annotation, None)
+            field: Optional[dataclasses.Field] = attrs.pop(annotation, None)
             # remove field class variables from the class namespace
             if field is not None:
                 field.name = annotation
@@ -629,7 +629,8 @@ class Message(metaclass=MessageMeta):
         parts = [
             f"{field_name}={value!r}"
             for field_name in self._betterproto.sorted_field_names
-            if self.__raw_get(field_name) is not PLACEHOLDER
+            for value in (self.__raw_get(field_name),)
+            if value is not PLACEHOLDER
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
