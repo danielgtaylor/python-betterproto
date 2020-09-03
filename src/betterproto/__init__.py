@@ -646,16 +646,13 @@ class Message(metaclass=MessageMeta):
             # Track when a field has been set.
             super().__setattr__("_serialized_on_wire", True)
 
-        if hasattr(self, "_group_current"):
-            if attr in self._betterproto.oneof_group_by_field:
-                group = self._betterproto.oneof_group_by_field[attr]
-                for field in self._betterproto.oneof_field_by_group[group]:
-                    if field.name == attr:
-                        self._group_current[group] = field.name
-                    else:
-                        super().__setattr__(
-                            field.name, self._get_field_default(field.name)
-                        )
+        if attr in self._betterproto.oneof_group_by_field:
+            group = self._betterproto.oneof_group_by_field[attr]
+            for field in self._betterproto.oneof_field_by_group[group]:
+                if field.name == attr:
+                    self._group_current[group] = field.name
+                else:
+                    super().__setattr__(field.name, PLACEHOLDER)
 
         super().__setattr__(attr, value)
 
