@@ -505,32 +505,33 @@ class MessageMeta(ABCMeta):
 
     Abstracts away any @dataclass decorators with a custom specialized dataclass
     implementation for generated messages, mixes in a dataslots implementation as well
-    for __slot__ed classes with relatively low overhead.
+    for __slot__'ed classes with relatively low overhead.
     """
 
     def __new__(
         mcs, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any]
-    ) -> "Message":
+    ) -> Type["Message"]:
         annotations = attrs.get("__annotations__", {})
-        attrs["__slots__"] = tuple(annotations) + attrs.get("__slots__", ())
-        # slot the class
+        attrs["__slots__"] = tuple(annotations)
+        # Slot the class
 
         fields = {}
         for annotation, type in annotations.items():
             field: Optional[dataclasses.Field] = attrs.pop(annotation, None)
-            # remove field class variables from the class namespace
+            # Remove field class variables from the class namespace
             if field is not None:
                 field.name = annotation
                 field.type = type
                 field._field_type = dataclasses._FIELD
                 fields[annotation] = field
 
-        message_class: "Message" = super().__new__(mcs, name, bases, attrs)
+        message_class = super().__new__(mcs, name, bases, attrs)
 
-        # set __dataclass_fields__
+        # Set __dataclass_fields__
         setattr(message_class, dataclasses._FIELDS, fields)
-        # we don't need to set __dataclass_params__ as its only use appears to be for
-        # checking if any base classes are frozen
+        # We don't need to set __dataclass_params__ as its only use appears to be for
+        # checking if any base classes are frozen and Messages don't support inheritance
+        # so this isn't useful.
         return message_class
 
 
@@ -544,13 +545,8 @@ class Message(metaclass=MessageMeta):
     _serialized_on_wire: bool
     _unknown_fields: bytes
     _group_current: Dict[str, str]
-    __dataclass_fields__: Mapping[str, dataclasses.Field]  # technically should be Final
-
-    __slots__ = (
-        "_serialized_on_wire",
-        "_unknown_fields",
-        "_group_current",
-    )
+    __dataclass_fields__: Mapping[str, dataclasses.Field]  # Technically should be Final
+    # as this is not settable by the end user, but that doesn't come till python 3.8
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         args = list(args)
@@ -558,7 +554,7 @@ class Message(metaclass=MessageMeta):
         all_sentinel = True  # Keep track of whether every field was default
         group_current: Dict[str, str] = {}
 
-        for field in getattr(self, dataclasses._FIELDS).values():
+        for field in self.__raw_get(dataclasses._FIELDS).values():
             # We have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
@@ -584,8 +580,9 @@ class Message(metaclass=MessageMeta):
         if args:
             default_args = len(self._betterproto.meta_by_field_name) + 1
             raise TypeError(
-                f"__init__() takes {default_args} positional argument{'s' if default_args != 1 else ''} but"
-                f" {len(args) + default_args} were given"
+                f"__init__() takes {default_args} positional argument"
+                f"{'s' if default_args != 1 else ''} but {len(args) + default_args} "
+                f"were given"
             )
         if kwargs:
             raise TypeError(
