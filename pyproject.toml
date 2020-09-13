@@ -12,7 +12,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3"
+python = "^3.6"
 backports-datetime-fromisoformat = { version = "^1.0.0", python = "<3.7" }
 black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
@@ -33,6 +33,7 @@ pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
 tox = "^3.15.1"
+asv = "^0.4.2"
 
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
@@ -47,7 +48,7 @@ test        = { cmd = "pytest --cov src", help = "Run tests" }
 types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
 format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
 clean       = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
-bench       = { shell = "asv run master~1..HEAD && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
+bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
 
 # CI tasks
 full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
