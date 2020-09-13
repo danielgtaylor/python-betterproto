@@ -130,7 +130,7 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
         # print(list(sci.path), path, file=sys.stderr)
         if list(sci.path) == path and sci.leading_comments:
             lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""), width=79 - indent,
+                sci.leading_comments.strip().replace("\n", ""), width=79 - indent
             )
 
             if path[-2] == 2 and path[-4] != 6:
@@ -153,6 +153,7 @@ class ProtoContentBase:
 
     path: List[int]
     comment_indent: int = 4
+    parent: Union["Messsage", "OutputTemplate"]
 
     def __post_init__(self):
         """Checks that no fake default fields were left as placeholders."""
@@ -187,7 +188,7 @@ class ProtoContentBase:
         for this object.
         """
         return get_comment(
-            proto_file=self.proto_file, path=self.path, indent=self.comment_indent,
+            proto_file=self.proto_file, path=self.path, indent=self.comment_indent
         )
 
 
@@ -262,8 +263,7 @@ class OutputTemplate:
 
 @dataclass
 class MessageCompiler(ProtoContentBase):
-    """Representation of a protobuf message.
-    """
+    """Representation of a protobuf message."""
 
     parent: Union["MessageCompiler", OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
@@ -307,8 +307,7 @@ class MessageCompiler(ProtoContentBase):
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
 ) -> bool:
-    """True if proto_field_obj is a map, otherwise False.
-    """
+    """True if proto_field_obj is a map, otherwise False."""
     if proto_field_obj.type == FieldDescriptorProto.TYPE_MESSAGE:
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
@@ -322,8 +321,7 @@ def is_map(
 
 
 def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
-    """True if proto_field_obj is a OneOf, otherwise False.
-    """
+    """True if proto_field_obj is a OneOf, otherwise False."""
     if proto_field_obj.HasField("oneof_index"):
         return True
     return False
@@ -355,24 +353,26 @@ class FieldCompiler(MessageCompiler):
         """Construct string representation of this field as a field."""
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
+        field_args = ", ".join(
+            ([""] + self.betterproto_field_args) if self.betterproto_field_args else []
+        )
         betterproto_field_type = (
             f"betterproto.{self.field_type}_field({self.proto_obj.number}"
-            + f"{self.betterproto_field_args}"
+            + field_args
             + ")"
         )
         return name + annotations + " = " + betterproto_field_type
 
     @property
-    def betterproto_field_args(self):
-        args = ""
+    def betterproto_field_args(self) -> List[str]:
+        args = []
         if self.field_wraps:
-            args = args + f", wraps={self.field_wraps}"
+            args.append(f"wraps={self.field_wraps}")
         return args
 
     @property
     def field_wraps(self) -> Union[str, None]:
-        """Returns betterproto wrapped field type or None.
-        """
+        """Returns betterproto wrapped field type or None."""
         match_wrapper = re.match(
             r"\.google\.protobuf\.(.+)Value", self.proto_obj.type_name
         )
@@ -405,8 +405,7 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def default_value_string(self) -> Union[Text, None, float, int]:
-        """Python representation of the default proto value.
-        """
+        """Python representation of the default proto value."""
         if self.repeated:
             return "[]"
         if self.py_type == "int":
@@ -473,10 +472,10 @@ class FieldCompiler(MessageCompiler):
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
     @property
-    def betterproto_field_args(self) -> "str":
+    def betterproto_field_args(self) -> List[str]:
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
-        args = args + f', group="{group}"'
+        args.append(f'group="{group}"')
         return args
 
 
@@ -495,26 +494,23 @@ class MapEntryCompiler(FieldCompiler):
                 if nested.options.map_entry:
                     # Get Python types
                     self.py_k_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[0],  # key
+                        parent=self, proto_obj=nested.field[0]  # key
                     ).py_type
                     self.py_v_type = FieldCompiler(
-                        parent=self, proto_obj=nested.field[1],  # value
+                        parent=self, proto_obj=nested.field[1]  # value
                     ).py_type
                     # Get proto types
                     self.proto_k_type = self.proto_obj.Type.Name(nested.field[0].type)
                     self.proto_v_type = self.proto_obj.Type.Name(nested.field[1].type)
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
-    def get_field_string(self, indent: int = 4) -> str:
-        """Construct string representation of this field."""
-        name = f"{self.py_name}"
-        annotations = f": {self.annotation}"
-        betterproto_field_type = (
-            f"betterproto.map_field("
-            f"{self.proto_obj.number}, betterproto.{self.proto_k_type}, "
-            f"betterproto.{self.proto_v_type})"
-        )
-        return name + annotations + " = " + betterproto_field_type
+    @property
+    def betterproto_field_args(self) -> List[str]:
+        return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+
+    @property
+    def field_type(self) -> str:
+        return "map"
 
     @property
     def annotation(self):

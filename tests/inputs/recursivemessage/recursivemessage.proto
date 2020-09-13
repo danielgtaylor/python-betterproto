@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message Test {
+    string name = 1;
+    Test child = 2;
+    Intermediate intermediate = 3;
+}
+
+
+message Intermediate {
+    int32 number = 1;
+    Test child = 2;
+}
