@@ -45,7 +45,7 @@ class BenchMessage:
         self.cls(0, "test", 0.0)
 
     def time_attribute_setting(self):
-        """Time to set an attribute
+        """Time to set attributes
         """
         self.instance.foo = 0
         self.instance.bar = "test"
