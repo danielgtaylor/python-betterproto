@@ -39,7 +39,7 @@ class BenchMessage:
         self.instance.bar
         self.instance.baz
     
-    def time_attribute_setting_init(self):
+    def time_init_with_values(self):
         """Time to set an attribute
         """
         self.cls(0, "test", 0.0)
