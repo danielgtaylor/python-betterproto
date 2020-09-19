@@ -43,7 +43,6 @@ protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
 compiler = ["black", "jinja2", "protobuf"]
-docs = ["toml", "sphinx"]
 
 [tool.poe.tasks]
 # Dev workflow tasks
