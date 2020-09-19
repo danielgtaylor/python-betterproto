@@ -94,7 +94,7 @@ The generated code includes [grpclib](https://grpclib.readthedocs.io/en/latest/)
 better static type checking and code completion support. It is enabled by default.
 
 
-Given an example service definition similar to the one below:
+Given a service definition similar to the one below:
 
 .. code-block:: proto
 
