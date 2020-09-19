@@ -15,9 +15,9 @@ Message
     :special-members: __bytes__
 
 
-.. automethod:: betterproto.serialized_on_wire
+.. autofunction:: betterproto.serialized_on_wire
 
-.. automethod:: betterproto.which_one_of
+.. autofunction:: betterproto.which_one_of
 
 
 Enumerations
