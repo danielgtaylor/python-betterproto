@@ -1,5 +1,5 @@
 [[package]]
-category = "main"
+category = "dev"
 description = "A configurable sidebar-enabled Sphinx theme"
 name = "alabaster"
 optional = false
@@ -52,7 +52,7 @@ tests = ["coverage (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six
 tests_no_zope = ["coverage (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Internationalization utilities"
 name = "babel"
 optional = false
@@ -129,7 +129,7 @@ urwid = ["urwid"]
 watch = ["watchdog"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python package for providing Mozilla's CA Bundle."
 name = "certifi"
 optional = false
@@ -137,7 +137,7 @@ python-versions = "*"
 version = "2020.6.20"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Universal encoding detector for Python 2 and 3"
 name = "chardet"
 optional = false
@@ -153,7 +153,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 version = "7.1.2"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Cross-platform colored terminal text."
 marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
 name = "colorama"
@@ -202,7 +202,7 @@ python-versions = "*"
 version = "0.3.1"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Docutils -- Python Documentation Utilities"
 name = "docutils"
 optional = false
@@ -296,7 +296,7 @@ python-versions = "*"
 version = "5.2.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Internationalized Domain Names in Applications (IDNA)"
 name = "idna"
 optional = false
@@ -304,7 +304,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "2.10"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Getting image size from png/jpeg/jpeg2000/gif file"
 name = "imagesize"
 optional = false
@@ -407,7 +407,7 @@ python-versions = "*"
 version = "0.4.3"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Core utilities for Python packages"
 name = "packaging"
 optional = false
@@ -483,7 +483,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "1.9.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Pygments is a syntax highlighting package written in Python."
 name = "pygments"
 optional = false
@@ -491,7 +491,7 @@ python-versions = ">=3.5"
 version = "2.7.1"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python parsing module"
 name = "pyparsing"
 optional = false
@@ -568,7 +568,7 @@ pytest = ">=5.0"
 dev = ["pre-commit", "tox", "pytest-asyncio"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "World timezone definitions, modern and historical"
 name = "pytz"
 optional = false
@@ -584,7 +584,7 @@ python-versions = "*"
 version = "2020.7.14"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python HTTP for Humans."
 name = "requests"
 optional = false
@@ -610,7 +610,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 version = "1.15.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "This package provides 26 stemmers for 25 languages generated from Snowball algorithms."
 name = "snowballstemmer"
 optional = false
@@ -618,7 +618,7 @@ python-versions = "*"
 version = "2.0.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python documentation generator"
 name = "sphinx"
 optional = false
@@ -664,7 +664,7 @@ sphinx = "*"
 dev = ["transifex-client", "sphinxcontrib-httpdomain", "bump2version"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "sphinxcontrib-applehelp is a sphinx extension which outputs Apple help books"
 name = "sphinxcontrib-applehelp"
 optional = false
@@ -676,7 +676,7 @@ lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "sphinxcontrib-devhelp is a sphinx extension which outputs Devhelp document."
 name = "sphinxcontrib-devhelp"
 optional = false
@@ -688,7 +688,7 @@ lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "sphinxcontrib-htmlhelp is a sphinx extension which renders HTML help files"
 name = "sphinxcontrib-htmlhelp"
 optional = false
@@ -700,7 +700,7 @@ lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest", "html5lib"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "A sphinx extension which renders display math in HTML via JavaScript"
 name = "sphinxcontrib-jsmath"
 optional = false
@@ -711,7 +711,7 @@ version = "1.0.1"
 test = ["pytest", "flake8", "mypy"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "sphinxcontrib-qthelp is a sphinx extension which outputs QtHelp document."
 name = "sphinxcontrib-qthelp"
 optional = false
@@ -723,7 +723,7 @@ lint = ["flake8", "mypy", "docutils-stubs"]
 test = ["pytest"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "sphinxcontrib-serializinghtml is a sphinx extension which outputs \"serialized\" HTML files (json and pickle)."
 name = "sphinxcontrib-serializinghtml"
 optional = false
@@ -785,7 +785,7 @@ python-versions = "*"
 version = "3.7.4.3"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
@@ -848,7 +848,7 @@ testing = ["jaraco.itertools", "func-timeout"]
 compiler = ["black", "jinja2", "protobuf"]
 
 [metadata]
-content-hash = "477937196c6e37924bc97270af4ae58e5be593949c62c08d6ca83c63949772de"
+content-hash = "aa1cdf753b393b5b61a5794989b6883709d82dd13e924c1b1d92d93c21dd256c"
 lock-version = "1.0"
 python-versions = "^3.6"
 
@@ -874,6 +874,7 @@ attrs = [
 ]
 babel = [
     {file = "Babel-2.8.0-py2.py3-none-any.whl", hash = "sha256:d670ea0b10f8b723672d3a6abeb87b565b244da220d76b4dba1b66269ec152d4"},
+    {file = "Babel-2.8.0.tar.gz", hash = "sha256:1aac2ae2d0d8ea368fa90906567f5c08463d98ade155c0c4bfedd6a0f7160e38"},
 ]
 backports-datetime-fromisoformat = [
     {file = "backports-datetime-fromisoformat-1.0.0.tar.gz", hash = "sha256:9577a2a9486cd7383a5f58b23bb8e81cf0821dbbc0eb7c87d3fa198c1df40f5c"},
