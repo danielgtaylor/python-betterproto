@@ -70,14 +70,14 @@ message Greeting {
 }
 ```
 
-You can run the following:
+You can run the following to invoke protoc directly:
 
 ```sh
 mkdir lib
 protoc -I . --python_betterproto_out=lib example.proto
 ```
 
-or
+or run the following to invoke protoc via grpcio-tools:
 
 ```sh
 pip install grpcio-tools
