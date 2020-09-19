@@ -99,7 +99,7 @@ Then to use it:
 Async gRPC Support
 ++++++++++++++++++
 
-The generated code includes [grpclib](https://grpclib.readthedocs.io/en/latest/) based
+The generated code includes `grpclib <https://grpclib.readthedocs.io/en/latest>`_ based
 stub (client) classes for rpc services declared in the input proto files.
 It is enabled by default.
 
