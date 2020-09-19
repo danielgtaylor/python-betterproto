@@ -591,6 +591,8 @@ class Message(ABC):
         super().__setattr__(attr, value)
 
     def __bool__(self) -> bool:
+        if not self._serialized_on_wire:
+            return False
         for field in dataclasses.fields(self):
             value = self.__raw_get(field.name)
             if self._get_field_default(field.name) != value:
