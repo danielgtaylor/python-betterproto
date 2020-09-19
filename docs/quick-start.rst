@@ -98,12 +98,12 @@ Then to use it:
 Async gRPC Support
 ++++++++++++++++++
 
-The generated Protobuf Message classes are compatible with grpclib.
-That said, this project also includes support for async gRPC stub generation with
+The generated Protobuf Message classes are compatible with grpclib and grpcio.
+The generated code includes [grpclib](https://grpclib.readthedocs.io/en/latest/) based stub (client) classes for rpc services declared in the input proto files. 
 better static type checking and code completion support. It is enabled by default.
 
 
-Given an example service definition similar to the one below:
+Given a service definition similar to the one below:
 
 .. code-block:: proto
 
