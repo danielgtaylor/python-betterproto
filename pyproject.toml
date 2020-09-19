@@ -37,6 +37,7 @@ pytest-mock = "^3.1.1"
 tox = "^3.15.1"
 sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
+asv = "^0.4.2"
 
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
@@ -52,6 +53,7 @@ types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types w
 format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
 clean       = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
 docs        = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
+bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
 
 # CI tasks
 full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
