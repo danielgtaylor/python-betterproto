@@ -52,6 +52,7 @@ You can run the following to invoke protoc directly:
 or run the following to invoke protoc via grpcio-tools:
 
 .. code-block:: sh
+
     pip install grpcio-tools
     python -m grpc_tools.protoc -I . --python_betterproto_out=lib example.proto
 
@@ -98,9 +99,9 @@ Then to use it:
 Async gRPC Support
 ++++++++++++++++++
 
-The generated Protobuf Message classes are compatible with grpclib and grpcio.
-The generated code includes [grpclib](https://grpclib.readthedocs.io/en/latest/) based stub (client) classes for rpc services declared in the input proto files. 
-better static type checking and code completion support. It is enabled by default.
+The generated code includes [grpclib](https://grpclib.readthedocs.io/en/latest/) based
+stub (client) classes for rpc services declared in the input proto files.
+It is enabled by default.
 
 
 Given a service definition similar to the one below:
