@@ -21,14 +21,24 @@ def safe_snake_case(value: str) -> str:
     return value
 
 
-def snake_case(value: str, strict: bool = True):
+def snake_case(value: str, strict: bool = True) -> str:
     """
     Join words with an underscore into lowercase and remove symbols.
-    @param value: value to convert
-    @param strict: force single underscores
+
+    Parameters
+    -----------
+    value: :class:`str`
+        The value to convert.
+    strict: :class:`bool`
+        Whether or not to force single underscores.
+
+    Returns
+    --------
+    :class:`str`
+        The value in snake_case.
     """
 
-    def substitute_word(symbols, word, is_start):
+    def substitute_word(symbols: str, word: str, is_start: bool) -> str:
         if not word:
             return ""
         if strict:
@@ -52,11 +62,21 @@ def snake_case(value: str, strict: bool = True):
     return snake
 
 
-def pascal_case(value: str, strict: bool = True):
+def pascal_case(value: str, strict: bool = True) -> str:
     """
     Capitalize each word and remove symbols.
-    @param value: value to convert
-    @param strict: output only alphanumeric characters
+
+    Parameters
+    -----------
+    value: :class:`str`
+        The value to convert.
+    strict: :class:`bool`
+        Whether or not to output only alphanumeric characters.
+
+    Returns
+    --------
+    :class:`str`
+        The value in PascalCase.
     """
 
     def substitute_word(symbols, word):
@@ -77,14 +97,39 @@ def pascal_case(value: str, strict: bool = True):
     )
 
 
-def camel_case(value: str, strict: bool = True):
+def camel_case(value: str, strict: bool = True) -> str:
     """
     Capitalize all words except first and remove symbols.
+
+    Parameters
+    -----------
+    value: :class:`str`
+        The value to convert.
+    strict: :class:`bool`
+        Whether or not to output only alphanumeric characters.
+
+    Returns
+    --------
+    :class:`str`
+        The value in camelCase.
     """
     return lowercase_first(pascal_case(value, strict=strict))
 
 
-def lowercase_first(value: str):
+def lowercase_first(value: str) -> str:
+    """
+    Lower cases the first character of the value.
+
+    Parameters
+    ----------
+    value: :class:`str`
+        The value to lower case.
+
+    Returns
+    -------
+    :class:`str`
+        The lower cased string.
+    """
     return value[0:1].lower() + value[1:]
 
 
