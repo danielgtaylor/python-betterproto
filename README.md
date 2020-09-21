@@ -70,11 +70,18 @@ message Greeting {
 }
 ```
 
-You can run the following:
+You can run the following to invoke protoc directly:
 
 ```sh
 mkdir lib
 protoc -I . --python_betterproto_out=lib example.proto
+```
+
+or run the following to invoke protoc via grpcio-tools:
+
+```sh
+pip install grpcio-tools
+python -m grpc_tools.protoc -I . --python_betterproto_out=lib example.proto
 ```
 
 This will generate `lib/hello/__init__.py` which looks like:
@@ -319,7 +326,7 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 ## Development
 
 - _Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!_
-- _See how you can help &rarr; [Contributing](CONTRIBUTING.md)_
+- _See how you can help &rarr; [Contributing](.github/CONTRIBUTING.md)_
 
 ### Requirements
 

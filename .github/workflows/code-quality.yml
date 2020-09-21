@@ -9,8 +9,8 @@ on:
       - '**'
 
 jobs:
-  black:
-    name: Black
+  check-formatting:
+    name: Check code/doc formatting
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -18,3 +18,9 @@ jobs:
       uses: lgeiger/black-action@master
       with:
         args: --check src/ tests/
+
+    - name: Install rST dependcies
+      run: python -m pip install doc8
+    - name: Lint documentation for errors
+      run: python -m doc8 docs --max-line-length 88 --ignore-path-errors "docs/migrating.rst;D001"
+      # it has a table which is longer than 88 characters long
