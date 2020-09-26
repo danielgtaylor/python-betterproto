@@ -337,6 +337,9 @@ class FieldCompiler(MessageCompiler):
         self.parent.fields.append(self)
         # Check for new imports
         annotation = self.annotation
+        if self.proto_obj.name == "email_should_have_options":
+            import sys
+            print(self.proto_obj.options, file=sys.stderr)
         if "Optional[" in annotation:
             self.output_file.typing_imports.add("Optional")
         if "List[" in annotation:

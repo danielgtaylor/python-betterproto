@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+import "google/protobuf/descriptor.proto";
+
+message MyOptions {
+    optional int32 max_size = 1;
+}
+
+extend google.protobuf.FieldOptions {
+    optional MyOptions extension = 1010;
+}

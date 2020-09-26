@@ -13,6 +13,7 @@ def main():
     data = sys.stdin.buffer.read()
 
     # Parse request
+    # import extension_pb2
     request = plugin.CodeGeneratorRequest()
     request.ParseFromString(data)
 

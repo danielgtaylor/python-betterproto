@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+import "extension.proto";
+
+message Person {
+    string email_should_have_options = 3 [(extension).max_size = 40];
+}
