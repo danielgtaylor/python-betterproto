@@ -340,6 +340,7 @@ def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
         elif wraps:
             if value is None:
                 return b""
+            # TODO: handle wrapper with different contents like EnumValue
             value = _get_wrapper(wraps)(value=value)
 
         return bytes(value)
@@ -802,7 +803,12 @@ class Message(ABC):
                 elif meta.wraps:
                     # This is a Google wrapper value message around a single
                     # scalar type.
-                    value = _get_wrapper(meta.wraps)().parse(value).value
+                    wrapper = _get_wrapper(meta.wraps)().parse(value)
+                    if meta.wraps == "enum":
+                        # There's also wrapper.name here but I don't think we need it.
+                        value = wrapper.number
+                    else:
+                        value = wrapper.value
                 else:
                     value = cls().parse(value)
                     value._serialized_on_wire = True
@@ -1153,6 +1159,7 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Any]:
 from .lib.google.protobuf import (  # noqa
     Duration,
     Timestamp,
+    EnumValue,
     BoolValue,
     BytesValue,
     DoubleValue,
@@ -1222,6 +1229,7 @@ class _WrappedMessage(Message):
 def _get_wrapper(proto_type: str) -> Type:
     """Get the wrapper message class for a wrapped type."""
     return {
+        TYPE_ENUM: EnumValue,
         TYPE_BOOL: BoolValue,
         TYPE_INT32: Int32Value,
         TYPE_UINT32: UInt32Value,

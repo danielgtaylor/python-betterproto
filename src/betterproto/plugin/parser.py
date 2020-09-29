@@ -1,29 +1,15 @@
-import itertools
-import pathlib
-import sys
-from typing import List, Iterator
-
-try:
-    # betterproto[compiler] specific dependencies
-    from google.protobuf.compiler import plugin_pb2 as plugin
-    from google.protobuf.descriptor_pb2 import (
-        DescriptorProto,
-        EnumDescriptorProto,
-        FieldDescriptorProto,
-        ServiceDescriptorProto,
-    )
-except ImportError as err:
-    missing_import = err.args[0][17:-1]
-    print(
-        "\033[31m"
-        f"Unable to import `{missing_import}` from betterproto plugin! "
-        "Please ensure that you've installed betterproto as "
-        '`pip install "betterproto[compiler]"` so that compiler dependencies '
-        "are included."
-        "\033[0m"
-    )
-    raise SystemExit(1)
-
+from betterproto.lib.google.protobuf import (
+    DescriptorProto,
+    EnumDescriptorProto,
+    FieldDescriptorProto,
+    ServiceDescriptorProto,
+)
+from betterproto.lib.google.protobuf.compiler import (
+    CodeGeneratorRequest,
+    CodeGeneratorResponse,
+    CodeGeneratorResponseFile,
+)
+from betterproto.plugin.compiler import outputfile_compiler
 from betterproto.plugin.models import (
     PluginRequestCompiler,
     OutputTemplate,
@@ -37,8 +23,10 @@ from betterproto.plugin.models import (
     is_map,
     is_oneof,
 )
-
-from betterproto.plugin.compiler import outputfile_compiler
+import itertools
+import pathlib
+import sys
+from typing import List, Iterator
 
 
 def traverse(proto_file: FieldDescriptorProto) -> Iterator:
@@ -65,7 +53,7 @@ def traverse(proto_file: FieldDescriptorProto) -> Iterator:
 
 
 def generate_code(
-    request: plugin.CodeGeneratorRequest, response: plugin.CodeGeneratorResponse
+    request: CodeGeneratorRequest, response: CodeGeneratorResponse
 ) -> None:
     plugin_options = request.parameter.split(",") if request.parameter else []
 
@@ -111,11 +99,13 @@ def generate_code(
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
         output_paths.add(output_path)
 
-        f: response.File = response.file.add()
-        f.name: str = str(output_path)
-
-        # Render and then format the output file
-        f.content: str = outputfile_compiler(output_file=output_package)
+        response.file.append(
+            CodeGeneratorResponseFile(
+                name=str(output_path),
+                # Render and then format the output file
+                content=outputfile_compiler(output_file=output_package),
+            )
+        )
 
     # Make each output directory a package with __init__ file
     init_files = (

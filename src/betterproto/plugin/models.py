@@ -29,21 +29,8 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attirbute.
 """
 
-import re
-from dataclasses import dataclass
-from dataclasses import field
-from typing import (
-    Iterator,
-    Union,
-    Type,
-    List,
-    Dict,
-    Set,
-    Text,
-)
-import textwrap
-
 import betterproto
+from betterproto.casing import sanitize_name
 from betterproto.compile.importing import (
     get_type_reference,
     parse_source_type_name,
@@ -53,30 +40,29 @@ from betterproto.compile.naming import (
     pythonize_field_name,
     pythonize_method_name,
 )
-
-from ..casing import sanitize_name
-
-try:
-    # betterproto[compiler] specific dependencies
-    from google.protobuf.compiler import plugin_pb2 as plugin
-    from google.protobuf.descriptor_pb2 import (
-        DescriptorProto,
-        EnumDescriptorProto,
-        FieldDescriptorProto,
-        FileDescriptorProto,
-        MethodDescriptorProto,
-    )
-except ImportError as err:
-    missing_import = re.match(r".*(cannot import name .*$)", err.args[0]).group(1)
-    print(
-        "\033[31m"
-        f"Unable to import `{missing_import}` from betterproto plugin! "
-        "Please ensure that you've installed betterproto as "
-        '`pip install "betterproto[compiler]"` so that compiler dependencies '
-        "are included."
-        "\033[0m"
-    )
-    raise SystemExit(1)
+from betterproto.lib.google.protobuf import (
+    DescriptorProto,
+    EnumDescriptorProto,
+    FileDescriptorProto,
+    MethodDescriptorProto,
+    FieldDescriptorProto,
+    FieldDescriptorProtoType,
+    FieldDescriptorProtoLabel,
+)
+from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
+from dataclasses import dataclass
+from dataclasses import field
+import re
+import textwrap
+from typing import (
+    Iterator,
+    Union,
+    Type,
+    List,
+    Dict,
+    Set,
+    Text,
+)
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
@@ -84,43 +70,43 @@ PLACEHOLDER = object()
 
 # Organize proto types into categories
 PROTO_FLOAT_TYPES = (
-    FieldDescriptorProto.TYPE_DOUBLE,  # 1
-    FieldDescriptorProto.TYPE_FLOAT,  # 2
+    FieldDescriptorProtoType.TYPE_DOUBLE,  # 1
+    FieldDescriptorProtoType.TYPE_FLOAT,  # 2
 )
 PROTO_INT_TYPES = (
-    FieldDescriptorProto.TYPE_INT64,  # 3
-    FieldDescriptorProto.TYPE_UINT64,  # 4
-    FieldDescriptorProto.TYPE_INT32,  # 5
-    FieldDescriptorProto.TYPE_FIXED64,  # 6
-    FieldDescriptorProto.TYPE_FIXED32,  # 7
-    FieldDescriptorProto.TYPE_UINT32,  # 13
-    FieldDescriptorProto.TYPE_SFIXED32,  # 15
-    FieldDescriptorProto.TYPE_SFIXED64,  # 16
-    FieldDescriptorProto.TYPE_SINT32,  # 17
-    FieldDescriptorProto.TYPE_SINT64,  # 18
+    FieldDescriptorProtoType.TYPE_INT64,  # 3
+    FieldDescriptorProtoType.TYPE_UINT64,  # 4
+    FieldDescriptorProtoType.TYPE_INT32,  # 5
+    FieldDescriptorProtoType.TYPE_FIXED64,  # 6
+    FieldDescriptorProtoType.TYPE_FIXED32,  # 7
+    FieldDescriptorProtoType.TYPE_UINT32,  # 13
+    FieldDescriptorProtoType.TYPE_SFIXED32,  # 15
+    FieldDescriptorProtoType.TYPE_SFIXED64,  # 16
+    FieldDescriptorProtoType.TYPE_SINT32,  # 17
+    FieldDescriptorProtoType.TYPE_SINT64,  # 18
 )
-PROTO_BOOL_TYPES = (FieldDescriptorProto.TYPE_BOOL,)  # 8
-PROTO_STR_TYPES = (FieldDescriptorProto.TYPE_STRING,)  # 9
-PROTO_BYTES_TYPES = (FieldDescriptorProto.TYPE_BYTES,)  # 12
+PROTO_BOOL_TYPES = (FieldDescriptorProtoType.TYPE_BOOL,)  # 8
+PROTO_STR_TYPES = (FieldDescriptorProtoType.TYPE_STRING,)  # 9
+PROTO_BYTES_TYPES = (FieldDescriptorProtoType.TYPE_BYTES,)  # 12
 PROTO_MESSAGE_TYPES = (
-    FieldDescriptorProto.TYPE_MESSAGE,  # 11
-    FieldDescriptorProto.TYPE_ENUM,  # 14
+    FieldDescriptorProtoType.TYPE_MESSAGE,  # 11
+    FieldDescriptorProtoType.TYPE_ENUM,  # 14
 )
-PROTO_MAP_TYPES = (FieldDescriptorProto.TYPE_MESSAGE,)  # 11
+PROTO_MAP_TYPES = (FieldDescriptorProtoType.TYPE_MESSAGE,)  # 11
 PROTO_PACKED_TYPES = (
-    FieldDescriptorProto.TYPE_DOUBLE,  # 1
-    FieldDescriptorProto.TYPE_FLOAT,  # 2
-    FieldDescriptorProto.TYPE_INT64,  # 3
-    FieldDescriptorProto.TYPE_UINT64,  # 4
-    FieldDescriptorProto.TYPE_INT32,  # 5
-    FieldDescriptorProto.TYPE_FIXED64,  # 6
-    FieldDescriptorProto.TYPE_FIXED32,  # 7
-    FieldDescriptorProto.TYPE_BOOL,  # 8
-    FieldDescriptorProto.TYPE_UINT32,  # 13
-    FieldDescriptorProto.TYPE_SFIXED32,  # 15
-    FieldDescriptorProto.TYPE_SFIXED64,  # 16
-    FieldDescriptorProto.TYPE_SINT32,  # 17
-    FieldDescriptorProto.TYPE_SINT64,  # 18
+    FieldDescriptorProtoType.TYPE_DOUBLE,  # 1
+    FieldDescriptorProtoType.TYPE_FLOAT,  # 2
+    FieldDescriptorProtoType.TYPE_INT64,  # 3
+    FieldDescriptorProtoType.TYPE_UINT64,  # 4
+    FieldDescriptorProtoType.TYPE_INT32,  # 5
+    FieldDescriptorProtoType.TYPE_FIXED64,  # 6
+    FieldDescriptorProtoType.TYPE_FIXED32,  # 7
+    FieldDescriptorProtoType.TYPE_BOOL,  # 8
+    FieldDescriptorProtoType.TYPE_UINT32,  # 13
+    FieldDescriptorProtoType.TYPE_SFIXED32,  # 15
+    FieldDescriptorProtoType.TYPE_SFIXED64,  # 16
+    FieldDescriptorProtoType.TYPE_SINT32,  # 17
+    FieldDescriptorProtoType.TYPE_SINT64,  # 18
 )
 
 
@@ -195,7 +181,7 @@ class ProtoContentBase:
 @dataclass
 class PluginRequestCompiler:
 
-    plugin_request_obj: plugin.CodeGeneratorRequest
+    plugin_request_obj: CodeGeneratorRequest
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
     @property
@@ -308,7 +294,7 @@ def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
 ) -> bool:
     """True if proto_field_obj is a map, otherwise False."""
-    if proto_field_obj.type == FieldDescriptorProto.TYPE_MESSAGE:
+    if proto_field_obj.type == FieldDescriptorProtoType.TYPE_MESSAGE:
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
         map_entry = f"{proto_field_obj.name.replace('_', '').lower()}entry"
@@ -322,7 +308,10 @@ def is_map(
 
 def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
     """True if proto_field_obj is a OneOf, otherwise False."""
-    if proto_field_obj.HasField("oneof_index"):
+
+    # FIXME
+    # if proto_field_obj.HasField("oneof_index"):
+    if proto_field_obj.oneof_index:
         return True
     return False
 
@@ -339,6 +328,7 @@ class FieldCompiler(MessageCompiler):
         annotation = self.annotation
         if self.proto_obj.name == "email_should_have_options":
             import sys
+
             print(self.proto_obj.options, file=sys.stderr)
         if "Optional[" in annotation:
             self.output_file.typing_imports.add("Optional")
@@ -387,8 +377,9 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def repeated(self) -> bool:
-        if self.proto_obj.label == FieldDescriptorProto.LABEL_REPEATED and not is_map(
-            self.proto_obj, self.parent
+        if (
+            self.proto_obj.label == FieldDescriptorProtoLabel.LABEL_REPEATED
+            and not is_map(self.proto_obj, self.parent)
         ):
             return True
         return False
@@ -403,7 +394,9 @@ class FieldCompiler(MessageCompiler):
     def field_type(self) -> str:
         """String representation of proto field type."""
         return (
-            self.proto_obj.Type.Name(self.proto_obj.type).lower().replace("type_", "")
+            FieldDescriptorProtoType(self.proto_obj.type)
+            .name.lower()
+            .replace("type_", "")
         )
 
     @property
@@ -540,11 +533,18 @@ class EnumDefinitionCompiler(MessageCompiler):
         comment: str
 
     def __post_init__(self):
+        # import sys
+
+        # sys.stderr.write(f"self.proto_obj: {self.proto_obj}")
         # Get entries/allowed values for this Enum
         self.entries = [
             self.EnumEntry(
-                name=sanitize_name(entry_proto_value.name),
-                value=entry_proto_value.number,
+                # FIXME: work out why the we're getting the wrong Message type (and no enum names)
+                #        maybe something wrong with the betterproto generated compiler methods?
+                # name=sanitize_name(entry_proto_value.name),
+                # value=entry_proto_value.number,
+                name=sanitize_name(entry_proto_value),
+                value=entry_proto_value,
                 comment=get_comment(
                     proto_file=self.proto_file, path=self.path + [2, entry_number]
                 ),

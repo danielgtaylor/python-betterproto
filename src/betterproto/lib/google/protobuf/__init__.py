@@ -696,6 +696,16 @@ class MessageOptions(betterproto.Message):
 
 
 @dataclass
+class MyOptions(betterproto.Message):
+    """
+    HACKS! - this shouldn't really be here
+    """
+
+    # optional int32 max_size = 1;
+    max_size: int = betterproto.enum_field(1)
+
+
+@dataclass
 class FieldOptions(betterproto.Message):
     # The ctype option instructs the C++ code generator to use a different
     # representation of the field than it normally would.  See the specific
@@ -750,6 +760,19 @@ class FieldOptions(betterproto.Message):
     weak: bool = betterproto.bool_field(10)
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
+
+    """
+    TODO:
+    The compiler should monkey patch this field on at runtime in the first pass over
+    the input. This would consist of
+    - dynamically defining the MyOptions dataclass, i.e. dataclass(type("MyOptions", ...))
+    - monkey patching FieldOptions:
+        e.g. FieldOptions.__init__ = ...
+             FieldOptions.__dataclass_fields__['extension'] = field(...)
+             FieldOptions.__annotations__['extension'] = MyOptions
+    """
+    # optional MyOptions extension = 1010;
+    extension: "MyOptions" = betterproto.message_field(1010)
 
 
 @dataclass
