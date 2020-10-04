@@ -315,6 +315,9 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
         return True
     return False
 
+import ptvsd
+ptvsd.enable_attach()
+ptvsd.wait_for_attach()  # blocks execution until debugger is attached
 
 @dataclass
 class FieldCompiler(MessageCompiler):
@@ -326,9 +329,8 @@ class FieldCompiler(MessageCompiler):
         self.parent.fields.append(self)
         # Check for new imports
         annotation = self.annotation
-        if self.proto_obj.name == "email_should_have_options":
+        if self.proto_obj.name == "email":
             import sys
-
             print(self.proto_obj.options, file=sys.stderr)
         if "Optional[" in annotation:
             self.output_file.typing_imports.add("Optional")

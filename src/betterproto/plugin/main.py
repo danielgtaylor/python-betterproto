@@ -16,7 +16,7 @@ def main():
 
     request = CodeGeneratorRequest().parse(data)
 
-    sys.stderr.write(f"request: {request}")
+    # sys.stderr.write(f"request: {request}")
 
     # TODO: scan request to find Option extensions,
     #       and if found then monkey patch the relevant messages and parse data again
