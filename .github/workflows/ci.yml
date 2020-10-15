@@ -19,6 +19,7 @@ jobs:
         exclude:
           - os: Windows
             python-version: 3.6
+          - os: Windows
             python-version: 3.9
     steps:
       - uses: actions/checkout@v2
