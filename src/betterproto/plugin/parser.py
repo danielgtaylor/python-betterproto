@@ -1,9 +1,7 @@
 import itertools
 import pathlib
 import sys
-from typing import Iterator, List, Tuple, Union
-
-from google.protobuf.descriptor import Descriptor
+from typing import TYPE_CHECKING, Iterator, List, Tuple, Union, Set
 
 try:
     # betterproto[compiler] specific dependencies
@@ -39,6 +37,9 @@ from .models import (
     is_map,
     is_oneof,
 )
+
+if TYPE_CHECKING:
+    from google.protobuf.descriptor import Descriptor
 
 
 def traverse(
@@ -108,7 +109,7 @@ def generate_code(
                 read_protobuf_service(service, index, output_package)
 
     # Generate output files
-    output_paths: pathlib.Path = set()
+    output_paths: Set[pathlib.Path] = set()
     for output_package_name, output_package in request_data.output_packages.items():
 
         # Add files to the response object
@@ -116,20 +117,17 @@ def generate_code(
         output_paths.add(output_path)
 
         f: response.File = response.file.add()
-        f.name: str = str(output_path)
+        f.name = str(output_path)
 
         # Render and then format the output file
-        f.content: str = outputfile_compiler(output_file=output_package)
+        f.content = outputfile_compiler(output_file=output_package)
 
     # Make each output directory a package with __init__ file
-    init_files = (
-        set(
-            directory.joinpath("__init__.py")
-            for path in output_paths
-            for directory in path.parents
-        )
-        - output_paths
-    )
+    init_files = {
+         directory.joinpath("__init__.py")
+         for path in output_paths
+         for directory in path.parents
+     } - output_paths
 
     for init_file in init_files:
         init = response.file.add()

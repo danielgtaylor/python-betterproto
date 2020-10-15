@@ -31,9 +31,7 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
     )
     template = env.get_template("template.py.j2")
 
-    res = black.format_str(
+    return black.format_str(
         template.render(output_file=output_file),
         mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
     )
-
-    return res

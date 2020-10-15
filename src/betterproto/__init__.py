@@ -315,11 +315,7 @@ def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
         return encode_varint(value)
     elif proto_type in [TYPE_SINT32, TYPE_SINT64]:
         # Handle zig-zag encoding.
-        if value >= 0:
-            value = value << 1
-        else:
-            value = (value << 1) ^ (~0)
-        return encode_varint(value)
+        return encode_varint(value << 1 if value >= 0 else (value << 1) ^ (~0))
     elif proto_type in FIXED_TYPES:
         return struct.pack(_pack_fmt(proto_type), value)
     elif proto_type == TYPE_STRING:
@@ -463,7 +459,7 @@ class ProtoClassMetadata:
         self.field_name_by_number: Dict[int, str] = by_field_number
         self.meta_by_field_name: Dict[str, FieldMetadata] = by_field_name
         self.sorted_field_names: Tuple[str, FieldMetadata] = tuple(
-            by_field_number[number] for number in sorted(by_field_number.keys())
+            by_field_number[number] for number in sorted(by_field_number)
         )
         self.default_gen: Dict[str, Callable[[], Any]] = self._get_default_gen(
             cls, fields
@@ -719,9 +715,8 @@ class Message(ABC):
 
     @classmethod
     def _type_hints(cls) -> Dict[str, Type]:
-        module = inspect.getmodule(cls)
-        type_hints = get_type_hints(cls, vars(module))
-        return type_hints
+        module = sys.modules[cls.__module__]
+        return get_type_hints(cls, vars(module))
 
     @classmethod
     def _cls_for(cls, field: dataclasses.Field, index: int = 0) -> Type:
@@ -1029,8 +1024,8 @@ class Message(ABC):
                     v = getattr(self, field_name)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
-                        for i in range(len(value[key])):
-                            v.append(cls().from_dict(value[key][i]))
+                        for item in value[key]:
+                            v.append(cls().from_dict(item))
                     elif isinstance(v, datetime):
                         v = datetime.fromisoformat(value[key].replace("Z", "+00:00"))
                         setattr(self, field_name, v)

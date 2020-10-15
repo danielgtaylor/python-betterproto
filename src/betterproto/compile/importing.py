@@ -50,7 +50,7 @@ def get_type_reference(
         if source_type == ".google.protobuf.Duration":
             return "timedelta"
 
-        if source_type == ".google.protobuf.Timestamp":
+        elif source_type == ".google.protobuf.Timestamp":
             return "datetime"
 
     source_package, source_type = parse_source_type_name(source_type)

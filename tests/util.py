@@ -23,8 +23,7 @@ def get_files(path, suffix: str) -> Generator[str, None, None]:
 
 def get_directories(path):
     for root, directories, files in os.walk(path):
-        for directory in directories:
-            yield directory
+        yield from directories
 
 
 async def protoc(
@@ -49,7 +48,7 @@ async def protoc(
 
 
 def get_test_case_json_data(test_case_name: str, json_file_name: Optional[str] = None):
-    test_data_file_name = json_file_name if json_file_name else f"{test_case_name}.json"
+    test_data_file_name = json_file_name or f"{test_case_name}.json"
     test_data_file_path = inputs_path.joinpath(test_case_name, test_data_file_name)
 
     if not test_data_file_path.exists():
@@ -77,7 +76,7 @@ def find_module(
 
     module_path = pathlib.Path(*module.__path__)
 
-    for sub in list(sub.parent for sub in module_path.glob("**/__init__.py")):
+    for sub in [sub.parent for sub in module_path.glob("**/__init__.py")]:
         if sub == module_path:
             continue
         sub_module_path = sub.relative_to(module_path)
