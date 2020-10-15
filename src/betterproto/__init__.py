@@ -435,6 +435,14 @@ class ProtoClassMetadata:
         "sorted_field_names",
     )
 
+    oneof_group_by_field: Dict[str, str]
+    oneof_field_by_group: Dict[str, Set[dataclasses.Field]]
+    field_name_by_number: Dict[int, str]
+    meta_by_field_name: Dict[str, FieldMetadata]
+    sorted_field_names: Tuple[str, ...]
+    default_gen: Dict[str, Callable[[], Any]]
+    cls_by_field: Dict[str, Type]
+
     def __init__(self, cls: Type["Message"]):
         by_field = {}
         by_group: Dict[str, Set] = {}
@@ -454,17 +462,15 @@ class ProtoClassMetadata:
             by_field_name[field.name] = meta
             by_field_number[meta.number] = field.name
 
-        self.oneof_group_by_field: Dict[str, str] = by_field
-        self.oneof_field_by_group: Dict[str, Set[dataclasses.Field]] = by_group
-        self.field_name_by_number: Dict[int, str] = by_field_number
-        self.meta_by_field_name: Dict[str, FieldMetadata] = by_field_name
-        self.sorted_field_names: Tuple[str, FieldMetadata] = tuple(
+        self.oneof_group_by_field = by_field
+        self.oneof_field_by_group = by_group
+        self.field_name_by_number = by_field_number
+        self.meta_by_field_name = by_field_name
+        self.sorted_field_names = tuple(
             by_field_number[number] for number in sorted(by_field_number)
         )
-        self.default_gen: Dict[str, Callable[[], Any]] = self._get_default_gen(
-            cls, fields
-        )
-        self.cls_by_field: Dict[str, Type] = self._get_cls_by_field(cls, fields)
+        self.default_gen = self._get_default_gen(cls, fields)
+        self.cls_by_field = self._get_cls_by_field(cls, fields)
 
     @staticmethod
     def _get_default_gen(
