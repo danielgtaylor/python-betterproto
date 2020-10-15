@@ -5,7 +5,7 @@ import sys
 
 from google.protobuf.compiler import plugin_pb2 as plugin
 
-from .parser import generate_code
+from betterproto.plugin.parser import generate_code
 
 
 def main() -> None:
