@@ -47,7 +47,7 @@ def traverse(
 ) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List[Descriptor], prefix=""
+        path: List[int], items: List["Descriptor"], prefix=""
     ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
@@ -124,10 +124,10 @@ def generate_code(
 
     # Make each output directory a package with __init__ file
     init_files = {
-         directory.joinpath("__init__.py")
-         for path in output_paths
-         for directory in path.parents
-     } - output_paths
+        directory.joinpath("__init__.py")
+        for path in output_paths
+        for directory in path.parents
+    } - output_paths
 
     for init_file in init_files:
         init = response.file.add()
