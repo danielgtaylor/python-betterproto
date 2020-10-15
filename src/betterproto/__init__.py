@@ -611,12 +611,6 @@ class Message(ABC):
 
         super().__setattr__(attr, value)
 
-    def __bool__(self) -> bool:
-        return any(
-            self.__raw_get(field_name) is not PLACEHOLDER
-            for field_name in self._betterproto.meta_by_field_name
-        )
-
     @property
     def _betterproto(self):
         """

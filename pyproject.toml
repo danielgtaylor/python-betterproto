@@ -22,7 +22,7 @@ protobuf = { version = "^3.12.2", optional = true }
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
-bpython = { version = "^0.19", markers = "sys_platform != 'win32'" }
+bpython = "^0.19"
 grpcio-tools = "^1.30.0"
 jinja2 = "^2.11.2"
 mypy = "^0.770"

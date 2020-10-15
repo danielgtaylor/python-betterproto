@@ -319,29 +319,6 @@ def test_oneof_default_value_set_causes_writes_wire():
     )
 
 
-def test_bool():
-    # evaluates similarly to a collection
-    # >>> bool(list())
-    # False
-    # >>> bool([1]]
-    # True
-    # >>> bool([0])
-    # True
-
-    @dataclass
-    class Falsy(betterproto.Message):
-        pass
-
-    @dataclass
-    class Truthy(betterproto.Message):
-        bar: int = betterproto.int32_field(1)
-
-    assert not Falsy()
-    assert not Truthy()
-    assert Truthy(bar=1)
-    assert Truthy(bar=0)
-
-
 def test_recursive_message():
     from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
 
