@@ -27,10 +27,7 @@ class ClientStub:
 
 
 async def to_list(generator: AsyncIterator):
-    result = []
-    async for value in generator:
-        result.append(value)
-    return result
+    return [value async for value in generator]
 
 
 @pytest.fixture

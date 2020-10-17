@@ -5,10 +5,9 @@ try:
     import black
     import jinja2
 except ImportError as err:
-    missing_import = err.args[0][17:-1]
     print(
         "\033[31m"
-        f"Unable to import `{missing_import}` from betterproto plugin! "
+        f"Unable to import `{err.name}` from betterproto plugin! "
         "Please ensure that you've installed betterproto as "
         '`pip install "betterproto[compiler]"` so that compiler dependencies '
         "are included."
@@ -16,7 +15,7 @@ except ImportError as err:
     )
     raise SystemExit(1)
 
-from betterproto.plugin.models import OutputTemplate
+from .models import OutputTemplate
 
 
 def outputfile_compiler(output_file: OutputTemplate) -> str:
@@ -32,9 +31,7 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
     )
     template = env.get_template("template.py.j2")
 
-    res = black.format_str(
+    return black.format_str(
         template.render(output_file=output_file),
         mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
     )
-
-    return res
