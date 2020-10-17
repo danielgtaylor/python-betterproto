@@ -17,7 +17,7 @@ jobs:
     - name: Run Black
       uses: lgeiger/black-action@master
       with:
-        args: --check src/ tests/
+        args: --check src/ tests/ benchmarks/
 
     - name: Install rST dependcies
       run: python -m pip install doc8
