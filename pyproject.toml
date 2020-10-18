@@ -17,7 +17,6 @@ black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.4.1"
 jinja2 = { version = "^2.11.2", optional = true }
-protobuf = { version = "^3.12.2", optional = true }
 python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
@@ -26,7 +25,7 @@ bpython = "^0.19"
 grpcio-tools = "^1.30.0"
 jinja2 = "^2.11.2"
 mypy = "^0.770"
-poethepoet = "^0.5.0"
+poethepoet = ">=0.9.0"
 protobuf = "^3.12.2"
 pytest = "^5.4.2"
 pytest-asyncio = "^0.12.0"
@@ -43,7 +42,7 @@ asv = "^0.4.2"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "jinja2", "protobuf"]
+compiler = ["black", "jinja2"]
 
 [tool.poe.tasks]
 # Dev workflow tasks
@@ -54,6 +53,16 @@ format      = { cmd = "black . --exclude tests/output_",   help = "Apply black f
 docs        = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
 bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
 clean       = { cmd = "rm -rf .asv .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help  = "Clean out generated files from the workspace" }
+
+generate_lib.cmd = """
+protoc
+    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
+    --custom_opt=INCLUDE_GOOGLE
+    --custom_out=src/betterproto/lib
+    -I /usr/local/include/
+    /usr/local/include/google/protobuf/**/*.proto
+"""
+generate_lib.help = "Regenerate the types in betterproto.lib.google"
 
 # CI tasks
 full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
