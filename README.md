@@ -413,9 +413,9 @@ Assuming your `google.protobuf` source files (included with all releases of `pro
 
 ```sh
 protoc \
-    --plugin=protoc-gen-custom=betterproto/plugin.py \
+    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py \
     --custom_opt=INCLUDE_GOOGLE \
-    --custom_out=betterproto/lib \
+    --custom_out=src/betterproto/lib \
     -I /usr/local/include/ \
     /usr/local/include/google/protobuf/*.proto
 ```

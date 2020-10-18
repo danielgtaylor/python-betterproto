@@ -1149,6 +1149,7 @@ from .lib.google.protobuf import (  # noqa
     BytesValue,
     DoubleValue,
     Duration,
+    EnumValue,
     FloatValue,
     Int32Value,
     Int64Value,
@@ -1215,14 +1216,17 @@ class _WrappedMessage(Message):
 
 def _get_wrapper(proto_type: str) -> Type:
     """Get the wrapper message class for a wrapped type."""
+
+    # TODO: include ListValue and NullValue?
     return {
         TYPE_BOOL: BoolValue,
-        TYPE_INT32: Int32Value,
-        TYPE_UINT32: UInt32Value,
-        TYPE_INT64: Int64Value,
-        TYPE_UINT64: UInt64Value,
-        TYPE_FLOAT: FloatValue,
-        TYPE_DOUBLE: DoubleValue,
-        TYPE_STRING: StringValue,
         TYPE_BYTES: BytesValue,
+        TYPE_DOUBLE: DoubleValue,
+        TYPE_FLOAT: FloatValue,
+        TYPE_ENUM: EnumValue,
+        TYPE_INT32: Int32Value,
+        TYPE_INT64: Int64Value,
+        TYPE_STRING: StringValue,
+        TYPE_UINT32: UInt32Value,
+        TYPE_UINT64: UInt64Value,
     }[proto_type]
