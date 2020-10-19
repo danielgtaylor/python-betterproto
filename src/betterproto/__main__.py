@@ -65,8 +65,8 @@ def compile_files(*files: Path, output_dir: Path) -> None:
         out(f"VERBOSE: {stdout}")
 
     out(
-        f"Finished generating output for {len(files)} files, compiled output should be "
-        f"in {output_dir.as_posix()}"
+        f"Finished generating output for {len(files)}, compiled output should be in "
+        f"{output_dir.as_posix()}"
     )
 
 
