@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-import sys
+
 import os
+import sys
 
 from google.protobuf.compiler import plugin_pb2 as plugin
 
 from betterproto.plugin.parser import generate_code
 
 
-def main():
+def main() -> None:
     """The plugin's main entry point."""
     # Read request message from stdin
     data = sys.stdin.buffer.read()
@@ -33,7 +34,7 @@ def main():
     sys.stdout.buffer.write(output)
 
 
-def dump_request(dump_file: str, request: plugin.CodeGeneratorRequest):
+def dump_request(dump_file: str, request: plugin.CodeGeneratorRequest) -> None:
     """
     For developers: Supports running plugin.py standalone so its possible to debug it.
     Run protoc (or generate.py) with BETTERPROTO_DUMP="yourfile.bin" to write the request to a file.

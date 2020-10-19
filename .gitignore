@@ -15,3 +15,5 @@ output
 .DS_Store
 .tox
 .venv
+.asv
+venv

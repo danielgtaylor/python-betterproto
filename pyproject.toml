@@ -16,7 +16,7 @@ python = "^3.6"
 backports-datetime-fromisoformat = { version = "^1.0.0", python = "<3.7" }
 black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
-grpclib = "^0.3.1"
+grpclib = "^0.4.1"
 jinja2 = { version = "^2.11.2", optional = true }
 protobuf = { version = "^3.12.2", optional = true }
 
@@ -33,6 +33,9 @@ pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
 tox = "^3.15.1"
+sphinx = "3.1.2"
+sphinx-rtd-theme = "0.5.0"
+asv = "^0.4.2"
 
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
@@ -47,6 +50,8 @@ test        = { cmd = "pytest --cov src", help = "Run tests" }
 types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
 format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
 clean       = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
+docs        = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
+bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
 
 # CI tasks
 full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
@@ -72,5 +77,5 @@ commands =
 """
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=1.0.0,<2"]
+build-backend = "poetry.core.masonry.api"

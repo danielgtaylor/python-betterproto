@@ -1,10 +1,10 @@
 import os
 import re
-from typing import Dict, List, Set, Type
+from typing import Dict, List, Set, Tuple, Type
 
-from betterproto import safe_snake_case
-from betterproto.compile.naming import pythonize_class_name
-from betterproto.lib.google import protobuf as google_protobuf
+from ..casing import safe_snake_case
+from ..lib.google import protobuf as google_protobuf
+from .naming import pythonize_class_name
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,
@@ -19,7 +19,7 @@ WRAPPER_TYPES: Dict[str, Type] = {
 }
 
 
-def parse_source_type_name(field_type_name):
+def parse_source_type_name(field_type_name: str) -> Tuple[str, str]:
     """
     Split full source type name into package and type name.
     E.g. 'root.package.Message' -> ('root.package', 'Message')
@@ -50,7 +50,7 @@ def get_type_reference(
         if source_type == ".google.protobuf.Duration":
             return "timedelta"
 
-        if source_type == ".google.protobuf.Timestamp":
+        elif source_type == ".google.protobuf.Timestamp":
             return "datetime"
 
     source_package, source_type = parse_source_type_name(source_type)
@@ -79,7 +79,7 @@ def get_type_reference(
     return reference_cousin(current_package, imports, py_package, py_type)
 
 
-def reference_absolute(imports, py_package, py_type):
+def reference_absolute(imports: Set[str], py_package: List[str], py_type: str) -> str:
     """
     Returns a reference to a python type located in the root, i.e. sys.path.
     """

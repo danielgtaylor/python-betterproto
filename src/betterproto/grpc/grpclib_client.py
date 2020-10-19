@@ -1,7 +1,7 @@
-from abc import ABC
 import asyncio
-import grpclib.const
+from abc import ABC
 from typing import (
+    TYPE_CHECKING,
     AsyncIterable,
     AsyncIterator,
     Collection,
@@ -9,11 +9,13 @@ from typing import (
     Mapping,
     Optional,
     Tuple,
-    TYPE_CHECKING,
     Type,
     Union,
 )
-from betterproto._types import ST, T
+
+import grpclib.const
+
+from .._types import ST, T
 
 if TYPE_CHECKING:
     from grpclib.client import Channel
