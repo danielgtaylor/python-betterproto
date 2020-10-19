@@ -18,9 +18,6 @@ class Version(betterproto.Message):
     # be empty for mainline stable releases.
     suffix: str = betterproto.string_field(4)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class CodeGeneratorRequest(betterproto.Message):
@@ -49,9 +46,6 @@ class CodeGeneratorRequest(betterproto.Message):
     # The version number of protocol compiler.
     compiler_version: "Version" = betterproto.message_field(3)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class CodeGeneratorResponse(betterproto.Message):
@@ -66,9 +60,6 @@ class CodeGeneratorResponse(betterproto.Message):
     # exiting with a non-zero status code.
     error: str = betterproto.string_field(1)
     file: List["CodeGeneratorResponseFile"] = betterproto.message_field(15)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -117,9 +108,6 @@ class CodeGeneratorResponseFile(betterproto.Message):
     insertion_point: str = betterproto.string_field(2)
     # The file contents.
     content: str = betterproto.string_field(15)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

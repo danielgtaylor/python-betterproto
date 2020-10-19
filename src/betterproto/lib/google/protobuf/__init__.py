@@ -172,9 +172,6 @@ class Timestamp(betterproto.Message):
     # count forward in time. Must be from 0 to 999,999,999 inclusive.
     nanos: int = betterproto.int32_field(2)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class FieldMask(betterproto.Message):
@@ -259,9 +256,6 @@ class FieldMask(betterproto.Message):
     # The set of field mask paths.
     paths: List[str] = betterproto.string_field(1)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class SourceContext(betterproto.Message):
@@ -273,9 +267,6 @@ class SourceContext(betterproto.Message):
     # The path-qualified name of the .proto file that contained the associated
     # protobuf element.  For example: `"google/protobuf/source_context.proto"`.
     file_name: str = betterproto.string_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -335,9 +326,6 @@ class Any(betterproto.Message):
     # Must be a valid serialized protocol buffer of the above specified type.
     value: bytes = betterproto.bytes_field(2)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class Type(betterproto.Message):
@@ -355,9 +343,6 @@ class Type(betterproto.Message):
     source_context: "SourceContext" = betterproto.message_field(5)
     # The source syntax.
     syntax: "Syntax" = betterproto.enum_field(6)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -387,9 +372,6 @@ class Field(betterproto.Message):
     # The string value of the default value of this field. Proto2 syntax only.
     default_value: str = betterproto.string_field(11)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class Enum(betterproto.Message):
@@ -408,9 +390,6 @@ class Enum(betterproto.Message):
     # The source syntax.
     syntax: "Syntax" = betterproto.enum_field(5)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class EnumValue(betterproto.Message):
@@ -422,9 +401,6 @@ class EnumValue(betterproto.Message):
     number: int = betterproto.int32_field(2)
     # Protocol buffer options.
     options: List["Option"] = betterproto.message_field(3)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -444,9 +420,6 @@ class Option(betterproto.Message):
     # should be used. If the value is an enum, it should be stored as an int32
     # value using the google.protobuf.Int32Value type.
     value: "Any" = betterproto.message_field(2)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -491,9 +464,6 @@ class Api(betterproto.Message):
     # The source syntax of the service.
     syntax: "Syntax" = betterproto.enum_field(7)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class Method(betterproto.Message):
@@ -513,9 +483,6 @@ class Method(betterproto.Message):
     options: List["Option"] = betterproto.message_field(6)
     # The source syntax of this method.
     syntax: "Syntax" = betterproto.enum_field(7)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -562,9 +529,6 @@ class Mixin(betterproto.Message):
     # If non-empty specifies a path under which inherited HTTP paths are rooted.
     root: str = betterproto.string_field(2)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class Duration(betterproto.Message):
@@ -610,9 +574,6 @@ class Duration(betterproto.Message):
     # `seconds` field. Must be from -999,999,999 to +999,999,999 inclusive.
     nanos: int = betterproto.int32_field(2)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class Struct(betterproto.Message):
@@ -629,9 +590,6 @@ class Struct(betterproto.Message):
     fields: Dict[str, "Value"] = betterproto.map_field(
         1, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
     )
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -657,9 +615,6 @@ class Value(betterproto.Message):
     # Represents a repeated `Value`.
     list_value: "ListValue" = betterproto.message_field(6, group="kind")
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class ListValue(betterproto.Message):
@@ -670,9 +625,6 @@ class ListValue(betterproto.Message):
 
     # Repeated field of dynamically typed values.
     values: List["Value"] = betterproto.message_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -685,9 +637,6 @@ class DoubleValue(betterproto.Message):
     # The double value.
     value: float = betterproto.double_field(1)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class FloatValue(betterproto.Message):
@@ -698,9 +647,6 @@ class FloatValue(betterproto.Message):
 
     # The float value.
     value: float = betterproto.float_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -713,9 +659,6 @@ class Int64Value(betterproto.Message):
     # The int64 value.
     value: int = betterproto.int64_field(1)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class UInt64Value(betterproto.Message):
@@ -726,9 +669,6 @@ class UInt64Value(betterproto.Message):
 
     # The uint64 value.
     value: int = betterproto.uint64_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -741,9 +681,6 @@ class Int32Value(betterproto.Message):
     # The int32 value.
     value: int = betterproto.int32_field(1)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class UInt32Value(betterproto.Message):
@@ -754,9 +691,6 @@ class UInt32Value(betterproto.Message):
 
     # The uint32 value.
     value: int = betterproto.uint32_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -769,9 +703,6 @@ class BoolValue(betterproto.Message):
     # The bool value.
     value: bool = betterproto.bool_field(1)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class StringValue(betterproto.Message):
@@ -783,9 +714,6 @@ class StringValue(betterproto.Message):
     # The string value.
     value: str = betterproto.string_field(1)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class BytesValue(betterproto.Message):
@@ -796,9 +724,6 @@ class BytesValue(betterproto.Message):
 
     # The bytes value.
     value: bytes = betterproto.bytes_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -813,9 +738,6 @@ class Empty(betterproto.Message):
 
     pass
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class FileDescriptorSet(betterproto.Message):
@@ -825,9 +747,6 @@ class FileDescriptorSet(betterproto.Message):
     """
 
     file: List["FileDescriptorProto"] = betterproto.message_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -858,9 +777,6 @@ class FileDescriptorProto(betterproto.Message):
     # "proto3".
     syntax: str = betterproto.string_field(12)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class DescriptorProto(betterproto.Message):
@@ -881,18 +797,12 @@ class DescriptorProto(betterproto.Message):
     # A given name may only be reserved once.
     reserved_name: List[str] = betterproto.string_field(10)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class DescriptorProtoExtensionRange(betterproto.Message):
     start: int = betterproto.int32_field(1)
     end: int = betterproto.int32_field(2)
     options: "ExtensionRangeOptions" = betterproto.message_field(3)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -906,17 +816,11 @@ class DescriptorProtoReservedRange(betterproto.Message):
     start: int = betterproto.int32_field(1)
     end: int = betterproto.int32_field(2)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class ExtensionRangeOptions(betterproto.Message):
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -952,9 +856,6 @@ class FieldDescriptorProto(betterproto.Message):
     json_name: str = betterproto.string_field(10)
     options: "FieldOptions" = betterproto.message_field(8)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class OneofDescriptorProto(betterproto.Message):
@@ -962,9 +863,6 @@ class OneofDescriptorProto(betterproto.Message):
 
     name: str = betterproto.string_field(1)
     options: "OneofOptions" = betterproto.message_field(2)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -984,9 +882,6 @@ class EnumDescriptorProto(betterproto.Message):
     # be reserved once.
     reserved_name: List[str] = betterproto.string_field(5)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class EnumDescriptorProtoEnumReservedRange(betterproto.Message):
@@ -1000,9 +895,6 @@ class EnumDescriptorProtoEnumReservedRange(betterproto.Message):
     start: int = betterproto.int32_field(1)
     end: int = betterproto.int32_field(2)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class EnumValueDescriptorProto(betterproto.Message):
@@ -1012,9 +904,6 @@ class EnumValueDescriptorProto(betterproto.Message):
     number: int = betterproto.int32_field(2)
     options: "EnumValueOptions" = betterproto.message_field(3)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class ServiceDescriptorProto(betterproto.Message):
@@ -1023,9 +912,6 @@ class ServiceDescriptorProto(betterproto.Message):
     name: str = betterproto.string_field(1)
     method: List["MethodDescriptorProto"] = betterproto.message_field(2)
     options: "ServiceOptions" = betterproto.message_field(3)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1042,9 +928,6 @@ class MethodDescriptorProto(betterproto.Message):
     client_streaming: bool = betterproto.bool_field(5)
     # Identifies if server streams multiple server messages
     server_streaming: bool = betterproto.bool_field(6)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1174,9 +1057,6 @@ class MessageOptions(betterproto.Message):
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class FieldOptions(betterproto.Message):
@@ -1234,17 +1114,11 @@ class FieldOptions(betterproto.Message):
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class OneofOptions(betterproto.Message):
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1259,9 +1133,6 @@ class EnumOptions(betterproto.Message):
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class EnumValueOptions(betterproto.Message):
@@ -1273,9 +1144,6 @@ class EnumValueOptions(betterproto.Message):
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class ServiceOptions(betterproto.Message):
@@ -1285,9 +1153,6 @@ class ServiceOptions(betterproto.Message):
     deprecated: bool = betterproto.bool_field(33)
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1299,9 +1164,6 @@ class MethodOptions(betterproto.Message):
     idempotency_level: "MethodOptionsIdempotencyLevel" = betterproto.enum_field(34)
     # The parser stores options it doesn't recognize here. See above.
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1325,9 +1187,6 @@ class UninterpretedOption(betterproto.Message):
     string_value: bytes = betterproto.bytes_field(7)
     aggregate_value: str = betterproto.string_field(8)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class UninterpretedOptionNamePart(betterproto.Message):
@@ -1341,9 +1200,6 @@ class UninterpretedOptionNamePart(betterproto.Message):
 
     name_part: str = betterproto.string_field(1)
     is_extension: bool = betterproto.bool_field(2)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1383,9 +1239,6 @@ class SourceCodeInfo(betterproto.Message):
     # should probably be designed to   ignore those that it doesn't understand,
     # as more types of locations could   be recorded in the future.
     location: List["SourceCodeInfoLocation"] = betterproto.message_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1434,9 +1287,6 @@ class SourceCodeInfoLocation(betterproto.Message):
     trailing_comments: str = betterproto.string_field(4)
     leading_detached_comments: List[str] = betterproto.string_field(6)
 
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
 
 @dataclass(eq=False, repr=False)
 class GeneratedCodeInfo(betterproto.Message):
@@ -1449,9 +1299,6 @@ class GeneratedCodeInfo(betterproto.Message):
     # An Annotation connects some span of text in generated code to an element of
     # its generating .proto file.
     annotation: List["GeneratedCodeInfoAnnotation"] = betterproto.message_field(1)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
 
 
 @dataclass(eq=False, repr=False)
@@ -1468,6 +1315,3 @@ class GeneratedCodeInfoAnnotation(betterproto.Message):
     # the identified offset. The end offset should be one past the last relevant
     # byte (so the length of the text = end - begin).
     end: int = betterproto.int32_field(4)
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
