@@ -312,6 +312,10 @@ class MessageCompiler(ProtoContentBase):
             if f.deprecated:
                 yield f.py_name
 
+    @property
+    def has_deprecated_fields(self) -> bool:
+        return any(self.deprecated_fields)
+
 
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
