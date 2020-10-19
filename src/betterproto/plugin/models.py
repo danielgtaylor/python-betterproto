@@ -251,15 +251,15 @@ class OutputTemplate:
         return self.package_proto_obj.package
 
     @property
-    def input_filenames(self) -> List[str]:
+    def input_filenames(self) -> Iterator[str]:
         """Names of the input files used to build this output.
 
         Returns
         -------
-        List[str]
+        Iterator[str]
             Names of the input files used to build this output.
         """
-        return [f.name for f in self.input_files]
+        return sorted(f.name for f in self.input_files)
 
     @property
     def python_module_imports(self) -> Set[str]:
