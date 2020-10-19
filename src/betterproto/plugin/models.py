@@ -58,7 +58,7 @@ from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 import re
 import textwrap
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Text, Type, Union
 import sys
 
 from ..casing import sanitize_name
@@ -251,15 +251,15 @@ class OutputTemplate:
         return self.package_proto_obj.package
 
     @property
-    def input_filenames(self) -> List[str]:
+    def input_filenames(self) -> Iterable[str]:
         """Names of the input files used to build this output.
 
         Returns
         -------
-        List[str]
+        Iterable[str]
             Names of the input files used to build this output.
         """
-        return [f.name for f in self.input_files]
+        return sorted(f.name for f in self.input_files)
 
     @property
     def python_module_imports(self) -> Set[str]:
