@@ -37,15 +37,15 @@ def test_has_field():
 
     # Is always set from parse, even if all collections are empty
     with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == True
+    assert betterproto.serialized_on_wire(with_collections_empty)
     with_collections_list = WithCollections().parse(
         bytes(WithCollections(test_list=["a", "b", "c"]))
     )
-    assert betterproto.serialized_on_wire(with_collections_list) == True
+    assert betterproto.serialized_on_wire(with_collections_list)
     with_collections_map = WithCollections().parse(
         bytes(WithCollections(test_map={"a": "b", "c": "d"}))
     )
-    assert betterproto.serialized_on_wire(with_collections_map) == True
+    assert betterproto.serialized_on_wire(with_collections_map)
 
 
 def test_class_init():
