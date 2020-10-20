@@ -611,7 +611,7 @@ class Message(ABC):
         super().__setattr__(attr, value)
 
     def __bool__(self) -> bool:
-        """Whether or not the Message has had fields set over its lifetime."""
+        """Whether or not the Message has any fields that are non-default."""
         if not self._serialized_on_wire:
             return False
         for field in dataclasses.fields(self):
