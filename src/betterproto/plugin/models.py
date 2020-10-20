@@ -291,6 +291,18 @@ class MessageCompiler(ProtoContentBase):
             if f.deprecated:
                 yield f.py_name
 
+    @property
+    def params(self) -> str:
+        return (
+            f"self, {', '.join(f'{f.py_name} = None' for f in self.fields)}"
+            if self.fields
+            else "self"
+        )
+
+    @property
+    def super_params(self) -> str:
+        return ", ".join(f"{f.py_name}={f.py_name}" for f in self.fields)
+
 
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto

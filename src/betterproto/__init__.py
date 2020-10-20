@@ -1,6 +1,5 @@
 import dataclasses
 import enum
-import inspect
 import json
 import struct
 import sys
@@ -536,12 +535,7 @@ class MessageMeta(ABCMeta):
                 fields[annotation] = field
 
         message_class = super().__new__(mcs, name, bases, attrs)
-
-        # Set __dataclass_fields__
-        setattr(message_class, dataclasses._FIELDS, fields)
-        # We don't need to set __dataclass_params__ as its only use appears to be for
-        # checking if any base classes are frozen and Messages don't support inheritance
-        # so this isn't useful.
+        message_class.__dataclass_fields__ = fields
         return message_class
 
 
@@ -558,11 +552,10 @@ class Message(metaclass=MessageMeta):
             Calls :meth:`__bytes__`.
     """
 
+    _group_current: Dict[str, str]
     _serialized_on_wire: bool
     _unknown_fields: bytes
-    _group_current: Dict[str, str]
-    __dataclass_fields__: Mapping[str, dataclasses.Field]  # Technically should be Final
-    # as this is not settable by the end user, but that doesn't come till python 3.8
+    __dataclass_fields__: Mapping[str, dataclasses.Field]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         args = list(args)
@@ -602,7 +595,7 @@ class Message(metaclass=MessageMeta):
             )
         if kwargs:
             raise TypeError(
-                f"__init__() got an unexpected keyword argument {repr(list(kwargs)[0])}"
+                f"__init__() got an unexpected keyword argument {list(kwargs)[0]!r}"
             )
 
         # Now that all the defaults are set, reset it!
