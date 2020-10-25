@@ -563,7 +563,7 @@ class Message(metaclass=MessageMeta):
         all_sentinel = True  # Keep track of whether every field was default
         group_current: Dict[str, str] = {}
 
-        for field in self.__raw_get(dataclasses._FIELDS).values():
+        for field in self.__raw_get(dataclasses ._FIELDS).values():
             # We have to set these here to allow for them to be editable
             set_attribute(field.name, field.default)
 
