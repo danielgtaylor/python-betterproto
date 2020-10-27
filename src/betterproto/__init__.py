@@ -612,13 +612,11 @@ class Message(ABC):
 
     def __bool__(self) -> bool:
         """Whether or not the Message has any fields that are non-default."""
-        if not self._serialized_on_wire:
-            return False
-        for field in dataclasses.fields(self):
-            value = self.__raw_get(field.name)
-            if self._get_field_default(field.name) != value:
-                return True
-        return False
+        return any(
+            self.__raw_get(field_name)
+            not in (PLACEHOLDER, self._get_field_default(field_name))
+            for field_name in self._betterproto.meta_by_field_name
+        )
 
     @property
     def _betterproto(self) -> ProtoClassMetadata:
