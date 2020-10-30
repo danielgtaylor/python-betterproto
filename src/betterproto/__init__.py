@@ -928,7 +928,6 @@ class Message(ABC):
         field_types = self._type_hints()
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            field_type = field_types[field_name]
             field_is_repeated = defaults[field_name] is list
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
@@ -995,7 +994,7 @@ class Message(ABC):
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
                     if field_is_repeated:
-                        enum_class: Type[Enum] = field_type.__args__[0]
+                        enum_class: Type[Enum] = field_types[field_name].__args__[0]
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
                         ):
@@ -1004,7 +1003,7 @@ class Message(ABC):
                             # transparently upgrade single value to repeated
                             output[cased_name] = [enum_class(value).name]
                     else:
-                        enum_class: Type[Enum] = field_type  # noqa
+                        enum_class: Type[Enum] = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
                 else:
                     output[cased_name] = value
