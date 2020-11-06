@@ -280,6 +280,10 @@ class MessageCompiler(ProtoContentBase):
         return pythonize_class_name(self.proto_name)
 
     @property
+    def py_name_as_field(self) -> str:
+        return pythonize_field_name(self.proto_name)
+
+    @property
     def annotation(self) -> str:
         if self.repeated:
             return f"List[{self.py_name}]"
@@ -558,6 +562,10 @@ class ServiceCompiler(ProtoContentBase):
     @property
     def proto_name(self) -> str:
         return self.proto_obj.name
+
+    @property
+    def full_proto_name(self) -> str:
+        return f"{self.parent.package_proto_obj.package}.{self.proto_obj.name}"
 
     @property
     def py_name(self) -> str:

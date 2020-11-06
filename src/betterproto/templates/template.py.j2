@@ -154,6 +154,97 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% endfor %}
 {% endfor %}
 
+{% for service in output_file.services %}
+class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% endif %}
+
+    __service_name__ = "{{ service.full_proto_name }}"
+
+    {% for method in service.methods %}
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            {%- if method.py_input_message and method.py_input_message.fields -%},
+                {%- for field in method.py_input_message.fields -%}
+                    {{ field.py_name }}: {% if field.py_name in method.mutable_default_args and not field.annotation.startswith("Optional[") -%}
+                                            Optional[{{ field.annotation }}]
+                                         {%- else -%}
+                                            {{ field.annotation }}
+                                         {%- endif -%}
+                    {%- if not loop.last %}, {% endif -%}
+                {%- endfor -%}
+            {%- endif -%}
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , {{ method.py_input_message.py_name_as_field }}_iterator: AsyncIterable["{{ method.py_input_message_type }}"]
+        {%- endif -%}
+            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    {% endfor %}
+
+    {% for method in service.methods %}
+    async def __rpc_{{ method.py_name }}(self, stream):
+        {% if not method.client_streaming %}
+        request = await stream.recv_message()
+
+        request_kwargs = {
+        {% for field in method.py_input_message.fields %}
+            "{{ field.py_name }}": request.{{ field.py_name }},
+        {% endfor %}
+        }
+
+        {% else %}
+        request_kwargs = {"{{ method.py_input_message.py_name_as_field }}_iterator": stream.__aiter__()}
+        {% endif %}
+
+        {% if not method.server_streaming %}
+        response = await self.{{ method.py_name }}(**request_kwargs)
+        await stream.send_message(response)
+        {% else %}
+        response_iter = self.{{ method.py_name }}(**request_kwargs)
+        {# check if response is actually an AsyncIterator #}
+        {# this might be false if the method just returns without #}
+        {# yielding at least once #}
+        {# in that case, we just interpret it as an empty iterator #}
+        if isinstance(response_iter, AsyncIterable):
+            async for response_message in response_iter:
+                await stream.send_message(response_message)
+        else:
+            response_iter.close()
+        {% endif %}
+
+    {% endfor %}
+
+    def __rpc_methods__(self):
+        return [
+        {% for method in service.methods %}
+            (
+                self.__rpc_{{ method.py_name }},
+                "{{ method.proto_name }}",
+                {% if not method.client_streaming and not method.server_streaming %}
+                grpclib.const.Cardinality.UNARY_UNARY,
+                {% elif not method.client_streaming and method.server_streaming %}
+                grpclib.const.Cardinality.UNARY_STREAM,
+                {% elif method.client_streaming and not method.server_streaming %}
+                grpclib.const.Cardinality.STREAM_UNARY,
+                {% else %}
+                grpclib.const.Cardinality.STREAM_STREAM,
+                {% endif %}
+                {{ method.py_input_message_type }},
+                {{ method.py_output_message_type }},
+            ),
+        {% endfor %}
+    ]
+
+{% endfor %}
+
 {% for i in output_file.imports|sort %}
 {{ i }}
 {% endfor %}
