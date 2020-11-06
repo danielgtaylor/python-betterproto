@@ -52,8 +52,8 @@ class ExampleService(ExampleServiceImplementation):
 
 
 async def async_test_server_start():
-    host = "localhost"
-    port = 133337
+    host = "127.0.0.1"
+    port = 13337
 
     test_string = "test string"
     test_int = 42
@@ -104,4 +104,5 @@ async def async_test_server_start():
 
 
 def test_server_start():
-    asyncio.run(async_test_server_start())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(async_test_server_start())
