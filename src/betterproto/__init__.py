@@ -536,6 +536,22 @@ class MessageMeta(ABCMeta):
 
         message_class = super().__new__(mcs, name, bases, attrs)
         message_class.__dataclass_fields__ = fields
+        body = "\n".join(
+            f"    self.{field_name} = {field_name}" for field_name in fields
+        )
+        exec(
+            f"""
+def __init__(self, {", ".join(f"{field_name} = PLACEHOLDER" for field_name in fields)}):
+    object.__setattr__(self, "_group_current", {'{}'})
+    object.__setattr__(self, "_unknown_fields", b"")
+    object.__setattr__(self, "_init_running", True)
+{body}
+    self._init_running = False
+
+message_class.__init__ = __init__
+        """
+        )
+
         return message_class
 
 
@@ -555,53 +571,14 @@ class Message(metaclass=MessageMeta):
     _group_current: Dict[str, str]
     _serialized_on_wire: bool
     _unknown_fields: bytes
+    _init_running: bool
     __dataclass_fields__: Mapping[str, dataclasses.Field]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        args = list(args)
-        set_attribute = super().__setattr__  # Save a super() call every time
-        all_sentinel = True  # Keep track of whether every field was default
-        group_current: Dict[str, str] = {}
+        ...
 
-        for field in self.__raw_get(dataclasses ._FIELDS).values():
-            # We have to set these here to allow for them to be editable
-            set_attribute(field.name, field.default)
-
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
-            if args or kwargs:
-                try:
-                    set_attribute(
-                        field_name, (args or kwargs).pop(0 if args else field_name)
-                    )  # Prioritise args before kwargs as python normally does
-                except (IndexError, KeyError):
-                    pass
-                else:
-                    # Found a non-sentinel value
-                    all_sentinel = False
-
-                    if meta.group:
-                        # This was set, so make it the selected value of the one-of.
-                        group_current[meta.group] = field_name
-
-            if meta.group:
-                group_current.setdefault(meta.group)
-
-        if args:
-            default_args = len(self._betterproto.meta_by_field_name) + 1
-            raise TypeError(
-                f"__init__() takes {default_args} positional argument"
-                f"{'s' if default_args != 1 else ''} but {len(args) + default_args} "
-                f"were given"
-            )
-        if kwargs:
-            raise TypeError(
-                f"__init__() got an unexpected keyword argument {list(kwargs)[0]!r}"
-            )
-
-        # Now that all the defaults are set, reset it!
-        set_attribute("_serialized_on_wire", not all_sentinel)
-        set_attribute("_unknown_fields", b"")
-        set_attribute("_group_current", group_current)
+    def __post_init__(self) -> None:
+        ...
 
     def __raw_get(self, name: str) -> Any:
         return super().__getattribute__(name)
@@ -648,6 +625,14 @@ class Message(metaclass=MessageMeta):
         return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
+        if self._init_running:
+            if (
+                value is not PLACEHOLDER and attr in self.__annotations__
+            ):  # its a field with a value
+                super().__setattr__(attr, value)
+                return super().__setattr__("_serialized_on_wire", True)
+            super().__setattr__(attr, value)
+
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
             super().__setattr__("_serialized_on_wire", True)
