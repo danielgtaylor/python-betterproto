@@ -541,13 +541,19 @@ class MessageMeta(ABCMeta):
         )
         exec(
             f"""
-def __init__(self, {", ".join(f"{field_name} = PLACEHOLDER" for field_name in fields)}):
-    object.__setattr__(self, "_group_current", {'{}'})
+def __init__(
+    self, {", ".join(f"{field_name} = PLACEHOLDER" for field_name in fields)}
+) -> None:
+    group_current = {'{}'}
     object.__setattr__(self, "_unknown_fields", b"")
     object.__setattr__(self, "_serialized_on_wire", False)
-    object.__setattr__(self, "_init_running", True)
+    object.__setattr__(self, "_Message__init_running", True)
+    for meta in self._betterproto.meta_by_field_name.values():
+        if meta.group:
+            group_current.setdefault(meta.group)
+    object.__setattr__(self, "_group_current", group_current)
 {body}
-    object.__setattr__(self, "_init_running", False)
+    object.__setattr__(self, "_Message__init_running", False)
     self.__post_init__()
 
 message_class.__init__ = __init__
@@ -573,7 +579,7 @@ class Message(metaclass=MessageMeta):
     _group_current: Dict[str, str]
     _serialized_on_wire: bool
     _unknown_fields: bytes
-    _init_running: bool
+    __init_running: bool
     __dataclass_fields__: Mapping[str, dataclasses.Field]
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -627,10 +633,7 @@ class Message(metaclass=MessageMeta):
         return value
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if self._init_running:
-            if value is not PLACEHOLDER:  # its a field
-                super().__setattr__(name, value)
-                return super().__setattr__("_serialized_on_wire", True)
+        if self.__init_running and value is PLACEHOLDER:  # its a field
             return super().__setattr__(name, value)
 
         if name != "_serialized_on_wire":
