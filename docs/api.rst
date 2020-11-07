@@ -12,7 +12,7 @@ Message
 
 .. autoclass:: betterproto.Message
     :members:
-    :special-members: __bytes__
+    :special-members: __bytes__, __bool__
 
 
 .. autofunction:: betterproto.serialized_on_wire
