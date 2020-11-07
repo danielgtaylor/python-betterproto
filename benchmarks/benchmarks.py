@@ -1,8 +1,6 @@
 import betterproto
-from dataclasses import dataclass
 
 
-@dataclass
 class TestMessage(betterproto.Message):
     foo: int = betterproto.uint32_field(0)
     bar: str = betterproto.string_field(1)
@@ -20,7 +18,6 @@ class BenchMessage:
     def time_overhead(self):
         """Overhead in class definition."""
 
-        @dataclass
         class Message(betterproto.Message):
             foo: int = betterproto.uint32_field(0)
             bar: str = betterproto.string_field(1)

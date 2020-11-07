@@ -544,6 +544,7 @@ class MessageMeta(ABCMeta):
 def __init__(self, {", ".join(f"{field_name} = PLACEHOLDER" for field_name in fields)}):
     object.__setattr__(self, "_group_current", {'{}'})
     object.__setattr__(self, "_unknown_fields", b"")
+    object.__setattr__(self, "_serialized_on_wire", False)
     object.__setattr__(self, "_init_running", True)
 {body}
     object.__setattr__(self, "_init_running", False)
@@ -567,10 +568,6 @@ class Message(metaclass=MessageMeta):
         .. describe:: bytes(x)
 
             Calls :meth:`__bytes__`.
-
-        .. describe:: bool(x)
-
-            Calls :meth:`__bool__`.
     """
 
     _group_current: Dict[str, str]
@@ -629,36 +626,26 @@ class Message(metaclass=MessageMeta):
         super().__setattr__(name, value)
         return value
 
-    def __setattr__(self, attr: str, value: Any) -> None:
+    def __setattr__(self, name: str, value: Any) -> None:
         if self._init_running:
-            if (
-                value is not PLACEHOLDER and attr in self.__annotations__
-            ):  # its a field with a value
-                super().__setattr__(attr, value)
+            if value is not PLACEHOLDER:  # its a field
+                super().__setattr__(name, value)
                 return super().__setattr__("_serialized_on_wire", True)
-            super().__setattr__(attr, value)
+            return super().__setattr__(name, value)
 
-        if attr != "_serialized_on_wire":
+        if name != "_serialized_on_wire":
             # Track when a field has been set.
             super().__setattr__("_serialized_on_wire", True)
 
-        if attr in self._betterproto.oneof_group_by_field:
-            group = self._betterproto.oneof_group_by_field[attr]
+        if name in self._betterproto.oneof_group_by_field:
+            group = self._betterproto.oneof_group_by_field[name]
             for field in self._betterproto.oneof_field_by_group[group]:
-                if field.name == attr:
+                if field.name == name:
                     self._group_current[group] = field.name
                 else:
                     super().__setattr__(field.name, PLACEHOLDER)
 
-        super().__setattr__(attr, value)
-
-    def __bool__(self) -> bool:
-        """Whether or not the Message has any fields that are non-default."""
-        return any(
-            self.__raw_get(field_name)
-            not in (PLACEHOLDER, self._get_field_default(field_name))
-            for field_name in self._betterproto.meta_by_field_name
-        )
+        super().__setattr__(name, value)
 
     @property
     def _betterproto(self) -> ProtoClassMetadata:
