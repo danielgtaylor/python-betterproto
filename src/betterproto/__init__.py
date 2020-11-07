@@ -546,7 +546,8 @@ def __init__(self, {", ".join(f"{field_name} = PLACEHOLDER" for field_name in fi
     object.__setattr__(self, "_unknown_fields", b"")
     object.__setattr__(self, "_init_running", True)
 {body}
-    self._init_running = False
+    object.__setattr__(self, "_init_running", False)
+    self.__post_init__()
 
 message_class.__init__ = __init__
         """
