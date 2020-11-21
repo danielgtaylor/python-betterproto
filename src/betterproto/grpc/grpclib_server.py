@@ -1,4 +1,6 @@
 from abc import ABC
+from collections import AsyncIterable
+from typing import Callable, Any, Dict
 
 import grpclib
 import grpclib.server
@@ -9,21 +11,30 @@ class ServiceImplementation(ABC):
     Base class for async gRPC servers.
     """
 
-    __service_name__: str
+    async def __call_rpc_handler_server_unary(
+        self,
+        handler: Callable,
+        stream: grpclib.server.Stream,
+        request_kwargs: Dict[str, Any],
+    ) -> None:
 
-    def __rpc_methods__(self):
-        pass
+        response = await handler(**request_kwargs)
+        await stream.send_message(response)
 
-    def __mapping__(self):
-        mapping = {}
-        for (
-            method,
-            proto_name,
-            cardinality,
-            request_type,
-            response_type,
-        ) in self.__rpc_methods__():
-            mapping[f"/{self.__service_name__}/{proto_name}"] = grpclib.const.Handler(
-                method, cardinality, request_type, response_type
-            )
-        return mapping
+    async def __call_rpc_handler_server_stream(
+        self,
+        handler: Callable,
+        stream: grpclib.server.Stream,
+        request_kwargs: Dict[str, Any],
+    ) -> None:
+
+        response_iter = handler(**request_kwargs)
+        # check if response is actually an AsyncIterator
+        # this might be false if the method just returns without
+        # yielding at least once
+        # in that case, we just interpret it as an empty iterator
+        if isinstance(response_iter, AsyncIterable):
+            async for response_message in response_iter:
+                await stream.send_message(response_message)
+        else:
+            response_iter.close()

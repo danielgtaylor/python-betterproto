@@ -82,7 +82,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
                                             Optional[{{ field.annotation }}]
                                          {%- else -%}
                                             {{ field.annotation }}
-                                         {%- endif -%} = 
+                                         {%- endif -%} =
                                             {%- if field.py_name not in method.mutable_default_args -%}
                                                 {{ field.default_value_string }}
                                             {%- else -%}
@@ -161,8 +161,6 @@ class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
 
     {% endif %}
 
-    __service_name__ = "{{ service.full_proto_name }}"
-
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
@@ -205,43 +203,40 @@ class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
         {% endif %}
 
         {% if not method.server_streaming %}
-        response = await self.{{ method.py_name }}(**request_kwargs)
-        await stream.send_message(response)
+        await self.__call_rpc_handler_server_unary(
+            self.{{ method.py_name }},
+            stream,
+            request_kwargs,
+        )
         {% else %}
-        response_iter = self.{{ method.py_name }}(**request_kwargs)
-        {# check if response is actually an AsyncIterator #}
-        {# this might be false if the method just returns without #}
-        {# yielding at least once #}
-        {# in that case, we just interpret it as an empty iterator #}
-        if isinstance(response_iter, AsyncIterable):
-            async for response_message in response_iter:
-                await stream.send_message(response_message)
-        else:
-            response_iter.close()
+        await self.__call_rpc_handler_server_stream(
+            self.{{ method.py_name }},
+            stream,
+            request_kwargs,
+        )
         {% endif %}
 
     {% endfor %}
 
-    def __rpc_methods__(self):
-        return [
+    def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
+        return {
         {% for method in service.methods %}
-            (
-                self.__rpc_{{ method.py_name }},
-                "{{ method.proto_name }}",
-                {% if not method.client_streaming and not method.server_streaming %}
-                grpclib.const.Cardinality.UNARY_UNARY,
-                {% elif not method.client_streaming and method.server_streaming %}
-                grpclib.const.Cardinality.UNARY_STREAM,
-                {% elif method.client_streaming and not method.server_streaming %}
-                grpclib.const.Cardinality.STREAM_UNARY,
-                {% else %}
-                grpclib.const.Cardinality.STREAM_STREAM,
-                {% endif %}
-                {{ method.py_input_message_type }},
-                {{ method.py_output_message_type }},
-            ),
+        "/{{ service.full_proto_name }}/{{ method.proto_name }}": grpclib.const.Handler(
+            self.__rpc_{{ method.py_name }},
+            {% if not method.client_streaming and not method.server_streaming %}
+            grpclib.const.Cardinality.UNARY_UNARY,
+            {% elif not method.client_streaming and method.server_streaming %}
+            grpclib.const.Cardinality.UNARY_STREAM,
+            {% elif method.client_streaming and not method.server_streaming %}
+            grpclib.const.Cardinality.STREAM_UNARY,
+            {% else %}
+            grpclib.const.Cardinality.STREAM_STREAM,
+            {% endif %}
+            {{ method.py_input_message_type }},
+            {{ method.py_output_message_type }},
+        ),
         {% endfor %}
-    ]
+        }
 
 {% endfor %}
 
