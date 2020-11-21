@@ -188,7 +188,7 @@ class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
     {% endfor %}
 
     {% for method in service.methods %}
-    async def __rpc_{{ method.py_name }}(self, stream):
+    async def __rpc_{{ method.py_name }}(self, stream) -> None:
         {% if not method.client_streaming %}
         request = await stream.recv_message()
 
@@ -221,7 +221,7 @@ class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
         {% for method in service.methods %}
-        "/{{ service.full_proto_name }}/{{ method.proto_name }}": grpclib.const.Handler(
+        "{{ method.route }}": grpclib.const.Handler(
             self.__rpc_{{ method.py_name }},
             {% if not method.client_streaming and not method.server_streaming %}
             grpclib.const.Cardinality.UNARY_UNARY,
