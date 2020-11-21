@@ -36,7 +36,7 @@ jobs:
         shell: bash
         run: |
           python -m pip install poetry
-          echo "::set-env name=PATH::$HOME/.poetry/bin:$PATH"
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Configure poetry
         shell: bash
