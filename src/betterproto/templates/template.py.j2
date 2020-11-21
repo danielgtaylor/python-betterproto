@@ -203,13 +203,13 @@ class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
         {% endif %}
 
         {% if not method.server_streaming %}
-        await self.__call_rpc_handler_server_unary(
+        await self._call_rpc_handler_server_unary(
             self.{{ method.py_name }},
             stream,
             request_kwargs,
         )
         {% else %}
-        await self.__call_rpc_handler_server_stream(
+        await self._call_rpc_handler_server_stream(
             self.{{ method.py_name }},
             stream,
             request_kwargs,

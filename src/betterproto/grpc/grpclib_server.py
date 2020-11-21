@@ -11,7 +11,7 @@ class ServiceImplementation(ABC):
     Base class for async gRPC servers.
     """
 
-    async def __call_rpc_handler_server_unary(
+    async def _call_rpc_handler_server_unary(
         self,
         handler: Callable,
         stream: grpclib.server.Stream,
@@ -21,7 +21,7 @@ class ServiceImplementation(ABC):
         response = await handler(**request_kwargs)
         await stream.send_message(response)
 
-    async def __call_rpc_handler_server_stream(
+    async def _call_rpc_handler_server_stream(
         self,
         handler: Callable,
         stream: grpclib.server.Stream,
