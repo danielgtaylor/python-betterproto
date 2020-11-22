@@ -155,7 +155,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {% endfor %}
 
 {% for service in output_file.services %}
-class {{ service.py_name }}Implementation(betterproto.ServiceImplementation):
+class {{ service.py_name }}Base(betterproto.grpc.ServiceBase):
     {% if service.comment %}
 {{ service.comment }}
 

@@ -6,7 +6,7 @@ import grpclib
 import grpclib.server
 
 
-class ServiceImplementation(ABC):
+class ServiceBase(ABC):
     """
     Base class for async gRPC servers.
     """

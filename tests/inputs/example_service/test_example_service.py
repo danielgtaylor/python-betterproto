@@ -1,18 +1,17 @@
-import asyncio
 from typing import AsyncIterator, AsyncIterable
 
-from grpclib.client import Channel
-from grpclib.server import Server
+import pytest
+from grpclib.testing import ChannelFor
 
 from tests.output_betterproto.example_service.example_service import (
-    ExampleServiceImplementation,
+    ExampleServiceBase,
     ExampleServiceStub,
     ExampleRequest,
     ExampleResponse,
 )
 
 
-class ExampleService(ExampleServiceImplementation):
+class ExampleService(ExampleServiceBase):
     async def example_unary_unary(
         self, example_string: str, example_integer: int
     ) -> "ExampleResponse":
@@ -51,58 +50,46 @@ class ExampleService(ExampleServiceImplementation):
             )
 
 
-async def async_test_server_start():
-    host = "127.0.0.1"
-    port = 13337
-
+@pytest.mark.asyncio
+async def test_calls_with_different_cardinalities():
     test_string = "test string"
     test_int = 42
 
-    # start server
-    server = Server([ExampleService()])
-    await server.start(host, port)
+    async with ChannelFor([ExampleService()]) as channel:
+        stub = ExampleServiceStub(channel)
 
-    # start client
-    channel = Channel(host=host, port=port)
-    stub = ExampleServiceStub(channel)
-
-    # unary unary
-    response = await stub.example_unary_unary(
-        example_string="test string",
-        example_integer=42,
-    )
-    assert response.example_string == test_string
-    assert response.example_integer == test_int
-
-    # unary stream
-    async for response in stub.example_unary_stream(
-        example_string="test string",
-        example_integer=42,
-    ):
+        # unary unary
+        response = await stub.example_unary_unary(
+            example_string="test string",
+            example_integer=42,
+        )
         assert response.example_string == test_string
         assert response.example_integer == test_int
 
-    # stream unary
-    request = ExampleRequest(
-        example_string=test_string,
-        example_integer=42,
-    )
+        # unary stream
+        async for response in stub.example_unary_stream(
+            example_string="test string",
+            example_integer=42,
+        ):
+            assert response.example_string == test_string
+            assert response.example_integer == test_int
 
-    async def request_iterator():
-        yield request
-        yield request
-        yield request
+        # stream unary
+        request = ExampleRequest(
+            example_string=test_string,
+            example_integer=42,
+        )
 
-    response = await stub.example_stream_unary(request_iterator())
-    assert response.example_string == test_string
-    assert response.example_integer == test_int
+        async def request_iterator():
+            yield request
+            yield request
+            yield request
 
-    # stream stream
-    async for response in stub.example_stream_stream(request_iterator()):
+        response = await stub.example_stream_unary(request_iterator())
         assert response.example_string == test_string
         assert response.example_integer == test_int
 
-
-def test_server_start():
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(async_test_server_start())
+        # stream stream
+        async for response in stub.example_stream_stream(request_iterator()):
+            assert response.example_string == test_string
+            assert response.example_integer == test_int
