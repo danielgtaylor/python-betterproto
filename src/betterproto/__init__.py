@@ -611,7 +611,7 @@ class Message(ABC):
         super().__setattr__(attr, value)
 
     def __bool__(self) -> bool:
-        """Whether or not the Message has any fields that are non-default."""
+        """True if the Message has any fields with non-default values."""
         return any(
             self.__raw_get(field_name)
             not in (PLACEHOLDER, self._get_field_default(field_name))
