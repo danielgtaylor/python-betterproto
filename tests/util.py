@@ -5,7 +5,7 @@ import pathlib
 import sys
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, Generator, Optional, Union
+from typing import Callable, Generator, List, Optional, Union
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -47,15 +47,27 @@ async def protoc(
     return stdout, stderr, proc.returncode
 
 
-def get_test_case_json_data(test_case_name: str, json_file_name: Optional[str] = None):
-    test_data_file_name = json_file_name or f"{test_case_name}.json"
-    test_data_file_path = inputs_path.joinpath(test_case_name, test_data_file_name)
+def get_test_case_json_data(test_case_name: str, *json_file_names: str) -> List[str]:
+    """
+    :return:
+        A list of all files found in "inputs_path/test_case_name" with names matching
+        f"{test_case_name}.json" or f"{test_case_name}_*.json", OR given by json_file_names
+    """
+    test_case_dir = inputs_path.joinpath(test_case_name)
+    possible_file_paths = [
+        *(test_case_dir.joinpath(json_file_name) for json_file_name in json_file_names),
+        test_case_dir.joinpath(f"{test_case_name}.json"),
+        *test_case_dir.glob(f"{test_case_name}_*.json"),
+    ]
 
-    if not test_data_file_path.exists():
-        return None
+    result = []
+    for test_data_file_path in possible_file_paths:
+        if not test_data_file_path.exists():
+            continue
+        with test_data_file_path.open("r") as fh:
+            result.append(fh.read())
 
-    with test_data_file_path.open("r") as fh:
-        return fh.read()
+    return result
 
 
 def find_module(

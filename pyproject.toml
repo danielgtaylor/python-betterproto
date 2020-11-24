@@ -49,9 +49,19 @@ generate    = { script = "tests.generate:main", help = "Generate test cases (do 
 test        = { cmd = "pytest --cov src", help = "Run tests" }
 types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
 format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
-clean       = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
 docs        = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
 bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
+
+clean.cmd = """
+rm -rf .asv
+       .coverage
+       .mypy_cache
+       .pytest_cache
+       dist
+       betterproto.egg-info
+       **/__pycache__ tests/output_*
+"""
+clean.help  = "Clean out generated files from the workspace"
 
 # CI tasks
 full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
