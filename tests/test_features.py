@@ -365,3 +365,33 @@ def test_message_repr():
 
     assert repr(Test(name="Loki")) == "Test(name='Loki')"
     assert repr(Test(child=Test(), name="Loki")) == "Test(name='Loki', child=Test())"
+
+
+def test_bool():
+    """Messages should evaluate similarly to a collection
+    >>> test = []
+    >>> bool(test)
+    ... False
+    >>> test.append(1)
+    >>> bool(test)
+    ... True
+    >>> del test[0]
+    >>> bool(test)
+    ... False
+    """
+
+    @dataclass
+    class Falsy(betterproto.Message):
+        pass
+
+    @dataclass
+    class Truthy(betterproto.Message):
+        bar: int = betterproto.int32_field(1)
+
+    assert not Falsy()
+    t = Truthy()
+    assert not t
+    t.bar = 1
+    assert t
+    t.bar = 0
+    assert not t

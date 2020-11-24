@@ -516,6 +516,10 @@ class Message(ABC):
         .. describe:: bytes(x)
 
             Calls :meth:`__bytes__`.
+
+        .. describe:: bool(x)
+
+            Calls :meth:`__bool__`.
     """
 
     _serialized_on_wire: bool
@@ -605,6 +609,14 @@ class Message(ABC):
                         super().__setattr__(field.name, PLACEHOLDER)
 
         super().__setattr__(attr, value)
+
+    def __bool__(self) -> bool:
+        """True if the Message has any fields with non-default values."""
+        return any(
+            self.__raw_get(field_name)
+            not in (PLACEHOLDER, self._get_field_default(field_name))
+            for field_name in self._betterproto.meta_by_field_name
+        )
 
     @property
     def _betterproto(self) -> ProtoClassMetadata:
