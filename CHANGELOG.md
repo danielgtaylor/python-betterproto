@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [2.0.0b2] - 2020-11-24
+
+- Add support for deprecated message and fields [#126](https://github.com/danielgtaylor/python-betterproto/pull/126)
+- Add support for recursive messages [#130](https://github.com/danielgtaylor/python-betterproto/pull/130)
+- Add support for `bool(Message)` [#142](https://github.com/danielgtaylor/python-betterproto/pull/142)
+- Improve support for Python 3.9 [#140](https://github.com/danielgtaylor/python-betterproto/pull/140) [#173](https://github.com/danielgtaylor/python-betterproto/pull/173)
+- Improve keyword sanitisation for generated code [#137](https://github.com/danielgtaylor/python-betterproto/pull/137)
+
+- Fix missing serialized_on_wire when message contains only lists [#81](https://github.com/danielgtaylor/python-betterproto/pull/81)
+- Fix circular dependencies [#100](https://github.com/danielgtaylor/python-betterproto/pull/100)
+- Fix to_dict enum fields when numbering is not consecutive [#102](https://github.com/danielgtaylor/python-betterproto/pull/102)
+- Fix argument generation for stub methods when using `import` with proto definition [#103](https://github.com/danielgtaylor/python-betterproto/pull/103)
+- Fix missing async/await keywords when casing [#104](https://github.com/danielgtaylor/python-betterproto/pull/104)
+- Fix mutable default arguments in generated code [#105](https://github.com/danielgtaylor/python-betterproto/pull/105)
+- Fix serialisation of default values in oneofs when calling to_dict() or to_json() [#110](https://github.com/danielgtaylor/python-betterproto/pull/110)
+- Fix static type checking for grpclib client [#124](https://github.com/danielgtaylor/python-betterproto/pull/124)
+- Fix python3.6 compatibility issue with dataclasses [#124](https://github.com/danielgtaylor/python-betterproto/pull/124)
+- Fix handling of trailer-only responses [#127](https://github.com/danielgtaylor/python-betterproto/pull/127)
+
+- Refactor plugin.py to use modular dataclasses in tree-like structure to represent parsed data [#121](https://github.com/danielgtaylor/python-betterproto/pull/121)
+- Refactor template compilation logic [#136](https://github.com/danielgtaylor/python-betterproto/pull/136)
+
+- Replace use of platform provided protoc with development dependency on grpcio-tools [#107](https://github.com/danielgtaylor/python-betterproto/pull/107)
+- Switch to using `poe` from `make` to manage project development tasks [#118](https://github.com/danielgtaylor/python-betterproto/pull/118)
+- Improve CI platform coverage [#128](https://github.com/danielgtaylor/python-betterproto/pull/128)
+
 ## [2.0.0b1] - 2020-07-04
 
 [Upgrade Guide](./docs/upgrading.md) 
