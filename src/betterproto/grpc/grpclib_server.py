@@ -11,16 +11,6 @@ class ServiceBase(ABC):
     Base class for async gRPC servers.
     """
 
-    async def _call_rpc_handler_server_unary(
-        self,
-        handler: Callable,
-        stream: grpclib.server.Stream,
-        request_kwargs: Dict[str, Any],
-    ) -> None:
-
-        response = await handler(**request_kwargs)
-        await stream.send_message(response)
-
     async def _call_rpc_handler_server_stream(
         self,
         handler: Callable,

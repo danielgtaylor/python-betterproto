@@ -177,7 +177,7 @@ class {{ service.py_name }}Base(ServiceBase):
             {%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message.py_name_as_field }}_iterator: AsyncIterable["{{ method.py_input_message_type }}"]
+            , request_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
         {%- endif -%}
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
@@ -189,7 +189,7 @@ class {{ service.py_name }}Base(ServiceBase):
     {% endfor %}
 
     {% for method in service.methods %}
-    async def __rpc_{{ method.py_name }}(self, stream) -> None:
+    async def __rpc_{{ method.py_name }}(self, stream: grpclib.server.Stream) -> None:
         {% if not method.client_streaming %}
         request = await stream.recv_message()
 
@@ -204,11 +204,8 @@ class {{ service.py_name }}Base(ServiceBase):
         {% endif %}
 
         {% if not method.server_streaming %}
-        await self._call_rpc_handler_server_unary(
-            self.{{ method.py_name }},
-            stream,
-            request_kwargs,
-        )
+        response = await self.{{ method.py_name }}(**request_kwargs)
+        await stream.send_message(response)
         {% else %}
         await self._call_rpc_handler_server_stream(
             self.{{ method.py_name }},

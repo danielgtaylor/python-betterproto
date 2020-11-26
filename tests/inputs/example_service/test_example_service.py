@@ -4,14 +4,14 @@ import pytest
 from grpclib.testing import ChannelFor
 
 from tests.output_betterproto.example_service.example_service import (
-    ExampleServiceBase,
-    ExampleServiceStub,
+    TestBase,
+    TestStub,
     ExampleRequest,
     ExampleResponse,
 )
 
 
-class ExampleService(ExampleServiceBase):
+class ExampleService(TestBase):
     async def example_unary_unary(
         self, example_string: str, example_integer: int
     ) -> "ExampleResponse":
@@ -56,7 +56,7 @@ async def test_calls_with_different_cardinalities():
     test_int = 42
 
     async with ChannelFor([ExampleService()]) as channel:
-        stub = ExampleServiceStub(channel)
+        stub = TestStub(channel)
 
         # unary unary
         response = await stub.example_unary_unary(
