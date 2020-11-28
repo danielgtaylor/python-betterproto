@@ -638,7 +638,10 @@ class ServiceMethodCompiler(ProtoContentBase):
 
     @property
     def route(self) -> str:
-        return f"/{self.output_file.package}.{self.parent.proto_name}/{self.proto_name}"
+        package_part = (
+            f"{self.output_file.package}." if self.output_file.package else ""
+        )
+        return f"/{package_part}{self.parent.proto_name}/{self.proto_name}"
 
     @property
     def py_input_message(self) -> Optional[MessageCompiler]:
