@@ -21,3 +21,10 @@ services = {
     "example_service",
     "empty_service",
 }
+
+
+# Indicate json sample messages to skip when testing that json (de)serialization
+# is symmetrical becuase some cases legitimately are not symmetrical.
+# Each key references the name of the test scenario and the values in the tuple
+# Are the names of the json files.
+non_symmetrical_json = {"empty_repeated": ("empty_repeated",)}

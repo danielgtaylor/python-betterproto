@@ -1,11 +1,11 @@
 import asyncio
+from dataclasses import dataclass
 import importlib
 import os
-import pathlib
-import sys
 from pathlib import Path
+import sys
 from types import ModuleType
-from typing import Callable, Generator, List, Optional, Union
+from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -47,11 +47,24 @@ async def protoc(
     return stdout, stderr, proc.returncode
 
 
-def get_test_case_json_data(test_case_name: str, *json_file_names: str) -> List[str]:
+@dataclass
+class TestCaseJsonFile:
+    json: str
+    test_name: str
+    file_name: str
+
+    def belongs_to(self, non_symmetrical_json: Dict[str, Tuple[str, ...]]):
+        return self.file_name in non_symmetrical_json.get(self.test_name, tuple())
+
+
+def get_test_case_json_data(
+    test_case_name: str, *json_file_names: str
+) -> List[TestCaseJsonFile]:
     """
     :return:
-        A list of all files found in "inputs_path/test_case_name" with names matching
-        f"{test_case_name}.json" or f"{test_case_name}_*.json", OR given by json_file_names
+        A list of all files found in "{inputs_path}/test_case_name" with names matching
+        f"{test_case_name}.json" or f"{test_case_name}_*.json", OR given by
+        json_file_names
     """
     test_case_dir = inputs_path.joinpath(test_case_name)
     possible_file_paths = [
@@ -65,7 +78,11 @@ def get_test_case_json_data(test_case_name: str, *json_file_names: str) -> List[
         if not test_data_file_path.exists():
             continue
         with test_data_file_path.open("r") as fh:
-            result.append(fh.read())
+            result.append(
+                TestCaseJsonFile(
+                    fh.read(), test_case_name, test_data_file_path.name.split(".")[0]
+                )
+            )
 
     return result
 
@@ -86,7 +103,7 @@ def find_module(
     if predicate(module):
         return module
 
-    module_path = pathlib.Path(*module.__path__)
+    module_path = Path(*module.__path__)
 
     for sub in [sub.parent for sub in module_path.glob("**/__init__.py")]:
         if sub == module_path:

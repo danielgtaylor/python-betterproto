@@ -5,7 +5,7 @@ import os
 import sys
 from collections import namedtuple
 from types import ModuleType
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple
 
 import pytest
 
@@ -29,7 +29,12 @@ from google.protobuf.json_format import Parse
 
 
 class TestCases:
-    def __init__(self, path, services: Set[str], xfail: Set[str]):
+    def __init__(
+        self,
+        path,
+        services: Set[str],
+        xfail: Set[str],
+    ):
         _all = set(get_directories(path)) - {"__pycache__"}
         _services = services
         _messages = (_all - services) - {"__pycache__"}
@@ -175,15 +180,18 @@ def test_message_json(repeat, test_data: TestData) -> None:
     plugin_module, _, json_data = test_data
 
     for _ in range(repeat):
-        for json_sample in json_data:
+        for sample in json_data:
+            if sample.belongs_to(test_input_config.non_symmetrical_json):
+                continue
+
             message: betterproto.Message = plugin_module.Test()
 
-            message.from_json(json_sample)
+            message.from_json(sample.json)
             message_json = message.to_json(0)
 
-        assert dict_replace_nans(json.loads(message_json)) == dict_replace_nans(
-            json.loads(json_sample)
-        )
+            assert dict_replace_nans(json.loads(message_json)) == dict_replace_nans(
+                json.loads(sample.json)
+            )
 
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
@@ -195,13 +203,13 @@ def test_service_can_be_instantiated(test_data: TestData) -> None:
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
 
-    for json_sample in json_data:
-        reference_instance = Parse(json_sample, reference_module().Test())
+    for sample in json_data:
+        reference_instance = Parse(sample.json, reference_module().Test())
         reference_binary_output = reference_instance.SerializeToString()
 
         for _ in range(repeat):
             plugin_instance_from_json: betterproto.Message = (
-                plugin_module.Test().from_json(json_sample)
+                plugin_module.Test().from_json(sample.json)
             )
             plugin_instance_from_binary = plugin_module.Test.FromString(
                 reference_binary_output
