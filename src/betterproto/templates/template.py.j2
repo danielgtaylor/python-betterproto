@@ -200,7 +200,7 @@ class {{ service.py_name }}Base(ServiceBase):
         }
 
         {% else %}
-        request_kwargs = {"{{ method.py_input_message.py_name_as_field }}_iterator": stream.__aiter__()}
+        request_kwargs = {"request_iterator": stream.__aiter__()}
         {% endif %}
 
         {% if not method.server_streaming %}
