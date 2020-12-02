@@ -32,18 +32,18 @@ class ExampleService(TestBase):
         yield response
 
     async def example_stream_unary(
-        self, example_request_iterator: AsyncIterable["ExampleRequest"]
+        self, request_iterator: AsyncIterator["ExampleRequest"]
     ) -> "ExampleResponse":
-        async for example_request in example_request_iterator:
+        async for example_request in request_iterator:
             return ExampleResponse(
                 example_string=example_request.example_string,
                 example_integer=example_request.example_integer,
             )
 
     async def example_stream_stream(
-        self, example_request_iterator: AsyncIterable["ExampleRequest"]
+        self, request_iterator: AsyncIterator["ExampleRequest"]
     ) -> AsyncIterator["ExampleResponse"]:
-        async for example_request in example_request_iterator:
+        async for example_request in request_iterator:
             yield ExampleResponse(
                 example_string=example_request.example_string,
                 example_integer=example_request.example_integer,

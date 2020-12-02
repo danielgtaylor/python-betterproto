@@ -565,10 +565,6 @@ class ServiceCompiler(ProtoContentBase):
         return self.proto_obj.name
 
     @property
-    def full_proto_name(self) -> str:
-        return f"{self.parent.package_proto_obj.package}.{self.proto_obj.name}"
-
-    @property
     def py_name(self) -> str:
         return pythonize_class_name(self.proto_name)
 
