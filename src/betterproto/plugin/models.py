@@ -280,10 +280,6 @@ class MessageCompiler(ProtoContentBase):
         return pythonize_class_name(self.proto_name)
 
     @property
-    def py_name_as_field(self) -> str:
-        return pythonize_field_name(self.proto_name)
-
-    @property
     def annotation(self) -> str:
         if self.repeated:
             return f"List[{self.py_name}]"
