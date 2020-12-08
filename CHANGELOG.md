@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [2.0.0b3] - 202?-??-??
+
+- Generate grpclib service stubs [#170](https://github.com/danielgtaylor/python-betterproto/pull/170)
+
+- Fix incorrect routes in generated client when service is not in a package [#177](https://github.com/danielgtaylor/python-betterproto/pull/177)
+
 ## [2.0.0b2] - 2020-11-24
 
 - Add support for deprecated message and fields [#126](https://github.com/danielgtaylor/python-betterproto/pull/126)
