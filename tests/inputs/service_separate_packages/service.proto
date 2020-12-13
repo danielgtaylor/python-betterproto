@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "messages.proto";
+
+package things.service;
+
+service Test {
+  rpc DoThing (things.messages.DoThingRequest) returns (things.messages.DoThingResponse);
+  rpc DoManyThings (stream things.messages.DoThingRequest) returns (things.messages.DoThingResponse);
+  rpc GetThingVersions (things.messages.GetThingRequest) returns (stream things.messages.GetThingResponse);
+  rpc GetDifferentThings (stream things.messages.GetThingRequest) returns (stream things.messages.GetThingResponse);
+}
