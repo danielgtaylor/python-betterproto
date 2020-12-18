@@ -13,3 +13,10 @@ enum Choice {
   FOUR = 4;
   THREE = 3;
 }
+
+// A "C" like enum with the enum name prefixed onto members, these should be stripped
+enum ArithmeticOperator {
+    ARITHMETIC_OPERATOR_NONE = 0;
+    ARITHMETIC_OPERATOR_PLUS = 1;
+    ARITHMETIC_OPERATOR_MINUS = 2;
+}

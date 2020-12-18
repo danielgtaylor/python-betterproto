@@ -1,7 +1,4 @@
-from tests.output_betterproto.enum import (
-    Test,
-    Choice,
-)
+from tests.output_betterproto.enum import ArithmeticOperator, Test, Choice
 
 
 def test_enum_set_and_get():
@@ -82,3 +79,8 @@ def test_repeated_enum_with_non_list_iterables_to_dict():
         yield Choice.THREE
 
     assert Test(choices=enum_generator()).to_dict()["choices"] == ["ONE", "THREE"]
+
+
+def test_renamed_enum_members():
+    for member in ArithmeticOperator:
+        assert member.name in ("NONE", "PLUS", "MINUS")
