@@ -36,12 +36,12 @@ from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
 
 import betterproto
 
-from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
 from ..compile.naming import (
     pythonize_class_name,
+    pythonize_enum_member_name,
     pythonize_field_name,
-    pythonize_method_name, pythonize_enum_member_name,
+    pythonize_method_name,
 )
 
 try:

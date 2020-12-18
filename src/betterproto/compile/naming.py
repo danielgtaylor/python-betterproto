@@ -17,5 +17,5 @@ def pythonize_enum_member_name(name: str, enum_name: str) -> str:
     enum_name = casing.snake_case(enum_name).upper()
     find = name.find(enum_name)
     if find != -1:
-        name = name[find + len(enum_name):].strip("_")
+        name = name[find + len(enum_name) :].strip("_")
     return casing.sanitize_name(name)
