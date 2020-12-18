@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package example_service;
+
+service Test {
+  rpc ExampleUnaryUnary(ExampleRequest) returns (ExampleResponse);
+  rpc ExampleUnaryStream(ExampleRequest) returns (stream ExampleResponse);
+  rpc ExampleStreamUnary(stream ExampleRequest) returns (ExampleResponse);
+  rpc ExampleStreamStream(stream ExampleRequest) returns (stream ExampleResponse);
+}
+
+message ExampleRequest {
+  string example_string = 1;
+  int64  example_integer = 2;
+}
+
+message ExampleResponse {
+  string example_string = 1;
+  int64  example_integer = 2;
+}

@@ -555,6 +555,7 @@ class ServiceCompiler(ProtoContentBase):
     def __post_init__(self) -> None:
         # Add service to output file
         self.output_file.services.append(self)
+        self.output_file.typing_imports.add("Dict")
         super().__post_init__()  # check for unset fields
 
     @property
