@@ -523,7 +523,7 @@ class EnumDefinitionCompiler(MessageCompiler):
     def __post_init__(self) -> None:
         # Get entries/allowed values for this Enum
         member_names = pythonize_enum_member_names(
-            entry_proto_value.name for entry_proto_value in self.proto_obj.value
+            [entry_proto_value.name for entry_proto_value in self.proto_obj.value]
         )
         self.entries = [
             self.EnumEntry(
