@@ -140,4 +140,3 @@ def sanitize_name(value: str) -> str:
     if value[0].isdigit():
         return f"_{value}"
     return value
-    
