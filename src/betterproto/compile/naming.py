@@ -1,7 +1,5 @@
-import re
 from typing import Iterable, List
 
-import itertools
 from betterproto import casing
 
 
