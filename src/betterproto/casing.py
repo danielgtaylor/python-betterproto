@@ -132,6 +132,7 @@ def lowercase_first(value: str) -> str:
     """
     return value[0:1].lower() + value[1:]
 
+
 def is_keyword(value: str) -> bool:
     if keyword.iskeyword(value):
         return True
@@ -140,6 +141,7 @@ def is_keyword(value: str) -> bool:
         return True
 
     return False
+
 
 def sanitize_name(value: str) -> str:
     # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
