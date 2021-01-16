@@ -24,7 +24,7 @@ from typing import (
 
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
-from .grpc.grpclib_client import ServiceStub
+from .grpc import ServiceBase, ServiceStub
 
 if sys.version_info[:2] < (3, 7):
     # Apply backport of datetime.fromisoformat from 3.7
