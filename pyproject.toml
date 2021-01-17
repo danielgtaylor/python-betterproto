@@ -37,6 +37,7 @@ sphinx-rtd-theme = "0.5.0"
 asv = "^0.4.2"
 
 [tool.poetry.scripts]
+betterproto = "betterproto:__main__.main"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]

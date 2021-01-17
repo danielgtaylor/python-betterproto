@@ -1,19 +1,7 @@
 import os.path
 
-try:
-    # betterproto[compiler] specific dependencies
-    import black
-    import jinja2
-except ImportError as err:
-    print(
-        "\033[31m"
-        f"Unable to import `{err.name}` from betterproto plugin! "
-        "Please ensure that you've installed betterproto as "
-        '`pip install "betterproto[compiler]"` so that compiler dependencies '
-        "are included."
-        "\033[0m"
-    )
-    raise SystemExit(1)
+import black
+import jinja2
 
 from .models import OutputTemplate
 
@@ -33,5 +21,5 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
 
     return black.format_str(
         template.render(output_file=output_file),
-        mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
+        mode=black.Mode(target_versions={black.TargetVersion.PY37}),
     )

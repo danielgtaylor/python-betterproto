@@ -29,38 +29,13 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attribute.
 """
 
-
-import betterproto
-from betterproto import which_one_of
-from betterproto.casing import sanitize_name
-from betterproto.compile.importing import (
-    get_type_reference,
-    parse_source_type_name,
-)
-from betterproto.compile.naming import (
-    pythonize_class_name,
-    pythonize_field_name,
-    pythonize_method_name,
-)
-from betterproto.lib.google.protobuf import (
-    DescriptorProto,
-    EnumDescriptorProto,
-    FileDescriptorProto,
-    MethodDescriptorProto,
-    Field,
-    FieldDescriptorProto,
-    FieldDescriptorProtoType,
-    FieldDescriptorProtoLabel,
-)
-from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
-
-
 import re
 import textwrap
 from dataclasses import dataclass, field
 from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
-import sys
 
+import betterproto
+from .. import Message, which_one_of
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
 from ..compile.naming import (
@@ -68,7 +43,17 @@ from ..compile.naming import (
     pythonize_field_name,
     pythonize_method_name,
 )
-
+from ..lib.google.protobuf import (
+    DescriptorProto,
+    EnumDescriptorProto,
+    Field,
+    FieldDescriptorProto,
+    FieldDescriptorProtoLabel,
+    FieldDescriptorProtoType,
+    FileDescriptorProto,
+    MethodDescriptorProto,
+)
+from ..lib.google.protobuf.compiler import CodeGeneratorRequest
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
@@ -168,7 +153,7 @@ class ProtoContentBase:
     source_file: FileDescriptorProto
     path: List[int]
     comment_indent: int = 4
-    parent: Union["betterproto.Message", "OutputTemplate"]
+    parent: Union["Message", "OutputTemplate"]
 
     def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
