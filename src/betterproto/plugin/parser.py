@@ -57,7 +57,11 @@ def traverse(
     )
 
 
-def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
+def generate_code(
+    request: CodeGeneratorRequest,
+    # *,
+    # generate_services: bool = False,  # TODO **KWARGS support for custom options
+) -> CodeGeneratorResponse:
     response = CodeGeneratorResponse()
     plugin_options = request.parameter.split(",") if request.parameter else []
 

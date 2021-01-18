@@ -7,11 +7,10 @@ import rich
 from rich.progress import Progress
 from rich.syntax import Syntax
 
-from src.betterproto.plugin.cli import DEFAULT_LINE_LENGTH, DEFAULT_OUT, ENV, USE_PROTOC, VERBOSE
-from src.betterproto.plugin.cli.errors import ProtobufSyntaxError
-from src.betterproto.plugin.cli.runner import compile_protobufs
-from src.betterproto.plugin.cli.utils import recursive_file_finder, run_sync
-from src.betterproto.plugin.models import monkey_patch_oneof_index
+from . import DEFAULT_LINE_LENGTH, DEFAULT_OUT, ENV, USE_PROTOC, VERBOSE, utils
+from .errors import ProtobufSyntaxError
+from .runner import compile_protobufs
+from ..models import monkey_patch_oneof_index
 
 monkey_patch_oneof_index()
 
@@ -69,7 +68,7 @@ def main(ctx: click.Context) -> None:
     type=click.Path(exists=True, file_okay=True, dir_okay=True, allow_dash=True),
     is_eager=True,
 )
-@run_sync
+@utils.run_sync
 async def compile(
     verbose: bool,
     protoc: bool,
@@ -81,7 +80,7 @@ async def compile(
     """The recommended way to compile your protobuf files."""
 
     directory = (Path.cwd() / src).resolve()
-    files = recursive_file_finder(directory) if directory.is_dir() else (directory,)
+    files = utils.recursive_file_finder(directory) if directory.is_dir() else (directory,)
     if not files:
         return rich.print("[bold]No files found to compile")
 
