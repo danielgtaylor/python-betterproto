@@ -1,7 +1,8 @@
 import itertools
 import pathlib
-import sys
 from typing import Iterator, List, Set, Tuple, Union
+
+import black
 
 from ..lib.google.protobuf import (
     DescriptorProto,
@@ -35,7 +36,9 @@ def traverse(
 ) -> "itertools.chain[Tuple[Union[DescriptorProto, EnumDescriptorProto], List[int]]]":
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List[Union[DescriptorProto, EnumDescriptorProto]], prefix=""
+        path: List[int],
+        items: List[Union[DescriptorProto, EnumDescriptorProto]],
+        prefix: str = "",
     ) -> Iterator[Tuple[Union[DescriptorProto, EnumDescriptorProto], List[int]]]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
@@ -59,21 +62,39 @@ def traverse(
 
 def generate_code(
     request: CodeGeneratorRequest,
-    # *,
-    # generate_services: bool = False,  # TODO **KWARGS support for custom options
+    *,
+    include_google: bool = False,
+    line_length: int = black.DEFAULT_LINE_LENGTH,
+    generate_services: bool = True,
+    separate_files: bool = False,
+    show_info: bool = False,
+    verbose: bool = False,
 ) -> CodeGeneratorResponse:
+    """Generate the protobuf response file for a given request.
+
+    Parameters
+    ----------
+    request
+    include_google
+    line_length
+    generate_services
+    separate_files
+    show_info
+    verbose
+
+    Returns
+    -------
+    :class:`.CodeGeneratorResponse`
+    """
     response = CodeGeneratorResponse()
     plugin_options = request.parameter.split(",") if request.parameter else []
+    include_google = "INCLUDE_GOOGLE" in plugin_options or include_google
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
     for proto_file in request.proto_file:
-        if (
-            proto_file.package == "google.protobuf"
-            and "INCLUDE_GOOGLE" not in plugin_options
-        ):
-            # If not INCLUDE_GOOGLE,
-            # skip re-compiling Google's well-known types
+        if proto_file.package == "google.protobuf" and include_google:
+            # If not INCLUDE_GOOGLE skip re-compiling Google's well-known types
             continue
 
         output_package_name = proto_file.package
@@ -99,10 +120,11 @@ def generate_code(
                 )
 
     # Read Services
-    for output_package_name, output_package in request_data.output_packages.items():
-        for proto_input_file in output_package.input_files:
-            for index, service in enumerate(proto_input_file.service):
-                read_protobuf_service(service, index, output_package)
+    if generate_services:
+        for output_package_name, output_package in request_data.output_packages.items():
+            for proto_input_file in output_package.input_files:
+                for index, service in enumerate(proto_input_file.service):
+                    read_protobuf_service(service, index, output_package)
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
@@ -116,22 +138,17 @@ def generate_code(
             CodeGeneratorResponseFile(
                 name=str(output_path),
                 # Render and then format the output file
-                content=outputfile_compiler(output_file=output_package),
+                content=outputfile_compiler(output_file=output_package, line_length=line_length),
             )
         )
 
     # Make each output directory a package with __init__ file
     init_files = {
-        directory.joinpath("__init__.py")
-        for path in output_paths
-        for directory in path.parents
+        directory / "__init__.py" for path in output_paths for directory in path.parents
     } - output_paths
 
     for init_file in init_files:
         response.file.append(CodeGeneratorResponseFile(name=str(init_file)))
-
-    for output_package_name in sorted(output_paths.union(init_files)):
-        print(f"Writing {output_package_name}", file=sys.stderr)
 
     return response
 

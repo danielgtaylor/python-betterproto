@@ -1,9 +1,9 @@
 import sys
+import traceback
 from distutils import sysconfig
 from pathlib import Path
 from types import TracebackType
 from typing import Type
-import traceback
 
 IMPORT_ERROR_MESSAGE = (
     "Unable to import `{0.name}` from betterproto plugin! Please ensure that you've installed "

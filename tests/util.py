@@ -1,11 +1,9 @@
-import asyncio
 import importlib
 import os
 import pathlib
-import sys
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, Generator, Optional, Union
+from typing import Callable, Generator, Optional
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -15,36 +13,9 @@ output_path_reference = root_path.joinpath("output_reference")
 output_path_betterproto = root_path.joinpath("output_betterproto")
 
 
-def get_files(path, suffix: str) -> Generator[str, None, None]:
-    for r, dirs, files in os.walk(path):
-        for filename in [f for f in files if f.endswith(suffix)]:
-            yield os.path.join(r, filename)
-
-
-def get_directories(path):
+def get_directories(path: str) -> Generator[str, None, None]:
     for root, directories, files in os.walk(path):
         yield from directories
-
-
-async def protoc(
-    path: Union[str, Path], output_dir: Union[str, Path], reference: bool = False
-):
-    path: Path = Path(path).resolve()
-    output_dir: Path = Path(output_dir).resolve()
-    python_out_option: str = "python_betterproto_out" if not reference else "python_out"
-    command = [
-        sys.executable,
-        "-m",
-        "grpc.tools.protoc",
-        f"--proto_path={path.as_posix()}",
-        f"--{python_out_option}={output_dir.as_posix()}",
-        *[p.as_posix() for p in path.glob("*.proto")],
-    ]
-    proc = await asyncio.create_subprocess_exec(
-        *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await proc.communicate()
-    return stdout, stderr, proc.returncode
 
 
 def get_test_case_json_data(test_case_name: str, json_file_name: Optional[str] = None):

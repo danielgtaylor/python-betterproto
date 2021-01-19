@@ -35,6 +35,8 @@ tox = "^3.15.1"
 sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 asv = "^0.4.2"
+click = "^7.1.2"
+rich = "^9.8.2"
 
 [tool.poetry.scripts]
 betterproto = "betterproto:__main__.main"

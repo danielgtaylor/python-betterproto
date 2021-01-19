@@ -35,6 +35,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
 
 import betterproto
+
 from .. import Message, which_one_of
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name

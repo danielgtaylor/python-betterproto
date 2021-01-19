@@ -4,10 +4,8 @@ import platform
 from pathlib import Path
 from typing import Any, Dict
 
-from black import DEFAULT_LINE_LENGTH as DEFAULT_LINE_LENGTH  # noqa
-
 try:
-    import grpc
+    import grpc_tools.protoc
 except ImportError:
     USE_PROTOC = True
 else:
@@ -16,6 +14,7 @@ else:
 DEFAULT_OUT = Path.cwd() / "betterproto_out"
 VERBOSE = False
 ENV: Dict[str, Any] = dict(os.environ)
+from black import DEFAULT_LINE_LENGTH as DEFAULT_LINE_LENGTH  # noqa
 
 from .commands import main
 from .runner import compile_protobufs
