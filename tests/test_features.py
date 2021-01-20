@@ -17,7 +17,7 @@ def test_has_field():
     assert betterproto.serialized_on_wire(foo.bar) is False
 
     # Serialized after setting something
-    foo.bar.baz = 1
+    foo.bar = Bar(baz=1)
     assert betterproto.serialized_on_wire(foo.bar) is True
 
     # Still has it after setting the default value
@@ -130,7 +130,7 @@ def test_oneof_support():
     assert foo.bar == 0
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
-    foo.sub.val = 1
+    foo.sub = Sub(val=1)
     assert betterproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
@@ -348,7 +348,7 @@ def test_recursive_message_defaults():
     assert msg != RecursiveMessage(
         name="bob", intermediate=Intermediate(42), child=RecursiveMessage(name="jude")
     )
-    msg.child.child.name = "jude"
+    msg.child = RecursiveMessage(child=RecursiveMessage(name="jude"))
     assert msg == RecursiveMessage(
         name="bob",
         intermediate=Intermediate(42),
