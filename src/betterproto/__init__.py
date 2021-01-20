@@ -589,7 +589,7 @@ class Message(ABC):
         value = super().__getattribute__(name)
         if value is not PLACEHOLDER:
             return value
-        
+
         value = self._get_field_default(name)
         return value
 
