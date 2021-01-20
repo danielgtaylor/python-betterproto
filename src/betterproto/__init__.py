@@ -589,9 +589,8 @@ class Message(ABC):
         value = super().__getattribute__(name)
         if value is not PLACEHOLDER:
             return value
-
+        
         value = self._get_field_default(name)
-        super().__setattr__(name, value)
         return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
@@ -875,6 +874,10 @@ class Message(ABC):
                 )
 
             current = getattr(self, field_name)
+
+            if self.__raw_get(field_name) == PLACEHOLDER:
+                setattr(self, field_name, current)
+
             if meta.proto_type == TYPE_MAP:
                 # Value represents a single key/value pair entry in the map.
                 current[value.key] = value.value
@@ -972,7 +975,7 @@ class Message(ABC):
                     )
                 ):
                     output[cased_name] = value.to_dict(casing, include_default_values)
-                else:
+                elif self.__raw_get(field_name) != PLACEHOLDER:
                     output[cased_name] = {}
             elif meta.proto_type == TYPE_MAP:
                 for k in value:
