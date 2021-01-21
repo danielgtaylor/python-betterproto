@@ -1,9 +1,8 @@
 import os
-import sys
 from pathlib import Path
-from typing import Tuple
+from typing import List
 
-import click
+import typer
 import rich
 from rich.progress import Progress
 from rich.syntax import Syntax
@@ -11,144 +10,105 @@ from rich.syntax import Syntax
 from betterproto.plugin.cli import (
     DEFAULT_LINE_LENGTH,
     DEFAULT_OUT,
-    ENV,
     USE_PROTOC,
     VERBOSE,
     utils,
 )
 
-from ..models import monkey_patch_oneof_index
-from .errors import CLIError, ProtobufSyntaxError
-from .runner import compile_protobufs
+from betterproto.plugin.models import monkey_patch_oneof_index
+from betterproto.plugin.cli.errors import CLIError, ProtobufSyntaxError
+from betterproto.plugin.cli.runner import compile_protobufs
 
 monkey_patch_oneof_index()
+app = typer.Typer()
+compile_app = typer.Typer()
+app.add_typer(compile_app, name="compile")
 
 
-@click.group(context_settings={"help_option_names": ["-h", "--help"]})
-@click.pass_context
-def main(ctx: click.Context) -> None:
+@app.callback(context_settings={"help_option_names": ["-h", "--help"]})
+def callback(ctx: typer.Context) -> None:
     """The main entry point to all things betterproto"""
     if ctx.invoked_subcommand is None:
         rich.print(ctx.get_help())
 
 
-@main.command(context_settings={"help_option_names": ["-h", "--help"]})
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    default=VERBOSE,
-)
-@click.option(
-    "-p",
-    "--protoc",
-    is_flag=True,
-    help="Whether or not to use protoc to compile the protobufs if this is false"
-    "it will attempt to use grpc instead",
-    default=USE_PROTOC,
-)
-@click.option(
-    "-l",
-    "--line-length",
-    type=int,
-    default=DEFAULT_LINE_LENGTH,
-)
-@click.option(
-    "--generate-services",
-    help="Whether or not to generate servicer stubs",
-    is_flag=True,
-    default=True,
-)
-@click.option(
-    "-o",
-    "--output",
-    help="The output directory",
-    type=click.Path(file_okay=False, dir_okay=True, allow_dash=True),
-    default=DEFAULT_OUT.name,
-)
-@click.argument(
-    "src",
-    type=click.Path(exists=True, file_okay=True, dir_okay=True, allow_dash=True),
-    is_eager=True,
-    nargs=-1,
-)
 @utils.run_sync
+@app.command(context_settings={"help_option_names": ["-h", "--help"]})
 async def compile(
-    verbose: bool,
-    protoc: bool,
-    line_length: int,
-    generate_services: bool,
-    output: str,
-    src: Tuple[str, ...],
+    verbose: bool = typer.Option(VERBOSE, "-v", "--verbose"),
+    protoc: bool = typer.Option(
+        USE_PROTOC,
+        "-p",
+        "--protoc",
+        help="Whether or not to use protoc to compile the protobufs if this is false "
+        "it will attempt to use grpc instead",
+    ),
+    line_length: int = typer.Option(DEFAULT_LINE_LENGTH, "-l", "--line-length"),
+    generate_services: bool = typer.Option(
+        True, help="Whether or not to generate servicer stubs"
+    ),
+    output: str = typer.Option(
+        DEFAULT_OUT,
+        "-o",
+        "--output",
+        help="The name of the output directory",
+        file_okay=False,
+        allow_dash=True,
+    ),
+    paths: List[Path] = typer.Argument(
+        ..., exists=True, allow_dash=True, resolve_path=True
+    ),
 ) -> None:
     """The recommended way to compile your protobuf files."""
-    if len(src) != 1:
-        return rich.print(
-            "[red]Currently can't handle more than one source this is just for a "
-            "nicer invocation of help"
-        )
+    if not paths:
+        return rich.print("[bold]No files provided")
 
-    files = utils.get_files(src[0])
+    files = utils.get_files(paths)
     if not files:
         return rich.print("[bold]No files found to compile")
 
-    output = Path.cwd() / output
-    output.mkdir(exist_ok=True)
-
-    ENV["USING_BETTERPROTO_CLI"] = "true"
-
-    try:
-        await compile_protobufs(
-            *files,
-            output=output,
-            verbose=verbose,
-            use_protoc=protoc,
-            generate_services=generate_services,
-            line_length=line_length,
-        )
-    except ProtobufSyntaxError as exc:
-        error = Syntax(
-            exc.file.read_text(),
-            lexer_name="proto",
-            line_numbers=True,
-            line_range=(max(exc.lineno - 5, 0), exc.lineno),
-        )
-        # I'd like to switch to .from_path but it appears to be bugged and doesnt pick up syntax
-        return rich.print(
-            f"[red]File {str(exc.file).strip()}:\n",
-            error,
-            f"[red]{' ' * (exc.offset + 3)}^\n"
-            f"[red]SyntaxError: {exc.msg}",
-        )
-    except CLIError as exc:
-        failed_files = "\n".join(f" - {file}" for file in files)
-        return rich.print(
-            f"[red]{'Protoc' if protoc else 'GRPC'} failed to generate outputs for:\n\n"
-            f"{failed_files}\n\nSee the output for the issue:\n{exc.args[0]}[red]",
-        )
-
-    rich.print(
-        f"[bold]Finished generating output for {len(files)} files, output is in [link]{output.as_posix()}"
-    )
-
-
-"""
-async def run_cli(port: int) -> None:
-
-    with Progress(transient=True) as progress:  # TODO reading and compiling stuff
-        compiling_progress_bar = progress.add_task(
-            "[green]Compiling protobufs...", total=total
-        )
-
-        async for message in service.get_currently_compiling():
-            progress.tasks[0].description = (
-                f"[green]Compiling protobufs...\n"
-                f"Currently compiling {message.type.name.lower()}: {message.name}"
+    for output_path, protos in files.items():
+        try:
+            output = Path.cwd() / output_path.name if output == DEFAULT_OUT else output
+            output.mkdir(exist_ok=True)
+            await compile_protobufs(
+                *protos,
+                output=output,
+                verbose=verbose,
+                use_protoc=protoc,
+                generate_services=generate_services,
+                line_length=line_length,
+                from_cli=True,
             )
-            progress.update(compiling_progress_bar, advance=1)
-    rich.print(f"[bold][green]Finished compiling output should be at {round(3)}")"""
+        except ProtobufSyntaxError as exc:
+            error = Syntax(
+                exc.file.read_text(),
+                "proto",
+                line_numbers=True,
+                line_range=(max(exc.lineno - 5, 0), exc.lineno),
+            )
+            # I'd like to switch to .from_path but it appears to be bugged and doesnt pick lexer_name
+            rich.print(
+                f"[red]File {str(exc.file).strip()}:\n",
+                error,
+                f"{' ' * (exc.offset + 3)}^\n" f"SyntaxError: {exc.msg}[red]",
+            )
+        except CLIError as exc:
+            failed_files = "\n".join(f" - {file}" for file in protos)
+            rich.print(
+                f"[red]{'Protoc' if protoc else 'GRPC'} failed to generate outputs for:\n\n"
+                f"{failed_files}\n\nSee the output for the issue:\n{exc.args[0]}[red]",
+            )
+
+        else:
+            rich.print(
+                f"[bold green]Finished generating output for {len(protos)} files, output is in {output.as_posix()}"
+            )
+
 
 if __name__ == "__main__":
-    os.getcwd = lambda: "/Users/gobot1234/PycharmProjects/betterproto/tests"
-    sys.argv = "betterproto compile /Users/gobot1234/PycharmProjects/betterproto/tests/inputs/bool".split()
-    main()
+    os.getcwd = lambda: "/Users/gobot1234/PycharmProjects/betterproto"
+    # sys.argv = "betterproto compile  --output=src/betterproto/lib".split()
+    compile(
+        output=Path("src/betterproto/lib").resolve(), paths=[Path("/usr/local/bin/include/google/protobuf")]
+    )

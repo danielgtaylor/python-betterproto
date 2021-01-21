@@ -69,6 +69,7 @@ def generate_code(
     separate_files: bool = False,
     show_info: bool = False,
     verbose: bool = False,
+    from_cli: bool = False,
 ) -> CodeGeneratorResponse:
     """Generate the protobuf response file for a given request.
 
@@ -81,6 +82,7 @@ def generate_code(
     separate_files
     show_info
     verbose
+    from_cli
 
     Returns
     -------

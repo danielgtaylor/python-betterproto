@@ -1,4 +1,4 @@
-from .plugin.cli import main
+from .plugin.cli import app
 
 if __name__ == "__main__":
-    main()
+    app()

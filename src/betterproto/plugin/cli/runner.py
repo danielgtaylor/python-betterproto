@@ -10,7 +10,7 @@ from ...lib.google.protobuf.compiler import (
     CodeGeneratorResponseFile,
 )
 from ..parser import generate_code
-from . import ENV, USE_PROTOC, utils
+from . import USE_PROTOC, utils
 from .errors import CLIError, ProtobufSyntaxError
 
 
@@ -21,7 +21,7 @@ def write_file(output: Path, file: CodeGeneratorResponseFile) -> None:
 
 def handle_error(data: str, files: Tuple[Path, ...]) -> NoReturn:
     match = re.match(
-        r"(?P<filename>.+):(?P<lineno>\d+):(?P<offset>\d+):(?P<message>.*)",
+        r"^(?P<filename>.+):(?P<lineno>\d+):(?P<offset>\d+):(?P<message>.*)",
         data,
     )
     if match is None:
@@ -55,7 +55,7 @@ async def compile_protobufs(
     output: :class:`.Path`
         The output directory.
     **kwargs:
-        The **kwargs to pass to generate_code.
+        Any keyword arguments to pass to generate_code.
 
     Returns
     -------
@@ -70,22 +70,22 @@ async def compile_protobufs(
         command,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        stdin=asyncio.subprocess.PIPE,
-        env=ENV,
+        env={"USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)).lower()},
     )
 
+    stdout, stderr = await process.communicate()
+
     if implementation == "betterproto_":
-        data = await process.stderr.read()
         # we put code on stderr so we can actually read it thank you google :)))))
 
         try:
-            request = CodeGeneratorRequest().parse(data)
+            request = CodeGeneratorRequest().parse(stderr)
         except Exception:
-            handle_error(data.decode(), files)
+            handle_error(stderr.decode(), files)
 
         if request._unknown_fields:
             try:
-                handle_error(data.decode(), files)
+                handle_error(stderr.decode(), files)
             except UnicodeError:
                 raise CLIError(
                     'Try running "poetry generate_lib" to try and fix this, if that doesn\'t work protoc broke'
@@ -94,21 +94,26 @@ async def compile_protobufs(
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
-        with ProcessPoolExecutor(max_workers=4) as process_pool:
-            # write multiple files concurrently
+        if len(response.files) > 1:
             loop = asyncio.get_event_loop()
-            await asyncio.gather(
-                *(
-                    loop.run_in_executor(
-                        process_pool, functools.partial(write_file, output, file)
+            with ProcessPoolExecutor(max_workers=4) as process_pool:
+                # write multiple files concurrently
+                await asyncio.gather(
+                    *(
+                        loop.run_in_executor(
+                            process_pool, functools.partial(write_file, output, file)
+                        )
+                        for file in response.file
                     )
-                    for file in response.file
                 )
-            )
 
-    stdout, stderr = await process.communicate()
+        else:
+            await utils.to_thread(write_file, output, response.file[0])
 
-    if process.returncode != 0:
-        raise CLIError(stderr.decode())  # bad
+    elif stderr:
+        handle_error(stderr.decode(), files)
+
+    elif process.returncode != 0:
+        raise CLIError(stderr.decode())
 
     return stdout.decode(), stderr.decode()

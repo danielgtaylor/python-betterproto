@@ -36,10 +36,11 @@ sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 asv = "^0.4.2"
 click = "^7.1.2"
+typer = "^0.3.2"
 rich = "^9.8.2"
 
 [tool.poetry.scripts]
-betterproto = "betterproto:__main__.main"
+betterproto = "betterproto:__main__.app"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
@@ -47,23 +48,14 @@ compiler = ["black", "jinja2"]
 
 [tool.poe.tasks]
 # Dev workflow tasks
-generate    = { script = "tests.generate:main", help = "Generate test cases (do this once before running test)" }
-test        = { cmd = "pytest --cov src", help = "Run tests" }
-types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
-format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
-clean       = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
-docs        = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
-bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
-
-generate_lib.cmd = """
-protoc
-    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
-    --custom_opt=INCLUDE_GOOGLE
-    --custom_out=src/betterproto/lib
-    -I /usr/local/include/
-    /usr/local/include/google/protobuf/**/*.proto
-"""
-generate_lib.help = "Regenerate the types in betterproto.lib.google"
+generate     = { script = "tests.generate:main", help = "Generate test cases (do this once before running test)" }
+test         = { cmd = "pytest --cov src", help = "Run tests" }
+types        = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
+format       = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
+clean        = { cmd = "rm -rf .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help = "Clean out generated files from the workspace" }
+docs         = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
+bench        = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
+generate_lib = { cmd = "betterproto compile /usr/local/bin/include/google/protobuf --output=src/betterproto/lib", help = "Regenerate the types in betterproto.lib.google"}
 
 # CI tasks
 full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }

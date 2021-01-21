@@ -1,8 +1,5 @@
 import asyncio
-import os
 import platform
-from pathlib import Path
-from typing import Any, Dict
 
 try:
     import grpc_tools.protoc
@@ -11,12 +8,11 @@ except ImportError:
 else:
     USE_PROTOC = False
 
-DEFAULT_OUT = Path.cwd() / "betterproto_out"
+DEFAULT_OUT = "betterproto_out"
 VERBOSE = False
-ENV: Dict[str, Any] = dict(os.environ)
 from black import DEFAULT_LINE_LENGTH as DEFAULT_LINE_LENGTH  # noqa
 
-from .commands import main
+from .commands import app
 from .runner import compile_protobufs
 
 if platform.system() == "Windows":

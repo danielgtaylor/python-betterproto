@@ -1,27 +1,60 @@
 import asyncio
 import functools
+import os
 import platform
 import sys
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Awaitable, Callable, List, TypeVar
+from typing import Awaitable, Callable, TypeVar, Any, List, Set
 
-from . import USE_PROTOC
+# from . import USE_PROTOC
+USE_PROTOC = True
 
 T = TypeVar("T")
 
+INCLUDE = (
+    "any.proto",
+    "api.proto",
+    "compiler/plugin.proto",
+    "descriptor.proto",
+    "duration.proto",
+    "empty.proto",
+    "field_mask.proto",
+    "source_context.proto",
+    "struct.proto",
+    "timestamp.proto",
+    "type.proto",
+    "wrappers.proto",
+)
 
-def get_files(src: str) -> List[Path]:
+
+def get_files(paths: List[Path]) -> "defaultdict[Path, Set[Path]]":
     """Return a list of files ready for :func:`generate_command`"""
-    path = Path(src)
-    if not path.is_absolute():
-        path = (Path.cwd() / src).resolve()
-    if path.is_dir():
-        return [p for p in path.iterdir() if p.suffix == ".proto"]
-    return [path]
+    # TODO create a default dict of parent to paths
+    # recurse up folder to file first folder without a .proto
+    # return highest directory as first value in list
+
+    new_paths: "defaultdict[Path, Set[Path]]" = defaultdict(set)
+    for path in paths:
+        if not path.is_absolute():
+            path = (Path.cwd() / path).resolve()
+        if str(path).startswith("/usr") and "include/google/protobuf" in str(path):
+            # TODO make this better for windows systems and being in different places in usr/
+            # TODO make this actually work :) --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
+            new_paths[path].update(path / proto for proto in INCLUDE)
+        elif path.is_dir():
+            new_paths[path].update(path.glob("*.proto"))
+        else:
+            new_paths[path.parent].add(path)
+
+    return new_paths
 
 
 def generate_command(
-    *files: Path, output: Path, use_protoc: bool = USE_PROTOC, implementation: str = "betterproto_"
+    *files: Path,
+    output: Path,
+    use_protoc: bool = USE_PROTOC,
+    implementation: str = "betterproto_",
 ) -> str:
 
     command = [
@@ -65,8 +98,14 @@ def run_sync(func: Callable[..., Awaitable[T]]) -> Callable[..., T]:
 if sys.version_info[:2] >= (3, 9):
     from asyncio import to_thread
 else:
+
     async def to_thread(func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         loop = asyncio.get_event_loop()
         # no context vars
         partial = functools.partial(func, *args, **kwargs)
         return await loop.run_in_executor(None, partial)
+
+
+if __name__ == '__main__':
+    os.getcwd = lambda: "/Users/gobot1234/PycharmProjects/betterproto/tests/inputs"
+    print(get_files(("bool", "bool/bool.proto", "casing/casing.proto")))
