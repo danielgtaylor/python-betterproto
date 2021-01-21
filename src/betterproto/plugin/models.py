@@ -663,6 +663,10 @@ class ServiceCompiler(ProtoContentBase):
         return self.proto_obj.name
 
     @property
+    def proto_path(self) -> str:
+        return self.parent.package + "." + self.proto_name
+
+    @property
     def py_name(self) -> str:
         return pythonize_class_name(self.proto_name)
 
