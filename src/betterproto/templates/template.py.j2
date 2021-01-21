@@ -15,8 +15,10 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 {% endif %}
 
 import betterproto
+{% if output_file.parent_request.options.grpc_kind == "grpclib" %}
 from betterproto.grpc.grpclib_server import ServiceBase
-{% if output_file.services %}
+{% endif %}
+{% if output_file.services and output_file.parent_request.options.grpc_kind == "grpclib" %}
 import grpclib
 {% endif %}
 
@@ -68,6 +70,9 @@ class {{ message.py_name }}(betterproto.Message):
 
 
 {% endfor %}
+
+{% if output_file.parent_request.options.grpc_kind == "grpclib" %}
+
 {% for service in output_file.services %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
@@ -239,6 +244,7 @@ class {{ service.py_name }}Base(ServiceBase):
         }
 
 {% endfor %}
+{% endif %}
 
 {% for i in output_file.imports|sort %}
 {{ i }}
