@@ -181,9 +181,14 @@ class ProtoContentBase:
 
 
 @dataclass
-class PluginRequestCompiler:
+class Options:
+    grpc_kind: str = "grpclib"
 
+
+@dataclass
+class PluginRequestCompiler:
     plugin_request_obj: plugin.CodeGeneratorRequest
+    options: Options
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
     @property
