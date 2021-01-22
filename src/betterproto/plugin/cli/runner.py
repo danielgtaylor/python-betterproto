@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import os
 import re
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
@@ -65,12 +66,13 @@ async def compile_protobufs(
     command = utils.generate_command(
         *files, output=output, use_protoc=use_protoc, implementation=implementation
     )
-
+    env = {"USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)).lower()}
+    env.update(os.environ)
     process = await asyncio.create_subprocess_shell(
         command,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        env={"USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)).lower()},
+        env=env,
     )
 
     stdout, stderr = await process.communicate()
@@ -94,7 +96,7 @@ async def compile_protobufs(
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
-        if len(response.files) > 1:
+        if len(response.file) > 1:
             loop = asyncio.get_event_loop()
             with ProcessPoolExecutor(max_workers=4) as process_pool:
                 # write multiple files concurrently
@@ -109,6 +111,8 @@ async def compile_protobufs(
 
         else:
             await utils.to_thread(write_file, output, response.file[0])
+
+        stderr = b""
 
     elif stderr:
         handle_error(stderr.decode(), files)

@@ -3,6 +3,8 @@ import pathlib
 from typing import Iterator, List, Set, Tuple, Union
 
 import black
+import rich
+from rich.progress import Progress
 
 from ..lib.google.protobuf import (
     DescriptorProto,
@@ -94,55 +96,87 @@ def generate_code(
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
-    for proto_file in request.proto_file:
-        if proto_file.package == "google.protobuf" and include_google:
-            # If not INCLUDE_GOOGLE skip re-compiling Google's well-known types
-            continue
 
-        output_package_name = proto_file.package
-        if output_package_name not in request_data.output_packages:
-            # Create a new output if there is no output for this package
-            request_data.output_packages[output_package_name] = OutputTemplate(
-                parent_request=request_data, package_proto_obj=proto_file
-            )
-        # Add this input file to the output corresponding to this package
-        request_data.output_packages[output_package_name].input_files.append(proto_file)
+    with Progress(transient=True) as progress:
+        reading_progress_bar = progress.add_task(
+            "[green]Reading protobuf files...", total=len(request.proto_file)
+        )
+        for proto_file in request.proto_file:
+            if proto_file.package == "google.protobuf" and include_google:
+                # If not INCLUDE_GOOGLE skip re-compiling Google's well-known types
+                continue
+
+            output_package_name = proto_file.package
+            if output_package_name not in request_data.output_packages:
+                # Create a new output if there is no output for this package
+                request_data.output_packages[output_package_name] = OutputTemplate(
+                    parent_request=request_data, package_proto_obj=proto_file
+                )
+            # Add this input file to the output corresponding to this package
+            request_data.output_packages[output_package_name].input_files.append(proto_file)
+            if from_cli:
+                progress.update(reading_progress_bar, advance=1)
 
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
     # get the references to input/output messages for each service
-    for output_package_name, output_package in request_data.output_packages.items():
-        for proto_input_file in output_package.input_files:
-            for item, path in traverse(proto_input_file):
-                read_protobuf_type(
-                    source_file=proto_input_file,
-                    item=item,
-                    path=path,
-                    output_package=output_package,
-                )
+    with Progress(transient=True) as progress:
+        parsing_progress_bar = progress.add_task(
+            "[green]Parsing protobuf enums and messages...", total=sum(
+                len(message.package_proto_obj.enum_type)
+                + len(message.package_proto_obj.message_type)
+                for message in request_data.output_packages.values()
+            )
+        )
+        for output_package_name, output_package in request_data.output_packages.items():
+            for proto_input_file in output_package.input_files:
+                for item, path in traverse(proto_input_file):
+                    read_protobuf_type(
+                        item=item,
+                        path=path,
+                        source_file=proto_input_file,
+                        output_package=output_package,
+                    )
+                    if from_cli:
+                        progress.update(parsing_progress_bar, advance=1)
 
     # Read Services
     if generate_services:
-        for output_package_name, output_package in request_data.output_packages.items():
-            for proto_input_file in output_package.input_files:
-                for index, service in enumerate(proto_input_file.service):
-                    read_protobuf_service(service, index, output_package)
+        with Progress(transient=True) as progress:
+            parsing_progress_bar = progress.add_task(
+                "[green]Parsing protobuf services...", total=sum(
+                    len(message.package_proto_obj.service)
+                    for message in request_data.output_packages.values()
+                )
+            )
+            for output_package_name, output_package in request_data.output_packages.items():
+                for proto_input_file in output_package.input_files:
+                    for index, service in enumerate(proto_input_file.service):
+                        read_protobuf_service(service, index, output_package)
+                        if from_cli:
+                            progress.update(parsing_progress_bar, advance=1)
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
-    for output_package_name, output_package in request_data.output_packages.items():
-
-        # Add files to the response object
-        output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
-        output_paths.add(output_path)
-
-        response.file.append(
-            CodeGeneratorResponseFile(
-                name=str(output_path),
-                # Render and then format the output file
-                content=outputfile_compiler(output_file=output_package, line_length=line_length),
-            )
+    with Progress(transient=True) as progress:
+        compiling_progress_bar = progress.add_task(
+            "[green]Compiling protobuf files...", total=len(request_data.output_packages)
         )
+        for output_package_name, output_package in request_data.output_packages.items():
+
+            # Add files to the response object
+            output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
+            output_paths.add(output_path)
+
+            response.file.append(
+                CodeGeneratorResponseFile(
+                    name=str(output_path),
+                    # Render and then format the output file
+                    content=outputfile_compiler(output_file=output_package, line_length=line_length),
+                )
+            )
+            if from_cli:
+                progress.update(compiling_progress_bar, advance=1)
 
     # Make each output directory a package with __init__ file
     init_files = {
