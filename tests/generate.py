@@ -4,9 +4,9 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional, Set, Tuple
+from typing import Optional, Set, List
 
-import click
+import typer
 import rich
 
 from betterproto.plugin.cli import compile_protobufs, utils
@@ -20,6 +20,7 @@ from tests.util import (
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+app = typer.Typer()
 
 
 def clear_directory(dir_path: Path) -> None:
@@ -30,7 +31,7 @@ def clear_directory(dir_path: Path) -> None:
             file_or_directory.unlink()
 
 
-async def generate(whitelist: Set[str], verbose: bool) -> None:
+async def generate(whitelist: Set[Path], verbose: bool) -> None:
     test_case_names = set(get_directories(inputs_path)) - {"__pycache__"}
 
     path_whitelist = set()
@@ -59,7 +60,7 @@ async def generate(whitelist: Set[str], verbose: bool) -> None:
     for test_case_name, exception in zip(
         sorted(test_case_names), await asyncio.gather(*generation_tasks)
     ):
-        if exception is not None:
+        if exception is not None:  # TODO this broke
             failed_test_cases.append(test_case_name)
 
     if failed_test_cases:
@@ -92,7 +93,9 @@ async def generate_test_case_output(
             compile_protobufs(
                 *files, output=test_case_output_path_reference, implementation=""
             ),
-            compile_protobufs(*files, output=test_case_output_path_betterproto),
+            compile_protobufs(
+                *files, output=test_case_output_path_betterproto, from_cli=True
+            ),
         )
     except Exception as exc:
         return exc
@@ -112,27 +115,22 @@ async def generate_test_case_output(
         sys.stderr.buffer.flush()
 
 
-@click.command(
-    help="Generate python classes for standard tests.",
-    context_settings={"help_option_names": ["-h", "--help"]},
-)
-@click.option("-v", "--verbose", is_flag=True, default=False)
-@click.argument("directories", nargs=-1)
+@app.command(context_settings={"help_option_names": ["-h", "--help"]},)
 @utils.run_sync
-async def main(verbose: bool, directories: Tuple[str, ...]):
-    """
-    Parameters
-    ----------
-    verbose:
-        Whether or not to run the plugin in verbose mode.
-    directories:
-        One or more relative or absolute directories or test-case names test-cases to generate classes for. e.g.
-        ``inputs/bool inputs/double inputs/enum`` or ``bool double enum``
-    """
+async def main(
+    verbose: bool = typer.Option(
+        False, help="Whether or not to run the plugin in verbose mode."
+    ),
+    directories: List[Path] = typer.Option(
+        (),
+        help="One or more relative or absolute directories or test-case names "
+        "test-cases to generate classes for. e.g. ``inputs/bool inputs/double "
+        "inputs/enum`` or ``bool double enum``"
+    )
+) -> None:
+    """Generate python classes for standard tests."""
     await generate(set(directories), verbose)
 
 
 if __name__ == "__main__":
-    sys.argv = "generate.py".split()
-    os.getcwd = lambda: "/Users/gobot1234/PycharmProjects/betterproto/tests"
-    main()
+    app()

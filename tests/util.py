@@ -13,7 +13,7 @@ output_path_reference = root_path.joinpath("output_reference")
 output_path_betterproto = root_path.joinpath("output_betterproto")
 
 
-def get_directories(path: str) -> Generator[str, None, None]:
+def get_directories(path: Path) -> Generator[str, None, None]:
     for root, directories, files in os.walk(path):
         yield from directories
 

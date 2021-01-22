@@ -40,7 +40,7 @@ typer = "^0.3.2"
 rich = "^9.8.2"
 
 [tool.poetry.scripts]
-betterproto = "betterproto:__main__.app"
+betterproto = "betterproto:__main__.main"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]

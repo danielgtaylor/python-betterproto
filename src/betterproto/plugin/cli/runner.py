@@ -86,19 +86,14 @@ async def compile_protobufs(
             handle_error(stderr.decode(), files)
 
         if request._unknown_fields:
-            try:
-                handle_error(stderr.decode(), files)
-            except UnicodeError:
-                raise CLIError(
-                    'Try running "poetry generate_lib" to try and fix this, if that doesn\'t work protoc broke'
-                )
+            handle_error(stderr.decode(), files)
 
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
         if len(response.file) > 1:
             loop = asyncio.get_event_loop()
-            with ProcessPoolExecutor(max_workers=4) as process_pool:
+            with ProcessPoolExecutor() as process_pool:
                 # write multiple files concurrently
                 await asyncio.gather(
                     *(

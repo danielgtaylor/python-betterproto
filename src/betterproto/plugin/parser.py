@@ -3,7 +3,6 @@ import pathlib
 from typing import Iterator, List, Set, Tuple, Union
 
 import black
-import rich
 from rich.progress import Progress
 
 from ..lib.google.protobuf import (
@@ -69,7 +68,6 @@ def generate_code(
     line_length: int = black.DEFAULT_LINE_LENGTH,
     generate_services: bool = True,
     separate_files: bool = False,
-    show_info: bool = False,
     verbose: bool = False,
     from_cli: bool = False,
 ) -> CodeGeneratorResponse:
@@ -82,14 +80,14 @@ def generate_code(
     line_length
     generate_services
     separate_files
-    show_info
     verbose
     from_cli
 
     Returns
     -------
     :class:`.CodeGeneratorResponse`
-    """
+    """  # TODO
+
     response = CodeGeneratorResponse()
     plugin_options = request.parameter.split(",") if request.parameter else []
     include_google = "INCLUDE_GOOGLE" in plugin_options or include_google

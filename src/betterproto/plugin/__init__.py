@@ -1,6 +1,5 @@
 import sys
 import traceback
-from distutils import sysconfig
 from pathlib import Path
 from types import TracebackType
 from typing import Type
@@ -13,7 +12,7 @@ IMPORT_ERROR_MESSAGE = (
 
 STDLIB_MODULES = [
     p.with_suffix("").name
-    for p in Path(sysconfig.get_python_lib(standard_lib=True)).iterdir()
+    for p in Path(traceback.__file__).parent.iterdir() if p.suffix == ".py" or p.is_dir()
 ]
 
 

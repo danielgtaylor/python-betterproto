@@ -53,6 +53,7 @@ from ..lib.google.protobuf import (
     FieldDescriptorProtoType,
     FileDescriptorProto,
     MethodDescriptorProto,
+    ServiceDescriptorProto,
 )
 from ..lib.google.protobuf.compiler import CodeGeneratorRequest
 
@@ -467,7 +468,7 @@ class FieldCompiler(MessageCompiler):
                 source_type=self.proto_obj.type_name,
             )
         else:
-            raise NotImplementedError(f"Unknown type {field.type}")
+            raise NotImplementedError(f"Unknown type {self.proto_obj.type}")
 
     @property
     def annotation(self) -> str:
@@ -576,7 +577,7 @@ class EnumDefinitionCompiler(MessageCompiler):
 @dataclass
 class ServiceCompiler(ProtoContentBase):
     parent: OutputTemplate = PLACEHOLDER
-    proto_obj: DescriptorProto = PLACEHOLDER
+    proto_obj: ServiceDescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
     methods: List["ServiceMethodCompiler"] = field(default_factory=list)
 
