@@ -15,7 +15,7 @@ def main() -> None:
     # Read request message from stdin
     data = sys.stdin.buffer.read()
 
-    if os.getenv("USING_BETTERPROTO_CLI") == "true":
+    if os.getenv("USING_BETTERPROTO_CLI") == "True":
         # Write the data to stderr for cli
         sys.stderr.buffer.write(data)  # need to figure out how to potentially lock this
         sys.stdout.buffer.write(b"")

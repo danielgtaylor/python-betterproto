@@ -7,8 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Awaitable, Callable, TypeVar, Any, List, Set
 
-# from . import USE_PROTOC
-USE_PROTOC = True
+from . import USE_PROTOC
 
 T = TypeVar("T")
 
@@ -30,17 +29,12 @@ INCLUDE = (
 
 def get_files(paths: List[Path]) -> "defaultdict[Path, Set[Path]]":
     """Return a list of files ready for :func:`generate_command`"""
-    # TODO create a default dict of parent to paths
-    # recurse up folder to file first folder without a .proto
-    # return highest directory as first value in list
 
     new_paths: "defaultdict[Path, Set[Path]]" = defaultdict(set)
     for path in paths:
         if not path.is_absolute():
             path = (Path.cwd() / path).resolve()
         if str(path).startswith("/usr") and "include/google/protobuf" in str(path):
-            # TODO make this better for windows systems and being in different places in usr/
-            # TODO make this actually work :) --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
             new_paths[path].update(path / proto for proto in INCLUDE)
         elif path.is_dir():
             new_paths[path].update(path.glob("*.proto"))
@@ -56,6 +50,7 @@ def generate_command(
     use_protoc: bool = USE_PROTOC,
     implementation: str = "betterproto_",
 ) -> str:
+    # TODO make this actually work :) --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
 
     command = [
         f"--proto_path={files[0].parent.as_posix()}",

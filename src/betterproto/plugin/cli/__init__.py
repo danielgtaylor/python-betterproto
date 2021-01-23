@@ -8,7 +8,6 @@ except ImportError:
 else:
     USE_PROTOC = False
 
-DEFAULT_OUT = "betterproto_out"
 VERBOSE = False
 from black import DEFAULT_LINE_LENGTH as DEFAULT_LINE_LENGTH  # noqa
 

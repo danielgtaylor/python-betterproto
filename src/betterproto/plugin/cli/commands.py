@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import typer
 import rich
@@ -8,7 +8,6 @@ from rich.syntax import Syntax
 from ..models import monkey_patch_oneof_index
 from . import (
     DEFAULT_LINE_LENGTH,
-    DEFAULT_OUT,
     USE_PROTOC,
     VERBOSE,
     utils,
@@ -49,8 +48,8 @@ async def compile(
     generate_services: bool = typer.Option(
         True, help="Whether or not to generate servicer stubs"
     ),
-    output: Path = typer.Option(
-        DEFAULT_OUT,
+    output: Optional[Path] = typer.Option(
+        None,
         help="The name of the output directory",
         file_okay=False,
         allow_dash=True,
@@ -72,9 +71,7 @@ async def compile(
     for output_path, protos in files.items():
         try:
             output = (
-                (Path(output_path.parent.name) / output_path.name).resolve()
-                if output.name == DEFAULT_OUT
-                else output
+                output or (Path(output_path.parent.name) / output_path.name).resolve()
             )
             output.mkdir(exist_ok=True, parents=True)
             await compile_protobufs(

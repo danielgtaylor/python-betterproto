@@ -3,8 +3,7 @@ import functools
 import os
 import re
 from concurrent.futures import ProcessPoolExecutor
-from pathlib import Path
-from typing import Any, NoReturn, Tuple
+from typing import TYPE_CHECKING, Any, NoReturn, Tuple
 
 from ...lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
@@ -14,13 +13,25 @@ from ..parser import generate_code
 from . import USE_PROTOC, utils
 from .errors import CLIError, ProtobufSyntaxError
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-def write_file(output: Path, file: CodeGeneratorResponseFile) -> None:
+DEFAULT_IMPLEMENTATION = "betterproto_"
+
+
+def write_file(output: "Path", file: CodeGeneratorResponseFile) -> None:
     path = (output / file.name).resolve()
-    path.write_text(file.content)
+    if file.content.__class__ is object:
+        return
+    try:
+        path.write_text(file.content)
+    except FileNotFoundError:
+        # something weird happens here with files that use google imports
+        # the google files seem to get included in the generated code but with no code?
+        pass
 
 
-def handle_error(data: str, files: Tuple[Path, ...]) -> NoReturn:
+def handle_error(data: str, files: Tuple["Path", ...]) -> NoReturn:
     match = re.match(
         r"^(?P<filename>.+):(?P<lineno>\d+):(?P<offset>\d+):(?P<message>.*)",
         data,
@@ -40,10 +51,10 @@ def handle_error(data: str, files: Tuple[Path, ...]) -> NoReturn:
 
 
 async def compile_protobufs(
-    *files: Path,
-    output: Path,
+    *files: "Path",
+    output: "Path",
     use_protoc: bool = USE_PROTOC,
-    implementation: str = "betterproto_",
+    use_betterproto: bool = True,
     **kwargs: Any,
 ) -> Tuple[str, str]:
     """
@@ -63,21 +74,21 @@ async def compile_protobufs(
     Tuple[:class:`str`, :class:`str`]
         A tuple of the ``stdout`` and ``stderr`` from the invocation of protoc.
     """
+    implementation = DEFAULT_IMPLEMENTATION if use_betterproto else ""
     command = utils.generate_command(
         *files, output=output, use_protoc=use_protoc, implementation=implementation
     )
-    env = {"USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)).lower()}
-    env.update(os.environ)
+
     process = await asyncio.create_subprocess_shell(
         command,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        env=env,
+        env={"USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)), **os.environ},
     )
 
     stdout, stderr = await process.communicate()
 
-    if implementation == "betterproto_":
+    if use_betterproto:
         # we put code on stderr so we can actually read it thank you google :)))))
 
         try:
@@ -91,28 +102,24 @@ async def compile_protobufs(
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
-        if len(response.file) > 1:
-            loop = asyncio.get_event_loop()
-            with ProcessPoolExecutor() as process_pool:
-                # write multiple files concurrently
-                await asyncio.gather(
-                    *(
-                        loop.run_in_executor(
-                            process_pool, functools.partial(write_file, output, file)
-                        )
-                        for file in response.file
+        loop = asyncio.get_event_loop()
+        with ProcessPoolExecutor() as process_pool:
+            # write multiple files concurrently
+            await asyncio.gather(
+                *(
+                    loop.run_in_executor(
+                        process_pool, functools.partial(write_file, output, file)
                     )
+                    for file in response.file
                 )
-
-        else:
-            await utils.to_thread(write_file, output, response.file[0])
+            )
 
         stderr = b""
 
-    elif stderr:
+    if stderr:
         handle_error(stderr.decode(), files)
 
-    elif process.returncode != 0:
+    if process.returncode != 0:
         raise CLIError(stderr.decode())
 
     return stdout.decode(), stderr.decode()

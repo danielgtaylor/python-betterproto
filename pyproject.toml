@@ -35,7 +35,6 @@ tox = "^3.15.1"
 sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 asv = "^0.4.2"
-click = "^7.1.2"
 typer = "^0.3.2"
 rich = "^9.8.2"
 
@@ -44,7 +43,7 @@ betterproto = "betterproto:__main__.main"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "jinja2"]
+compiler = ["black", "jinja2", "typer", "rich"]
 
 [tool.poe.tasks]
 # Dev workflow tasks

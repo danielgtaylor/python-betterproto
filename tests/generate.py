@@ -61,6 +61,8 @@ async def generate(whitelist: Set[Path], verbose: bool) -> None:
         sorted(test_case_names), await asyncio.gather(*generation_tasks)
     ):
         if exception is not None:  # TODO this broke
+            import traceback
+            traceback.print_exception(exception.__class__, exception, exception.__traceback__)
             failed_test_cases.append(test_case_name)
 
     if failed_test_cases:
@@ -89,9 +91,9 @@ async def generate_test_case_output(
 
     files = list(test_case_input_path.glob("*.proto"))
     try:
-        ((ref_out, ref_err), (plg_out, plg_err),) = await asyncio.gather(
+        (ref_out, ref_err), (plg_out, plg_err) = await asyncio.gather(
             compile_protobufs(
-                *files, output=test_case_output_path_reference, implementation=""
+                *files, output=test_case_output_path_reference, use_betterproto=False
             ),
             compile_protobufs(
                 *files, output=test_case_output_path_betterproto, from_cli=True
@@ -100,36 +102,38 @@ async def generate_test_case_output(
     except Exception as exc:
         return exc
 
-    message = f"[red][bold]Generated output for {test_case_name!r}"
-    rich.print(message)
+    rich.print(f"[bold red]Generated output for {test_case_name!r}")
     if verbose:
         if ref_out:
-            rich.print(f"[bold red]{ref_out}")
+            rich.print(f"[red]{ref_out}")
         if ref_err:
-            rich.print(f"[bold red]{ref_err}", file=sys.stderr)
+            rich.print(f"[red]{ref_err}", file=sys.stderr)
         if plg_out:
-            rich.print(f"[bold red]{plg_out}")
+            rich.print(f"[red]{plg_out}")
         if plg_err:
-            rich.print(f"[bold red]{plg_err}", file=sys.stderr)
-        sys.stdout.buffer.flush()
-        sys.stderr.buffer.flush()
+            rich.print(f"[red]{plg_err}", file=sys.stderr)
+        sys.stdout.flush()
+        sys.stderr.flush()
 
 
-@app.command(context_settings={"help_option_names": ["-h", "--help"]},)
+@app.command(context_settings={"help_option_names": ["-h", "--help"]})
 @utils.run_sync
 async def main(
     verbose: bool = typer.Option(
-        False, help="Whether or not to run the plugin in verbose mode."
+        False,
+        "-v",
+        "--verbose",
+        help="Whether or not to run the plugin in verbose mode.",
     ),
-    directories: List[Path] = typer.Option(
-        (),
+    directories: Optional[List[Path]] = typer.Argument(
+        None,
         help="One or more relative or absolute directories or test-case names "
         "test-cases to generate classes for. e.g. ``inputs/bool inputs/double "
-        "inputs/enum`` or ``bool double enum``"
-    )
+        "inputs/enum`` or ``bool double enum``",
+    ),
 ) -> None:
     """Generate python classes for standard tests."""
-    await generate(set(directories), verbose)
+    await generate(set(directories or ()), verbose)
 
 
 if __name__ == "__main__":
