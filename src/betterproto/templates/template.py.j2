@@ -23,6 +23,7 @@ import grpclib
 {% endif %}
 {% if output_file.services and output_file.parent_request.options.grpc_kind == "grpcio" %}
 import grpc
+from betterproto.grpc.grpcio_server import ServicerBase
 {% endif %}
 
 
@@ -251,7 +252,7 @@ class {{ service.py_name }}Base(ServiceBase):
 
 {% if output_file.parent_request.options.grpc_kind == "grpcio" %}
 {% for service in output_file.services %}
-class {{ service.py_name }}Base:
+class {{ service.py_name }}Base(ServicerBase):
     {% if service.comment %}
 {{ service.comment }}
 
@@ -277,8 +278,11 @@ class {{ service.py_name }}Base:
 
     {% endfor %}
 
-    def register_to_server(self, server: grpc.aio.Server):
-        rpc_method_handlers = {
+    __proto_path__ = "{{ service.proto_path }}"
+
+    @property
+    def __rpc_methods__(self):
+        return {
         {% for method in service.methods %}
             "{{ method.proto_name }}":
             {% if not method.client_streaming and not method.server_streaming %}
@@ -296,9 +300,6 @@ class {{ service.py_name }}Base:
                 ),
         {% endfor %}
         }
-        generic_handler = grpc.method_handlers_generic_handler(
-            "{{ service.proto_path }}", rpc_method_handlers)
-        server.add_generic_rpc_handlers((generic_handler,))
 
 {% endfor %}
 {% endif %}
