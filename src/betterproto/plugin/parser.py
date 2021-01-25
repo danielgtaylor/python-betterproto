@@ -42,6 +42,7 @@ from .models import (
 if TYPE_CHECKING:
     from google.protobuf.descriptor import Descriptor
 
+
 def traverse(
     proto_file: FieldDescriptorProto,
 ) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
@@ -68,30 +69,30 @@ def traverse(
         _traverse([5], proto_file.enum_type), _traverse([4], proto_file.message_type)
     )
 
+
 def parse_options(plugin_options: List[str]) -> Options:
     options = Options()
     for option in plugin_options:
         if option.startswith("grpc="):
             options.grpc_kind = option.split("=", 1)[1]
+        if option == "INCLUDE_GOOGLE":
+            options.include_google = True
     return options
+
 
 def generate_code(
     request: plugin.CodeGeneratorRequest, response: plugin.CodeGeneratorResponse
 ) -> None:
-    plugin_options = request.parameter.split(",") if request.parameter else []
-
-    options = parse_options(plugin_options)
+    plugin_options = parse_options(
+        request.parameter.split(",") if request.parameter else []
+    )
 
     request_data = PluginRequestCompiler(
-        plugin_request_obj=request,
-        options=options
+        plugin_request_obj=request, options=plugin_options
     )
     # Gather output packages
     for proto_file in request.proto_file:
-        if (
-            proto_file.package == "google.protobuf"
-            and "INCLUDE_GOOGLE" not in plugin_options
-        ):
+        if proto_file.package == "google.protobuf" and plugin_options.include_google:
             # If not INCLUDE_GOOGLE,
             # skip re-compiling Google's well-known types
             continue

@@ -183,6 +183,7 @@ class ProtoContentBase:
 @dataclass
 class Options:
     grpc_kind: str = "grpclib"
+    include_google: bool = False
 
 
 @dataclass
