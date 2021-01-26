@@ -39,9 +39,8 @@ import betterproto
 from ..compile.importing import get_type_reference, parse_source_type_name
 from ..compile.naming import (
     pythonize_class_name,
-    pythonize_enum_member_names,
     pythonize_field_name,
-    pythonize_method_name,
+    pythonize_method_name, pythonize_enum_member_name,
 )
 
 try:
@@ -522,20 +521,17 @@ class EnumDefinitionCompiler(MessageCompiler):
 
     def __post_init__(self) -> None:
         # Get entries/allowed values for this Enum
-        member_names = pythonize_enum_member_names(
-            [entry_proto_value.name for entry_proto_value in self.proto_obj.value]
-        )
         self.entries = [
             self.EnumEntry(
-                name=member_name,
+                name=pythonize_enum_member_name(
+                    entry_proto_value.name, self.proto_obj.name
+                ),
                 value=entry_proto_value.number,
                 comment=get_comment(
                     proto_file=self.proto_file, path=self.path + [2, entry_number]
                 ),
             )
-            for member_name, (entry_number, entry_proto_value) in zip(
-                member_names, enumerate(self.proto_obj.value)
-            )
+            for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
         ]
         super().__post_init__()  # call MessageCompiler __post_init__
 
