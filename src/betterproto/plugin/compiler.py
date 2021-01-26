@@ -6,7 +6,9 @@ import jinja2
 from .models import OutputTemplate
 
 
-def outputfile_compiler(output_file: OutputTemplate, line_length: int = black.DEFAULT_LINE_LENGTH) -> str:
+def outputfile_compiler(
+    output_file: OutputTemplate, line_length: int = black.DEFAULT_LINE_LENGTH
+) -> str:
 
     templates_folder = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "templates")
@@ -21,5 +23,7 @@ def outputfile_compiler(output_file: OutputTemplate, line_length: int = black.DE
 
     return black.format_str(
         template.render(output_file=output_file),
-        mode=black.Mode(line_length=line_length, target_versions={black.TargetVersion.PY37}),
+        mode=black.Mode(
+            line_length=line_length, target_versions={black.TargetVersion.PY37}
+        ),
     )

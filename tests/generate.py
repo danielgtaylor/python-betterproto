@@ -62,7 +62,10 @@ async def generate(whitelist: Set[Path], verbose: bool) -> None:
     ):
         if exception is not None:  # TODO this broke
             import traceback
-            traceback.print_exception(exception.__class__, exception, exception.__traceback__)
+
+            traceback.print_exception(
+                exception.__class__, exception, exception.__traceback__
+            )
             failed_test_cases.append(test_case_name)
 
     if failed_test_cases:

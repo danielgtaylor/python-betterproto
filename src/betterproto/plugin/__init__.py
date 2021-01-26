@@ -10,10 +10,12 @@ IMPORT_ERROR_MESSAGE = (
     "included."
 )
 
-STDLIB_MODULES = [
-    p.with_suffix("").name
-    for p in Path(traceback.__file__).parent.iterdir() if p.suffix == ".py" or p.is_dir()
-]
+STDLIB_MODULES = getattr(sys, "module_names", [
+        p.with_suffix("").name
+        for p in Path(traceback.__file__).parent.iterdir()
+        if p.suffix == ".py" or p.is_dir()
+    ]
+)
 
 
 def import_exception_hook(

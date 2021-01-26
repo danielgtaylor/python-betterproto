@@ -22,6 +22,7 @@ class ProtobufSyntaxError(SyntaxError, CompilerError):
     offset: :class:`int`
         The offset along the :attr:`lineno` that the syntax error occurs.
     """
+
     def __init__(self, msg: str, file: Path, lineno: int, offset: int):
         text = file.read_text().splitlines()[lineno - 1]
         super().__init__(msg, (str(file), lineno, offset, text))

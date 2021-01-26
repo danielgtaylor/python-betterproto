@@ -74,14 +74,7 @@ You can run the following to invoke protoc directly:
 
 ```sh
 mkdir lib
-protoc -I . --python_betterproto_out=lib example.proto
-```
-
-or run the following to invoke protoc via grpcio-tools:
-
-```sh
-pip install grpcio-tools
-python -m grpc_tools.protoc -I . --python_betterproto_out=lib example.proto
+betterproto compile example.proto --output=lib
 ```
 
 This will generate `lib/hello/__init__.py` which looks like:
@@ -407,17 +400,12 @@ poe full-test
 Betterproto includes compiled versions for Google's well-known types at [betterproto/lib/google](betterproto/lib/google).
 Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
 
-Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
+Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`.
 
 Assuming your `google.protobuf` source files (included with all releases of `protoc`) are located in `/usr/local/include`, you can regenerate them as follows:
 
 ```sh
-protoc \
-    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py \
-    --custom_opt=INCLUDE_GOOGLE \
-    --custom_out=src/betterproto/lib \
-    -I /usr/local/include/ \
-    /usr/local/include/google/protobuf/*.proto
+betterproto compile /usr/local/include/google/protobuf/*.proto --output=src/betterproto/lib
 ```
 
 ### TODO

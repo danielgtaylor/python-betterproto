@@ -30,7 +30,7 @@ def main() -> None:
             "Direct invocation of the protoc plugin is depreciated over using the CLI\n"
             "To do so you just need to type:\n"
             f"betterproto compile {' '.join(request.file_to_generate)}",
-            file=sys.stderr
+            file=sys.stderr,
         )
 
         # Generate code

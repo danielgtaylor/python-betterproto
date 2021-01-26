@@ -101,6 +101,6 @@ else:
         return await loop.run_in_executor(None, partial)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     os.getcwd = lambda: "/Users/gobot1234/PycharmProjects/betterproto/tests/inputs"
     print(get_files(("bool", "bool/bool.proto", "casing/casing.proto")))

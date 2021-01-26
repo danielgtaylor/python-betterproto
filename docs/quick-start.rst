@@ -42,20 +42,10 @@ Given you installed the compiler and have a proto file, e.g ``example.proto``:
 
 To compile the proto you would run the following:
 
-You can run the following to invoke protoc directly:
-
 .. code-block:: sh
 
     mkdir hello
-    protoc -I . --python_betterproto_out=lib example.proto
-
-or run the following to invoke protoc via grpcio-tools:
-
-.. code-block:: sh
-
-    pip install grpcio-tools
-    python -m grpc_tools.protoc -I . --python_betterproto_out=lib example.proto
-
+    betterproto compile example.proto --output=lib
 
 This will generate ``lib/__init__.py`` which looks like:
 

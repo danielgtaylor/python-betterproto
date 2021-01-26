@@ -111,7 +111,9 @@ def generate_code(
                     parent_request=request_data, package_proto_obj=proto_file
                 )
             # Add this input file to the output corresponding to this package
-            request_data.output_packages[output_package_name].input_files.append(proto_file)
+            request_data.output_packages[output_package_name].input_files.append(
+                proto_file
+            )
             if from_cli:
                 progress.update(reading_progress_bar, advance=1)
 
@@ -120,11 +122,12 @@ def generate_code(
     # get the references to input/output messages for each service
     with Progress(transient=True) as progress:
         parsing_progress_bar = progress.add_task(
-            "[green]Parsing protobuf enums and messages...", total=sum(
+            "[green]Parsing protobuf enums and messages...",
+            total=sum(
                 len(message.package_proto_obj.enum_type)
                 + len(message.package_proto_obj.message_type)
                 for message in request_data.output_packages.values()
-            )
+            ),
         )
         for output_package_name, output_package in request_data.output_packages.items():
             for proto_input_file in output_package.input_files:
@@ -142,12 +145,16 @@ def generate_code(
     if generate_services:
         with Progress(transient=True) as progress:
             parsing_progress_bar = progress.add_task(
-                "[green]Parsing protobuf services...", total=sum(
+                "[green]Parsing protobuf services...",
+                total=sum(
                     len(message.package_proto_obj.service)
                     for message in request_data.output_packages.values()
-                )
+                ),
             )
-            for output_package_name, output_package in request_data.output_packages.items():
+            for (
+                output_package_name,
+                output_package,
+            ) in request_data.output_packages.items():
                 for proto_input_file in output_package.input_files:
                     for index, service in enumerate(proto_input_file.service):
                         read_protobuf_service(service, index, output_package)
@@ -158,7 +165,8 @@ def generate_code(
     output_paths: Set[pathlib.Path] = set()
     with Progress(transient=True) as progress:
         compiling_progress_bar = progress.add_task(
-            "[green]Compiling protobuf files...", total=len(request_data.output_packages)
+            "[green]Compiling protobuf files...",
+            total=len(request_data.output_packages),
         )
         for output_package_name, output_package in request_data.output_packages.items():
 
@@ -170,7 +178,9 @@ def generate_code(
                 CodeGeneratorResponseFile(
                     name=str(output_path),
                     # Render and then format the output file
-                    content=outputfile_compiler(output_file=output_package, line_length=line_length),
+                    content=outputfile_compiler(
+                        output_file=output_package, line_length=line_length
+                    ),
                 )
             )
             if from_cli:
