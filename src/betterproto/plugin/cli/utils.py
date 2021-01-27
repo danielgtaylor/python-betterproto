@@ -55,7 +55,7 @@ def generate_command(
     command = [
         f"--proto_path={files[0].parent.as_posix()}",
         f"--python_{implementation}out={output.as_posix()}",
-        *[file.as_posix() for file in files],
+        *[f'"{file.as_posix()}"' for file in files],  # ensure paths with spaces in the name get parsed correctly
     ]
     if use_protoc:
         command.insert(0, "protoc")

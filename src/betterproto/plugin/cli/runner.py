@@ -21,13 +21,10 @@ DEFAULT_IMPLEMENTATION = "betterproto_"
 
 def write_file(output: "Path", file: CodeGeneratorResponseFile) -> None:
     path = (output / file.name).resolve()
-    if file.content.__class__ is object:
-        return
+    path.parent.mkdir(parents=True, exist_ok=True)
     try:
         path.write_text(file.content)
-    except FileNotFoundError:
-        # something weird happens here with files that use google imports
-        # the google files seem to get included in the generated code but with no code?
+    except TypeError:
         pass
 
 

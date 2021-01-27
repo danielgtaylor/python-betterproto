@@ -100,8 +100,8 @@ def generate_code(
             "[green]Reading protobuf files...", total=len(request.proto_file)
         )
         for proto_file in request.proto_file:
-            if proto_file.package == "google.protobuf" and include_google:
-                # If not INCLUDE_GOOGLE skip re-compiling Google's well-known types
+            if proto_file.package == "google.protobuf" and not include_google:
+                # If not include_google skip re-compiling Google's well-known types
                 continue
 
             output_package_name = proto_file.package
