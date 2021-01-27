@@ -37,7 +37,9 @@ def get_files(paths: List[Path]) -> "defaultdict[Path, Set[Path]]":
         if str(path).startswith("/usr") and "include/google/protobuf" in str(path):
             new_paths[path].update(path / proto for proto in INCLUDE)
         elif path.is_dir():
-            new_paths[path].update(path.glob("*.proto"))
+            new_paths[path].update(
+                sorted(path.glob("*.proto"))
+            )  # ensure order for files when debugging compilation errors
         else:
             new_paths[path.parent].add(path)
 
