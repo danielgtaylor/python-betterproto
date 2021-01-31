@@ -60,12 +60,7 @@ async def generate(whitelist: Set[Path], verbose: bool) -> None:
     for test_case_name, exception in zip(
         sorted(test_case_names), await asyncio.gather(*generation_tasks)
     ):
-        if exception is not None:  # TODO this broke
-            import traceback
-
-            traceback.print_exception(
-                exception.__class__, exception, exception.__traceback__
-            )
+        if exception is not None:
             failed_test_cases.append(test_case_name)
 
     if failed_test_cases:
@@ -93,30 +88,24 @@ async def generate_test_case_output(
     clear_directory(test_case_output_path_betterproto)
 
     files = list(test_case_input_path.glob("*.proto"))
-    try:
-        (ref_out, ref_err), (plg_out, plg_err) = await asyncio.gather(
-            compile_protobufs(
-                *files, output=test_case_output_path_reference, use_betterproto=False
-            ),
-            compile_protobufs(
-                *files, output=test_case_output_path_betterproto, from_cli=True
-            ),
-        )
-    except Exception as exc:
-        return exc
+    ref_errs, plg_errs = await asyncio.gather(
+        compile_protobufs(
+            *files, output=test_case_output_path_reference, use_betterproto=False
+        ),
+        compile_protobufs(
+            *files, output=test_case_output_path_betterproto, from_cli=True
+        ),
+    )
 
     rich.print(f"[bold red]Generated output for {test_case_name!r}")
     if verbose:
-        if ref_out:
-            rich.print(f"[red]{ref_out}")
-        if ref_err:
+        for ref_err in ref_errs:
             rich.print(f"[red]{ref_err}", file=sys.stderr)
-        if plg_out:
-            rich.print(f"[red]{plg_out}")
-        if plg_err:
+        for plg_err in plg_errs:
             rich.print(f"[red]{plg_err}", file=sys.stderr)
-        sys.stdout.flush()
         sys.stderr.flush()
+
+    return ref_errs or plg_errs or None
 
 
 @app.command(context_settings={"help_option_names": ["-h", "--help"]})

@@ -1,18 +1,14 @@
+import sys
 from pathlib import Path
 from typing import List, Optional
 
-import typer
 import rich
+import typer
 from rich.syntax import Syntax
 
 from ..models import monkey_patch_oneof_index
-from . import (
-    DEFAULT_LINE_LENGTH,
-    USE_PROTOC,
-    VERBOSE,
-    utils,
-)
-from .errors import CLIError, ProtobufSyntaxError
+from . import DEFAULT_LINE_LENGTH, USE_PROTOC, VERBOSE, utils
+from .errors import CLIError, ProtobufSyntaxError, UnusedImport
 from .runner import compile_protobufs
 
 monkey_patch_oneof_index()
@@ -69,40 +65,45 @@ async def compile(
         return rich.print("[bold]No files found to compile")
 
     for output_path, protos in files.items():
-        try:
-            output = (
-                output or (Path(output_path.parent.name) / output_path.name).resolve()
-            )
-            output.mkdir(exist_ok=True, parents=True)
-            await compile_protobufs(
-                *protos,
-                output=output,
-                verbose=verbose,
-                use_protoc=protoc,
-                generate_services=generate_services,
-                line_length=line_length,
-                from_cli=True,
-            )
-        except ProtobufSyntaxError as exc:
-            rich.print(
-                f"[red]File {str(exc.file).strip()}:\n",
-                Syntax(
-                    exc.file.read_text(),
-                    "proto",
-                    line_numbers=True,
-                    line_range=(max(exc.lineno - 5, 0), exc.lineno),
-                ),  # TODO switch to .from_path but it appears to be bugged and doesnt render properly
-                f"{' ' * (exc.offset + 3)}^\nSyntaxError: {exc.msg}[red]",
-            )
-        except CLIError as exc:
-            failed_files = "\n".join(f" - {file}" for file in protos)
-            rich.print(
-                f"[red]{'Protoc' if protoc else 'GRPC'} failed to generate outputs for:\n\n"
-                f"{failed_files}\n\nSee the output for the issue:\n{' '.join(exc.args)}[red]",
-            )
+        output = output or (Path(output_path.parent.name) / output_path.name).resolve()
+        output.mkdir(exist_ok=True, parents=True)
 
-        else:
+        errors = await compile_protobufs(
+            *protos,
+            output=output,
+            verbose=verbose,
+            use_protoc=protoc,
+            generate_services=generate_services,
+            line_length=line_length,
+            from_cli=True,
+        )
+
+        for error in errors:
+            if isinstance(error, ProtobufSyntaxError):
+                rich.print(
+                    f"[red]File {str(error.file).strip()}:\n",
+                    Syntax(
+                        error.file.read_text(),
+                        "proto",
+                        line_numbers=True,
+                        line_range=(max(error.lineno - 5, 0), error.lineno),
+                    ),  # TODO switch to .from_path but it appears to be bugged and doesnt render properly
+                    f"{' ' * (error.offset + 3)}^\nSyntaxError: {error.msg}[red]",
+                    file=sys.stderr,
+                )
+            elif isinstance(error, Warning):
+                rich.print(f"Warning: {error}", file=sys.stderr)
+            elif isinstance(error, CLIError):
+                failed_files = "\n".join(f" - {file}" for file in protos)
+                rich.print(
+                    f"[red]{'Protoc' if protoc else 'GRPC'} failed to generate outputs for:\n\n"
+                    f"{failed_files}\n\nSee the output for the issue:\n{' '.join(error.args)}[red]",
+                    file=sys.stderr,
+                )
+
+        if not errors or all(isinstance(e, Warning) for e in errors):
             rich.print(
-                f"[bold green]Finished generating output for {len(protos)} files, "
+                f"[bold green]Finished generating output for "
+                f"{len(protos)} file{'s' if len(protos) != 1 else ''}, "
                 f"output is in {output.as_posix()}"
             )

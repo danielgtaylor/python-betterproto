@@ -5,7 +5,7 @@ import platform
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Awaitable, Callable, TypeVar, Any, List, Set, Iterable, Optional
+from typing import Any, Awaitable, Callable, Iterable, List, Optional, Set, TypeVar
 
 from . import USE_PROTOC
 
@@ -52,12 +52,12 @@ def generate_command(
     use_protoc: bool = USE_PROTOC,
     implementation: str = "betterproto_",
 ) -> str:
-    # TODO make this actually work :) --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
-
     command = [
         f"--proto_path={files[0].parent.as_posix()}",
         f"--python_{implementation}out={output.as_posix()}",
-        *[f'"{file.as_posix()}"' for file in files],  # ensure paths with spaces in the name get parsed correctly
+        *[
+            f'"{file.as_posix()}"' for file in files
+        ],  # ensure paths with spaces in the name get parsed correctly
     ]
     if use_protoc:
         command.insert(0, "protoc")

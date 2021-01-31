@@ -3,9 +3,8 @@ import functools
 import os
 import re
 import secrets
-import warnings
 from concurrent.futures import ProcessPoolExecutor
-from typing import TYPE_CHECKING, Any, NoReturn, Tuple
+from typing import TYPE_CHECKING, Any, List, Tuple, Optional
 
 from ...lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
@@ -13,7 +12,7 @@ from ...lib.google.protobuf.compiler import (
 )
 from ..parser import generate_code
 from . import USE_PROTOC, utils
-from .errors import CompilerError, ProtobufSyntaxError, UnusedImport
+from .errors import CLIError, CompilerError, ProtobufSyntaxError, UnusedImport
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -30,41 +29,58 @@ def write_file(output: "Path", file: CodeGeneratorResponseFile) -> None:
         pass
 
 
-def handle_error(data: bytes, files: Tuple["Path", ...]) -> NoReturn:
+def handle_error(data: bytes, files: Tuple["Path", ...]) -> List[CLIError]:
+    errors = []
     matches = re.finditer(
         rb"^(?P<filename>.+):(?P<lineno>\d+):(?P<offset>\d+): (?P<message>.*)",
         data,
     )
     if not matches:
-        raise CompilerError(data.decode().strip())
+        return [CompilerError(data.decode().strip())]
 
     for match in matches:
-        file = utils.find(lambda f: f.as_posix().endswith(match["filename"].decode()), files)
+        file = utils.find(
+            lambda f: f.as_posix().endswith(match["filename"].decode()), files
+        )
 
         if match["message"].startswith(b"warning: "):
-            import_matches = list(re.finditer(rb"warning: Import (?P<unused_import>.+) is unused\.", match["message"]))
+            import_matches = list(
+                re.finditer(
+                    rb"warning: Import (?P<unused_import>.+) is unused\.",
+                    match["message"],
+                )
+            )
             if import_matches:
                 for import_match in import_matches:
                     unused_import = utils.find(
-                        lambda f: file.as_posix().endswith(import_match["unused_import"].decode()),
-                        files
+                        lambda f: file.as_posix().endswith(
+                            import_match["unused_import"].decode()
+                        ),
+                        files,
                     )
                     if unused_import is None:
                         unused_import = import_match["unused_import"].decode()
-                    warning = UnusedImport(match["message"].decode().strip(), file, unused_import)
+                    warning = UnusedImport(
+                        match["message"].decode().strip(), file, unused_import
+                    )
             else:
-                warning = Warning(match["message"].lstrip(b"warning: ").strip().decode())
+                warning = Warning(
+                    match["message"].lstrip(b"warning: ").strip().decode()
+                )
 
-            warnings.simplefilter("once")
-            warnings.warn(warning)
+            errors.append(warning)
             continue
 
-        raise ProtobufSyntaxError(
-            match["message"].decode().strip(),
-            file,
-            int(match["lineno"]),
-            int(match["offset"]),
+        errors.append(
+            ProtobufSyntaxError(
+                match["message"].decode().strip(),
+                file,
+                int(match["lineno"]),
+                int(match["offset"]),
+            )
         )
+
+    return errors
 
 
 async def compile_protobufs(
@@ -73,7 +89,7 @@ async def compile_protobufs(
     use_protoc: bool = USE_PROTOC,
     use_betterproto: bool = True,
     **kwargs: Any,
-) -> Tuple[str, str]:
+) -> List[CLIError]:
     """
     A programmatic way to compile protobufs.
 
@@ -112,7 +128,7 @@ async def compile_protobufs(
     if use_betterproto:
         stderr = await process.stderr.read()
         if stderr.find(secret_word.encode()) == -1:
-            handle_error(stderr, files)
+            return handle_error(stderr, files)
 
         try:
             stderr, data = stderr.split(secret_word.encode())
@@ -126,7 +142,7 @@ async def compile_protobufs(
             )  # you've exceptionally lucky
 
         if stderr:
-            handle_error(stderr, files)
+            return handle_error(stderr, files)
 
         request = CodeGeneratorRequest().parse(data)
 
@@ -148,9 +164,9 @@ async def compile_protobufs(
     stdout, stderr = await process.communicate()
 
     if stderr:
-        handle_error(stderr, files)
+        return handle_error(stderr, files)
 
     if process.returncode != 0:
-        raise CompilerError(stderr.decode())
+        return [CompilerError(stderr.decode())]
 
-    return stdout.decode(), stderr.decode()
+    return []
