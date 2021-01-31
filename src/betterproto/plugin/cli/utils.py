@@ -5,7 +5,7 @@ import platform
 import sys
 from collections import defaultdict
 from pathlib import Path
-from typing import Awaitable, Callable, TypeVar, Any, List, Set
+from typing import Awaitable, Callable, TypeVar, Any, List, Set, Iterable, Optional
 
 from . import USE_PROTOC
 
@@ -103,6 +103,7 @@ else:
         return await loop.run_in_executor(None, partial)
 
 
-if __name__ == "__main__":
-    os.getcwd = lambda: "/Users/gobot1234/PycharmProjects/betterproto/tests/inputs"
-    print(get_files(("bool", "bool/bool.proto", "casing/casing.proto")))
+def find(predicate: Callable[[T], bool], iterable: Iterable[T]) -> Optional[T]:
+    for i in iterable:
+        if predicate(i):
+            return i

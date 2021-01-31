@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import os
+import signal
 import sys
+import time
+from socket import socket
 
 import rich
 
@@ -16,8 +19,9 @@ def main() -> None:
     data = sys.stdin.buffer.read()
 
     if os.getenv("USING_BETTERPROTO_CLI") == "True":
-        # Write the data to stderr for cli
-        sys.stderr.buffer.write(data)  # need to figure out how to potentially lock this
+        sys.stderr.buffer.write(os.environ["BETTERPROTO_STOP_KEYWORD"].encode())
+        sys.stderr.buffer.write(data)
+
         sys.stdout.buffer.write(b"")
     else:
         # Apply Work around for proto2/3 difference in protoc messages

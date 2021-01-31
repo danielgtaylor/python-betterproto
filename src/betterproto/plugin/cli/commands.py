@@ -84,23 +84,21 @@ async def compile(
                 from_cli=True,
             )
         except ProtobufSyntaxError as exc:
-            error = Syntax(
-                exc.file.read_text(),
-                "proto",
-                line_numbers=True,
-                line_range=(max(exc.lineno - 5, 0), exc.lineno),
-            )
-            # TODO switch to .from_path but it appears to be bugged and doesnt pick lexer_name
             rich.print(
                 f"[red]File {str(exc.file).strip()}:\n",
-                error,
+                Syntax(
+                    exc.file.read_text(),
+                    "proto",
+                    line_numbers=True,
+                    line_range=(max(exc.lineno - 5, 0), exc.lineno),
+                ),  # TODO switch to .from_path but it appears to be bugged and doesnt render properly
                 f"{' ' * (exc.offset + 3)}^\nSyntaxError: {exc.msg}[red]",
             )
         except CLIError as exc:
             failed_files = "\n".join(f" - {file}" for file in protos)
             rich.print(
                 f"[red]{'Protoc' if protoc else 'GRPC'} failed to generate outputs for:\n\n"
-                f"{failed_files}\n\nSee the output for the issue:\n{exc.args[0]}[red]",
+                f"{failed_files}\n\nSee the output for the issue:\n{' '.join(exc.args)}[red]",
             )
 
         else:

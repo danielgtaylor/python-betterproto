@@ -2,6 +2,8 @@ import asyncio
 import functools
 import os
 import re
+import secrets
+import warnings
 from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING, Any, NoReturn, Tuple
 
@@ -11,7 +13,7 @@ from ...lib.google.protobuf.compiler import (
 )
 from ..parser import generate_code
 from . import USE_PROTOC, utils
-from .errors import CLIError, ProtobufSyntaxError
+from .errors import CompilerError, ProtobufSyntaxError, UnusedImport
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -28,23 +30,41 @@ def write_file(output: "Path", file: CodeGeneratorResponseFile) -> None:
         pass
 
 
-def handle_error(data: str, files: Tuple["Path", ...]) -> NoReturn:
-    match = re.match(
-        r"^(?P<filename>.+):(?P<lineno>\d+):(?P<offset>\d+):(?P<message>.*)",
+def handle_error(data: bytes, files: Tuple["Path", ...]) -> NoReturn:
+    matches = re.finditer(
+        rb"^(?P<filename>.+):(?P<lineno>\d+):(?P<offset>\d+): (?P<message>.*)",
         data,
     )
-    if match is None:
-        raise CLIError(data.strip())
+    if not matches:
+        raise CompilerError(data.decode().strip())
 
-    for file in files:
-        if file.as_posix().endswith(match["filename"]):
-            raise ProtobufSyntaxError(
-                match["message"].strip(),
-                file,
-                int(match["lineno"]),
-                int(match["offset"]),
-            )
-    raise ProtobufSyntaxError
+    for match in matches:
+        file = utils.find(lambda f: f.as_posix().endswith(match["filename"].decode()), files)
+
+        if match["message"].startswith(b"warning: "):
+            import_matches = list(re.finditer(rb"warning: Import (?P<unused_import>.+) is unused\.", match["message"]))
+            if import_matches:
+                for import_match in import_matches:
+                    unused_import = utils.find(
+                        lambda f: file.as_posix().endswith(import_match["unused_import"].decode()),
+                        files
+                    )
+                    if unused_import is None:
+                        unused_import = import_match["unused_import"].decode()
+                    warning = UnusedImport(match["message"].decode().strip(), file, unused_import)
+            else:
+                warning = Warning(match["message"].lstrip(b"warning: ").strip().decode())
+
+            warnings.simplefilter("once")
+            warnings.warn(warning)
+            continue
+
+        raise ProtobufSyntaxError(
+            match["message"].decode().strip(),
+            file,
+            int(match["lineno"]),
+            int(match["offset"]),
+        )
 
 
 async def compile_protobufs(
@@ -76,25 +96,39 @@ async def compile_protobufs(
         *files, output=output, use_protoc=use_protoc, implementation=implementation
     )
 
+    secret_word = secrets.token_hex(256)
+
     process = await asyncio.create_subprocess_shell(
         command,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
-        env={"USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)), **os.environ},
+        env={
+            "USING_BETTERPROTO_CLI": str(kwargs.get("from_cli", False)),
+            "BETTERPROTO_STOP_KEYWORD": secret_word,
+            **os.environ,
+        },
     )
 
-    stdout, stderr = await process.communicate()
-
     if use_betterproto:
-        # we put code on stderr so we can actually read it thank you google :)))))
+        stderr = await process.stderr.read()
+        if stderr.find(secret_word.encode()) == -1:
+            handle_error(stderr, files)
 
         try:
-            request = CodeGeneratorRequest().parse(stderr)
-        except Exception:
-            handle_error(stderr.decode(), files)
+            stderr, data = stderr.split(secret_word.encode())
+        except TypeError:
+            return await compile_protobufs(
+                *files,
+                output=output,
+                use_protoc=use_protoc,
+                use_betterproto=use_betterproto,
+                **kwargs,
+            )  # you've exceptionally lucky
 
-        if request._unknown_fields:
-            handle_error(stderr.decode(), files)
+        if stderr:
+            handle_error(stderr, files)
+
+        request = CodeGeneratorRequest().parse(data)
 
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
@@ -111,12 +145,12 @@ async def compile_protobufs(
                 )
             )
 
-        stderr = b""
+    stdout, stderr = await process.communicate()
 
     if stderr:
-        handle_error(stderr.decode(), files)
+        handle_error(stderr, files)
 
     if process.returncode != 0:
-        raise CLIError(stderr.decode())
+        raise CompilerError(stderr.decode())
 
     return stdout.decode(), stderr.decode()
