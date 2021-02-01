@@ -139,7 +139,7 @@ async def compile_protobufs(
                 use_protoc=use_protoc,
                 use_betterproto=use_betterproto,
                 **kwargs,
-            )  # you've exceptionally lucky
+            )  # you've exceptionally un/lucky
 
         if stderr:
             return handle_error(stderr, files)

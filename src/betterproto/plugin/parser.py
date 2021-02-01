@@ -67,7 +67,6 @@ def generate_code(
     include_google: bool = False,
     line_length: int = black.DEFAULT_LINE_LENGTH,
     generate_services: bool = True,
-    separate_files: bool = False,
     verbose: bool = False,
     from_cli: bool = False,
 ) -> CodeGeneratorResponse:
@@ -75,18 +74,24 @@ def generate_code(
 
     Parameters
     ----------
-    request
-    include_google
-    line_length
-    generate_services
-    separate_files
-    verbose
-    from_cli
+    request: :class:`.CodeGeneratorRequest`
+        The request to generate the protobufs from.
+    include_google: :class:`bool`
+        Whether or not to include the google protobufs in the response files.
+    line_length: :class:`int`
+        The line length to pass to black for formatting.
+    generate_services: :class:`bool`
+        Whether or not to include services.
+    verbose: :class:`bool`
+        Whether or not to run the plugin in verbose mode.
+    from_cli: :class:`bool`
+        Whether or not the plugin is being ran from the CLI.
 
     Returns
     -------
     :class:`.CodeGeneratorResponse`
-    """  # TODO
+        The response for the request.
+    """
 
     response = CodeGeneratorResponse()
     plugin_options = request.parameter.split(",") if request.parameter else []
@@ -114,7 +119,7 @@ def generate_code(
             request_data.output_packages[output_package_name].input_files.append(
                 proto_file
             )
-            if from_cli:
+            if verbose or from_cli:
                 progress.update(reading_progress_bar, advance=1)
 
     # Read Messages and Enums
@@ -138,7 +143,7 @@ def generate_code(
                         source_file=proto_input_file,
                         output_package=output_package,
                     )
-                    if from_cli:
+                    if verbose or from_cli:
                         progress.update(parsing_progress_bar, advance=1)
 
     # Read Services
@@ -158,7 +163,7 @@ def generate_code(
                 for proto_input_file in output_package.input_files:
                     for index, service in enumerate(proto_input_file.service):
                         read_protobuf_service(service, index, output_package)
-                        if from_cli:
+                        if verbose or from_cli:
                             progress.update(parsing_progress_bar, advance=1)
 
     # Generate output files
@@ -183,7 +188,7 @@ def generate_code(
                     ),
                 )
             )
-            if from_cli:
+            if verbose or from_cli:
                 progress.update(compiling_progress_bar, advance=1)
 
     # Make each output directory a package with __init__ file
