@@ -82,5 +82,4 @@ def test_repeated_enum_with_non_list_iterables_to_dict():
 
 
 def test_renamed_enum_members():
-    for member in ArithmeticOperator:
-        assert member.name in ("NONE", "PLUS", "MINUS")
+    assert set(ArithmeticOperator) == {"NONE", "PLUS", "MINUS"}
