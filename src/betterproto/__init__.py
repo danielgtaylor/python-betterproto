@@ -963,29 +963,13 @@ class Message(ABC):
                     # Convert each item.
                     cls = self._betterproto.cls_by_field[field_name]
                     if cls == datetime:
-                        value = [
-                            _Timestamp.timestamp_to_json(i)
-                            for i in value
-                            if (
-                                i != DATETIME_ZERO
-                                or include_default_values
-                                or self._include_default_value_for_oneof(field_name=field_name, meta=meta)
-                            )
-                        ]
+                        value = [_Timestamp.timestamp_to_json(i) for i in value]
                     elif cls == timedelta:
-                        value = [
-                            _Duration.delta_to_json(i)
-                            for i in value
-                            if (
-                                i != timedelta(0)
-                                or include_default_values
-                                or self._include_default_value_for_oneof(
-                                    field_name=field_name, meta=meta
-                                )
-                            )
-                        ]
+                        value = [_Duration.delta_to_json(i) for i in value]
                     else:
-                        value = [i.to_dict(casing, include_default_values) for i in value]
+                        value = [
+                            i.to_dict(casing, include_default_values) for i in value
+                        ]
                     if value or include_default_values:
                         output[cased_name] = value
                 elif (
