@@ -961,7 +961,15 @@ class Message(ABC):
                         output[cased_name] = value
                 elif field_is_repeated:
                     # Convert each item.
-                    value = [i.to_dict(casing, include_default_values) for i in value]
+                    cls = self._betterproto.cls_by_field[field_name]
+                    if cls == datetime:
+                        value = [_Timestamp.timestamp_to_json(i) for i in value]
+                    elif cls == timedelta:
+                        value = [_Duration.delta_to_json(i) for i in value]
+                    else:
+                        value = [
+                            i.to_dict(casing, include_default_values) for i in value
+                        ]
                     if value or include_default_values:
                         output[cased_name] = value
                 elif (
@@ -1042,8 +1050,18 @@ class Message(ABC):
                     v = getattr(self, field_name)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
-                        for item in value[key]:
-                            v.append(cls().from_dict(item))
+                        if cls == datetime:
+                            v = [
+                                datetime.fromisoformat(item.replace("Z", "+00:00"))
+                                for item in value[key]
+                            ]
+                        elif cls == timedelta:
+                            v = [
+                                timedelta(seconds=float(item[:-1]))
+                                for item in value[key]
+                            ]
+                        else:
+                            v = [cls().from_dict(item) for item in value[key]]
                     elif isinstance(v, datetime):
                         v = datetime.fromisoformat(value[key].replace("Z", "+00:00"))
                         setattr(self, field_name, v)
