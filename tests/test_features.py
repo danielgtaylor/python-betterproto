@@ -1,6 +1,7 @@
 import betterproto
 from dataclasses import dataclass
 from typing import Optional, List, Dict
+from datetime import datetime, timedelta
 
 
 def test_has_field():
@@ -395,3 +396,56 @@ def test_bool():
     assert t
     t.bar = 0
     assert not t
+
+
+def test_iso_datetime():
+    @dataclass
+    class Envelop(betterproto.Message):
+        ts: datetime = betterproto.message_field(1)
+
+    e = Envelop()
+    # valid ISO datetimes according to https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+    candidates = """2009-12-12T12:34
+2009
+2009-05-19
+2009-05-19
+20090519
+2009123
+2009-05
+2009-123
+2009-222
+2009-001
+2009-W01-1
+2009-W51-1
+2009-W33
+2009W511
+2009-05-19
+2009-05-19 00:00
+2009-05-19 14
+2009-05-19 14:31
+2009-05-19 14:39:22
+2009-05-19T14:39Z
+2009-W21-2
+2009-W21-2T01:22
+2009-139
+2009-05-19 14:39:22-06:00
+2009-05-19 14:39:22+0600
+2009-05-19 14:39:22-01
+20090621T0545Z
+2007-04-06T00:00
+2007-04-05T24:00
+2010-02-18T16:23:48.5
+2010-02-18T16:23:48,444
+2010-02-18T16:23:48,3-06:00
+2010-02-18T16:23:00.4
+2010-02-18T16:23:00,25
+2010-02-18T16:23:00.33+0600
+2010-02-18T16:00:00.23334444
+2010-02-18T16:00:00,2283
+2009-05-19 143922
+2009-05-19 1439""".split(
+        "\n"
+    )
+
+    for i, candidate in enumerate(candidates):
+        e.from_dict({"ts": candidate})
