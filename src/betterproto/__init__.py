@@ -8,6 +8,7 @@ import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
+from dateutil.parser import isoparse
 from typing import (
     Any,
     Callable,
@@ -1044,7 +1045,7 @@ class Message(ABC):
             meta = self._betterproto.meta_by_field_name.get(field_name)
             if not meta:
                 continue
-
+            
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
@@ -1052,7 +1053,7 @@ class Message(ABC):
                         cls = self._betterproto.cls_by_field[field_name]
                         if cls == datetime:
                             v = [
-                                datetime.fromisoformat(item.replace("Z", "+00:00"))
+                                isoparse(item)
                                 for item in value[key]
                             ]
                         elif cls == timedelta:
@@ -1063,10 +1064,12 @@ class Message(ABC):
                         else:
                             v = [cls().from_dict(item) for item in value[key]]
                     elif isinstance(v, datetime):
-                        v = datetime.fromisoformat(value[key].replace("Z", "+00:00"))
+                        v = isoparse(value[key])
                         setattr(self, field_name, v)
                     elif isinstance(v, timedelta):
                         v = timedelta(seconds=float(value[key][:-1]))
+                        setattr(self, field_name, v)
+                    elif isinstance(v, bool):   
                         setattr(self, field_name, v)
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
