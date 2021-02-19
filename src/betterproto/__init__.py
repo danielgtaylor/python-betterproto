@@ -1045,17 +1045,14 @@ class Message(ABC):
             meta = self._betterproto.meta_by_field_name.get(field_name)
             if not meta:
                 continue
-            
+
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
                         if cls == datetime:
-                            v = [
-                                isoparse(item)
-                                for item in value[key]
-                            ]
+                            v = [isoparse(item) for item in value[key]]
                         elif cls == timedelta:
                             v = [
                                 timedelta(seconds=float(item[:-1]))
@@ -1069,7 +1066,7 @@ class Message(ABC):
                     elif isinstance(v, timedelta):
                         v = timedelta(seconds=float(value[key][:-1]))
                         setattr(self, field_name, v)
-                    elif isinstance(v, bool):   
+                    elif isinstance(v, bool):
                         setattr(self, field_name, v)
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
