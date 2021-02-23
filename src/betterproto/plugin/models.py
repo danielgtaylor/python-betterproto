@@ -340,7 +340,7 @@ class MessageCompiler(ProtoContentBase):
         for f in self.fields:
             if f.deprecated:
                 yield f.py_name
-    
+
     @property
     def docstring_params(self) -> str:
         """Docstring parameters
@@ -352,11 +352,19 @@ class MessageCompiler(ProtoContentBase):
         """
         if hasattr(self, "entries"):
             return "\n".join(
-                [entry.docstring for entry in self.entries if hasattr(entry, "docstring")]
+                [
+                    entry.docstring
+                    for entry in self.entries
+                    if hasattr(entry, "docstring")
+                ]
             )
         if hasattr(self, "fields"):
             return "\n".join(
-                [field.docstring for field in self.fields if hasattr(field, "docstring")]
+                [
+                    field.docstring
+                    for field in self.fields
+                    if hasattr(field, "docstring")
+                ]
             )
         raise ValueError("No `field` or `entries` attributes!")
 
@@ -374,8 +382,10 @@ class MessageCompiler(ProtoContentBase):
 
         if not joined:
             return ""
-        
-        heading = "Attributes" if isinstance(self, EnumDefinitionCompiler) else "Parameters"
+
+        heading = (
+            "Attributes" if isinstance(self, EnumDefinitionCompiler) else "Parameters"
+        )
 
         return textwrap.indent(
             f'"""{joined}\n\n{heading}\n----------\n{self.docstring_params}\n"""',
@@ -640,7 +650,9 @@ class EnumDefinitionCompiler(MessageCompiler):
                 name=sanitize_name(entry_proto_value.name),
                 value=entry_proto_value.number,
                 comment=get_comment(
-                    proto_file=self.proto_file, path=self.path + [2, entry_number], comment_out=False
+                    proto_file=self.proto_file,
+                    path=self.path + [2, entry_number],
+                    comment_out=False,
                 ),
             )
             for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
@@ -823,7 +835,7 @@ class ServiceMethodCompiler(ProtoContentBase):
     @property
     def server_streaming(self) -> bool:
         return self.proto_obj.server_streaming
-    
+
     @property
     def docstring(self) -> str:
         intro = get_comment(
@@ -837,9 +849,8 @@ class ServiceMethodCompiler(ProtoContentBase):
 
         if self.py_input_message is None:
             return textwrap.indent(f'"""{intro}"""', pad)
-        
+
         return textwrap.indent(
             f'"""{intro}\n\nParameters\n----------\n{self.py_input_message.docstring_params}\n"""',
             pad,
         )
-            
