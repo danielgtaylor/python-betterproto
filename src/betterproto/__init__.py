@@ -27,12 +27,6 @@ from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
 
-if sys.version_info[:2] < (3, 7):
-    # Apply backport of datetime.fromisoformat from 3.7
-    from backports.datetime_fromisoformat import MonkeyPatch
-
-    MonkeyPatch.patch_fromisoformat()
-
 
 # Proto 3 data types
 TYPE_ENUM = "enum"
@@ -1065,8 +1059,6 @@ class Message(ABC):
                         setattr(self, field_name, v)
                     elif isinstance(v, timedelta):
                         v = timedelta(seconds=float(value[key][:-1]))
-                        setattr(self, field_name, v)
-                    elif isinstance(v, bool):
                         setattr(self, field_name, v)
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
