@@ -100,13 +100,23 @@ def generate_code(
     for output_package_name, output_package in request_data.output_packages.items():
         for proto_input_file in output_package.input_files:
             for item, path in traverse(proto_input_file):
-                read_protobuf_type(item=item, path=path, output_package=output_package)
+                read_protobuf_type(
+                    item=item,
+                    path=path,
+                    output_package=output_package,
+                    input_file_name=proto_input_file.name,
+                )
 
     # Read Services
     for output_package_name, output_package in request_data.output_packages.items():
         for proto_input_file in output_package.input_files:
             for index, service in enumerate(proto_input_file.service):
-                read_protobuf_service(service, index, output_package)
+                read_protobuf_service(
+                    service=service,
+                    index=index,
+                    output_package=output_package,
+                    input_file_name=proto_input_file.name,
+                )
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
@@ -138,39 +148,70 @@ def generate_code(
 
 
 def read_protobuf_type(
-    item: DescriptorProto, path: List[int], output_package: OutputTemplate
+    item: DescriptorProto,
+    path: List[int],
+    output_package: OutputTemplate,
+    input_file_name: str,
 ) -> None:
     if isinstance(item, DescriptorProto):
         if item.options.map_entry:
             # Skip generated map entry messages since we just use dicts
             return
         # Process Message
-        message_data = MessageCompiler(parent=output_package, proto_obj=item, path=path)
+        message_data = MessageCompiler(
+            parent=output_package,
+            proto_obj=item,
+            path=path,
+            input_file_name=input_file_name,
+        )
         for index, field in enumerate(item.field):
             if is_map(field, item):
                 MapEntryCompiler(
-                    parent=message_data, proto_obj=field, path=path + [2, index]
+                    parent=message_data,
+                    proto_obj=field,
+                    path=path + [2, index],
+                    input_file_name=input_file_name,
                 )
             elif is_oneof(field):
                 OneOfFieldCompiler(
-                    parent=message_data, proto_obj=field, path=path + [2, index]
+                    parent=message_data,
+                    proto_obj=field,
+                    path=path + [2, index],
+                    input_file_name=input_file_name,
                 )
             else:
                 FieldCompiler(
-                    parent=message_data, proto_obj=field, path=path + [2, index]
+                    parent=message_data,
+                    proto_obj=field,
+                    path=path + [2, index],
+                    input_file_name=input_file_name,
                 )
     elif isinstance(item, EnumDescriptorProto):
         # Enum
-        EnumDefinitionCompiler(parent=output_package, proto_obj=item, path=path)
+        EnumDefinitionCompiler(
+            parent=output_package,
+            proto_obj=item,
+            path=path,
+            input_file_name=input_file_name,
+        )
 
 
 def read_protobuf_service(
-    service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
+    service: ServiceDescriptorProto,
+    index: int,
+    output_package: OutputTemplate,
+    input_file_name: str,
 ) -> None:
     service_data = ServiceCompiler(
-        parent=output_package, proto_obj=service, path=[6, index]
+        parent=output_package,
+        proto_obj=service,
+        path=[6, index],
+        input_file_name=input_file_name,
     )
     for j, method in enumerate(service.method):
         ServiceMethodCompiler(
-            parent=service_data, proto_obj=method, path=[6, index, 2, j]
+            parent=service_data,
+            proto_obj=method,
+            path=[6, index, 2, j],
+            input_file_name=input_file_name,
         )

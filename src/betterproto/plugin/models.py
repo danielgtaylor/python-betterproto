@@ -142,6 +142,7 @@ class ProtoContentBase:
     path: List[int]
     comment_indent: int = 4
     parent: Union["betterproto.Message", "OutputTemplate"]
+    input_file_name: str = PLACEHOLDER
 
     def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
@@ -158,10 +159,8 @@ class ProtoContentBase:
 
     @property
     def proto_file(self) -> FieldDescriptorProto:
-        current = self
-        while not isinstance(current, OutputTemplate):
-            current = current.parent
-        return current.package_proto_obj
+        template = self.output_file
+        return template.input_files_dict[self.input_file_name]
 
     @property
     def request(self) -> "PluginRequestCompiler":
@@ -211,7 +210,7 @@ class OutputTemplate:
 
     parent_request: PluginRequestCompiler
     package_proto_obj: FileDescriptorProto
-    input_files: List[str] = field(default_factory=list)
+    input_files: List[FileDescriptorProto] = field(default_factory=list)
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
@@ -242,6 +241,17 @@ class OutputTemplate:
         return [f.name for f in self.input_files]
 
     @property
+    def input_files_dict(self) -> Dict[str, FileDescriptorProto]:
+        """Dictionary mapping filenames to their FileDescriptorProto objects
+
+        Returns
+        -------
+        Dict[str, FileDescriptorProto]
+            Dictionary mapping filenames to their FileDescriptorProto objects
+        """
+        return {f.name: f for f in self.input_files}
+
+    @property
     def python_module_imports(self) -> Set[str]:
         imports = set()
         if any(x for x in self.messages if any(x.deprecated_fields)):
@@ -256,6 +266,7 @@ class MessageCompiler(ProtoContentBase):
     parent: Union["MessageCompiler", OutputTemplate] = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
+    input_file_name: str = PLACEHOLDER
     fields: List[Union["FieldCompiler", "MessageCompiler"]] = field(
         default_factory=list
     )
@@ -319,6 +330,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
 class FieldCompiler(MessageCompiler):
     parent: MessageCompiler = PLACEHOLDER
     proto_obj: FieldDescriptorProto = PLACEHOLDER
+    input_file_name: str = PLACEHOLDER
 
     def __post_init__(self) -> None:
         # Add field to message
@@ -548,6 +560,7 @@ class ServiceCompiler(ProtoContentBase):
     parent: OutputTemplate = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
+    input_file_name: str = PLACEHOLDER
     methods: List["ServiceMethodCompiler"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -571,6 +584,7 @@ class ServiceMethodCompiler(ProtoContentBase):
     parent: ServiceCompiler
     proto_obj: MethodDescriptorProto
     path: List[int] = PLACEHOLDER
+    input_file_name: str = PLACEHOLDER
     comment_indent: int = 8
 
     def __post_init__(self) -> None:
