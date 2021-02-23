@@ -397,15 +397,8 @@ def test_bool():
     t.bar = 0
     assert not t
 
-
-def test_iso_datetime():
-    @dataclass
-    class Envelop(betterproto.Message):
-        ts: datetime = betterproto.message_field(1)
-
-    e = Envelop()
-    # valid ISO datetimes according to https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
-    candidates = """2009-12-12T12:34
+# valid ISO datetimes according to https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+iso_candidates = """2009-12-12T12:34
 2009
 2009-05-19
 2009-05-19
@@ -447,5 +440,24 @@ def test_iso_datetime():
         "\n"
     )
 
-    for i, candidate in enumerate(candidates):
-        e.from_dict({"ts": candidate})
+def test_iso_datetime():
+    @dataclass
+    class Envelope(betterproto.Message):
+        ts: datetime = betterproto.message_field(1)
+
+    msg = Envelope()
+    
+    for _, candidate in enumerate(iso_candidates):
+        msg.from_dict({"ts": candidate})
+        assert isinstance(msg.ts, datetime)
+
+
+def test_iso_datetime_list():
+    @dataclass
+    class Envelope(betterproto.Message):
+        timestamps: List[datetime] = betterproto.message_field(1)
+
+    msg = Envelope()
+    
+    msg.from_dict({"timestamps": iso_candidates})
+    assert all([ isinstance(item, datetime) for item in msg.timestamps])
