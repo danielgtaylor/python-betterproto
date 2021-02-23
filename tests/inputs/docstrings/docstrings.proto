@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-package echo;
-
 enum Casing { // Message casing
   UNCHANGED = 0; // Don't change the message
   LOWERCASE = 1; // Convert to lowercase
@@ -9,18 +7,10 @@ enum Casing { // Message casing
   TITLECASE = 3; // Convert to titlecase
 }
 
-message EchoRequest { // A request to the server
+message Test { // A request to the server
   // String to echo
   string value = 1;
   // Number of extra times to echo
   uint32 extra_times = 2;
   Casing casing = 3; // Message case
-}
-
-message EchoResponse { // A response message
-  repeated string values = 1; // The echoed strings
-}
-
-service Echo { // The Echo service
-  rpc Echo(EchoRequest) returns (EchoResponse); // Non-streaming requests
 }
