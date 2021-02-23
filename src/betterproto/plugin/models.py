@@ -143,7 +143,7 @@ def get_comment(
             if sci.leading_comments:
                 comments.append(
                     sci.leading_comments.replace("\n", " ").replace("  ", " ").strip()
-            )
+                )
             if sci.trailing_comments:
                 comments.append(
                     sci.trailing_comments.replace("\n", " ").replace("  ", " ").strip()
@@ -155,7 +155,7 @@ def get_comment(
         return ""
     if len(comments) == 1:
         comment = comments[0]
-                else:
+    else:
         comment = " ".join(comments)
 
     if not wrap and not comment_out:
@@ -340,6 +340,47 @@ class MessageCompiler(ProtoContentBase):
         for f in self.fields:
             if f.deprecated:
                 yield f.py_name
+    
+    @property
+    def docstring_params(self) -> str:
+        """Docstring parameters
+
+        Returns
+        -------
+        str
+            Docstring parameters
+        """
+        if hasattr(self, "entries"):
+            return "\n".join(
+                [entry.docstring for entry in self.entries if hasattr(entry, "docstring")]
+            )
+        if hasattr(self, "fields"):
+            return "\n".join(
+                [field.docstring for field in self.fields if hasattr(field, "docstring")]
+            )
+        raise ValueError("No `field` or `entries` attributes!")
+
+    @property
+    def docstring(self) -> str:
+        """Crawl the proto source code and retrieve comments
+        for this object.
+        """
+        joined = get_comment(
+            proto_file=self.proto_file,
+            path=self.path,
+            indent=0,
+            comment_out=False,
+        )
+
+        if not joined:
+            return ""
+        
+        heading = "Attributes" if isinstance(self, EnumDefinitionCompiler) else "Parameters"
+
+        return textwrap.indent(
+            f'"""{joined}\n\n{heading}\n----------\n{self.docstring_params}\n"""',
+            "    ",
+        )
 
 
 def is_map(
@@ -501,6 +542,23 @@ class FieldCompiler(MessageCompiler):
             return f"List[{self.py_type}]"
         return self.py_type
 
+    @property
+    def docstring(self) -> str:
+        """Crawl the proto source code and retrieve comments
+        for this object.
+        """
+
+        joined = get_comment(
+            proto_file=self.proto_file,
+            path=self.path,
+            indent=self.comment_indent,
+            comment_out=False,
+        )
+
+        annotation = self.annotation.replace('"', "")
+
+        return f"{self.py_name} : {annotation}\n{joined}"
+
 
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
@@ -571,6 +629,10 @@ class EnumDefinitionCompiler(MessageCompiler):
         value: int
         comment: str
 
+        @property
+        def docstring(self) -> str:
+            return f"{self.name} : int = {self.value}\n{self.comment}"
+
     def __post_init__(self) -> None:
         # Get entries/allowed values for this Enum
         self.entries = [
@@ -578,7 +640,7 @@ class EnumDefinitionCompiler(MessageCompiler):
                 name=sanitize_name(entry_proto_value.name),
                 value=entry_proto_value.number,
                 comment=get_comment(
-                    proto_file=self.proto_file, path=self.path + [2, entry_number]
+                    proto_file=self.proto_file, path=self.path + [2, entry_number], comment_out=False
                 ),
             )
             for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
@@ -761,3 +823,23 @@ class ServiceMethodCompiler(ProtoContentBase):
     @property
     def server_streaming(self) -> bool:
         return self.proto_obj.server_streaming
+    
+    @property
+    def docstring(self) -> str:
+        intro = get_comment(
+            proto_file=self.proto_file,
+            path=self.path,
+            indent=0,
+            comment_out=False,
+        )
+
+        pad = " " * 8
+
+        if self.py_input_message is None:
+            return textwrap.indent(f'"""{intro}"""', pad)
+        
+        return textwrap.indent(
+            f'"""{intro}\n\nParameters\n----------\n{self.py_input_message.docstring_params}\n"""',
+            pad,
+        )
+            

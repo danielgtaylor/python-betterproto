@@ -23,14 +23,11 @@ import grpclib
 
 {% if output_file.enums %}{% for enum in output_file.enums %}
 class {{ enum.py_name }}(betterproto.Enum):
-    {% if enum.comment %}
-{{ enum.comment }}
+    {% if enum.docstring %}
+{{ enum.docstring }}
 
     {% endif %}
     {% for entry in enum.entries %}
-        {% if entry.comment %}
-{{ entry.comment }}
-        {% endif %}
     {{ entry.name }} = {{ entry.value }}
     {% endfor %}
 
@@ -40,14 +37,10 @@ class {{ enum.py_name }}(betterproto.Enum):
 {% for message in output_file.messages %}
 @dataclass(eq=False, repr=False)
 class {{ message.py_name }}(betterproto.Message):
-    {% if message.comment %}
-{{ message.comment }}
-
+    {% if message.docstring %}
+{{ message.docstring }}
     {% endif %}
     {% for field in message.fields %}
-        {% if field.comment %}
-{{ field.comment }}
-        {% endif %}
     {{ field.get_field_string() }}
     {% endfor %}
     {% if not message.fields %}
@@ -97,9 +90,8 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             , request_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
         {%- endif -%}
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
-        {% if method.comment %}
-{{ method.comment }}
-
+        {% if method.docstring %}
+{{ method.docstring }}
         {% endif %}
         {%- for py_name, zero in method.mutable_default_args.items() %}
         {{ py_name }} = {{ py_name }} or {{ zero }}
@@ -180,8 +172,8 @@ class {{ service.py_name }}Base(ServiceBase):
             , request_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
         {%- endif -%}
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
-        {% if method.comment %}
-{{ method.comment }}
+        {% if method.docstring %}
+{{ method.docstring }}
 
         {% endif %}
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
