@@ -112,28 +112,67 @@ PROTO_PACKED_TYPES = (
 
 
 def get_comment(
-    proto_file: "FileDescriptorProto", path: List[int], indent: int = 4
+    proto_file: "FileDescriptorProto",
+    path: List[int],
+    indent: int = 4,
+    wrap: bool = True,
+    comment_out: bool = True,
 ) -> str:
+    """Get the comment for the given proto_file, path combination
+
+    Parameters
+    ----------
+    proto_file : FileDescriptorProto
+        Proto file descriptor
+    path : List[int]
+        Path to the item
+    indent : int, default 4
+        Indent to use when wrapping (ignored if ``wrap==False``)
+    wrap : bool, default ``True``
+        Wrap the comment
+    comment_out : bool, default ``True``
+        Comment out the comment with `\"\"\"` on either end
+    """
     pad = " " * indent
+    comments = []
+
+    # Get leading and trailing comments, and remove newlines, being
+    # careful not to concatenate words
     for sci in proto_file.source_code_info.location:
-        if list(sci.path) == path and sci.leading_comments:
-            lines = textwrap.wrap(
-                sci.leading_comments.strip().replace("\n", ""), width=79 - indent
+        if list(sci.path) == path:
+            if sci.leading_comments:
+                comments.append(
+                    sci.leading_comments.replace("\n", " ").replace("  ", " ").strip()
             )
+            if sci.trailing_comments:
+                comments.append(
+                    sci.trailing_comments.replace("\n", " ").replace("  ", " ").strip()
+                )
 
-            if path[-2] == 2 and path[-4] != 6:
-                # This is a field
-                return f"{pad}# " + f"\n{pad}# ".join(lines)
-            else:
-                # This is a message, enum, service, or method
-                if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
-                    lines[0] = lines[0].strip('"')
-                    return f'{pad}"""{lines[0]}"""'
+    # Combine leading a trailing comments if necessary; if we have
+    # neither return an empty string
+    if len(comments) == 0:
+        return ""
+    if len(comments) == 1:
+        comment = comments[0]
                 else:
-                    joined = f"\n{pad}".join(lines)
-                    return f'{pad}"""\n{pad}{joined}\n{pad}"""'
+        comment = " ".join(comments)
 
-    return ""
+    if not wrap and not comment_out:
+        return comment
+
+    # Comment out before wrapping, so we don't end up with a first or
+    # last line with too many characters
+    if comment_out:
+        cmt = comment.replace('"', "'")
+        comment = f'"""{cmt}"""'
+
+    if (len(comment) < 79 - indent) or not wrap:
+        return textwrap.indent(comment, pad)
+
+    lines = textwrap.wrap(comment, width=79 - indent)
+
+    return textwrap.indent(f"\n".join(lines), pad)
 
 
 class ProtoContentBase:
