@@ -397,6 +397,7 @@ def test_bool():
     t.bar = 0
     assert not t
 
+
 # valid ISO datetimes according to https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
 iso_candidates = """2009-12-12T12:34
 2009
@@ -437,8 +438,9 @@ iso_candidates = """2009-12-12T12:34
 2010-02-18T16:00:00,2283
 2009-05-19 143922
 2009-05-19 1439""".split(
-        "\n"
-    )
+    "\n"
+)
+
 
 def test_iso_datetime():
     @dataclass
@@ -446,7 +448,7 @@ def test_iso_datetime():
         ts: datetime = betterproto.message_field(1)
 
     msg = Envelope()
-    
+
     for _, candidate in enumerate(iso_candidates):
         msg.from_dict({"ts": candidate})
         assert isinstance(msg.ts, datetime)
@@ -458,6 +460,6 @@ def test_iso_datetime_list():
         timestamps: List[datetime] = betterproto.message_field(1)
 
     msg = Envelope()
-    
+
     msg.from_dict({"timestamps": iso_candidates})
-    assert all([ isinstance(item, datetime) for item in msg.timestamps])
+    assert all([isinstance(item, datetime) for item in msg.timestamps])
