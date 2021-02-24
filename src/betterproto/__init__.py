@@ -8,6 +8,7 @@ import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
+from dateutil.parser import isoparse
 from typing import (
     Any,
     Callable,
@@ -25,12 +26,6 @@ from typing import (
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
-
-if sys.version_info[:2] < (3, 7):
-    # Apply backport of datetime.fromisoformat from 3.7
-    from backports.datetime_fromisoformat import MonkeyPatch
-
-    MonkeyPatch.patch_fromisoformat()
 
 
 # Proto 3 data types
@@ -1051,10 +1046,7 @@ class Message(ABC):
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
                         if cls == datetime:
-                            v = [
-                                datetime.fromisoformat(item.replace("Z", "+00:00"))
-                                for item in value[key]
-                            ]
+                            v = [isoparse(item) for item in value[key]]
                         elif cls == timedelta:
                             v = [
                                 timedelta(seconds=float(item[:-1]))
@@ -1063,7 +1055,7 @@ class Message(ABC):
                         else:
                             v = [cls().from_dict(item) for item in value[key]]
                     elif isinstance(v, datetime):
-                        v = datetime.fromisoformat(value[key].replace("Z", "+00:00"))
+                        v = isoparse(value[key])
                         setattr(self, field_name, v)
                     elif isinstance(v, timedelta):
                         v = timedelta(seconds=float(value[key][:-1]))
