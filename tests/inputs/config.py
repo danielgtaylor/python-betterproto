@@ -17,4 +17,5 @@ services = {
     "import_service_input_message",
     "googletypes_service_returns_empty",
     "googletypes_service_returns_googletype",
+    "example_service",
 }

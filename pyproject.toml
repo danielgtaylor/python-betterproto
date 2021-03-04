@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "betterproto"
-version = "2.0.0b1"
+version = "2.0.0b2"
 description = "A better Protobuf / gRPC generator & library"
 authors = ["Daniel G. Taylor <danielgtaylor@gmail.com>"]
 readme = "README.md"
@@ -13,13 +13,14 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-backports-datetime-fromisoformat = { version = "^1.0.0", python = "<3.7" }
 black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.4.1"
 jinja2 = { version = "^2.11.2", optional = true }
 typer = { version = "^0.3.2", optional = true }
 rich = { version = "^9.8.2", optional = true }
+protobuf = { version = "^3.12.2", optional = true }
+python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"

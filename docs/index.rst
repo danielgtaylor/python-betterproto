@@ -12,7 +12,7 @@ Features:
 - Generated messages are both binary & JSON serializable
 - Messages use relevant python types, e.g. ``Enum``, ``datetime`` and ``timedelta``
   objects
-- ``async``/``await`` support for gRPC Clients
+- ``async``/``await`` support for gRPC Clients and Servers
 - Generates modern, readable, idiomatic python code
 
 Contents:
