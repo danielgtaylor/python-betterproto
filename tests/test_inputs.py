@@ -126,42 +126,44 @@ def test_message_json(repeat, test_data: TestData) -> None:
     plugin_module, _, json_data = test_data
 
     for _ in range(repeat):
-        message: betterproto.Message = plugin_module.Test()
+        for json_sample in json_data:
+            message: betterproto.Message = plugin_module.Test()
 
-        message.from_json(json_data)
-        message_json = message.to_json(0)
+            message.from_json(json_sample)
+            message_json = message.to_json(0)
 
-        assert json.loads(message_json) == json.loads(json_data)
+            assert json.loads(message_json) == json.loads(json_sample)
 
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
 def test_service_can_be_instantiated(test_data: TestData) -> None:
-    plugin_module, _, json_data = test_data
-    plugin_module.TestStub(MockChannel())
+    test_data.plugin_module.TestStub(MockChannel())
 
 
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
 
-    reference_instance = Parse(json_data, reference_module().Test())
-    reference_binary_output = reference_instance.SerializeToString()
+    for json_sample in json_data:
+        reference_instance = Parse(json_sample, reference_module().Test())
+        reference_binary_output = reference_instance.SerializeToString()
 
-    for _ in range(repeat):
-        plugin_instance_from_json: betterproto.Message = plugin_module.Test().from_json(
-            json_data
-        )
-        plugin_instance_from_binary = plugin_module.Test.FromString(
-            reference_binary_output
-        )
+        for _ in range(repeat):
+            plugin_instance_from_json: betterproto.Message = (
+                plugin_module.Test().from_json(json_sample)
+            )
+            plugin_instance_from_binary = plugin_module.Test.FromString(
+                reference_binary_output
+            )
 
-        # # Generally this can't be relied on, but here we are aiming to match the
-        # # existing Python implementation and aren't doing anything tricky.
-        # # https://developers.google.com/protocol-buffers/docs/encoding#implications
-        assert bytes(plugin_instance_from_json) == reference_binary_output
-        assert bytes(plugin_instance_from_binary) == reference_binary_output
+            # # Generally this can't be relied on, but here we are aiming to match the
+            # # existing Python implementation and aren't doing anything tricky.
+            # # https://developers.google.com/protocol-buffers/docs/encoding#implications
+            assert bytes(plugin_instance_from_json) == reference_binary_output
+            assert bytes(plugin_instance_from_binary) == reference_binary_output
 
-        assert plugin_instance_from_json == plugin_instance_from_binary
-        assert (
-            plugin_instance_from_json.to_dict() == plugin_instance_from_binary.to_dict()
-        )
+            assert plugin_instance_from_json == plugin_instance_from_binary
+            assert (
+                plugin_instance_from_json.to_dict()
+                == plugin_instance_from_binary.to_dict()
+            )
