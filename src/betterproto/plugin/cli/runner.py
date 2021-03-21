@@ -4,11 +4,12 @@ import os
 import re
 import secrets
 from concurrent.futures import ProcessPoolExecutor
-from typing import TYPE_CHECKING, Any, List, Tuple, Optional
+from typing import TYPE_CHECKING, Any, List, Tuple
 
 from ...lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponseFile,
+    CodeGeneratorResponse,
 )
 from ..parser import generate_code
 from . import USE_PROTOC, utils
@@ -23,10 +24,7 @@ DEFAULT_IMPLEMENTATION = "betterproto_"
 def write_file(output: "Path", file: CodeGeneratorResponseFile) -> None:
     path = (output / file.name).resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        path.write_text(file.content)
-    except TypeError:
-        pass
+    path.write_text(file.content)
 
 
 def handle_error(data: bytes, files: Tuple["Path", ...]) -> List[CLIError]:
@@ -104,8 +102,8 @@ async def compile_protobufs(
 
     Returns
     -------
-    Tuple[:class:`str`, :class:`str`]
-        A tuple of the ``stdout`` and ``stderr`` from the invocation of protoc.
+    List[:class:`CLIError`]
+        A of exceptions from protoc.
     """
     implementation = DEFAULT_IMPLEMENTATION if use_betterproto else ""
     command = utils.generate_command(
@@ -146,10 +144,12 @@ async def compile_protobufs(
 
         request = CodeGeneratorRequest().parse(data)
 
-        # Generate code
-        response = await utils.to_thread(generate_code, request, **kwargs)
-
         loop = asyncio.get_event_loop()
+        # Generate code
+        response: CodeGeneratorResponse = await loop.run_in_executor(
+            None, functools.partial(generate_code, request, **kwargs)
+        )
+
         with ProcessPoolExecutor() as process_pool:
             # write multiple files concurrently
             await asyncio.gather(

@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import signal
 import sys
-import time
-from socket import socket
 
 import rich
 

@@ -1,6 +1,5 @@
 import asyncio
 import functools
-import os
 import platform
 import sys
 from collections import defaultdict
@@ -90,17 +89,6 @@ def run_sync(func: Callable[..., Awaitable[T]]) -> Callable[..., T]:
             loop.close()
 
     return wrapper
-
-
-if sys.version_info[:2] >= (3, 9):
-    from asyncio import to_thread
-else:
-
-    async def to_thread(func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
-        loop = asyncio.get_event_loop()
-        # no context vars
-        partial = functools.partial(func, *args, **kwargs)
-        return await loop.run_in_executor(None, partial)
 
 
 def find(predicate: Callable[[T], bool], iterable: Iterable[T]) -> Optional[T]:

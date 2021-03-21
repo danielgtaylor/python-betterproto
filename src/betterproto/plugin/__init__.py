@@ -12,7 +12,7 @@ IMPORT_ERROR_MESSAGE = (
 
 STDLIB_MODULES = getattr(
     sys,
-    "module_names",
+    "builtin_module_names",
     [
         p.with_suffix("").name
         for p in Path(traceback.__file__).parent.iterdir()
