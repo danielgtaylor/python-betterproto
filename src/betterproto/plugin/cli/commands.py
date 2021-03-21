@@ -8,7 +8,7 @@ from rich.syntax import Syntax
 
 from ..models import monkey_patch_oneof_index
 from . import DEFAULT_LINE_LENGTH, USE_PROTOC, VERBOSE, utils
-from .errors import CLIError, ProtobufSyntaxError, UnusedImport
+from .errors import CLIError, ProtobufSyntaxError
 from .runner import compile_protobufs
 
 monkey_patch_oneof_index()
@@ -101,9 +101,16 @@ async def compile(
                     file=sys.stderr,
                 )
 
-        if not errors or all(isinstance(e, Warning) for e in errors):
+        has_warnings = all(isinstance(e, Warning) for e in errors)
+        if not errors or has_warnings:
             rich.print(
                 f"[bold green]Finished generating output for "
                 f"{len(protos)} file{'s' if len(protos) != 1 else ''}, "
                 f"output is in {output.as_posix()}"
             )
+
+        if errors:
+            if not has_warnings:
+                exit(2)
+            exit(1)
+        exit(0)
