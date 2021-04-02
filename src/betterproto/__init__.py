@@ -8,6 +8,7 @@ import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
+from dateutil.parser import isoparse
 from typing import (
     Any,
     Callable,
@@ -23,14 +24,9 @@ from typing import (
 )
 
 from ._types import T
+from ._version import __version__
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
-
-if sys.version_info[:2] < (3, 7):
-    # Apply backport of datetime.fromisoformat from 3.7
-    from backports.datetime_fromisoformat import MonkeyPatch
-
-    MonkeyPatch.patch_fromisoformat()
 
 
 # Proto 3 data types
@@ -704,7 +700,7 @@ class Message(ABC):
                     meta.number,
                     meta.proto_type,
                     value,
-                    serialize_empty=serialize_empty,
+                    serialize_empty=serialize_empty or selected_in_group,
                     wraps=meta.wraps or "",
                 )
 
@@ -961,7 +957,15 @@ class Message(ABC):
                         output[cased_name] = value
                 elif field_is_repeated:
                     # Convert each item.
-                    value = [i.to_dict(casing, include_default_values) for i in value]
+                    cls = self._betterproto.cls_by_field[field_name]
+                    if cls == datetime:
+                        value = [_Timestamp.timestamp_to_json(i) for i in value]
+                    elif cls == timedelta:
+                        value = [_Duration.delta_to_json(i) for i in value]
+                    else:
+                        value = [
+                            i.to_dict(casing, include_default_values) for i in value
+                        ]
                     if value or include_default_values:
                         output[cased_name] = value
                 elif (
@@ -1042,10 +1046,17 @@ class Message(ABC):
                     v = getattr(self, field_name)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
-                        for item in value[key]:
-                            v.append(cls().from_dict(item))
+                        if cls == datetime:
+                            v = [isoparse(item) for item in value[key]]
+                        elif cls == timedelta:
+                            v = [
+                                timedelta(seconds=float(item[:-1]))
+                                for item in value[key]
+                            ]
+                        else:
+                            v = [cls().from_dict(item) for item in value[key]]
                     elif isinstance(v, datetime):
-                        v = datetime.fromisoformat(value[key].replace("Z", "+00:00"))
+                        v = isoparse(value[key])
                         setattr(self, field_name, v)
                     elif isinstance(v, timedelta):
                         v = timedelta(seconds=float(value[key][:-1]))
@@ -1161,6 +1172,7 @@ from .lib.google.protobuf import (  # noqa
     BytesValue,
     DoubleValue,
     Duration,
+    EnumValue,
     FloatValue,
     Int32Value,
     Int64Value,
@@ -1227,14 +1239,17 @@ class _WrappedMessage(Message):
 
 def _get_wrapper(proto_type: str) -> Type:
     """Get the wrapper message class for a wrapped type."""
+
+    # TODO: include ListValue and NullValue?
     return {
         TYPE_BOOL: BoolValue,
-        TYPE_INT32: Int32Value,
-        TYPE_UINT32: UInt32Value,
-        TYPE_INT64: Int64Value,
-        TYPE_UINT64: UInt64Value,
-        TYPE_FLOAT: FloatValue,
-        TYPE_DOUBLE: DoubleValue,
-        TYPE_STRING: StringValue,
         TYPE_BYTES: BytesValue,
+        TYPE_DOUBLE: DoubleValue,
+        TYPE_FLOAT: FloatValue,
+        TYPE_ENUM: EnumValue,
+        TYPE_INT32: Int32Value,
+        TYPE_INT64: Int64Value,
+        TYPE_STRING: StringValue,
+        TYPE_UINT32: UInt32Value,
+        TYPE_UINT64: UInt64Value,
     }[proto_type]
