@@ -1,0 +1,9 @@
+{
+    "positive": "Infinity",
+    "negative": "-Infinity",
+    "nan": "NaN",
+    "three": 3.0,
+    "threePointOneFour": 3.14,
+    "negThree": -3.0,
+    "negThreePointOneFour": -3.14
+  }

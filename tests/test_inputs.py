@@ -1,10 +1,11 @@
 import importlib
 import json
+import math
 import os
 import sys
 from collections import namedtuple
 from types import ModuleType
-from typing import Set
+from typing import Any, Dict, List, Set
 
 import pytest
 
@@ -69,6 +70,55 @@ def module_has_entry_point(module: ModuleType):
     return any(hasattr(module, attr) for attr in ["Test", "TestStub"])
 
 
+def list_replace_nans(items: List) -> List[Any]:
+    """Replace float("nan") in a list with the string "NaN"
+
+    Parameters
+    ----------
+    items : List
+            List to update
+
+    Returns
+    -------
+    List[Any]
+        Updated list
+    """
+    result = []
+    for item in items:
+        if isinstance(item, list):
+            result.append(list_replace_nans(item))
+        elif isinstance(item, dict):
+            result.append(dict_replace_nans(item))
+        elif isinstance(item, float) and math.isnan(item):
+            result.append(betterproto.NAN)
+    return result
+
+
+def dict_replace_nans(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
+    """Replace float("nan") in a dictionary with the string "NaN"
+
+    Parameters
+    ----------
+    input_dict : Dict[Any, Any]
+            Dictionary to update
+
+    Returns
+    -------
+    Dict[Any, Any]
+        Updated dictionary
+    """
+    result = {}
+    for key, value in input_dict.items():
+        if isinstance(value, dict):
+            value = dict_replace_nans(value)
+        elif isinstance(value, list):
+            value = list_replace_nans(value)
+        elif isinstance(value, float) and math.isnan(value):
+            value = betterproto.NAN
+        result[key] = value
+    return result
+
+
 @pytest.fixture
 def test_data(request):
     test_case_name = request.param
@@ -81,7 +131,6 @@ def test_data(request):
     reference_module_root = os.path.join(
         *reference_output_package.split("."), test_case_name
     )
-
     sys.path.append(reference_module_root)
 
     plugin_module = importlib.import_module(f"{plugin_output_package}.{test_case_name}")
@@ -132,7 +181,9 @@ def test_message_json(repeat, test_data: TestData) -> None:
             message.from_json(json_sample)
             message_json = message.to_json(0)
 
-            assert json.loads(message_json) == json.loads(json_sample)
+        assert dict_replace_nans(json.loads(message_json)) == dict_replace_nans(
+            json.loads(json_sample)
+        )
 
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
@@ -156,14 +207,13 @@ def test_binary_compatibility(repeat, test_data: TestData) -> None:
                 reference_binary_output
             )
 
-            # # Generally this can't be relied on, but here we are aiming to match the
-            # # existing Python implementation and aren't doing anything tricky.
-            # # https://developers.google.com/protocol-buffers/docs/encoding#implications
+            # Generally this can't be relied on, but here we are aiming to match the
+            # existing Python implementation and aren't doing anything tricky.
+            # https://developers.google.com/protocol-buffers/docs/encoding#implications
             assert bytes(plugin_instance_from_json) == reference_binary_output
             assert bytes(plugin_instance_from_binary) == reference_binary_output
 
             assert plugin_instance_from_json == plugin_instance_from_binary
-            assert (
+            assert dict_replace_nans(
                 plugin_instance_from_json.to_dict()
-                == plugin_instance_from_binary.to_dict()
-            )
+            ) == dict_replace_nans(plugin_instance_from_binary.to_dict())
