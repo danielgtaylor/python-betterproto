@@ -32,11 +32,9 @@ reference to `A` to `B`'s `fields` attribute.
 import re
 import textwrap
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Text, Type, Union
-import sys
+from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
 
-import betterproto
-
+from .. import Message, which_one_of
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
 from ..compile.naming import (
@@ -155,7 +153,7 @@ class ProtoContentBase:
     source_file: FileDescriptorProto
     path: List[int]
     comment_indent: int = 4
-    parent: Union["betterproto.Message", "OutputTemplate"]
+    parent: Union["Message", "OutputTemplate"]
 
     def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
