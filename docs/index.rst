@@ -24,6 +24,7 @@ Contents:
     quick-start
     api
     migrating
+    troubleshooting
 
 
 If you still can't find what you're looking for, try in one of the following pages:
