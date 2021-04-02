@@ -1,6 +1,7 @@
 # Better Protobuf / gRPC Support for Python
 
 ![](https://github.com/danielgtaylor/python-betterproto/workflows/CI/badge.svg)
+> :octocat: If you're reading this on github, please be aware that it might mention unreleased features! See the latest released README on [pypi](https://pypi.org/project/betterproto/).
 
 This project aims to provide an improved experience when using Protobuf / gRPC in a modern Python environment by making use of modern language features and generating readable, understandable, idiomatic Python code. It will not support legacy features or environments (e.g. Protobuf 2). The following are supported:
 
@@ -433,9 +434,9 @@ Assuming your `google.protobuf` source files (included with all releases of `pro
 
 ```sh
 protoc \
-    --plugin=protoc-gen-custom=betterproto/plugin.py \
+    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py \
     --custom_opt=INCLUDE_GOOGLE \
-    --custom_out=betterproto/lib \
+    --custom_out=src/betterproto/lib \
     -I /usr/local/include/ \
     /usr/local/include/google/protobuf/*.proto
 ```

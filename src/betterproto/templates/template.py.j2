@@ -73,6 +73,8 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
 {{ service.comment }}
 
+    {% elif not service.methods %}
+    pass
     {% endif %}
     {% for method in service.methods %}
     async def {{ method.py_name }}(self

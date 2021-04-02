@@ -138,9 +138,9 @@ def generate_code(
             for proto_input_file in output_package.input_files:
                 for item, path in traverse(proto_input_file):
                     read_protobuf_type(
+                        source_file=proto_input_file,
                         item=item,
                         path=path,
-                        source_file=proto_input_file,
                         output_package=output_package,
                     )
                     if verbose or from_cli:
@@ -183,9 +183,7 @@ def generate_code(
                 CodeGeneratorResponseFile(
                     name=str(output_path),
                     # Render and then format the output file
-                    content=outputfile_compiler(
-                        output_file=output_package, line_length=line_length
-                    ),
+                    content=outputfile_compiler(output_file=output_package),
                 )
             )
             if verbose or from_cli:

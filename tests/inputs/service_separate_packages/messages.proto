@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+package things.messages;
+
+message DoThingRequest {
+  string name = 1;
+
+  // use `repeated` so we can check if `List` is correctly imported
+  repeated string comments = 2;
+
+  // use google types `timestamp` and `duration` so we can check
+  // if everything from `datetime` is correctly imported
+  google.protobuf.Timestamp when = 3;
+  google.protobuf.Duration duration = 4;
+}
+
+message DoThingResponse {
+  repeated string names = 1;
+}
+
+message GetThingRequest {
+  string name = 1;
+}
+
+message GetThingResponse {
+  string name = 1;
+  int32 version = 2;
+}

@@ -24,6 +24,7 @@ from typing import (
 )
 
 from ._types import T
+from ._version import __version__
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
 
@@ -699,7 +700,7 @@ class Message(ABC):
                     meta.number,
                     meta.proto_type,
                     value,
-                    serialize_empty=serialize_empty,
+                    serialize_empty=serialize_empty or selected_in_group,
                     wraps=meta.wraps or "",
                 )
 
