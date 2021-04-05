@@ -1,7 +1,6 @@
 # Test cases that are expected to fail, e.g. unimplemented features or bug-fixes.
 # Remove from list when fixed.
 xfail = {
-    "oneof_enum",  # 63
     "namespace_keywords",  # 70
     "namespace_builtin_types",  # 53
     "googletypes_struct",  # 9
