@@ -133,11 +133,11 @@ def lowercase_first(value: str) -> str:
     return value[0:1].lower() + value[1:]
 
 
-def is_keyword(value: str) -> bool:
+def is_reserved_name(value: str) -> bool:
     if keyword.iskeyword(value):
         return True
 
-    if value == "bytes":
+    if value in ("bytes", "str"):
         return True
 
     return False
@@ -145,4 +145,4 @@ def is_keyword(value: str) -> bool:
 
 def sanitize_name(value: str) -> str:
     # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
-    return f"{value}_" if is_keyword(value) else value
+    return f"{value}_" if is_reserved_name(value) else value
