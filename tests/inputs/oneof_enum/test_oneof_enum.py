@@ -15,7 +15,7 @@ def test_which_one_of_returns_enum_with_default_value():
     """
     message = Test()
     message.from_json(
-        get_test_case_json_data("oneof_enum", "oneof_enum-enum-0.json")[0]
+        get_test_case_json_data("oneof_enum", "oneof_enum-enum-0.json")[0].json
     )
 
     assert message.move == Move(
@@ -31,7 +31,7 @@ def test_which_one_of_returns_enum_with_non_default_value():
     """
     message = Test()
     message.from_json(
-        get_test_case_json_data("oneof_enum", "oneof_enum-enum-1.json")[0]
+        get_test_case_json_data("oneof_enum", "oneof_enum-enum-1.json")[0].json
     )
     assert message.move == Move(
         x=0, y=0
@@ -42,7 +42,7 @@ def test_which_one_of_returns_enum_with_non_default_value():
 
 def test_which_one_of_returns_second_field_when_set():
     message = Test()
-    message.from_json(get_test_case_json_data("oneof_enum")[0])
+    message.from_json(get_test_case_json_data("oneof_enum")[0].json)
     assert message.move == Move(x=2, y=3)
     assert message.signal == Signal.PASS
     assert betterproto.which_one_of(message, "action") == ("move", Move(x=2, y=3))

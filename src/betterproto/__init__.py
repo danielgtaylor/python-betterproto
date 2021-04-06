@@ -739,9 +739,18 @@ class Message(ABC):
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
                 else:
                     for item in value:
-                        output += _serialize_single(
-                            meta.number, meta.proto_type, item, wraps=meta.wraps or ""
+                        output += (
+                            _serialize_single(
+                                meta.number,
+                                meta.proto_type,
+                                item,
+                                wraps=meta.wraps or "",
+                            )
+                            # if it's an empty message it still needs to be represented
+                            # as an item in the repeated list
+                            or b"\n\x00"
                         )
+
             elif isinstance(value, dict):
                 for k, v in value.items():
                     assert meta.map_types
