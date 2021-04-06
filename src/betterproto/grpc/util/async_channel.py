@@ -70,7 +70,7 @@ class AsyncChannel(AsyncIterable[T]):
     """
 
     def __init__(self, *, buffer_limit: int = 0, close: bool = False):
-        self._queue: asyncio.Queue[Union[T, object]] = asyncio.Queue(buffer_limit)
+        self._queue: asyncio.Queue[T] = asyncio.Queue(buffer_limit)
         self._closed = False
         self._waiting_receivers: int = 0
         # Track whether flush has been invoked so it can only happen once

@@ -20,6 +20,7 @@ jinja2 = { version = "^2.11.2", optional = true }
 python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
+asv = "^0.4.2"
 black = "^20.8b1"
 bpython = "^0.19"
 grpcio-tools = "^1.30.0"
@@ -31,11 +32,10 @@ pytest = "^5.4.2"
 pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
-toml = "^0.10.1"
-tox = "^3.15.1"
 sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
-asv = "^0.4.2"
+tomlkit = "^0.7.0"
+tox = "^3.15.1"
 
 
 [tool.poetry.scripts]
@@ -44,17 +44,43 @@ protoc-gen-python_betterproto = "betterproto.plugin:main"
 [tool.poetry.extras]
 compiler = ["black", "jinja2"]
 
-[tool.poe.tasks]
-# Dev workflow tasks
-generate    = { script = "tests.generate:main", help = "Generate test cases (do this once before running test)" }
-test        = { cmd = "pytest --cov src", help = "Run tests" }
-types       = { cmd = "mypy src --ignore-missing-imports", help = "Check types with mypy" }
-format      = { cmd = "black . --exclude tests/output_",   help = "Apply black formatting to source code" }
-docs        = { cmd = "sphinx-build docs docs/build", help = "Build the sphinx docs"}
-bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD", help = "Benchmark current commit vs. master branch"}
-clean       = { cmd = "rm -rf .asv .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help  = "Clean out generated files from the workspace" }
 
-generate_lib.cmd = """
+# Dev workflow tasks
+
+[tool.poe.tasks.generate]
+script = "tests.generate:main"
+help = "Generate test cases (do this once before running test)"
+
+[tool.poe.tasks.test]
+cmd = "pytest"
+help = "Run tests"
+
+[tool.poe.tasks.types]
+cmd  = "mypy src --ignore-missing-imports"
+help = "Check types with mypy"
+
+[tool.poe.tasks.format]
+cmd  = "black . --exclude tests/output_"
+help = "Apply black formatting to source code"
+
+[tool.poe.tasks.docs]
+cmd  = "sphinx-build docs docs/build"
+help = "Build the sphinx docs"
+
+[tool.poe.tasks.bench]
+shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD"
+help  = "Benchmark current commit vs. master branch"
+
+[tool.poe.tasks.clean]
+cmd  = """
+rm -rf .asv .coverage .mypy_cache .pytest_cache
+       dist betterproto.egg-info **/__pycache__
+       testsoutput_*
+"""
+help = "Clean out generated files from the workspace"
+
+[tool.poe.tasks.generate_lib]
+cmd = """
 protoc
     --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
     --custom_opt=INCLUDE_GOOGLE
@@ -62,11 +88,18 @@ protoc
     -I /usr/local/include/
     /usr/local/include/google/protobuf/**/*.proto
 """
-generate_lib.help = "Regenerate the types in betterproto.lib.google"
+help = "Regenerate the types in betterproto.lib.google"
 
 # CI tasks
-full-test   = { shell = "poe generate && tox", help = "Run tests with multiple pythons" }
-check-style = { cmd = "black . --check --diff --exclude tests/output_", help = "Check if code style is correct"}
+
+[tool.poe.tasks.full-test]
+shell = "poe generate && tox"
+help = "Run tests with multiple pythons"
+
+[tool.poe.tasks.check-style]
+cmd = "black . --check --diff --exclude tests/output_"
+help = "Check if code style is correct"
+
 
 [tool.black]
 target-version = ['py36']

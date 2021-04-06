@@ -15,6 +15,7 @@ from typing import (
     Callable,
     Dict,
     Generator,
+    Iterable,
     List,
     Optional,
     Set,
@@ -272,7 +273,7 @@ class Enum(enum.IntEnum):
             The member was not found in the Enum.
         """
         try:
-            return cls._member_map_[name]
+            return cls._member_map_[name]  # type: ignore
         except KeyError as e:
             raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
@@ -522,13 +523,13 @@ class ProtoClassMetadata:
 
     @staticmethod
     def _get_default_gen(
-        cls: Type["Message"], fields: List[dataclasses.Field]
+        cls: Type["Message"], fields: Iterable[dataclasses.Field]
     ) -> Dict[str, Callable[[], Any]]:
         return {field.name: cls._get_field_default_gen(field) for field in fields}
 
     @staticmethod
     def _get_cls_by_field(
-        cls: Type["Message"], fields: List[dataclasses.Field]
+        cls: Type["Message"], fields: Iterable[dataclasses.Field]
     ) -> Dict[str, Type]:
         field_cls = {}
 
@@ -687,7 +688,7 @@ class Message(ABC):
         meta = getattr(self.__class__, "_betterproto_meta", None)
         if not meta:
             meta = ProtoClassMetadata(self.__class__)
-            self.__class__._betterproto_meta = meta
+            self.__class__._betterproto_meta = meta  # type: ignore
         return meta
 
     def __bytes__(self) -> bytes:
@@ -763,7 +764,7 @@ class Message(ABC):
                     meta.number,
                     meta.proto_type,
                     value,
-                    serialize_empty=serialize_empty or selected_in_group,
+                    serialize_empty=serialize_empty or bool(selected_in_group),
                     wraps=meta.wraps or "",
                 )
 
@@ -1067,7 +1068,7 @@ class Message(ABC):
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
                     if field_is_repeated:
-                        enum_class: Type[Enum] = field_types[field_name].__args__[0]
+                        enum_class = field_types[field_name].__args__[0]
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
                         ):
@@ -1076,7 +1077,7 @@ class Message(ABC):
                             # transparently upgrade single value to repeated
                             output[cased_name] = [enum_class(value).name]
                     else:
-                        enum_class: Type[Enum] = field_types[field_name]  # noqa
+                        enum_class = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
                     if field_is_repeated:
@@ -1291,23 +1292,6 @@ class _Timestamp(Timestamp):
             return f"{result}.{int(nanos // 1e3) :06d}Z"
         # Serialize 9 fractional digits.
         return f"{result}.{nanos:09d}"
-
-
-class _WrappedMessage(Message):
-    """
-    Google protobuf wrapper types base class. JSON representation is just the
-    value itself.
-    """
-
-    value: Any
-
-    def to_dict(self, casing: Casing = Casing.CAMEL) -> Any:
-        return self.value
-
-    def from_dict(self: T, value: Any) -> T:
-        if value is not None:
-            self.value = value
-        return self
 
 
 def _get_wrapper(proto_type: str) -> Type:

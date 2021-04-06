@@ -170,6 +170,8 @@ class ProtoContentBase:
     comment_indent: int = 4
     parent: Union["betterproto.Message", "OutputTemplate"]
 
+    __dataclass_fields__: Dict[str, object]
+
     def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
         for field_name, field_val in self.__dataclass_fields__.items():
