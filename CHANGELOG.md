@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [2.0.0b3] - 2021-04-07
+
+- Generate grpclib service stubs [#170](https://github.com/danielgtaylor/python-betterproto/pull/170)
+- Add \_\_version\_\_ attribute to package [#134](https://github.com/danielgtaylor/python-betterproto/pull/134)
+- Use betterproto generated messages in the plugin [#161](https://github.com/danielgtaylor/python-betterproto/pull/161)
+- Sort the list of sources in generated file headers [#164](https://github.com/danielgtaylor/python-betterproto/pull/164)
+- Micro-optimization: use tuples instead of lists for conditions [#228](https://github.com/danielgtaylor/python-betterproto/pull/228)
+- Improve datestring parsing [#213](https://github.com/danielgtaylor/python-betterproto/pull/213)
+
+- Fix serialization of repeated fields with empty messages [#180](https://github.com/danielgtaylor/python-betterproto/pull/180)
+- Fix compilation of fields named 'bytes' or 'str' [#226](https://github.com/danielgtaylor/python-betterproto/pull/226)
+- Fix json serialization of infinite and nan floats/doubles [#215](https://github.com/danielgtaylor/python-betterproto/pull/215)
+- Fix template bug resulting in empty \_\_post_init\_\_ methods [#162](https://github.com/danielgtaylor/python-betterproto/pull/162)
+- Fix serialization of zero-value messages in a oneof group [#176](https://github.com/danielgtaylor/python-betterproto/pull/176)
+- Fix missing typing and datetime imports [#183](https://github.com/danielgtaylor/python-betterproto/pull/183)
+- Fix code generation for empty services [#222](https://github.com/danielgtaylor/python-betterproto/pull/222)
+- Fix Message.to_dict and from_dict handling of repeated timestamps and durations [#211](https://github.com/danielgtaylor/python-betterproto/pull/211)
+- Fix incorrect routes in generated client when service is not in a package [#177](https://github.com/danielgtaylor/python-betterproto/pull/177)
+
 ## [2.0.0b2] - 2020-11-24
 
 - Add support for deprecated message and fields [#126](https://github.com/danielgtaylor/python-betterproto/pull/126)
