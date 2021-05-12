@@ -43,6 +43,27 @@ You cannot check if a scalar was sent on the wire.
     True
 
 
+Accessing the Stream/Metadata
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need access to the ``grpclib.server.Stream`` object, either to access the call metadata
+or for other reasons, you can implement ``<method>__with_stream`` instead:
+
+.. code-block:: python
+
+    # this method also receives the unspread request object
+    async def example_unary_unary__with_stream(
+        self, stream: grpclib.server.Stream, request: "ExampleRequest"
+    ) -> "ExampleResponse":
+        # metadata is a MultiDict
+        auth = stream.metadata.get("authorization")
+        # grpclib.events.listen is probably a better way to check auth
+        await check_auth(auth)
+
+        return await get_response(request)
+
+Note the double underscore in the method name. This is slightly ugly but should avoid name collisions.
+
 One-of Support
 ~~~~~~~~~~~~~~
 
