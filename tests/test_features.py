@@ -333,6 +333,18 @@ def test_oneof_default_value_set_causes_writes_wire():
     )
 
 
+def test_none_in_list_error_message():
+    from tests.output_betterproto.empty_repeated import Test as EmptyRepeated
+
+    # this is an error, tell me where the problem is
+    try:
+        print(bytes(EmptyRepeated(
+            msg=[None]
+        )))
+    except ValueError as e:
+        assert "msg" in str(e)
+
+
 def test_recursive_message():
     from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
 

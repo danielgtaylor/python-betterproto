@@ -739,6 +739,8 @@ class Message(ABC):
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
                 else:
                     for item in value:
+                        if item is None:
+                            raise ValueError(f"None value in list field {field_name} of {self}")
                         output += (
                             _serialize_single(
                                 meta.number,
