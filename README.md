@@ -160,6 +160,12 @@ service Echo {
 }
 ```
 
+Generate echo proto file:
+
+```
+python -m grpc_tools.protoc -I . --python_betterproto_out=. echo.proto
+```
+
 A client can be implemented as follows:
 ```python
 import asyncio
@@ -199,28 +205,29 @@ To use them, simply subclass the base class in the generated files and override 
 service methods:
 
 ```python
-from echo import EchoBase
+import asyncio
+from echo import EchoBase, EchoResponse, EchoStreamResponse
 from grpclib.server import Server
 from typing import AsyncIterator
 
 
 class EchoService(EchoBase):
     async def echo(self, value: str, extra_times: int) -> "EchoResponse":
-        return value
+        return EchoResponse([value for _ in range(extra_times)])
 
-    async def echo_stream(
-        self, value: str, extra_times: int
-    ) -> AsyncIterator["EchoStreamResponse"]:
+    async def echo_stream(self, value: str, extra_times: int) -> AsyncIterator["EchoStreamResponse"]:
         for _ in range(extra_times):
-            yield value
+            yield EchoStreamResponse(value)
 
 
-async def start_server():
-    HOST = "127.0.0.1"
-    PORT = 1337
+async def main():
     server = Server([EchoService()])
-    await server.start(HOST, PORT)
-    await server.serve_forever()
+    await server.start("127.0.0.1", 50051)
+    await server.wait_closed()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
 ```
 
 ### JSON
