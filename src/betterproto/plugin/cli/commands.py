@@ -2,13 +2,16 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
+from .. import install_exception_hook
+install_exception_hook()
+
+import protobuf_parser
 import rich
 import typer
 from rich.syntax import Syntax
 
 from ..models import monkey_patch_oneof_index
-from . import DEFAULT_LINE_LENGTH, USE_PROTOC, VERBOSE, utils
-from .errors import CLIError, ProtobufSyntaxError
+from . import DEFAULT_LINE_LENGTH, VERBOSE, utils
 from .runner import compile_protobufs
 
 monkey_patch_oneof_index()
@@ -27,13 +30,6 @@ def callback(ctx: typer.Context) -> None:
 async def compile(
     verbose: bool = typer.Option(
         VERBOSE, "-v", "--verbose", help="Whether or not to be verbose"
-    ),
-    protoc: bool = typer.Option(
-        USE_PROTOC,
-        "-p",
-        "--protoc",
-        help="Whether or not to use protoc to compile the protobufs if this is false "
-        "it will attempt to use grpc instead",
     ),
     line_length: int = typer.Option(
         DEFAULT_LINE_LENGTH,
@@ -72,14 +68,13 @@ async def compile(
             *protos,
             output=output,
             verbose=verbose,
-            use_protoc=protoc,
             generate_services=generate_services,
             line_length=line_length,
             from_cli=True,
         )
 
         for error in errors:
-            if isinstance(error, ProtobufSyntaxError):
+            if isinstance(error, SyntaxError):
                 rich.print(
                     f"[red]File {str(error.file).strip()}:\n",
                     Syntax(
@@ -93,10 +88,10 @@ async def compile(
                 )
             elif isinstance(error, Warning):
                 rich.print(f"Warning: {error}", file=sys.stderr)
-            elif isinstance(error, CLIError):
+            elif isinstance(error, protobuf_parser.Error):
                 failed_files = "\n".join(f" - {file}" for file in protos)
                 rich.print(
-                    f"[red]{'Protoc' if protoc else 'GRPC'} failed to generate outputs for:\n\n"
+                    f"[red]Protoc failed to generate outputs for:\n\n"
                     f"{failed_files}\n\nSee the output for the issue:\n{' '.join(error.args)}[red]",
                     file=sys.stderr,
                 )

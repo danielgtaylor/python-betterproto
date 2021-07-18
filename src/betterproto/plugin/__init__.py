@@ -5,16 +5,16 @@ from types import TracebackType
 from typing import Type
 
 IMPORT_ERROR_MESSAGE = (
-    "Unable to import `{0.name}` from betterproto plugin! Please ensure that you've installed "
-    'betterproto as `pip install "betterproto[compiler]"` so that compiler dependencies are '
-    "included."
+    "Unable to import `{0.name}` from betterproto plugin! Please ensure that you've "
+    "installed betterproto as `pip install \"betterproto[compiler]\"` so that compiler "
+    "dependencies are included."
 )
 
 STDLIB_MODULES = getattr(
     sys,
     "builtin_module_names",
     [
-        p.with_suffix("").name
+        p.stem
         for p in Path(traceback.__file__).parent.iterdir()
         if p.suffix == ".py" or p.is_dir()
     ],
@@ -32,7 +32,8 @@ def import_exception_hook(
 
     if the module imported is not found and the exception is raised in this sub module
     """
-    module = list(traceback.walk_tb(tb))[-1][0].f_globals.get("__name__", "__main__")
+    bottom_frame = list(traceback.walk_tb(tb))[-1][0]
+    module = bottom_frame.f_globals.get("__name__", "__main__")
     if (
         not module.startswith(__name__)
         or not isinstance(value, ImportError)
@@ -45,6 +46,8 @@ def import_exception_hook(
     exit(1)
 
 
-sys.excepthook = import_exception_hook
+def install_exception_hook():
+    sys.excepthook = import_exception_hook
+
 
 from .main import main

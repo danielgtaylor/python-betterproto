@@ -38,13 +38,14 @@ tox = "^3.15.1"
 sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 asv = "^0.4.2"
+protobuf_parser = "*"
 
 [tool.poetry.scripts]
 betterproto = "betterproto:__main__.main"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "jinja2", "typer", "rich"]
+compiler = ["black", "jinja2", "typer", "rich", "protobuf_parser"]
 
 [tool.poe.tasks]
 # Dev workflow tasks
@@ -57,12 +58,7 @@ bench       = { shell = "asv run master^! && asv run HEAD^! && asv compare maste
 clean       = { cmd = "rm -rf .asv .coverage .mypy_cache .pytest_cache dist betterproto.egg-info **/__pycache__ tests/output_*", help  = "Clean out generated files from the workspace" }
 
 generate_lib.cmd = """
-protoc
-    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
-    --custom_opt=INCLUDE_GOOGLE
-    --custom_out=src/betterproto/lib
-    -I /usr/local/include/
-    /usr/local/include/google/protobuf/**/*.proto
+betterproto compile /usr/local/include/google/protobuf/**/*.proto
 """
 generate_lib.help = "Regenerate the types in betterproto.lib.google"
 

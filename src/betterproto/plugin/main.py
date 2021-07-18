@@ -2,6 +2,9 @@
 
 import sys
 
+from . import install_exception_hook
+install_exception_hook()
+
 import rich
 
 from ..lib.google.protobuf.compiler import CodeGeneratorRequest
