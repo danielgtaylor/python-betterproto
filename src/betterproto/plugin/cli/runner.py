@@ -1,7 +1,4 @@
 import asyncio
-import functools
-
-from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING, Any, List
 
 import protobuf_parser
@@ -35,17 +32,16 @@ async def compile_protobufs(
 
     Parameters
     ----------
-    *files: :class:`.Path`
+    *files
         The locations of the protobuf files to be generated.
-    output: :class:`.Path`
+    output
         The output directory.
     **kwargs:
         Any keyword arguments to pass to generate_code.
 
     Returns
     -------
-    List[:class:`CLIError`]
-        A of exceptions from protoc.
+    A of exceptions from protoc.
     """
     loop = asyncio.get_event_loop()
 
@@ -62,16 +58,11 @@ async def compile_protobufs(
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
-        with ProcessPoolExecutor() as process_pool:
-            # write multiple files concurrently
-            await asyncio.gather(
-                *(
-                    loop.run_in_executor(
-                        process_pool, functools.partial(write_file, output, file)
-                    )
-                    for file in response.file
-                )
+        await asyncio.gather(
+            *(
+                utils.to_thread(write_file(output, file) for file in response.file)
             )
+        )
 
     else:
         errors = await utils.to_thread(

@@ -10,6 +10,7 @@ import rich
 import typer
 from rich.syntax import Syntax
 
+from ... import __version__
 from ..models import monkey_patch_oneof_index
 from . import DEFAULT_LINE_LENGTH, VERBOSE, utils
 from .runner import compile_protobufs
@@ -23,6 +24,11 @@ def callback(ctx: typer.Context) -> None:
     """The callback for all things betterproto"""
     if ctx.invoked_subcommand is None:
         rich.print(ctx.get_help())
+
+
+@app.command()
+def version(ctx: typer.Context) -> None:
+    rich.print("betterproto version:", __version__)
 
 
 @app.command(context_settings={"help_option_names": ["-h", "--help"]})
@@ -74,15 +80,14 @@ async def compile(
         )
 
         for error in errors:
-            if isinstance(error, SyntaxError):
+            if isinstance(error, protobuf_parser.SyntaxError):
                 rich.print(
                     f"[red]File {str(error.file).strip()}:\n",
-                    Syntax(
-                        error.file.read_text(),
-                        "proto",
+                    Syntax.from_path(
+                        error.file,
                         line_numbers=True,
                         line_range=(max(error.lineno - 5, 0), error.lineno),
-                    ),  # TODO switch to .from_path but it appears to be bugged and doesnt render properly
+                    ),
                     f"{' ' * (error.offset + 3)}^\nSyntaxError: {error.msg}[red]",
                     file=sys.stderr,
                 )
@@ -92,7 +97,7 @@ async def compile(
                 failed_files = "\n".join(f" - {file}" for file in protos)
                 rich.print(
                     f"[red]Protoc failed to generate outputs for:\n\n"
-                    f"{failed_files}\n\nSee the output for the issue:\n{' '.join(error.args)}[red]",
+                    f"{failed_files}\n\nSee the output for the issue:\n{error}[red]",
                     file=sys.stderr,
                 )
 
