@@ -653,8 +653,9 @@ class ServiceMethodCompiler(ProtoContentBase):
             self.output_file.typing_imports.add("AsyncIterable")
             self.output_file.typing_imports.add("Iterable")
             self.output_file.typing_imports.add("Union")
-        if self.server_streaming:
-            self.output_file.typing_imports.add("AsyncIterator")
+
+        # Required by both client and server
+        self.output_file.typing_imports.add("AsyncIterator")
 
         super().__post_init__()  # check for unset fields
 
