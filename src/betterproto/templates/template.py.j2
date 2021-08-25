@@ -15,8 +15,8 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 {% endif %}
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 {% if output_file.services %}
+from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
 {% endif %}
 
