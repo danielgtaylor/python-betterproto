@@ -5,6 +5,12 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+class CodeGeneratorResponseFeature(betterproto.Enum):
+    FEATURE_NONE = 0
+    FEATURE_PROTO3_OPTIONAL = 1
 
 
 @dataclass(eq=False, repr=False)
@@ -59,6 +65,9 @@ class CodeGeneratorResponse(betterproto.Message):
     # unparseable -- should be reported by writing a message to stderr and
     # exiting with a non-zero status code.
     error: str = betterproto.string_field(1)
+    # A bitmask of supported features that the code generator supports. This is a
+    # bitwise "or" of values from the Feature enum.
+    supported_features: int = betterproto.uint64_field(2)
     file: List["CodeGeneratorResponseFile"] = betterproto.message_field(15)
 
 
@@ -108,6 +117,12 @@ class CodeGeneratorResponseFile(betterproto.Message):
     insertion_point: str = betterproto.string_field(2)
     # The file contents.
     content: str = betterproto.string_field(15)
+    # Information describing the file content being inserted. If an insertion
+    # point is used, this information will be appropriately offset and inserted
+    # into the code generation metadata for the generated files.
+    generated_code_info: "betterproto_lib_google_protobuf.GeneratedCodeInfo" = (
+        betterproto.message_field(16)
+    )
 
 
 import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
