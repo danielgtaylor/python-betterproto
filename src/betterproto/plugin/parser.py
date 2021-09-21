@@ -8,6 +8,7 @@ from betterproto.lib.google.protobuf import (
 from betterproto.lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponse,
+    CodeGeneratorResponseFeature,
     CodeGeneratorResponseFile,
 )
 import itertools
@@ -60,10 +61,11 @@ def traverse(
     )
 
 
-def generate_code(
-    request: CodeGeneratorRequest, response: CodeGeneratorResponse
-) -> None:
+def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
+    response = CodeGeneratorResponse()
+
     plugin_options = request.parameter.split(",") if request.parameter else []
+    response.supported_features = CodeGeneratorResponseFeature.FEATURE_PROTO3_OPTIONAL
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
@@ -133,6 +135,7 @@ def generate_code(
     for output_package_name in sorted(output_paths.union(init_files)):
         print(f"Writing {output_package_name}", file=sys.stderr)
 
+    return response
 
 def read_protobuf_type(
     item: DescriptorProto,
