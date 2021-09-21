@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+message InnerTest {
+    string test = 1;
+}
+
+message Test {
+    optional uint32 test1 = 1;
+    optional bool test2 = 2;
+    optional string test3 = 3;
+    optional bytes test4 = 4;
+    optional InnerTest test5 = 5;
+}
