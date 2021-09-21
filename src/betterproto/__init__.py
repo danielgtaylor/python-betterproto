@@ -1046,6 +1046,8 @@ class Message(ABC):
                         ]
                     if value or include_default_values:
                         output[cased_name] = value
+                elif value is None:
+                    output[cased_name] = None
                 elif (
                     value._serialized_on_wire
                     or include_default_values
@@ -1078,6 +1080,8 @@ class Message(ABC):
                         output[cased_name] = [
                             b64encode(b).decode("utf8") for b in value
                         ]
+                    elif value is None:
+                        output[cased_name] = None
                     else:
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
@@ -1090,6 +1094,8 @@ class Message(ABC):
                         else:
                             # transparently upgrade single value to repeated
                             output[cased_name] = [enum_class(value).name]
+                    elif value is None:
+                        output[cased_name] = None
                     else:
                         enum_class = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
