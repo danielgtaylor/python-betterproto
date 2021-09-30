@@ -834,8 +834,9 @@ class Message(ABC):
                 # This is some kind of list (repeated) field.
                 return list
             elif t.__origin__ is Union and t.__args__[1] is type(None):
-                # This is an optional (wrapped) field. For setting the default we
-                # really don't care what kind of field it is.
+                # This is an optional field (either wrapped, or using proto3
+                # field presence). For setting the default we really don't care
+                # what kind of field it is.
                 return type(None)
             else:
                 return t
@@ -1009,6 +1010,7 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
+            field_is_optional = defaults[field_name] is type(None)
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
@@ -1096,6 +1098,9 @@ class Message(ABC):
                             output[cased_name] = [enum_class(value).name]
                     elif value is None:
                         output[cased_name] = None
+                    elif field_is_optional:
+                        enum_class = field_types[field_name].__args__[0]
+                        output[cased_name] = enum_class(value).name
                     else:
                         enum_class = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
@@ -1133,6 +1138,9 @@ class Message(ABC):
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
+                    if value[key] is None and self._get_field_default(key) == None:
+                        # Setting an optional value to None.
+                        setattr(self, field_name, None)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
                         if cls == datetime:
@@ -1152,6 +1160,9 @@ class Message(ABC):
                         setattr(self, field_name, v)
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
+                    elif v is None:
+                        cls = self._betterproto.cls_by_field[field_name]
+                        setattr(self, field_name, cls().from_dict(value[key]))
                     else:
                         # NOTE: `from_dict` mutates the underlying message, so no
                         # assignment here is necessary.
