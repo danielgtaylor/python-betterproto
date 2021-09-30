@@ -1,7 +1,10 @@
 {
-  "test1": null,
-  "test2": null,
-  "test3": null,
-  "test4": null,
-  "test5": null
+  "test1": 128,
+  "test2": true,
+  "test3": "A value",
+  "test4": "aGVsbG8=",
+  "test5": {
+    "test": "Hello"
+  },
+  "test6": "B"
 }
