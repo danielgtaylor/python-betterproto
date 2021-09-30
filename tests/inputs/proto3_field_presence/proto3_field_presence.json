@@ -6,5 +6,7 @@
   "test5": {
     "test": "Hello"
   },
-  "test6": "B"
+  "test6": "B",
+  "test7": "8589934592",
+  "test8": 2.5
 }
