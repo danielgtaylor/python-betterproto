@@ -11,6 +11,8 @@ message Test {
     optional bytes test4 = 4;
     optional InnerTest test5 = 5;
     optional TestEnum test6 = 6;
+    optional uint64 test7 = 7;
+    optional float test8 = 8;
 }
 
 enum TestEnum {
