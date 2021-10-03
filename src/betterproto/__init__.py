@@ -835,8 +835,15 @@ class Message(ABC):
             else:
                 return t
         elif issubclass(t, Enum):
-            cls = cls._cls_for(field)
-            return lambda: cls(0)  # Enums always default to zero.
+            # Enums always default to zero.
+            def default_enum():
+                try:
+                    # try to create a python enum instance
+                    return t(0)
+                except ValueError:
+                    return 0  # if that does not work fallback to int
+
+            return default_enum
         elif t is datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
             return datetime_default_gen
