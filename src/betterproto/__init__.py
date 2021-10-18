@@ -871,7 +871,10 @@ class Message(ABC):
             elif meta.proto_type == TYPE_ENUM:
                 # Convert enum ints to python enum instances
                 cls = self._betterproto.cls_by_field[field_name]
-                value = cls(value)
+                try:
+                    value = cls(value)
+                except ValueError:
+                    pass  # the received value does not exist in the enum so we have to pass it as raw int
         elif wire_type in (WIRE_FIXED_32, WIRE_FIXED_64):
             fmt = _pack_fmt(meta.proto_type)
             value = struct.unpack(fmt, value)[0]
