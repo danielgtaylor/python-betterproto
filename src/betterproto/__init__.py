@@ -866,7 +866,7 @@ class Message(ABC):
             value = struct.unpack(fmt, value)[0]
         elif wire_type == WIRE_LEN_DELIM:
             if meta.proto_type == TYPE_STRING:
-                value = value.decode("utf-8")
+                value = str(value, "utf-8")
             elif meta.proto_type == TYPE_MESSAGE:
                 cls = self._betterproto.cls_by_field[field_name]
 
