@@ -45,7 +45,7 @@ body:
     attributes:
       label: System Information
       description: >
-        Paste the result of `pip show betterproto` below in the environment you installed betterproto in, python version info along with system info might also be helpful here.
+        Paste the result of `pip show betterproto` below in the environment you installed betterproto in, python/protoc version info along with system info might also be helpful here.
     validations:
       required: true
 
