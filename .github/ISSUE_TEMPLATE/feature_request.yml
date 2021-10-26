@@ -1,0 +1,49 @@
+name: Feature Request
+description: Suggest a feature for this library
+labels: ["enhancement"]
+
+body:
+  - type: input
+    attributes:
+      label: Summary
+      description: >
+        What problem is your feature trying to solve? What would become easier or possible if feature was implemented?
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      multiple: false
+      label: What is the feature request for?
+      options:
+        - The core library
+        - RPC handling
+        - The documentation
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: The Problem
+      description: >
+        What problem is your feature trying to solve?
+        What would become easier or possible if feature was implemented?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: The Ideal Solution
+      description: >
+        What is your ideal solution to the problem?
+        What would you like this feature to do?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: The Current Solution
+      description: >
+        What is the current solution to the problem, if any?
+    validations:
+      required: false
