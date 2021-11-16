@@ -183,66 +183,99 @@ def bool_field(number: int, group: Optional[str] = None, optional: bool = False)
     return dataclass_field(number, TYPE_BOOL, group=group, optional=optional)
 
 
-def int32_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def int32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_INT32, group=group, optional=optional)
 
 
-def int64_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def int64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_INT64, group=group, optional=optional)
 
 
-def uint32_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def uint32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_UINT32, group=group, optional=optional)
 
 
-def uint64_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def uint64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_UINT64, group=group, optional=optional)
 
 
-def sint32_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def sint32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_SINT32, group=group, optional=optional)
 
 
-def sint64_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def sint64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_SINT64, group=group, optional=optional)
 
 
-def float_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def float_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_FLOAT, group=group, optional=optional)
 
 
-def double_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def double_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_DOUBLE, group=group, optional=optional)
 
 
-def fixed32_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def fixed32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_FIXED32, group=group, optional=optional)
 
 
-def fixed64_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def fixed64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_FIXED64, group=group, optional=optional)
 
 
-def sfixed32_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def sfixed32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_SFIXED32, group=group, optional=optional)
 
 
-def sfixed64_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def sfixed64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_SFIXED64, group=group, optional=optional)
 
 
-def string_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def string_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_STRING, group=group, optional=optional)
 
 
-def bytes_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+def bytes_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
     return dataclass_field(number, TYPE_BYTES, group=group, optional=optional)
 
 
 def message_field(
-    number: int, group: Optional[str] = None, wraps: Optional[str] = None, optional: bool = False
+    number: int,
+    group: Optional[str] = None,
+    wraps: Optional[str] = None,
+    optional: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_MESSAGE, group=group, wraps=wraps, optional=optional)
+    return dataclass_field(
+        number, TYPE_MESSAGE, group=group, wraps=wraps, optional=optional
+    )
 
 
 def map_field(
@@ -709,7 +742,7 @@ class Message(ABC):
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
             #
-            # Note that proto3 field presence/optional fields are put in a 
+            # Note that proto3 field presence/optional fields are put in a
             # synthetic single-item oneof by protoc, which helps us ensure we
             # send the value even if the value is the default zero value.
             selected_in_group = (

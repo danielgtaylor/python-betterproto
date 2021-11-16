@@ -137,6 +137,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
 
     return response
 
+
 def read_protobuf_type(
     item: DescriptorProto,
     path: List[int],
