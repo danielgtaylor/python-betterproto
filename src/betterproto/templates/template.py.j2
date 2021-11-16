@@ -79,7 +79,10 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message and method.py_input_message.fields -%}, *,
+            {# oneof messages can't be splayed out into their fields #}
+            {%- if method.has_oneof -%}
+                    , request: "{{ method.py_input_message_type }}"
+            {%- elif method.py_input_message and method.py_input_message.fields -%}, *,
                 {%- for field in method.py_input_message.fields -%}
                     {{ field.py_name }}: {% if field.py_name in method.mutable_default_args and not field.annotation.startswith("Optional[") -%}
                                             Optional[{{ field.annotation }}]
@@ -101,13 +104,12 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
-
         {% endif %}
         {%- for py_name, zero in method.mutable_default_args.items() %}
         {{ py_name }} = {{ py_name }} or {{ zero }}
         {% endfor %}
 
-        {% if not method.client_streaming %}
+        {% if not method.client_streaming and not method.has_oneof %}
         request = {{ method.py_input_message_type }}()
         {% for field in method.py_input_message.fields %}
             {% if field.field_type == 'message' %}
@@ -167,7 +169,9 @@ class {{ service.py_name }}Base(ServiceBase):
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message and method.py_input_message.fields -%},
+            {%- if method.has_oneof -%}
+                , request: "{{ method.py_input_message_type }}"
+            {%- elif method.py_input_message and method.py_input_message.fields -%},
                 {%- for field in method.py_input_message.fields -%}
                     {{ field.py_name }}: {% if field.py_name in method.mutable_default_args and not field.annotation.startswith("Optional[") -%}
                                             Optional[{{ field.annotation }}]
@@ -196,9 +200,13 @@ class {{ service.py_name }}Base(ServiceBase):
         request = await stream.recv_message()
 
         request_kwargs = {
+        {% if method.has_oneof %}
+            "request": request,
+        {% else %}
         {% for field in method.py_input_message.fields %}
             "{{ field.py_name }}": request.{{ field.py_name }},
         {% endfor %}
+        {% endif %}
         }
 
         {% else %}

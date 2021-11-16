@@ -772,3 +772,10 @@ class ServiceMethodCompiler(ProtoContentBase):
     @property
     def server_streaming(self) -> bool:
         return self.proto_obj.server_streaming
+
+    @property
+    def has_oneof(self) -> bool:
+        return any(
+            isinstance(field, OneOfFieldCompiler)
+            for field in getattr(self.py_input_message, "fields", [])
+        )
