@@ -21,7 +21,7 @@ python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"
-black = "^21.11b0"
+black = "^21.11b1"
 bpython = "^0.19"
 grpcio-tools = "^1.30.0"
 jinja2 = "^2.11.2"
