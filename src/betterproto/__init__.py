@@ -1,4 +1,5 @@
 import dataclasses
+import enum
 import inspect
 import json
 import struct
