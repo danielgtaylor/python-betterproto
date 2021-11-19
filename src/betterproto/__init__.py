@@ -1,5 +1,4 @@
 import dataclasses
-import enum
 import inspect
 import json
 import struct
@@ -24,6 +23,7 @@ from typing import (
 
 from ._types import T
 from .casing import camel_case, safe_snake_case, snake_case
+from .enum import Enum
 from .grpc.grpclib_client import ServiceStub
 
 if sys.version_info[:2] < (3, 7):
@@ -246,32 +246,6 @@ def map_field(
     return dataclass_field(
         number, TYPE_MAP, map_types=(key_type, value_type), group=group
     )
-
-
-class Enum(enum.IntEnum):
-    """
-    The base class for protobuf enumerations, all generated enumerations will inherit
-    from this. Bases :class:`enum.IntEnum`.
-    """
-
-    @classmethod
-    def from_string(cls, name: str) -> "Enum":
-        """Return the value which corresponds to the string name.
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the enum member to get
-
-        Raises
-        -------
-        :exc:`ValueError`
-            The member was not found in the Enum.
-        """
-        try:
-            return cls._member_map_[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
 
 def _pack_fmt(proto_type: str) -> str:
@@ -755,7 +729,7 @@ class Message(ABC):
                 return t
         elif issubclass(t, Enum):
             # Enums always default to zero.
-            return int
+            return Enum.try_value
         elif t is datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
             return datetime_default_gen
@@ -780,6 +754,9 @@ class Message(ABC):
             elif meta.proto_type == TYPE_BOOL:
                 # Booleans use a varint encoding, so convert it to true/false.
                 value = value > 0
+            elif meta.proto_type == TYPE_ENUM:
+                # Convert enum ints to python enum instances
+                value = self._betterproto.cls_by_field[field_name].try_value(value)
         elif wire_type in [WIRE_FIXED_32, WIRE_FIXED_64]:
             fmt = _pack_fmt(meta.proto_type)
             value = struct.unpack(fmt, value)[0]
@@ -1062,10 +1039,10 @@ class Message(ABC):
                         else:
                             v = b64decode(value[key])
                     elif meta.proto_type == TYPE_ENUM:
-                        enum_cls = self._betterproto.cls_by_field[field_name]
+                        enum_cls: Enum = self._betterproto.cls_by_field[field_name]
                         if isinstance(v, list):
                             v = [enum_cls.from_string(e) for e in v]
-                        elif isinstance(v, str):
+                        else:
                             v = enum_cls.from_string(v)
 
                 if v is not None:
