@@ -73,10 +73,10 @@ class EnumType(type):
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__!r}>"
 
-    def __iter__(cls: type[E]) -> Generator[E, None, None]:
+    def __iter__(cls: type[E]) -> "Generator[E, None, None]":
         yield from cls._member_map_.values()
 
-    def __reversed__(cls: type[E]) -> Generator[E, None, None]:
+    def __reversed__(cls: type[E]) -> "Generator[E, None, None]":
         yield from reversed(
             tuple(cls._member_map_.values())
         )  # can remove tuple cast after 3.7
@@ -117,7 +117,7 @@ class Enum(int, metaclass=EnumType):
         return self
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or "None"
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self.name}"
