@@ -145,6 +145,8 @@ class FieldMetadata:
     group: Optional[str] = None
     # Describes the wrapped type (e.g. when using google.protobuf.BoolValue)
     wraps: Optional[str] = None
+    # Is the field optional
+    optional: Optional[bool] = False
 
     @staticmethod
     def get(field: dataclasses.Field) -> "FieldMetadata":
@@ -165,7 +167,9 @@ def dataclass_field(
     return dataclasses.field(
         default=None if optional else PLACEHOLDER,
         metadata={
-            "betterproto": FieldMetadata(number, proto_type, map_types, group, wraps)
+            "betterproto": FieldMetadata(
+                number, proto_type, map_types, group, wraps, optional
+            )
         },
     )
 
@@ -620,7 +624,8 @@ class Message(ABC):
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            if self.__raw_get(field_name) != PLACEHOLDER:
+            value = self.__raw_get(field_name)
+            if value != PLACEHOLDER and not (meta.optional and value is None):
                 # Found a non-sentinel value
                 all_sentinel = False
 
@@ -1043,7 +1048,6 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
-            field_is_optional = defaults[field_name] is type(None)
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
@@ -1133,7 +1137,7 @@ class Message(ABC):
                             output[cased_name] = [enum_class(value).name]
                     elif value is None:
                         output[cased_name] = None
-                    elif field_is_optional:
+                    elif meta.optional:
                         enum_class = field_types[field_name].__args__[0]
                         output[cased_name] = enum_class(value).name
                     else:
