@@ -1,6 +1,7 @@
 # Better Protobuf / gRPC Support for Python
 
 ![](https://github.com/danielgtaylor/python-betterproto/workflows/CI/badge.svg)
+> :octocat: If you're reading this on github, please be aware that it might mention unreleased features! See the latest released README on [pypi](https://pypi.org/project/betterproto/).
 
 This project aims to provide an improved experience when using Protobuf / gRPC in a modern Python environment by making use of modern language features and generating readable, understandable, idiomatic Python code. It will not support legacy features or environments (e.g. Protobuf 2). The following are supported:
 
@@ -159,6 +160,12 @@ service Echo {
 }
 ```
 
+Generate echo proto file:
+
+```
+python -m grpc_tools.protoc -I . --python_betterproto_out=. echo.proto
+```
+
 A client can be implemented as follows:
 ```python
 import asyncio
@@ -190,6 +197,37 @@ which would output
 EchoResponse(values=['hello', 'hello'])
 EchoStreamResponse(value='hello')
 EchoStreamResponse(value='hello')
+```
+
+This project also produces server-facing stubs that can be used to implement a Python
+gRPC server.
+To use them, simply subclass the base class in the generated files and override the
+service methods:
+
+```python
+import asyncio
+from echo import EchoBase, EchoResponse, EchoStreamResponse
+from grpclib.server import Server
+from typing import AsyncIterator
+
+
+class EchoService(EchoBase):
+    async def echo(self, value: str, extra_times: int) -> "EchoResponse":
+        return EchoResponse([value for _ in range(extra_times)])
+
+    async def echo_stream(self, value: str, extra_times: int) -> AsyncIterator["EchoStreamResponse"]:
+        for _ in range(extra_times):
+            yield EchoStreamResponse(value)
+
+
+async def main():
+    server = Server([EchoService()])
+    await server.start("127.0.0.1", 50051)
+    await server.wait_closed()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
 ```
 
 ### JSON
@@ -413,9 +451,9 @@ Assuming your `google.protobuf` source files (included with all releases of `pro
 
 ```sh
 protoc \
-    --plugin=protoc-gen-custom=betterproto/plugin.py \
+    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py \
     --custom_opt=INCLUDE_GOOGLE \
-    --custom_out=betterproto/lib \
+    --custom_out=src/betterproto/lib \
     -I /usr/local/include/ \
     /usr/local/include/google/protobuf/*.proto
 ```
