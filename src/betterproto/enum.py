@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NoReturn, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, NoReturn, Optional, Tuple, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
@@ -20,7 +20,7 @@ class EnumType(type):
     _member_map_: "Mapping[str, Enum]"
 
     def __new__(
-        mcs, name: str, bases: tuple[type, ...], namespace: dict[str, Any]
+        mcs, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any]
     ) -> "Self":
         value_map = {}
         member_map = {}
