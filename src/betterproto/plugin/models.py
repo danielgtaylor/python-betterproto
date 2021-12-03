@@ -59,8 +59,7 @@ from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 import re
 import textwrap
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Text, Type, Union
-import sys
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
 
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
@@ -460,7 +459,7 @@ class FieldCompiler(MessageCompiler):
         )
 
     @property
-    def default_value_string(self) -> Union[Text, None, float, int]:
+    def default_value_string(self) -> str:
         """Python representation of the default proto value."""
         if self.repeated:
             return "[]"
@@ -474,6 +473,14 @@ class FieldCompiler(MessageCompiler):
             return '""'
         elif self.py_type == "bytes":
             return 'b""'
+        elif self.field_type == "enum":
+            enum_proto_obj_name = self.proto_obj.type_name.split(".").pop()
+            enum = next(
+                e
+                for e in self.output_file.enums
+                if e.proto_obj.name == enum_proto_obj_name
+            )
+            return enum.default_value_string
         else:
             # Message type
             return "None"
