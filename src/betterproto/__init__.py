@@ -145,6 +145,8 @@ class FieldMetadata:
     group: Optional[str] = None
     # Describes the wrapped type (e.g. when using google.protobuf.BoolValue)
     wraps: Optional[str] = None
+    # Is the field optional
+    optional: Optional[bool] = False
 
     @staticmethod
     def get(field: dataclasses.Field) -> "FieldMetadata":
@@ -165,7 +167,9 @@ def dataclass_field(
     return dataclasses.field(
         default=None if optional else PLACEHOLDER,
         metadata={
-            "betterproto": FieldMetadata(number, proto_type, map_types, group, wraps)
+            "betterproto": FieldMetadata(
+                number, proto_type, map_types, group, wraps, optional
+            )
         },
     )
 
@@ -620,7 +624,8 @@ class Message(ABC):
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            if self.__raw_get(field_name) != PLACEHOLDER:
+            value = self.__raw_get(field_name)
+            if value != PLACEHOLDER and not (meta.optional and value is None):
                 # Found a non-sentinel value
                 all_sentinel = False
 
@@ -1043,7 +1048,6 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
-            field_is_optional = defaults[field_name] is type(None)
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
@@ -1082,7 +1086,8 @@ class Message(ABC):
                     if value or include_default_values:
                         output[cased_name] = value
                 elif value is None:
-                    output[cased_name] = None
+                    if include_default_values:
+                        output[cased_name] = value
                 elif (
                     value._serialized_on_wire
                     or include_default_values
@@ -1109,7 +1114,8 @@ class Message(ABC):
                     if field_is_repeated:
                         output[cased_name] = [str(n) for n in value]
                     elif value is None:
-                        output[cased_name] = value
+                        if include_default_values:
+                            output[cased_name] = value
                     else:
                         output[cased_name] = str(value)
                 elif meta.proto_type == TYPE_BYTES:
@@ -1117,8 +1123,8 @@ class Message(ABC):
                         output[cased_name] = [
                             b64encode(b).decode("utf8") for b in value
                         ]
-                    elif value is None:
-                        output[cased_name] = None
+                    elif value is None and include_default_values:
+                        output[cased_name] = value
                     else:
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
@@ -1132,8 +1138,9 @@ class Message(ABC):
                             # transparently upgrade single value to repeated
                             output[cased_name] = [enum_class(value).name]
                     elif value is None:
-                        output[cased_name] = None
-                    elif field_is_optional:
+                        if include_default_values:
+                            output[cased_name] = value
+                    elif meta.optional:
                         enum_class = field_types[field_name].__args__[0]
                         output[cased_name] = enum_class(value).name
                     else:
@@ -1173,9 +1180,6 @@ class Message(ABC):
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
-                    if value[key] is None and self._get_field_default(key) == None:
-                        # Setting an optional value to None.
-                        setattr(self, field_name, None)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
                         if cls == datetime:

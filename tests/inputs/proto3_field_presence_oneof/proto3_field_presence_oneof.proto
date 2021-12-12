@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+message Test {
+    oneof kind {
+        Nested nested = 1;
+        WithOptional with_optional = 2;
+    }
+}
+
+message InnerNested {
+    optional bool a = 1;
+}
+
+message Nested {
+    InnerNested inner = 1;
+}
+
+message WithOptional {
+    optional bool b = 2;
+}
