@@ -13,7 +13,7 @@ from betterproto.lib.google.protobuf.compiler import (
 import itertools
 import pathlib
 import sys
-from typing import Iterator, List, Tuple, TYPE_CHECKING, Union
+from typing import Iterator, List, Set, Tuple, TYPE_CHECKING, Union
 from .compiler import outputfile_compiler
 from .models import (
     EnumDefinitionCompiler,
@@ -38,7 +38,7 @@ def traverse(
 ) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List["Descriptor"], prefix=""
+        path: List[int], items: List["EnumDescriptorProto"], prefix=""
     ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.

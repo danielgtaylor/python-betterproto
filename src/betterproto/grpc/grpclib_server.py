@@ -1,5 +1,5 @@
 from abc import ABC
-from collections import AsyncIterable
+from collections.abc import AsyncIterable
 from typing import Callable, Any, Dict
 
 import grpclib

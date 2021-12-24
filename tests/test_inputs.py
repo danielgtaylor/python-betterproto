@@ -1,10 +1,11 @@
 import importlib
 import json
+import math
 import os
 import sys
 from collections import namedtuple
 from types import ModuleType
-from typing import Set
+from typing import Any, Dict, List, Set, Tuple
 
 import pytest
 
@@ -28,7 +29,12 @@ from google.protobuf.json_format import Parse
 
 
 class TestCases:
-    def __init__(self, path, services: Set[str], xfail: Set[str]):
+    def __init__(
+        self,
+        path,
+        services: Set[str],
+        xfail: Set[str],
+    ):
         _all = set(get_directories(path)) - {"__pycache__"}
         _services = services
         _messages = (_all - services) - {"__pycache__"}
@@ -69,6 +75,55 @@ def module_has_entry_point(module: ModuleType):
     return any(hasattr(module, attr) for attr in ["Test", "TestStub"])
 
 
+def list_replace_nans(items: List) -> List[Any]:
+    """Replace float("nan") in a list with the string "NaN"
+
+    Parameters
+    ----------
+    items : List
+            List to update
+
+    Returns
+    -------
+    List[Any]
+        Updated list
+    """
+    result = []
+    for item in items:
+        if isinstance(item, list):
+            result.append(list_replace_nans(item))
+        elif isinstance(item, dict):
+            result.append(dict_replace_nans(item))
+        elif isinstance(item, float) and math.isnan(item):
+            result.append(betterproto.NAN)
+    return result
+
+
+def dict_replace_nans(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
+    """Replace float("nan") in a dictionary with the string "NaN"
+
+    Parameters
+    ----------
+    input_dict : Dict[Any, Any]
+            Dictionary to update
+
+    Returns
+    -------
+    Dict[Any, Any]
+        Updated dictionary
+    """
+    result = {}
+    for key, value in input_dict.items():
+        if isinstance(value, dict):
+            value = dict_replace_nans(value)
+        elif isinstance(value, list):
+            value = list_replace_nans(value)
+        elif isinstance(value, float) and math.isnan(value):
+            value = betterproto.NAN
+        result[key] = value
+    return result
+
+
 @pytest.fixture
 def test_data(request):
     test_case_name = request.param
@@ -81,7 +136,6 @@ def test_data(request):
     reference_module_root = os.path.join(
         *reference_output_package.split("."), test_case_name
     )
-
     sys.path.append(reference_module_root)
 
     plugin_module = importlib.import_module(f"{plugin_output_package}.{test_case_name}")
@@ -126,13 +180,18 @@ def test_message_json(repeat, test_data: TestData) -> None:
     plugin_module, _, json_data = test_data
 
     for _ in range(repeat):
-        for json_sample in json_data:
+        for sample in json_data:
+            if sample.belongs_to(test_input_config.non_symmetrical_json):
+                continue
+
             message: betterproto.Message = plugin_module.Test()
 
-            message.from_json(json_sample)
+            message.from_json(sample.json)
             message_json = message.to_json(0)
 
-            assert json.loads(message_json) == json.loads(json_sample)
+            assert dict_replace_nans(json.loads(message_json)) == dict_replace_nans(
+                json.loads(sample.json)
+            )
 
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
@@ -144,26 +203,25 @@ def test_service_can_be_instantiated(test_data: TestData) -> None:
 def test_binary_compatibility(repeat, test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
 
-    for json_sample in json_data:
-        reference_instance = Parse(json_sample, reference_module().Test())
+    for sample in json_data:
+        reference_instance = Parse(sample.json, reference_module().Test())
         reference_binary_output = reference_instance.SerializeToString()
 
         for _ in range(repeat):
             plugin_instance_from_json: betterproto.Message = (
-                plugin_module.Test().from_json(json_sample)
+                plugin_module.Test().from_json(sample.json)
             )
             plugin_instance_from_binary = plugin_module.Test.FromString(
                 reference_binary_output
             )
 
-            # # Generally this can't be relied on, but here we are aiming to match the
-            # # existing Python implementation and aren't doing anything tricky.
-            # # https://developers.google.com/protocol-buffers/docs/encoding#implications
+            # Generally this can't be relied on, but here we are aiming to match the
+            # existing Python implementation and aren't doing anything tricky.
+            # https://developers.google.com/protocol-buffers/docs/encoding#implications
             assert bytes(plugin_instance_from_json) == reference_binary_output
             assert bytes(plugin_instance_from_binary) == reference_binary_output
 
             assert plugin_instance_from_json == plugin_instance_from_binary
-            assert (
+            assert dict_replace_nans(
                 plugin_instance_from_json.to_dict()
-                == plugin_instance_from_binary.to_dict()
-            )
+            ) == dict_replace_nans(plugin_instance_from_binary.to_dict())
