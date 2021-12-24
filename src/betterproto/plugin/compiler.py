@@ -33,5 +33,5 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
 
     return black.format_str(
         template.render(output_file=output_file),
-        mode=black.FileMode(target_versions={black.TargetVersion.PY37}),
+        mode=black.Mode(),
     )
