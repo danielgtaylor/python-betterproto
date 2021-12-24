@@ -28,10 +28,10 @@ class {{ enum.py_name }}(betterproto.Enum):
 
     {% endif %}
     {% for entry in enum.entries %}
+    {{ entry.name }} = {{ entry.value }}
         {% if entry.comment %}
 {{ entry.comment }}
         {% endif %}
-    {{ entry.name }} = {{ entry.value }}
     {% endfor %}
 
 
