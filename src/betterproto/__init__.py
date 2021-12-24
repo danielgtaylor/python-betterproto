@@ -1,5 +1,5 @@
 import dataclasses
-import enum
+import enum as builtin_enum
 import inspect
 import json
 import math
@@ -28,8 +28,8 @@ from typing import (
 from ._types import T
 from ._version import __version__
 from .casing import camel_case, safe_snake_case, snake_case
-from .enum import Enum
-from .grpc.grpclib_client import ServiceStub
+from .enum import Enum as Enum
+from .grpc.grpclib_client import ServiceStub as ServiceStub
 
 
 # Proto 3 data types
@@ -122,7 +122,7 @@ NEG_INFINITY = "-Infinity"
 NAN = "NaN"
 
 
-class Casing(enum.Enum):
+class Casing(builtin_enum.Enum):
     """Casing constants for serialization."""
 
     CAMEL = camel_case  #: A camelCase sterilization function.
@@ -1144,7 +1144,9 @@ class Message(ABC):
                         enum_cls: Enum = self._betterproto.cls_by_field[field_name]
                         if isinstance(v, list):
                             v = [enum_cls.from_string(e) for e in v]
-                        else:
+                        elif isinstance(v, int):
+                            v = enum_cls.try_value(v)
+                        elif isinstance(v, str):
                             v = enum_cls.from_string(v)
                     elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
                         if isinstance(value[key], list):
