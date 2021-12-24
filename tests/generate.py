@@ -60,12 +60,14 @@ async def generate(whitelist: Set[str], verbose: bool):
         if result != 0:
             failed_test_cases.append(test_case_name)
 
-    if failed_test_cases:
+    if len(failed_test_cases) > 0:
         sys.stderr.write(
             "\n\033[31;1;4mFailed to generate the following test cases:\033[0m\n"
         )
         for failed_test_case in failed_test_cases:
             sys.stderr.write(f"- {failed_test_case}\n")
+
+        sys.exit(1)
 
 
 async def generate_test_case_output(
@@ -92,21 +94,41 @@ async def generate_test_case_output(
         protoc(test_case_input_path, test_case_output_path_betterproto, False),
     )
 
-    message = f"Generated output for {test_case_name!r}"
-    if verbose:
-        print(f"\033[31;1;4m{message}\033[0m")
-        if ref_out:
-            sys.stdout.buffer.write(ref_out)
-        if ref_err:
-            sys.stderr.buffer.write(ref_err)
-        if plg_out:
-            sys.stdout.buffer.write(plg_out)
-        if plg_err:
-            sys.stderr.buffer.write(plg_err)
-        sys.stdout.buffer.flush()
-        sys.stderr.buffer.flush()
+    if ref_code == 0:
+        print(f"\033[31;1;4mGenerated reference output for {test_case_name!r}\033[0m")
     else:
-        print(message)
+        print(
+            f"\033[31;1;4mFailed to generate reference output for {test_case_name!r}\033[0m"
+        )
+
+    if verbose:
+        if ref_out:
+            print("Reference stdout:")
+            sys.stdout.buffer.write(ref_out)
+            sys.stdout.buffer.flush()
+
+        if ref_err:
+            print("Reference stderr:")
+            sys.stderr.buffer.write(ref_err)
+            sys.stderr.buffer.flush()
+
+    if plg_code == 0:
+        print(f"\033[31;1;4mGenerated plugin output for {test_case_name!r}\033[0m")
+    else:
+        print(
+            f"\033[31;1;4mFailed to generate plugin output for {test_case_name!r}\033[0m"
+        )
+
+    if verbose:
+        if plg_out:
+            print("Plugin stdout:")
+            sys.stdout.buffer.write(plg_out)
+            sys.stdout.buffer.flush()
+
+        if plg_err:
+            print("Plugin stderr:")
+            sys.stderr.buffer.write(plg_err)
+            sys.stderr.buffer.flush()
 
     return max(ref_code, plg_code)
 
