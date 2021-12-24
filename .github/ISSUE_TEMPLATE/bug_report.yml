@@ -6,8 +6,9 @@ body:
   - type: markdown
     attributes:
       value: >
-        Thanks for taking the time to fill out a bug.
-        The slack https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ is a better place for general questions than here.
+        Thanks for taking the time to fill out a bug report!
+        
+        If you're not sure it's a bug and you just have a question, the [community Slack channel](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ) is a better place for general questions than a GitHub issue.
 
   - type: input
     attributes:
