@@ -31,6 +31,7 @@ class {{ enum.py_name }}(betterproto.Enum):
     {{ entry.name }} = {{ entry.value }}
         {% if entry.comment %}
 {{ entry.comment }}
+
         {% endif %}
     {% endfor %}
 
@@ -48,6 +49,7 @@ class {{ message.py_name }}(betterproto.Message):
     {{ field.get_field_string() }}
         {% if field.comment %}
 {{ field.comment }}
+
         {% endif %}
     {% endfor %}
     {% if not message.fields %}
