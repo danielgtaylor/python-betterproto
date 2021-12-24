@@ -97,7 +97,7 @@ class EnumType(type):
         return isinstance(member, cls) and member.name in cls._member_map_
 
     @property
-    def __members__(cls: Type[E]) -> MappingProxyType[str, E]:
+    def __members__(cls: Type[E]) -> "MappingProxyType[str, E]":
         return MappingProxyType(cls._member_map_)
 
 
