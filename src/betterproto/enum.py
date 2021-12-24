@@ -1,5 +1,5 @@
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NoReturn, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, Optional, TypeVar, Type
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping
@@ -64,7 +64,7 @@ class EnumType(type):
 
         return cls
 
-    def __call__(cls: type[E], value: int) -> E:
+    def __call__(cls: Type[E], value: int) -> E:
         try:
             return cls._value_map_[value]
         except (KeyError, TypeError):
@@ -73,10 +73,10 @@ class EnumType(type):
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__!r}>"
 
-    def __iter__(cls: type[E]) -> "Generator[E, None, None]":
+    def __iter__(cls: Type[E]) -> "Generator[E, None, None]":
         yield from cls._member_map_.values()
 
-    def __reversed__(cls: type[E]) -> "Generator[E, None, None]":
+    def __reversed__(cls: Type[E]) -> "Generator[E, None, None]":
         yield from reversed(
             tuple(cls._member_map_.values())
         )  # can remove tuple cast after 3.7
@@ -84,7 +84,7 @@ class EnumType(type):
     def __len__(cls) -> int:
         return len(cls._member_map_)
 
-    def __getitem__(cls: type[E], key: str) -> E:
+    def __getitem__(cls: Type[E], key: str) -> E:
         return cls._member_map_[key]
 
     def __setattr__(cls, name: str, value: Any) -> NoReturn:
@@ -97,7 +97,7 @@ class EnumType(type):
         return isinstance(member, cls) and member.name in cls._member_map_
 
     @property
-    def __members__(cls: type[E]) -> MappingProxyType[str, E]:
+    def __members__(cls: Type[E]) -> MappingProxyType[str, E]:
         return MappingProxyType(cls._member_map_)
 
 
