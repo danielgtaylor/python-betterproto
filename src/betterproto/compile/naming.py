@@ -1,5 +1,3 @@
-from typing import Iterable, List
-
 from betterproto import casing
 
 
