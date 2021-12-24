@@ -45,10 +45,10 @@ class {{ message.py_name }}(betterproto.Message):
 
     {% endif %}
     {% for field in message.fields %}
+    {{ field.get_field_string() }}
         {% if field.comment %}
 {{ field.comment }}
         {% endif %}
-    {{ field.get_field_string() }}
     {% endfor %}
     {% if not message.fields %}
     pass
