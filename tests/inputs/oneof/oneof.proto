@@ -1,5 +1,9 @@
 syntax = "proto3";
 
+message MixedDrink {
+  int32 shots = 1;
+}
+
 message Test {
   oneof foo {
     int32 pitied = 1;
@@ -11,6 +15,7 @@ message Test {
   oneof bar {
     int32 drinks = 11;
     string bar_name = 12;
+    MixedDrink mixed_drink = 13;
   }
 }
 
