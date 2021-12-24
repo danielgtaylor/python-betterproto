@@ -1,7 +1,8 @@
 import betterproto
 from dataclasses import dataclass
 from typing import Optional, List, Dict
-from datetime import datetime, timedelta
+from datetime import datetime
+from inspect import signature
 
 
 def test_has_field():
@@ -476,3 +477,10 @@ def test_iso_datetime_list():
 
     msg.from_dict({"timestamps": iso_candidates})
     assert all([isinstance(item, datetime) for item in msg.timestamps])
+
+
+def test_enum_service_argument__expected_default_value():
+    from tests.output_betterproto.service.service import ThingType, TestStub
+
+    sig = signature(TestStub.do_thing)
+    assert sig.parameters["type"].default == ThingType.UNKNOWN
