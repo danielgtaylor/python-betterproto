@@ -448,8 +448,6 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def optional(self) -> bool:
-        # TODO: Should proto2 optional fields with kind=Message also be
-        # considered Optional.
         return self.proto_obj.proto3_optional
 
     @property
