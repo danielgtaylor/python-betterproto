@@ -9,13 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0b4] - 202x-xx-xx
 
-### Breaking changes
-- The minimum Python version has been bumped to `3.6.2`
+
+- **Breaking**: the minimum Python version has been bumped to `3.6.2`
+
+- Always add `AsyncIterator` to imports if there are services [#264](https://github.com/danielgtaylor/python-betterproto/pull/264)
+- Allow parsing of messages from `ByteStrings` [#266](https://github.com/danielgtaylor/python-betterproto/pull/266)
 
 - Fix compilation of fields with name identical to their type [#294](https://github.com/danielgtaylor/python-betterproto/pull/294)
 - Fix default values for enum service args [#299](https://github.com/danielgtaylor/python-betterproto/pull/299)
-- Always add `AsyncIterator` to imports if there are services [#264](https://github.com/danielgtaylor/python-betterproto/pull/264)
-- Allow parsing of messages from `ByteStrings` [#266](https://github.com/danielgtaylor/python-betterproto/pull/266)
 
 ## [2.0.0b3] - 2021-04-07
 
