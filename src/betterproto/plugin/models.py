@@ -539,10 +539,10 @@ class FieldCompiler(MessageCompiler):
         if self.use_builtins:
             py_type = f"builtins.{py_type}"
         if self.repeated:
-            return f"List[{self.py_type}]"
+            return f"List[{py_type}]"
         if self.optional:
-            return f"Optional[{self.py_type}]"
-        return self.py_type
+            return f"Optional[{py_type}]"
+        return py_type
 
 
 @dataclass
