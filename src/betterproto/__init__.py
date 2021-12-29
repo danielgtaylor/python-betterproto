@@ -724,11 +724,13 @@ class Message(ABC):
         It may be initialized multiple times in a multi-threaded environment,
         but that won't affect the correctness.
         """
-        meta = getattr(self.__class__, "_betterproto_meta", None)
-        if not meta:
+        cls = self.__class__
+        try:
+            return cls._betterproto_meta
+        except AttributeError:
             meta = ProtoClassMetadata(self.__class__)
-            self.__class__._betterproto_meta = meta  # type: ignore
-        return meta
+            cls._betterproto_meta = meta  # type: ignore
+            return meta
 
     def __bytes__(self) -> bytes:
         """
@@ -846,7 +848,7 @@ class Message(ABC):
     @classmethod
     def _type_hints(cls) -> Dict[str, Type]:
         module = sys.modules[cls.__module__]
-        return get_type_hints(cls, vars(module))
+        return get_type_hints(cls, module.__dict__, {})
 
     @classmethod
     def _cls_for(cls, field: dataclasses.Field, index: int = 0) -> Type:
