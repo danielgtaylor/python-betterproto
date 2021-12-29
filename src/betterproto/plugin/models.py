@@ -389,6 +389,8 @@ class FieldCompiler(MessageCompiler):
         args = []
         if self.field_wraps:
             args.append(f"wraps={self.field_wraps}")
+        if self.optional:
+            args.append(f"optional=True")
         return args
 
     @property
@@ -445,6 +447,10 @@ class FieldCompiler(MessageCompiler):
         )
 
     @property
+    def optional(self) -> bool:
+        return self.proto_obj.proto3_optional
+
+    @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
         return self.annotation.startswith(("List[", "Dict["))
@@ -463,6 +469,8 @@ class FieldCompiler(MessageCompiler):
         """Python representation of the default proto value."""
         if self.repeated:
             return "[]"
+        if self.optional:
+            return "None"
         if self.py_type == "int":
             return "0"
         if self.py_type == "float":
@@ -530,6 +538,8 @@ class FieldCompiler(MessageCompiler):
             py_type = f"builtins.{py_type}"
         if self.repeated:
             return f"List[{py_type}]"
+        if self.optional:
+            return f"Optional[{py_type}]"
         return py_type
 
 

@@ -66,4 +66,4 @@ jobs:
 
       - name: Execute test suite
         shell: bash
-        run: poetry run pytest tests/
+        run: poetry run python -m pytest tests/
