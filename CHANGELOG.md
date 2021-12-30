@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
-## [2.0.0b4] - 202x-xx-xx
+## [2.0.0b4] - 2021-12-30
 
 
 - **Breaking**: the minimum Python version has been bumped to `3.6.2`
 
 - Always add `AsyncIterator` to imports if there are services [#264](https://github.com/danielgtaylor/python-betterproto/pull/264)
 - Allow parsing of messages from `ByteStrings` [#266](https://github.com/danielgtaylor/python-betterproto/pull/266)
+- Add support for proto3 optional [#281](https://github.com/danielgtaylor/python-betterproto/pull/281)
 
 - Fix compilation of fields with name identical to their type [#294](https://github.com/danielgtaylor/python-betterproto/pull/294)
 - Fix default values for enum service args [#299](https://github.com/danielgtaylor/python-betterproto/pull/299)
