@@ -846,7 +846,7 @@ class Message(ABC):
     @classmethod
     def _type_hints(cls) -> Dict[str, Type]:
         module = sys.modules[cls.__module__]
-        return get_type_hints(cls, vars(module))
+        return get_type_hints(cls, module.__dict__, {})
 
     @classmethod
     def _cls_for(cls, field: dataclasses.Field, index: int = 0) -> Type:
