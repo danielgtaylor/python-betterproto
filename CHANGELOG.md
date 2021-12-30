@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow parsing of messages from `ByteStrings` [#266](https://github.com/danielgtaylor/python-betterproto/pull/266)
 - Add support for proto3 optional [#281](https://github.com/danielgtaylor/python-betterproto/pull/281)
 
-- Fix compilation of fields with name identical to their type [#294](https://github.com/danielgtaylor/python-betterproto/pull/294)
+- Fix compilation of fields with names identical to builtin types [#294](https://github.com/danielgtaylor/python-betterproto/pull/294)
 - Fix default values for enum service args [#299](https://github.com/danielgtaylor/python-betterproto/pull/299)
 
 ## [2.0.0b3] - 2021-04-07
