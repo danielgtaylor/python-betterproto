@@ -15,10 +15,10 @@ class ServiceBase(ABC):
         self,
         handler: Callable,
         stream: grpclib.server.Stream,
-        request_kwargs: Dict[str, Any],
+        request: Any,
     ) -> None:
 
-        response_iter = handler(**request_kwargs)
+        response_iter = handler(request)
         # check if response is actually an AsyncIterator
         # this might be false if the method just returns without
         # yielding at least once

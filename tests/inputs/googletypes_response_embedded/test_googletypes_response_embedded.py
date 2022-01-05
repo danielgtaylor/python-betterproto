@@ -1,7 +1,7 @@
 import pytest
-
 from tests.mocks import MockChannel
 from tests.output_betterproto.googletypes_response_embedded import (
+    Input,
     Output,
     TestStub,
 )
@@ -26,7 +26,7 @@ async def test_service_passes_through_unwrapped_values_embedded_in_response():
     )
 
     service = TestStub(MockChannel(responses=[output]))
-    response = await service.get_output()
+    response = await service.get_output(Input())
 
     assert response.double_value == 10.0
     assert response.float_value == 12.0
