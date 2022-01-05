@@ -111,7 +111,7 @@ omit = ["betterproto/tests/*"]
 legacy_tox_ini = """
 [tox]
 isolated_build = true
-envlist = py36, py37, py38
+envlist = py36, py37, py38, py310
 
 [testenv]
 whitelist_externals = poetry
