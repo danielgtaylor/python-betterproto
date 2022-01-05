@@ -155,3 +155,39 @@ Upgrading:
 - Create a new *empty* directory, e.g. ``generated`` or ``lib/generated/proto`` etc.
 - Regenerate your python files into this directory
 - Update import statements, e.g. ``import ExampleMessage from generated``
+
+
+[2.0.0b4] to [2.x.x]
+--------------------
+
+Client and Service Stubs
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Client and Service Stubs no longer pack and unpack the input message fields as kwargs.
+Update your client calls and server handlers as follows:
+
+Clients before:
+
+.. code-block:: python
+
+    response = await service.echo(value="hello", extra_times=1)
+
+Clients after:
+
+.. code-block:: python
+
+    response = await service.echo(EchoRequest(value="hello", extra_times=1))
+
+Servers before:
+
+.. code-block:: python
+
+    async def echo(self, value: str, extra_times: int) -> "EchoResponse":
+
+Servers after:
+
+.. code-block:: python
+
+    async def echo(self, echo_request: EchoRequest) -> "EchoResponse":
+        # Use echo_request.value
+        # Use echo_request.extra_times
