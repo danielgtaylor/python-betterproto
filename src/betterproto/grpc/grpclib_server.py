@@ -1,6 +1,6 @@
 from abc import ABC
 from collections.abc import AsyncIterable
-from typing import Callable, Any, Dict
+from typing import Any, Callable, Dict
 
 import grpclib
 import grpclib.server

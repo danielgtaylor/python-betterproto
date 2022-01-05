@@ -1,8 +1,9 @@
-import betterproto
 from dataclasses import dataclass
-from typing import Optional, List, Dict
 from datetime import datetime
-from inspect import signature
+from inspect import Parameter, signature
+from typing import Dict, List, Optional
+
+import betterproto
 
 
 def test_has_field():

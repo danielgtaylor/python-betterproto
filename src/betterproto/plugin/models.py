@@ -31,13 +31,15 @@ reference to `A` to `B`'s `fields` attribute.
 
 
 import builtins
+import re
+import textwrap
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
+
 import betterproto
 from betterproto import which_one_of
 from betterproto.casing import sanitize_name
-from betterproto.compile.importing import (
-    get_type_reference,
-    parse_source_type_name,
-)
+from betterproto.compile.importing import get_type_reference, parse_source_type_name
 from betterproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -46,20 +48,14 @@ from betterproto.compile.naming import (
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
-    FileDescriptorProto,
-    MethodDescriptorProto,
     Field,
     FieldDescriptorProto,
-    FieldDescriptorProtoType,
     FieldDescriptorProtoLabel,
+    FieldDescriptorProtoType,
+    FileDescriptorProto,
+    MethodDescriptorProto,
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
-
-
-import re
-import textwrap
-from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
 
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
@@ -68,7 +64,6 @@ from ..compile.naming import (
     pythonize_field_name,
     pythonize_method_name,
 )
-
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
