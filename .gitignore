@@ -17,3 +17,7 @@ output
 .venv
 .asv
 venv
+
+# Ignore vim swp files
+*.swp
+
