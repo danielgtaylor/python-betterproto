@@ -1,5 +1,8 @@
+import enum
 import keyword
 import re
+
+__all__ = ("Casing",)
 
 # Word delimiters and symbols that will not be preserved when re-casing.
 # language=PythonRegExp
@@ -136,3 +139,10 @@ def lowercase_first(value: str) -> str:
 def sanitize_name(value: str) -> str:
     # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
     return f"{value}_" if keyword.iskeyword(value) else value
+
+
+class Casing(enum.Enum):
+    """Casing constants for serialization."""
+
+    CAMEL = camel_case  #: A camelCase sterilization function.
+    SNAKE = snake_case  #: A snake_case sterilization function.

@@ -27,6 +27,8 @@ _MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
 _MessageLike = Union[T, ST]
 _MessageSource = Union[Iterable[ST], AsyncIterable[ST]]
 
+__all__ = ("ServiceStub",)
+
 
 class ServiceStub(ABC):
     """
