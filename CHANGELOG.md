@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [Unreleased]
+
+- **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters.
+
+    Update your client calls and server handlers as follows:
+
+    Clients before:
+    ```py
+    response = await service.echo(value="hello", extra_times=1)
+    ```
+    Clients after:
+    ```py
+    response = await service.echo(EchoRequest(value="hello", extra_times=1))
+    ```
+    Servers before:
+    ```py
+    async def echo(self, value: str, extra_times: int) -> EchoResponse:
+    ```
+    Servers after:
+    ```py
+    async def echo(self, echo_request: EchoRequest) -> EchoResponse:
+        # Use echo_request.value
+        # Use echo_request.extra_times
+    ```
+
+
 ## [2.0.0b4] - 2022-01-03
 
 - **Breaking**: the minimum Python version has been bumped to `3.6.2`

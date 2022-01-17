@@ -1,23 +1,24 @@
 import asyncio
 import sys
 
+import grpclib
+import grpclib.metadata
+import grpclib.server
+import pytest
+from betterproto.grpc.util.async_channel import AsyncChannel
+from grpclib.testing import ChannelFor
 from tests.output_betterproto.service.service import (
     DoThingRequest,
     DoThingResponse,
     GetThingRequest,
-    TestStub as ThingServiceClient,
 )
-import grpclib
-import grpclib.metadata
-import grpclib.server
-from grpclib.testing import ChannelFor
-import pytest
-from betterproto.grpc.util.async_channel import AsyncChannel
+from tests.output_betterproto.service.service import TestStub as ThingServiceClient
+
 from .thing_service import ThingService
 
 
-async def _test_client(client, name="clean room", **kwargs):
-    response = await client.do_thing(name=name)
+async def _test_client(client: ThingServiceClient, name="clean room", **kwargs):
+    response = await client.do_thing(DoThingRequest(name=name))
     assert response.names == [name]
 
 
@@ -62,7 +63,7 @@ async def test_trailer_only_error_unary_unary(
     )
     async with ChannelFor([service]) as channel:
         with pytest.raises(grpclib.exceptions.GRPCError) as e:
-            await ThingServiceClient(channel).do_thing(name="something")
+            await ThingServiceClient(channel).do_thing(DoThingRequest(name="something"))
         assert e.value.status == grpclib.Status.UNAUTHENTICATED
 
 
@@ -80,7 +81,7 @@ async def test_trailer_only_error_stream_unary(
     async with ChannelFor([service]) as channel:
         with pytest.raises(grpclib.exceptions.GRPCError) as e:
             await ThingServiceClient(channel).do_many_things(
-                request_iterator=[DoThingRequest(name="something")]
+                do_thing_request_iterator=[DoThingRequest(name="something")]
             )
             await _test_client(ThingServiceClient(channel))
         assert e.value.status == grpclib.Status.UNAUTHENTICATED
@@ -178,7 +179,9 @@ async def test_async_gen_for_unary_stream_request():
     async with ChannelFor([ThingService()]) as channel:
         client = ThingServiceClient(channel)
         expected_versions = [5, 4, 3, 2, 1]
-        async for response in client.get_thing_versions(name=thing_name):
+        async for response in client.get_thing_versions(
+            GetThingRequest(name=thing_name)
+        ):
             assert response.name == thing_name
             assert response.version == expected_versions.pop()
 

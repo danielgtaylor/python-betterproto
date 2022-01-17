@@ -1,8 +1,9 @@
-import betterproto
 from dataclasses import dataclass
-from typing import Optional, List, Dict
 from datetime import datetime
-from inspect import signature
+from inspect import Parameter, signature
+from typing import Dict, List, Optional
+
+import betterproto
 
 
 def test_has_field():
@@ -349,10 +350,8 @@ def test_recursive_message():
 
 
 def test_recursive_message_defaults():
-    from tests.output_betterproto.recursivemessage import (
-        Test as RecursiveMessage,
-        Intermediate,
-    )
+    from tests.output_betterproto.recursivemessage import Intermediate
+    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
 
     msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
 
@@ -479,8 +478,10 @@ def test_iso_datetime_list():
     assert all([isinstance(item, datetime) for item in msg.timestamps])
 
 
-def test_enum_service_argument__expected_default_value():
-    from tests.output_betterproto.service.service import ThingType, TestStub
+def test_service_argument__expected_parameter():
+    from tests.output_betterproto.service.service import TestStub
 
     sig = signature(TestStub.do_thing)
-    assert sig.parameters["type"].default == ThingType.UNKNOWN
+    do_thing_request_parameter = sig.parameters["do_thing_request"]
+    assert do_thing_request_parameter.default is Parameter.empty
+    assert do_thing_request_parameter.annotation == "DoThingRequest"

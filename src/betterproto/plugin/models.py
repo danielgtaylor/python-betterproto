@@ -31,13 +31,15 @@ reference to `A` to `B`'s `fields` attribute.
 
 
 import builtins
+import re
+import textwrap
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
+
 import betterproto
 from betterproto import which_one_of
 from betterproto.casing import sanitize_name
-from betterproto.compile.importing import (
-    get_type_reference,
-    parse_source_type_name,
-)
+from betterproto.compile.importing import get_type_reference, parse_source_type_name
 from betterproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -46,20 +48,14 @@ from betterproto.compile.naming import (
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
-    FileDescriptorProto,
-    MethodDescriptorProto,
     Field,
     FieldDescriptorProto,
-    FieldDescriptorProtoType,
     FieldDescriptorProtoLabel,
+    FieldDescriptorProtoType,
+    FileDescriptorProto,
+    MethodDescriptorProto,
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
-
-
-import re
-import textwrap
-from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
 
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
@@ -68,7 +64,6 @@ from ..compile.naming import (
     pythonize_field_name,
     pythonize_method_name,
 )
-
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
@@ -675,12 +670,8 @@ class ServiceMethodCompiler(ProtoContentBase):
         self.parent.methods.append(self)
 
         # Check for imports
-        if self.py_input_message:
-            for f in self.py_input_message.fields:
-                f.add_imports_to(self.output_file)
         if "Optional" in self.py_output_message_type:
             self.output_file.typing_imports.add("Optional")
-        self.mutable_default_args  # ensure this is called before rendering
 
         # Check for Async imports
         if self.client_streaming:
@@ -693,37 +684,6 @@ class ServiceMethodCompiler(ProtoContentBase):
             self.output_file.typing_imports.add("AsyncIterator")
 
         super().__post_init__()  # check for unset fields
-
-    @property
-    def mutable_default_args(self) -> Dict[str, str]:
-        """Handle mutable default arguments.
-
-        Returns a list of tuples containing the name and default value
-        for arguments to this message who's default value is mutable.
-        The defaults are swapped out for None and replaced back inside
-        the method's body.
-        Reference:
-        https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
-
-        Returns
-        -------
-        Dict[str, str]
-            Name and actual default value (as a string)
-            for each argument with mutable default values.
-        """
-        mutable_default_args = {}
-
-        if self.py_input_message:
-            for f in self.py_input_message.fields:
-                if (
-                    not self.client_streaming
-                    and f.default_value_string != "None"
-                    and f.mutable
-                ):
-                    mutable_default_args[f.py_name] = f.default_value_string
-                    self.output_file.typing_imports.add("Optional")
-
-        return mutable_default_args
 
     @property
     def py_name(self) -> str:
@@ -781,6 +741,17 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports,
             source_type=self.proto_obj.input_type,
         ).strip('"')
+
+    @property
+    def py_input_message_param(self) -> str:
+        """Param name corresponding to py_input_message_type.
+
+        Returns
+        -------
+        str
+            Param name corresponding to py_input_message_type.
+        """
+        return pythonize_field_name(self.py_input_message_type)
 
     @property
     def py_output_message_type(self) -> str:
