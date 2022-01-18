@@ -32,7 +32,6 @@ reference to `A` to `B`'s `fields` attribute.
 
 import builtins
 import betterproto
-from betterproto import which_one_of
 from betterproto.casing import sanitize_name
 from betterproto.compile.importing import (
     get_type_reference,
@@ -355,7 +354,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
         us to tell whether it was set, via the which_one_of interface.
     """
 
-    return which_one_of(proto_field_obj, "oneof_index")[0] == "oneof_index"
+    return proto_field_obj.which_one_of("oneof_index")[0] == "oneof_index"
 
 
 @dataclass
