@@ -1300,7 +1300,6 @@ class Message(ABC):
         return field_name, getattr(self, field_name)
 
 
-serialized_on_wire = None
 # Circular import workaround: google.protobuf depends on base classes defined above.
 from .lib.google.protobuf import (  # noqa
     BoolValue,
