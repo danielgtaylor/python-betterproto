@@ -113,6 +113,7 @@ PROTO_PACKED_TYPES = (
     FieldDescriptorProtoType.TYPE_SINT32,  # 17
     FieldDescriptorProtoType.TYPE_SINT64,  # 18
 )
+UNSAFE_FIELD_NAMES = frozenset(dir(betterproto.Message)) | frozenset(betterproto.Message.__annotations__)
 
 
 def monkey_patch_oneof_index():
@@ -502,7 +503,7 @@ class FieldCompiler(MessageCompiler):
         """Pythonized name."""
         unsafe_name = pythonize_field_name(self.proto_name)
         # rename fields in case they clash with things defined in Message
-        if unsafe_name in dir(betterproto.Message):
+        if unsafe_name in UNSAFE_FIELD_NAMES:
             return f"{unsafe_name}_"
         return unsafe_name
 
