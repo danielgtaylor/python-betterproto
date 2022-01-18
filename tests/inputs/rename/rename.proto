@@ -1,7 +1,9 @@
+syntax = "proto3";
+
 // The fields that have overlapping names with betterproto.Message will be renamed.
 message Test {
-    optional bool parse = 1;
-    optional bool serialized_on_wire = 2;
-    optional bool from_json = 3;
-    optional int32 this = 4;
+    bool parse = 1;
+    bool serialized_on_wire = 2;
+    bool from_json = 3;
+    int32 this = 4;
 }
