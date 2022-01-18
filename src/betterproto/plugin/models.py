@@ -501,7 +501,11 @@ class FieldCompiler(MessageCompiler):
     @property
     def py_name(self) -> str:
         """Pythonized name."""
-        return pythonize_field_name(self.proto_name)
+        unsafe_name = pythonize_field_name(self.proto_name)
+        # rename fields in case they clash with things defined in Message
+        if unsafe_name in dir(betterproto.Message):
+            return f"{unsafe_name}_"
+        return unsafe_name
 
     @property
     def proto_name(self) -> str:
