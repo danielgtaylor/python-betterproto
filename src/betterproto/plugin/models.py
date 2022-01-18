@@ -113,7 +113,9 @@ PROTO_PACKED_TYPES = (
     FieldDescriptorProtoType.TYPE_SINT32,  # 17
     FieldDescriptorProtoType.TYPE_SINT64,  # 18
 )
-UNSAFE_FIELD_NAMES = frozenset(dir(betterproto.Message)) | frozenset(betterproto.Message.__annotations__)
+UNSAFE_FIELD_NAMES = frozenset(dir(betterproto.Message)) | frozenset(
+    betterproto.Message.__annotations__
+)
 
 
 def monkey_patch_oneof_index():
