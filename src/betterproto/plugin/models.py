@@ -524,7 +524,7 @@ class FieldCompiler(MessageCompiler):
                 source_type=self.proto_obj.type_name,
             )
         else:
-            raise NotImplementedError(f"Unknown type {field.type}")
+            raise NotImplementedError(f"Unknown type {self.proto_obj.type}")
 
     @property
     def annotation(self) -> str:
