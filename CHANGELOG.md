@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters.
+- fix: Format field comments also as docstrings (#304) 
+- fix: Fix message text in NotImplementedError (#325)
+- **Breaking**: Client and Service Stubs take 1 request parameter, not one for each field (#311)  
+  Client and Service Stubs no longer pack and unpack the input message fields as parameters.
 
     Update your client calls and server handlers as follows:
 
