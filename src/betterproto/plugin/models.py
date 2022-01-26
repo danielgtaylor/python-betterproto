@@ -142,17 +142,13 @@ def get_comment(
                 sci_loc.leading_comments.strip().replace("\n", ""), width=79 - indent
             )
 
-            if path[-2] == 2 and path[-4] != 6:
-                # This is a field
-                return f"{pad}# " + f"\n{pad}# ".join(lines)
+            # This is a field, message, enum, service, or method
+            if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
+                lines[0] = lines[0].strip('"')
+                return f'{pad}"""{lines[0]}"""'
             else:
-                # This is a message, enum, service, or method
-                if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
-                    lines[0] = lines[0].strip('"')
-                    return f'{pad}"""{lines[0]}"""'
-                else:
-                    joined = f"\n{pad}".join(lines)
-                    return f'{pad}"""\n{pad}{joined}\n{pad}"""'
+                joined = f"\n{pad}".join(lines)
+                return f'{pad}"""\n{pad}{joined}\n{pad}"""'
 
     return ""
 
