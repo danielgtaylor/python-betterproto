@@ -35,4 +35,5 @@ def test_null_fields_json():
         "test6": None,
         "test7": None,
         "test8": None,
+        "test9": None,
     }
