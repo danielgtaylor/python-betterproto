@@ -4,10 +4,10 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Optional, Set, List
+from typing import List, Optional, Set
 
-import typer
 import rich
+import typer
 
 from betterproto.plugin.cli import compile_protobufs, utils
 from tests.util import (

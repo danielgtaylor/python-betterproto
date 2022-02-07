@@ -1,13 +1,12 @@
-import importlib
 import asyncio
-from dataclasses import dataclass
+import importlib
 import os
 import pathlib
-from pathlib import Path
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 from types import ModuleType
 from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
-from typing import Callable, Generator, List, Optional
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -22,7 +21,6 @@ def get_directories(path: Path) -> Generator[str, None, None]:
         yield from directories
 
 
-def get_test_case_json_data(test_case_name: str, *json_file_names: str) -> List[str]:
 async def protoc(
     path: Union[str, Path], output_dir: Union[str, Path], reference: bool = False
 ):
@@ -76,7 +74,9 @@ def get_test_case_json_data(
             continue
         result.append(
             TestCaseJsonFile(
-                test_data_file_path.read_text(), test_case_name, test_data_file_path.name.split(".")[0]
+                test_data_file_path.read_text(),
+                test_case_name,
+                test_data_file_path.name.split(".")[0],
             )
         )
 

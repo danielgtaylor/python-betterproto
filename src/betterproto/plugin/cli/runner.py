@@ -43,25 +43,19 @@ async def compile_protobufs(
     -------
     A of exceptions from protoc.
     """
-    loop = asyncio.get_event_loop()
-
     if use_betterproto:
-        files, errors = await utils.to_thread(protobuf_parser.parse, *files)
+        proto_files, errors = await utils.to_thread(protobuf_parser.parse, *files)
         if errors:
             return errors
         request = CodeGeneratorRequest(
-            proto_file=[
-                FileDescriptorProto().parse(file) for file in files
-            ]
+            proto_file=[FileDescriptorProto().parse(file) for file in proto_files]
         )
 
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
         await asyncio.gather(
-            *(
-                utils.to_thread(write_file(output, file) for file in response.file)
-            )
+            *(utils.to_thread(write_file(output, file) for file in response.file))
         )
 
     else:
@@ -69,7 +63,7 @@ async def compile_protobufs(
             protobuf_parser.run,
             *(f'"{file.as_posix()}"' for file in files),
             proto_path=files[0].parent.as_posix(),
-            python_out=output.as_posix()
+            python_out=output.as_posix(),
         )
 
     return errors

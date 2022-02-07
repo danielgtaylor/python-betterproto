@@ -1,8 +1,8 @@
 import itertools
 import pathlib
-from typing import Iterator, List, Set, Tuple, Union
+from typing import Iterator, List, Sequence, Set, Tuple, TypeAlias, Union
 
-import black
+from black.const import DEFAULT_LINE_LENGTH
 from rich.progress import Progress
 
 from ..lib.google.protobuf import (
@@ -17,10 +17,6 @@ from ..lib.google.protobuf.compiler import (
     CodeGeneratorResponseFeature,
     CodeGeneratorResponseFile,
 )
-import itertools
-import pathlib
-import sys
-from typing import Iterator, List, Set, Tuple, TYPE_CHECKING, Union
 from .compiler import outputfile_compiler
 from .models import (
     EnumDefinitionCompiler,
@@ -36,18 +32,18 @@ from .models import (
     is_oneof,
 )
 
+TraverseType: TypeAlias = (
+    "Tuple[Union[DescriptorProto, EnumDescriptorProto], List[int]]"
+)
 
-def traverse(
-    proto_file: FileDescriptorProto,
-) -> "itertools.chain[Tuple[Union[DescriptorProto, EnumDescriptorProto], List[int]]]":
+
+def traverse(proto_file: FileDescriptorProto) -> "itertools.chain[TraverseType]":
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List["EnumDescriptorProto"], prefix=""
-    ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
         path: List[int],
-        items: List[Union[DescriptorProto, EnumDescriptorProto]],
+        items: Sequence[Union[DescriptorProto, EnumDescriptorProto]],
         prefix: str = "",
-    ) -> Iterator[Tuple[Union[DescriptorProto, EnumDescriptorProto], List[int]]]:
+    ) -> Iterator[TraverseType]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
@@ -60,8 +56,7 @@ def traverse(
                     yield enum, path + [i, 4]
 
                 if item.nested_type:
-                    for n, p in _traverse(path + [i, 3], item.nested_type, next_prefix):
-                        yield n, p
+                    yield from _traverse(path + [i, 3], item.nested_type, next_prefix)
 
     return itertools.chain(
         _traverse([5], proto_file.enum_type), _traverse([4], proto_file.message_type)
@@ -72,7 +67,7 @@ def generate_code(
     request: CodeGeneratorRequest,
     *,
     include_google: bool = False,
-    line_length: int = black.DEFAULT_LINE_LENGTH,
+    line_length: int = DEFAULT_LINE_LENGTH,
     generate_services: bool = True,
     verbose: bool = False,
     from_cli: bool = False,
@@ -191,7 +186,9 @@ def generate_code(
                 CodeGeneratorResponseFile(
                     name=str(output_path),
                     # Render and then format the output file
-                    content=outputfile_compiler(output_file=output_package),
+                    content=outputfile_compiler(
+                        output_file=output_package, line_length=line_length
+                    ),
                 )
             )
             if verbose or from_cli:
@@ -204,8 +201,6 @@ def generate_code(
 
     for init_file in init_files:
         response.file.append(CodeGeneratorResponseFile(name=str(init_file)))
-
-    return response
 
     return response
 

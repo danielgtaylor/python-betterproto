@@ -2,9 +2,6 @@ import sys
 from pathlib import Path
 from typing import List, Optional
 
-from .. import install_exception_hook
-install_exception_hook()
-
 import protobuf_parser
 import rich
 import typer

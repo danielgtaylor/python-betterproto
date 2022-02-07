@@ -2,12 +2,14 @@ import os.path
 
 import black
 import jinja2
+from black.const import DEFAULT_LINE_LENGTH
+from black.mode import Mode, TargetVersion
 
 from .models import OutputTemplate
 
 
 def outputfile_compiler(
-    output_file: OutputTemplate, line_length: int = black.DEFAULT_LINE_LENGTH
+    output_file: OutputTemplate, line_length: int = DEFAULT_LINE_LENGTH
 ) -> str:
 
     templates_folder = os.path.abspath(
@@ -23,7 +25,5 @@ def outputfile_compiler(
 
     return black.format_str(
         template.render(output_file=output_file),
-        mode=black.Mode(
-            line_length=line_length, target_versions={black.TargetVersion.PY37}
-        ),
+        mode=Mode(line_length=line_length, target_versions={TargetVersion.PY37}),
     )

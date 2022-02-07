@@ -1,15 +1,18 @@
 import asyncio
 import functools
 import sys
+from collections.abc import Mapping
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Iterable, List, Optional, Set, TypeVar
 
+from typing_extensions import ParamSpec
 
 T = TypeVar("T")
+P = ParamSpec("P")
 
 
-def get_files(paths: List[Path]) -> "defaultdict[Path, Set[Path]]":
+def get_files(paths: List[Path]) -> "Mapping[Path, Set[Path]]":
     """Return a list of files ready for :func:`generate_command`"""
 
     new_paths: "defaultdict[Path, Set[Path]]" = defaultdict(set)
@@ -24,12 +27,12 @@ def get_files(paths: List[Path]) -> "defaultdict[Path, Set[Path]]":
         else:
             new_paths[path.parent].add(path)
 
-    return new_paths
+    return dict(new_paths)
 
 
-def run_sync(func: Callable[..., Awaitable[T]]) -> Callable[..., T]:
+def run_sync(func: Callable[P, Awaitable[T]]) -> Callable[P, T]:
     @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> T:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         coro = func(*args, **kwargs)
 
         if hasattr(asyncio, "run"):
@@ -53,6 +56,7 @@ def find(predicate: Callable[[T], bool], iterable: Iterable[T]) -> Optional[T]:
 if sys.version_info >= (3, 9):
     to_thread = asyncio.to_thread
 else:
+
     async def to_thread(func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
         loop = asyncio.get_running_loop()
         func_call = functools.partial(func, *args, **kwargs)

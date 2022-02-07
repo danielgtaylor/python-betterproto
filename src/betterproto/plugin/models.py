@@ -29,18 +29,11 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attribute.
 """
 
-import re
-import textwrap
-from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, Set, Text, Type, Union
-
-from .. import Message, which_one_of
-
 import builtins
 import re
 import textwrap
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
+from typing import Dict, Iterator, List, Optional, Set, Type, Union
 
 import betterproto
 from betterproto import which_one_of
@@ -63,6 +56,7 @@ from betterproto.lib.google.protobuf import (
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
+from .. import Message, which_one_of
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
 from ..compile.naming import (
@@ -82,6 +76,7 @@ from ..lib.google.protobuf import (
     ServiceDescriptorProto,
 )
 from ..lib.google.protobuf.compiler import CodeGeneratorRequest
+
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
 PLACEHOLDER = object()

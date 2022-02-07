@@ -3,6 +3,7 @@
 import sys
 
 from .exception_hook import install_exception_hook
+
 install_exception_hook()
 
 import rich
