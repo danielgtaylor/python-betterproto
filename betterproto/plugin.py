@@ -44,6 +44,8 @@ WRAPPER_TYPES: Dict[str, Optional[Type]] = defaultdict(
     },
 )
 
+def _get_proto(request, name: str):
+    return next(f for f in request.proto_file if f.name == name)
 
 def get_ref_type(
     package: str, imports: set, type_name: str, unwrap: bool = True
@@ -52,6 +54,9 @@ def get_ref_type(
     Return a Python type name for a proto type reference. Adds the import if
     necessary. Unwraps well known type if required.
     """
+
+#    print("get reference type package: " + package + " type: " + type_name + " " + str(unwrap), file=sys.stderr)
+
     # If the package name is a blank string, then this should still work
     # because by convention packages are lowercase and message/enum types are
     # pascal-cased. May require refactoring in the future.
@@ -61,6 +66,7 @@ def get_ref_type(
     wrapper_class = WRAPPER_TYPES[type_name]
 
     if unwrap:
+
         if wrapper_class:
             wrapped_type = type(wrapper_class().value)
             return f"Optional[{wrapped_type.__name__}]"
@@ -70,6 +76,7 @@ def get_ref_type(
 
         if type_name == "google.protobuf.Timestamp":
             return "datetime"
+
     elif wrapper_class:
         imports.add(f"from {wrapper_class.__module__} import {wrapper_class.__name__}")
         return f"{wrapper_class.__name__}"
@@ -82,13 +89,15 @@ def get_ref_type(
             cased = [stringcase.pascalcase(part) for part in parts]
             type_name = f'"{"".join(cased)}"'
 
+    if type_name == "google.protobuf.Empty":
+        imports.add(f"from google.protobuf.empty_pb2 import Empty")
+
     if "." in type_name:
         # This is imported from another package. No need
         # to use a forward ref and we need to add the import.
         parts = type_name.split(".")
         parts[-1] = stringcase.pascalcase(parts[-1])
-        imports.add(f"from .{'.'.join(parts[:-2])} import {parts[-2]}")
-        type_name = f"{parts[-2]}.{parts[-1]}"
+        type_name = f"{parts[-1]}" #type without namespace should by imported by user in proto file
 
     return type_name
 
@@ -109,6 +118,7 @@ def py_type(
         return "str"
     elif descriptor.type in [11, 14]:
         # Type referencing another defined Message or a named enum
+#        print("py type: " + package + " type: " + str(descriptor), file=sys.stderr)
         return get_ref_type(package, imports, descriptor.type_name)
     elif descriptor.type == 12:
         return "bytes"
@@ -176,38 +186,34 @@ def get_comment(proto_file, path: List[int], indent: int = 4) -> str:
 
     return ""
 
+def get_message(input_type, description):
 
-def generate_code(request, response):
-    env = jinja2.Environment(
-        trim_blocks=True,
-        lstrip_blocks=True,
-        loader=jinja2.FileSystemLoader("%s/templates/" % os.path.dirname(__file__)),
-    )
-    template = env.get_template("template.py.j2")
+    for msg in description["messages"]:
+#        print("  - " + msg["name"], file=sys.stderr)
+        if msg["name"] == input_type:
+#            print("  + found", file=sys.stderr)
+            return msg
 
-    output_map = {}
-    for proto_file in request.proto_file:
-        out = proto_file.package
-        if out == "google.protobuf":
-            continue
+    return None
 
-        if not out:
-            out = os.path.splitext(proto_file.name)[0].replace(os.path.sep, ".")
+def source_model(model, dependecies = None):
 
-        if out not in output_map:
-            output_map[out] = {"package": proto_file.package, "files": []}
-        output_map[out]["files"].append(proto_file)
+    outputs = {}
 
     # TODO: Figure out how to handle gRPC request/response messages and add
     # processing below for Service.
 
-    for filename, options in output_map.items():
+    for filename, options in model.items():
+
+        if filename in outputs:
+            continue
+
         package = options["package"]
-        # print(package, filename, file=sys.stderr)
-        output = {
+
+        outputs[filename] = {
             "package": package,
             "files": [f.name for f in options["files"]],
-            "imports": set(),
+            "imports": options["imports"],
             "datetime_imports": set(),
             "typing_imports": set(),
             "messages": [],
@@ -218,14 +224,16 @@ def generate_code(request, response):
         type_mapping = {}
 
         for proto_file in options["files"]:
-            # print(proto_file.message_type, file=sys.stderr)
-            # print(proto_file.service, file=sys.stderr)
-            # print(proto_file.source_code_info, file=sys.stderr)
+#            print(proto_file.message_type, file=sys.stderr)
+#            print(proto_file.service, file=sys.stderr)
+#            print(proto_file.source_code_info, file=sys.stderr)
 
             for item, path in traverse(proto_file):
-                # print(item, file=sys.stderr)
-                # print(path, file=sys.stderr)
+#                print(item, file=sys.stderr)
+#                print(path, file=sys.stderr)
                 data = {"name": item.name, "py_name": stringcase.pascalcase(item.name)}
+
+#                print(" type data " + str(data), file=sys.stderr)
 
                 if isinstance(item, DescriptorProto):
                     # print(item, file=sys.stderr)
@@ -242,7 +250,7 @@ def generate_code(request, response):
                     )
 
                     for i, f in enumerate(item.field):
-                        t = py_type(package, output["imports"], item, f)
+                        t = py_type(package, outputs[filename]["imports"], item, f)
                         zero = get_py_zero(f.type)
 
                         repeated = False
@@ -274,13 +282,13 @@ def generate_code(request, response):
                                             # print("Found a map!", file=sys.stderr)
                                             k = py_type(
                                                 package,
-                                                output["imports"],
+                                                outputs[filename]["imports"],
                                                 item,
                                                 nested.field[0],
                                             )
                                             v = py_type(
                                                 package,
-                                                output["imports"],
+                                                outputs[filename]["imports"],
                                                 item,
                                                 nested.field[1],
                                             )
@@ -290,14 +298,14 @@ def generate_code(request, response):
                                                 f.Type.Name(nested.field[0].type),
                                                 f.Type.Name(nested.field[1].type),
                                             )
-                                            output["typing_imports"].add("Dict")
+                                            outputs[filename]["typing_imports"].add("Dict")
 
                         if f.label == 3 and field_type != "map":
                             # Repeated field
                             repeated = True
                             t = f"List[{t}]"
                             zero = "[]"
-                            output["typing_imports"].add("List")
+                            outputs[filename]["typing_imports"].add("List")
 
                             if f.type in [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 17, 18]:
                                 packed = True
@@ -307,12 +315,12 @@ def generate_code(request, response):
                             one_of = item.oneof_decl[f.oneof_index].name
 
                         if "Optional[" in t:
-                            output["typing_imports"].add("Optional")
+                            outputs[filename]["typing_imports"].add("Optional")
 
                         if "timedelta" in t:
-                            output["datetime_imports"].add("timedelta")
+                            outputs[filename]["datetime_imports"].add("timedelta")
                         elif "datetime" in t:
-                            output["datetime_imports"].add("datetime")
+                            outputs[filename]["datetime_imports"].add("datetime")
 
                         data["properties"].append(
                             {
@@ -331,9 +339,9 @@ def generate_code(request, response):
                                 "one_of": one_of,
                             }
                         )
-                        # print(f, file=sys.stderr)
+                        #print(f, file=sys.stderr)
 
-                    output["messages"].append(data)
+                    outputs[filename]["messages"].append(data)
                 elif isinstance(item, EnumDescriptorProto):
                     # print(item.name, path, file=sys.stderr)
                     data.update(
@@ -351,7 +359,7 @@ def generate_code(request, response):
                         }
                     )
 
-                    output["enums"].append(data)
+                    outputs[filename]["enums"].append(data)
 
             for i, service in enumerate(proto_file.service):
                 # print(service, file=sys.stderr)
@@ -369,15 +377,26 @@ def generate_code(request, response):
 
                     input_message = None
                     input_type = get_ref_type(
-                        package, output["imports"], method.input_type
+                        package, outputs[filename]["imports"], method.input_type
                     ).strip('"')
-                    for msg in output["messages"]:
-                        if msg["name"] == input_type:
-                            input_message = msg
-                            for field in msg["properties"]:
-                                if field["zero"] == "None":
-                                    output["typing_imports"].add("Optional")
-                            break
+
+                    input_message = get_message(input_type, outputs[filename])
+
+#                    if not input_message:
+#                        print(" * " + input_type + " not found in the current namespace and " + filename, file=sys.stderr)
+
+                    if dependecies and not input_message: # iterate over dependecies and try to find model for dependet typs inside
+                        for f, desc in dependecies.items():
+#                            print(" looking for " + input_type + " in " + f, file=sys.stderr)
+                            input_message = get_message(input_type, desc)
+
+                            if input_message:
+                                break
+
+                    if input_message:
+                        for field in input_message["properties"]:
+                            if field["zero"] == "None":
+                                outputs[filename]["typing_imports"].add("Optional")
 
                     data["methods"].append(
                         {
@@ -386,12 +405,12 @@ def generate_code(request, response):
                             "comment": get_comment(proto_file, [6, i, 2, j], indent=8),
                             "route": f"/{package}.{service.name}/{method.name}",
                             "input": get_ref_type(
-                                package, output["imports"], method.input_type
+                                package, outputs[filename]["imports"], method.input_type
                             ).strip('"'),
                             "input_message": input_message,
                             "output": get_ref_type(
                                 package,
-                                output["imports"],
+                                outputs[filename]["imports"],
                                 method.output_type,
                                 unwrap=False,
                             ).strip('"'),
@@ -401,13 +420,77 @@ def generate_code(request, response):
                     )
 
                     if method.server_streaming:
-                        output["typing_imports"].add("AsyncGenerator")
+                        outputs[filename]["typing_imports"].add("AsyncGenerator")
 
-                output["services"].append(data)
+                outputs[filename]["services"].append(data)
 
-        output["imports"] = sorted(output["imports"])
-        output["datetime_imports"] = sorted(output["datetime_imports"])
-        output["typing_imports"] = sorted(output["typing_imports"])
+        outputs[filename]["imports"] = sorted(outputs[filename]["imports"])
+        outputs[filename]["datetime_imports"] = sorted(outputs[filename]["datetime_imports"])
+        outputs[filename]["typing_imports"] = sorted(outputs[filename]["typing_imports"])
+
+    return outputs
+
+def generate_code(request, response):
+    env = jinja2.Environment(
+        trim_blocks=True,
+        lstrip_blocks=True,
+        loader=jinja2.FileSystemLoader("%s/templates/" % os.path.dirname(__file__)),
+    )
+    template = env.get_template("template.py.j2")
+
+    # iterate over requested files to generate, not over all dependecies (dependecies are generated by external tool)
+    for file_to_generate in request.file_to_generate:
+
+#        print("===========================================", file=sys.stderr)
+#        print("generate request " + file_to_generate, file=sys.stderr)
+
+        #similar to original grpc, find descriptor for file we are generating
+        proto_file = _get_proto(request, file_to_generate)
+
+        output_map = {}
+        dependecy_map = {}
+
+        # go over imports and add all imports implicitly
+        imports = set()
+        for dep in list(proto_file.dependency):
+
+            imported_proto_file = _get_proto(request, dep)
+
+            if imported_proto_file.package.startswith("google"):
+                continue
+
+            path, filename = os.path.split(imported_proto_file.name)
+            file_name = os.path.splitext(filename)[0]
+
+            import_path = imported_proto_file.package
+
+            if path:
+                import_path += "." + path.replace(os.path.sep, ".")
+
+            imports.add("from " + import_path + "." + file_name + " import *")
+            import_dependecy = imported_proto_file.package + "." + file_name
+
+            if import_dependecy not in dependecy_map:
+                dependecy_map[import_dependecy] = {"package": imported_proto_file.package, "files": [], "imports" : []}
+
+            dependecy_map[import_dependecy]["files"].append(imported_proto_file)
+
+        out = proto_file.package + "." + proto_file.name.rsplit('.', 1)[0]
+
+        if out.startswith("google"):
+            continue
+
+        if not out:
+            out = os.path.splitext(proto_file.name)[0].replace(os.path.sep, ".")
+
+        if out not in output_map:
+            output_map[out] = {"package": proto_file.package, "files": [], "imports" : imports}
+
+        output_map[out]["files"].append(proto_file)
+
+    deps = source_model(dependecy_map)
+
+    for filename, description in source_model(output_map, deps).items():
 
         # Fill response
         f = response.file.add()
@@ -416,7 +499,7 @@ def generate_code(request, response):
 
         # Render and then format the output file.
         f.content = black.format_str(
-            template.render(description=output),
+            template.render(description=description),
             mode=black.FileMode(target_versions=set([black.TargetVersion.PY37])),
         )
 
@@ -444,9 +527,6 @@ def generate_code(request, response):
         init.content = b""
 
     filenames = sorted([f.name for f in response.file])
-    for fname in filenames:
-        print(f"Writing {fname}", file=sys.stderr)
-
 
 def main():
     """The plugin's main entry point."""
