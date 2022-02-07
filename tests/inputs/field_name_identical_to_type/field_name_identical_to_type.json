@@ -1,0 +1,7 @@
+{
+    "int": 26,
+    "float": 26.0,
+    "str": "value-for-str",
+    "bytes": "001a",
+    "bool": true
+}

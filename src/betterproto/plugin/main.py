@@ -2,7 +2,7 @@
 
 import sys
 
-from . import install_exception_hook
+from .exception_hook import install_exception_hook
 install_exception_hook()
 
 import rich
@@ -33,5 +33,8 @@ def main() -> None:
     # Generate code
     response = generate_code(request)
 
+    # Serialise response message
+    output = response.SerializeToString()
+
     # Write to stdout
-    sys.stdout.buffer.write(bytes(response))
+    sys.stdout.buffer.write(output)

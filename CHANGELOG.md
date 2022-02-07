@@ -7,6 +7,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [Unreleased]
+
+- **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters.
+
+    Update your client calls and server handlers as follows:
+
+    Clients before:
+    ```py
+    response = await service.echo(value="hello", extra_times=1)
+    ```
+    Clients after:
+    ```py
+    response = await service.echo(EchoRequest(value="hello", extra_times=1))
+    ```
+    Servers before:
+    ```py
+    async def echo(self, value: str, extra_times: int) -> EchoResponse:
+    ```
+    Servers after:
+    ```py
+    async def echo(self, echo_request: EchoRequest) -> EchoResponse:
+        # Use echo_request.value
+        # Use echo_request.extra_times
+    ```
+
+
+## [2.0.0b4] - 2022-01-03
+
+- **Breaking**: the minimum Python version has been bumped to `3.6.2`
+
+- Always add `AsyncIterator` to imports if there are services [#264](https://github.com/danielgtaylor/python-betterproto/pull/264)
+- Allow parsing of messages from `ByteStrings` [#266](https://github.com/danielgtaylor/python-betterproto/pull/266)
+- Add support for proto3 optional [#281](https://github.com/danielgtaylor/python-betterproto/pull/281)
+
+- Fix compilation of fields with names identical to builtin types [#294](https://github.com/danielgtaylor/python-betterproto/pull/294)
+- Fix default values for enum service args [#299](https://github.com/danielgtaylor/python-betterproto/pull/299)
+
+## [2.0.0b3] - 2021-04-07
+
+- Generate grpclib service stubs [#170](https://github.com/danielgtaylor/python-betterproto/pull/170)
+- Add \_\_version\_\_ attribute to package [#134](https://github.com/danielgtaylor/python-betterproto/pull/134)
+- Use betterproto generated messages in the plugin [#161](https://github.com/danielgtaylor/python-betterproto/pull/161)
+- Sort the list of sources in generated file headers [#164](https://github.com/danielgtaylor/python-betterproto/pull/164)
+- Micro-optimization: use tuples instead of lists for conditions [#228](https://github.com/danielgtaylor/python-betterproto/pull/228)
+- Improve datestring parsing [#213](https://github.com/danielgtaylor/python-betterproto/pull/213)
+
+- Fix serialization of repeated fields with empty messages [#180](https://github.com/danielgtaylor/python-betterproto/pull/180)
+- Fix compilation of fields named 'bytes' or 'str' [#226](https://github.com/danielgtaylor/python-betterproto/pull/226)
+- Fix json serialization of infinite and nan floats/doubles [#215](https://github.com/danielgtaylor/python-betterproto/pull/215)
+- Fix template bug resulting in empty \_\_post_init\_\_ methods [#162](https://github.com/danielgtaylor/python-betterproto/pull/162)
+- Fix serialization of zero-value messages in a oneof group [#176](https://github.com/danielgtaylor/python-betterproto/pull/176)
+- Fix missing typing and datetime imports [#183](https://github.com/danielgtaylor/python-betterproto/pull/183)
+- Fix code generation for empty services [#222](https://github.com/danielgtaylor/python-betterproto/pull/222)
+- Fix Message.to_dict and from_dict handling of repeated timestamps and durations [#211](https://github.com/danielgtaylor/python-betterproto/pull/211)
+- Fix incorrect routes in generated client when service is not in a package [#177](https://github.com/danielgtaylor/python-betterproto/pull/177)
+
 ## [2.0.0b2] - 2020-11-24
 
 - Add support for deprecated message and fields [#126](https://github.com/danielgtaylor/python-betterproto/pull/126)
@@ -35,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0b1] - 2020-07-04
 
-[Upgrade Guide](./docs/upgrading.md) 
+[Upgrade Guide](./docs/upgrading.md)
 
 > Several bugfixes and improvements required or will require small breaking changes, necessitating a new version.
 > `2.0.0` will be released once the interface is stable.

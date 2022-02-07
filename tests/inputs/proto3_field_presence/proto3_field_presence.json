@@ -1,0 +1,13 @@
+{
+  "test1": 128,
+  "test2": true,
+  "test3": "A value",
+  "test4": "aGVsbG8=",
+  "test5": {
+    "test": "Hello"
+  },
+  "test6": "B",
+  "test7": "8589934592",
+  "test8": 2.5,
+  "test9": "2022-01-24T12:12:42Z"
+}

@@ -14,8 +14,13 @@ from ..lib.google.protobuf import (
 from ..lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponse,
+    CodeGeneratorResponseFeature,
     CodeGeneratorResponseFile,
 )
+import itertools
+import pathlib
+import sys
+from typing import Iterator, List, Set, Tuple, TYPE_CHECKING, Union
 from .compiler import outputfile_compiler
 from .models import (
     EnumDefinitionCompiler,
@@ -37,6 +42,8 @@ def traverse(
 ) -> "itertools.chain[Tuple[Union[DescriptorProto, EnumDescriptorProto], List[int]]]":
     # Todo: Keep information about nested hierarchy
     def _traverse(
+        path: List[int], items: List["EnumDescriptorProto"], prefix=""
+    ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
         path: List[int],
         items: List[Union[DescriptorProto, EnumDescriptorProto]],
         prefix: str = "",
@@ -95,6 +102,7 @@ def generate_code(
 
     response = CodeGeneratorResponse()
     plugin_options = request.parameter.split(",") if request.parameter else []
+    response.supported_features = CodeGeneratorResponseFeature.FEATURE_PROTO3_OPTIONAL
     include_google = "INCLUDE_GOOGLE" in plugin_options or include_google
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
@@ -196,6 +204,8 @@ def generate_code(
 
     for init_file in init_files:
         response.file.append(CodeGeneratorResponseFile(name=str(init_file)))
+
+    return response
 
     return response
 

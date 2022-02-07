@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [Ubuntu, MacOS, Windows]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6.7', '3.7', '3.8', '3.9', '3.10']
         exclude:
           - os: Windows
             python-version: 3.6
@@ -66,4 +66,4 @@ jobs:
 
       - name: Execute test suite
         shell: bash
-        run: poetry run pytest tests/
+        run: poetry run python -m pytest tests/

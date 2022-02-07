@@ -63,12 +63,14 @@ async def generate(whitelist: Set[Path], verbose: bool) -> None:
         if exception is not None:
             failed_test_cases.append(test_case_name)
 
-    if failed_test_cases:
+    if len(failed_test_cases) > 0:
         rich.print(
             "[red bold]\nFailed to generate the following test cases:",
             *(f"[red]- {failed_test_case}" for failed_test_case in failed_test_cases),
             sep="\n",
         )
+
+        sys.exit(1)
 
 
 async def generate_test_case_output(

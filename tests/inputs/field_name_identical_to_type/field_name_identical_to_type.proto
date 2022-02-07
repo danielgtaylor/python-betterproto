@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+// Tests that messages may contain fields with names that are identical to their python types (PR #294)
+
+message Test {
+    int32 int = 1;
+    float float = 2;
+    string str = 3;
+    bytes bytes = 4;
+    bool bool = 5;
+}

@@ -164,10 +164,10 @@ from grpclib.client import Channel
 async def main():
     async with Channel(host="127.0.0.1", port=50051) as channel:
       service = echo.EchoStub(channel)
-      response = await service.echo(value="hello", extra_times=1)
+      response = await service.echo(echo.EchoRequest(value="hello", extra_times=1))
       print(response)
   
-      async for response in service.echo_stream(value="hello", extra_times=1):
+      async for response in service.echo_stream(echo.EchoRequest(value="hello", extra_times=1)):
           print(response)
 
 
@@ -189,28 +189,29 @@ To use them, simply subclass the base class in the generated files and override 
 service methods:
 
 ```python
-from echo import EchoBase
+import asyncio
+from echo import EchoBase, EchoRequest, EchoResponse, EchoStreamResponse
 from grpclib.server import Server
 from typing import AsyncIterator
 
 
 class EchoService(EchoBase):
-    async def echo(self, value: str, extra_times: int) -> "EchoResponse":
-        return value
+    async def echo(self, echo_request: "EchoRequest") -> "EchoResponse":
+        return EchoResponse([echo_request.value for _ in range(echo_request.extra_times)])
 
-    async def echo_stream(
-        self, value: str, extra_times: int
-    ) -> AsyncIterator["EchoStreamResponse"]:
-        for _ in range(extra_times):
-            yield value
+    async def echo_stream(self, echo_request: "EchoRequest") -> AsyncIterator["EchoStreamResponse"]:
+        for _ in range(echo_request.extra_times):
+            yield EchoStreamResponse(echo_request.value)
 
 
-async def start_server():
-    HOST = "127.0.0.1"
-    PORT = 1337
+async def main():
     server = Server([EchoService()])
-    await server.start(HOST, PORT)
-    await server.serve_forever()
+    await server.start("127.0.0.1", 50051)
+    await server.wait_closed()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
 ```
 
 ### JSON
