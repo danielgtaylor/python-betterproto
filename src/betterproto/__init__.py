@@ -1022,6 +1022,29 @@ class Message(ABC):
         """
         return cls().parse(data)
 
+    # For compatibility with Google protobuf official implementation.
+    def ParseFromString(self, data: bytes) -> T:
+        """
+        Parse the binary encoded Protobuf into this message instance. This
+        returns the instance itself and is therefore assignable and chainable.
+
+        .. note::
+            This is a method for compatibility with other libraries,
+            you should really use :meth:`parse`.
+
+
+        Parameters
+        -----------
+        data: :class:`bytes`
+            The data to parse the protobuf from.
+
+        Returns
+        --------
+        :class:`Message`
+            The initialized message.
+        """
+        return self.parse(data)
+
     def to_dict(
         self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
     ) -> Dict[str, Any]:
