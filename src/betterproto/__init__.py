@@ -720,7 +720,7 @@ class Message(ABC):
 
     def __deepcopy__(self: T, _: Any = {}) -> T:
         kwargs = {}
-        for name in self._betterproto.meta_by_field_name:
+        for name in self._betterproto.sorted_field_names:
             value = self.__raw_get(name)
             if value is not PLACEHOLDER:
                 kwargs[name] = deepcopy(value)
