@@ -1,6 +1,7 @@
 import itertools
 import pathlib
-from typing import Iterator, List, Sequence, Set, Tuple, TypeAlias, Union
+from contextlib import AbstractContextManager
+from typing import Any, Iterator, List, Sequence, Set, Tuple, TypeAlias, Union
 
 from black.const import DEFAULT_LINE_LENGTH
 from rich.progress import Progress
@@ -63,6 +64,17 @@ def traverse(proto_file: FileDescriptorProto) -> "itertools.chain[TraverseType]"
     )
 
 
+class NoopProgress(AbstractContextManager):
+    def add_task(self, *args: Any, **kwargs: Any) -> None:
+        ...
+
+    def update(self, *args: Any, **kwargs: Any) -> None:
+        ...
+
+    def __exit__(self, *args: Any) -> None:
+        ...
+
+
 def generate_code(
     request: CodeGeneratorRequest,
     *,
@@ -103,7 +115,7 @@ def generate_code(
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
 
-    with Progress(transient=True) as progress:
+    with Progress(transient=True) if from_cli else NoopProgress() as progress:
         reading_progress_bar = progress.add_task(
             "[green]Reading protobuf files...", total=len(request.proto_file)
         )
@@ -122,13 +134,12 @@ def generate_code(
             request_data.output_packages[output_package_name].input_files.append(
                 proto_file
             )
-            if verbose or from_cli:
-                progress.update(reading_progress_bar, advance=1)
+            progress.update(reading_progress_bar, advance=1)
 
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
     # get the references to input/output messages for each service
-    with Progress(transient=True) as progress:
+    with Progress(transient=True) if from_cli else NoopProgress() as progress:
         parsing_progress_bar = progress.add_task(
             "[green]Parsing protobuf enums and messages...",
             total=sum(
@@ -146,12 +157,11 @@ def generate_code(
                         path=path,
                         output_package=output_package,
                     )
-                    if verbose or from_cli:
-                        progress.update(parsing_progress_bar, advance=1)
+                    progress.update(parsing_progress_bar, advance=1)
 
     # Read Services
     if generate_services:
-        with Progress(transient=True) as progress:
+        with Progress(transient=True) if from_cli else NoopProgress() as progress:
             parsing_progress_bar = progress.add_task(
                 "[green]Parsing protobuf services...",
                 total=sum(
@@ -166,12 +176,11 @@ def generate_code(
                 for proto_input_file in output_package.input_files:
                     for index, service in enumerate(proto_input_file.service):
                         read_protobuf_service(service, index, output_package)
-                        if verbose or from_cli:
-                            progress.update(parsing_progress_bar, advance=1)
+                        progress.update(parsing_progress_bar, advance=1)
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
-    with Progress(transient=True) as progress:
+    with Progress(transient=True) if from_cli else NoopProgress() as progress:
         compiling_progress_bar = progress.add_task(
             "[green]Compiling protobuf files...",
             total=len(request_data.output_packages),
@@ -191,8 +200,7 @@ def generate_code(
                     ),
                 )
             )
-            if verbose or from_cli:
-                progress.update(compiling_progress_bar, advance=1)
+            progress.update(compiling_progress_bar, advance=1)
 
     # Make each output directory a package with __init__ file
     init_files = {
