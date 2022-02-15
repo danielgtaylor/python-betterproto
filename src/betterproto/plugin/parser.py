@@ -124,13 +124,12 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
 
     # Make each output directory a package with __init__ file
     init_files = {
-        directory.joinpath("__init__.py")
-        for path in output_paths
-        for directory in path.parents
+        directory / "__init__.py" for path in output_paths for directory in path.parents
     } - output_paths
 
     for init_file in init_files:
-        response.file.append(CodeGeneratorResponseFile(name=str(init_file)))
+        if not init_file.exists():
+            response.file.append(CodeGeneratorResponseFile(name=str(init_file)))
 
     for output_package_name in sorted(output_paths.union(init_files)):
         print(f"Writing {output_package_name}", file=sys.stderr)
