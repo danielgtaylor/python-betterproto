@@ -485,3 +485,12 @@ def test_service_argument__expected_parameter():
     do_thing_request_parameter = sig.parameters["do_thing_request"]
     assert do_thing_request_parameter.default is Parameter.empty
     assert do_thing_request_parameter.annotation == "DoThingRequest"
+
+
+def test_message_parse_from_string():
+    @dataclass
+    class SimpleMessage(betterproto.Message):
+        message: str = betterproto.string_field(1)
+
+    test_message = SimpleMessage(message="test message")
+    assert test_message == SimpleMessage().ParseFromString(bytes(test_message))
