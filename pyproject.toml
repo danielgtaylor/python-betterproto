@@ -17,6 +17,8 @@ black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=2.11.2", optional = true }
+typer = { version = "^0.3.2", optional = true }
+rich = { version = "^9.8.2", optional = true }
 python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
@@ -36,13 +38,14 @@ sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 tomlkit = "^0.7.0"
 tox = "^3.15.1"
-
+protobuf_parser = "1.0.0"
 
 [tool.poetry.scripts]
+betterproto = "betterproto:__main__.main"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "jinja2"]
+compiler = ["black", "jinja2", "typer", "rich", "protobuf_parser"]
 
 
 # Dev workflow tasks
@@ -81,12 +84,7 @@ help = "Clean out generated files from the workspace"
 
 [tool.poe.tasks.generate_lib]
 cmd = """
-protoc
-    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py
-    --custom_opt=INCLUDE_GOOGLE
-    --custom_out=src/betterproto/lib
-    -I /usr/local/include/
-    /usr/local/include/google/protobuf/**/*.proto
+betterproto compile /usr/local/include/google/protobuf/**/*.proto
 """
 help = "Regenerate the types in betterproto.lib.google"
 

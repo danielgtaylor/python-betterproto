@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
-import os
 import sys
 
-from betterproto.lib.google.protobuf.compiler import (
-    CodeGeneratorRequest,
-    CodeGeneratorResponse,
-)
+from .exception_hook import install_exception_hook
 
-from betterproto.plugin.parser import generate_code
-from betterproto.plugin.models import monkey_patch_oneof_index
+install_exception_hook()
+
+import rich
+
+from ..lib.google.protobuf.compiler import CodeGeneratorRequest
+from .models import monkey_patch_oneof_index
+from .parser import generate_code
 
 
 def main() -> None:
@@ -21,12 +22,14 @@ def main() -> None:
     monkey_patch_oneof_index()
 
     # Parse request
-    request = CodeGeneratorRequest()
-    request.parse(data)
+    request = CodeGeneratorRequest().parse(data)
 
-    dump_file = os.getenv("BETTERPROTO_DUMP")
-    if dump_file:
-        dump_request(dump_file, request)
+    rich.print(
+        "Direct invocation of the protoc plugin is depreciated over using the CLI\n"
+        "To do so you just need to type:\n"
+        f"betterproto compile {' '.join(request.file_to_generate)}",
+        file=sys.stderr,
+    )
 
     # Generate code
     response = generate_code(request)
@@ -36,18 +39,3 @@ def main() -> None:
 
     # Write to stdout
     sys.stdout.buffer.write(output)
-
-
-def dump_request(dump_file: str, request: CodeGeneratorRequest) -> None:
-    """
-    For developers: Supports running plugin.py standalone so its possible to debug it.
-    Run protoc (or generate.py) with BETTERPROTO_DUMP="yourfile.bin" to write the request to a file.
-    Then run plugin.py from your IDE in debugging mode, and redirect stdin to the file.
-    """
-    with open(str(dump_file), "wb") as fh:
-        sys.stderr.write(f"\033[31mWriting input from protoc to: {dump_file}\033[0m\n")
-        fh.write(request.SerializeToString())
-
-
-if __name__ == "__main__":
-    main()

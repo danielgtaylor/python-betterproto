@@ -40,22 +40,11 @@ Given you installed the compiler and have a proto file, e.g ``example.proto``:
       string message = 1;
     }
 
-To compile the proto you would run the following:
-
-You can run the following to invoke protoc directly:
+To compile the protobuf you would run the following:
 
 .. code-block:: sh
 
-    mkdir hello
-    protoc -I . --python_betterproto_out=lib example.proto
-
-or run the following to invoke protoc via grpcio-tools:
-
-.. code-block:: sh
-
-    pip install grpcio-tools
-    python -m grpc_tools.protoc -I . --python_betterproto_out=lib example.proto
-
+    betterproto compile example.proto --output=lib
 
 This will generate ``lib/__init__.py`` which looks like:
 
@@ -141,16 +130,13 @@ The generated client can be used like so:
 
 
     async def main():
-        channel = Channel(host="127.0.0.1", port=50051)
-        service = echo.EchoStub(channel)
-        response = await service.echo(value="hello", extra_times=1)
-        print(response)
-
-        async for response in service.echo_stream(value="hello", extra_times=1):
+        async with Channel(host="127.0.0.1", port=50051) as channel:
+            service = echo.EchoStub(channel)
+            response = await service.echo(value="hello", extra_times=1)
             print(response)
 
-        # don't forget to close the channel when you're done!
-        channel.close()
+            async for response in service.echo_stream(value="hello", extra_times=1):
+                print(response)
 
     asyncio.run(main())  # python 3.7 only
 

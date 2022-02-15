@@ -35,9 +35,7 @@ def test_reference_google_wellknown_types_non_wrappers(
     name = get_type_reference(package="", imports=imports, source_type=google_type)
 
     assert name == expected_name
-    assert imports.__contains__(
-        expected_import
-    ), f"{expected_import} not found in {imports}"
+    assert expected_import in imports, f"{expected_import} not found in {imports}"
 
 
 @pytest.mark.parametrize(

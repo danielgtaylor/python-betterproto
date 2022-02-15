@@ -38,11 +38,12 @@ This project exists because I am unhappy with the state of the official Google p
   - Uses `SerializeToString()` rather than the built-in `__bytes__()`
   - Special wrapped types don't use Python's `None`
   - Timestamp/duration types don't use Python's built-in `datetime` module
+  
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
 ## Installation
 
-First, install the package. Note that the `[compiler]` feature flag tells it to install extra dependencies only needed by the `protoc` plugin:
+First, install the package. Note that the `[compiler]` feature flag tells it to install extra dependencies only needed by the code generator:
 
 ```sh
 # Install both the library and compiler
@@ -71,18 +72,10 @@ message Greeting {
 }
 ```
 
-You can run the following to invoke protoc directly:
+To compile the protobuf you would run the following:
 
 ```sh
-mkdir lib
-protoc -I . --python_betterproto_out=lib example.proto
-```
-
-or run the following to invoke protoc via grpcio-tools:
-
-```sh
-pip install grpcio-tools
-python -m grpc_tools.protoc -I . --python_betterproto_out=lib example.proto
+betterproto compile example.proto --output=lib
 ```
 
 This will generate `lib/hello/__init__.py` which looks like:
@@ -160,12 +153,6 @@ service Echo {
 }
 ```
 
-Generate echo proto file:
-
-```
-python -m grpc_tools.protoc -I . --python_betterproto_out=. echo.proto
-```
-
 A client can be implemented as follows:
 ```python
 import asyncio
@@ -175,16 +162,13 @@ from grpclib.client import Channel
 
 
 async def main():
-    channel = Channel(host="127.0.0.1", port=50051)
-    service = echo.EchoStub(channel)
-    response = await service.echo(echo.EchoRequest(value="hello", extra_times=1))
-    print(response)
-
-    async for response in service.echo_stream(echo.EchoRequest(value="hello", extra_times=1)):
-        print(response)
-
-    # don't forget to close the channel when done!
-    channel.close()
+    async with Channel(host="127.0.0.1", port=50051) as channel:
+      service = echo.EchoStub(channel)
+      response = await service.echo(echo.EchoRequest(value="hello", extra_times=1))
+      print(response)
+  
+      async for response in service.echo_stream(echo.EchoRequest(value="hello", extra_times=1)):
+          print(response)
 
 
 if __name__ == "__main__":
@@ -278,23 +262,23 @@ You can use `betterproto.which_one_of(message, group_name)` to determine which o
 ```py
 >>> test = Test()
 >>> betterproto.which_one_of(test, "foo")
-["", None]
+("", None)
 
 >>> test.on = True
 >>> betterproto.which_one_of(test, "foo")
-["on", True]
+("on", True)
 
 # Setting one member of the group resets the others.
 >>> test.count = 57
 >>> betterproto.which_one_of(test, "foo")
-["count", 57]
+("count", 57)
 >>> test.on
 False
 
 # Default (zero) values also work.
 >>> test.name = ""
 >>> betterproto.which_one_of(test, "foo")
-["name", ""]
+("name", "")
 >>> test.count
 0
 >>> test.on
@@ -310,7 +294,7 @@ Again this is a little different than the official Google code generator:
 
 # New way (this project)
 >>> betterproto.which_one_of(message, "group")
-["foo", "foo's value"]
+("foo", "foo's value")
 ```
 
 ### Well-Known Google Types
@@ -445,7 +429,7 @@ poe full-test
 Betterproto includes compiled versions for Google's well-known types at [betterproto/lib/google](betterproto/lib/google).
 Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
 
-Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
+Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`.
 
 Assuming your `google.protobuf` source files (included with all releases of `protoc`) are located in `/usr/local/include`, you can regenerate them as follows:
 

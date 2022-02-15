@@ -4,7 +4,7 @@ Migrating Guide
 Google's protocolbuffers
 ------------------------
 
-betterproto has a mostly 1 to 1 drop in replacement for Google's protocolbuffers (after
+betterproto has a mostly 1 to 1 drop in replacement for Google's protocol buffers (after
 regenerating your protobufs of course) although there are some minor differences.
 
 .. note::

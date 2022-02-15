@@ -1,9 +1,10 @@
 import asyncio
-from dataclasses import dataclass
 import importlib
 import os
-from pathlib import Path
+import pathlib
 import sys
+from dataclasses import dataclass
+from pathlib import Path
 from types import ModuleType
 from typing import Callable, Dict, Generator, List, Optional, Tuple, Union
 
@@ -15,13 +16,7 @@ output_path_reference = root_path.joinpath("output_reference")
 output_path_betterproto = root_path.joinpath("output_betterproto")
 
 
-def get_files(path, suffix: str) -> Generator[str, None, None]:
-    for r, dirs, files in os.walk(path):
-        for filename in [f for f in files if f.endswith(suffix)]:
-            yield os.path.join(r, filename)
-
-
-def get_directories(path):
+def get_directories(path: Path) -> Generator[str, None, None]:
     for root, directories, files in os.walk(path):
         yield from directories
 
@@ -66,10 +61,10 @@ def get_test_case_json_data(
         f"{test_case_name}.json" or f"{test_case_name}_*.json", OR given by
         json_file_names
     """
-    test_case_dir = inputs_path.joinpath(test_case_name)
+    test_case_dir = inputs_path / test_case_name
     possible_file_paths = [
-        *(test_case_dir.joinpath(json_file_name) for json_file_name in json_file_names),
-        test_case_dir.joinpath(f"{test_case_name}.json"),
+        *(test_case_dir / json_file_name for json_file_name in json_file_names),
+        test_case_dir / f"{test_case_name}.json",
         *test_case_dir.glob(f"{test_case_name}_*.json"),
     ]
 
@@ -77,12 +72,13 @@ def get_test_case_json_data(
     for test_data_file_path in possible_file_paths:
         if not test_data_file_path.exists():
             continue
-        with test_data_file_path.open("r") as fh:
-            result.append(
-                TestCaseJsonFile(
-                    fh.read(), test_case_name, test_data_file_path.name.split(".")[0]
-                )
+        result.append(
+            TestCaseJsonFile(
+                test_data_file_path.read_text(),
+                test_case_name,
+                test_data_file_path.name.split(".")[0],
             )
+        )
 
     return result
 

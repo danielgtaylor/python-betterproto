@@ -29,12 +29,11 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attribute.
 """
 
-
 import builtins
 import re
 import textwrap
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
+from typing import Dict, Iterator, List, Optional, Set, Type, Union
 
 import betterproto
 from betterproto import which_one_of
@@ -57,6 +56,7 @@ from betterproto.lib.google.protobuf import (
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
+from .. import Message, which_one_of
 from ..casing import sanitize_name
 from ..compile.importing import get_type_reference, parse_source_type_name
 from ..compile.naming import (
@@ -64,6 +64,18 @@ from ..compile.naming import (
     pythonize_field_name,
     pythonize_method_name,
 )
+from ..lib.google.protobuf import (
+    DescriptorProto,
+    EnumDescriptorProto,
+    Field,
+    FieldDescriptorProto,
+    FieldDescriptorProtoLabel,
+    FieldDescriptorProtoType,
+    FileDescriptorProto,
+    MethodDescriptorProto,
+    ServiceDescriptorProto,
+)
+from ..lib.google.protobuf.compiler import CodeGeneratorRequest
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
@@ -159,7 +171,7 @@ class ProtoContentBase:
     source_file: FileDescriptorProto
     path: List[int]
     comment_indent: int = 4
-    parent: Union["betterproto.Message", "OutputTemplate"]
+    parent: Union["Message", "OutputTemplate"]
 
     __dataclass_fields__: Dict[str, object]
 
@@ -224,7 +236,7 @@ class OutputTemplate:
 
     parent_request: PluginRequestCompiler
     package_proto_obj: FileDescriptorProto
-    input_files: List[str] = field(default_factory=list)
+    input_files: List[FileDescriptorProto] = field(default_factory=list)
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
@@ -245,12 +257,12 @@ class OutputTemplate:
         return self.package_proto_obj.package
 
     @property
-    def input_filenames(self) -> Iterable[str]:
+    def input_filenames(self) -> List[str]:
         """Names of the input files used to build this output.
 
         Returns
         -------
-        Iterable[str]
+        List[str]
             Names of the input files used to build this output.
         """
         return sorted(f.name for f in self.input_files)
@@ -634,7 +646,7 @@ class EnumDefinitionCompiler(MessageCompiler):
 @dataclass
 class ServiceCompiler(ProtoContentBase):
     parent: OutputTemplate = PLACEHOLDER
-    proto_obj: DescriptorProto = PLACEHOLDER
+    proto_obj: ServiceDescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
     methods: List["ServiceMethodCompiler"] = field(default_factory=list)
 

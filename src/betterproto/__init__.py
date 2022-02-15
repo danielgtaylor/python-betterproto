@@ -9,7 +9,6 @@ import typing
 from abc import ABC
 from base64 import b64decode, b64encode
 from datetime import datetime, timedelta, timezone
-from dateutil.parser import isoparse
 from typing import (
     Any,
     Callable,
@@ -25,11 +24,12 @@ from typing import (
     get_type_hints,
 )
 
+from dateutil.parser import isoparse
+
 from ._types import T
 from ._version import __version__
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
-
 
 # Proto 3 data types
 TYPE_ENUM = "enum"
