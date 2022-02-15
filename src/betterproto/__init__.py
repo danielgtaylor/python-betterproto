@@ -1,4 +1,3 @@
-from copy import deepcopy
 import dataclasses
 import enum
 import inspect
@@ -9,6 +8,7 @@ import sys
 import typing
 from abc import ABC
 from base64 import b64decode, b64encode
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from dateutil.parser import isoparse
 from typing import (
