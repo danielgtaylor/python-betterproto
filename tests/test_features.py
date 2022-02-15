@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from copy import copy, deepcopy
 from datetime import datetime
 from inspect import Parameter, signature
 from typing import Dict, List, Optional
@@ -485,3 +486,22 @@ def test_service_argument__expected_parameter():
     do_thing_request_parameter = sig.parameters["do_thing_request"]
     assert do_thing_request_parameter.default is Parameter.empty
     assert do_thing_request_parameter.annotation == "DoThingRequest"
+
+
+def test_copyability():
+    @dataclass
+    class Spam(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+        bar: int = betterproto.int32_field(2)
+        baz: List[str] = betterproto.string_field(3)
+
+    spam = Spam(bar=12, baz=["hello"])
+    copied = copy(spam)
+    assert spam == copied
+    assert spam is not copied
+    assert spam.baz is copied.baz
+
+    deepcopied = deepcopy(spam)
+    assert spam == deepcopied
+    assert spam is not deepcopied
+    assert spam.baz is not deepcopied.baz

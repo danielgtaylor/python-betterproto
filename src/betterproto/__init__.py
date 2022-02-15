@@ -1,3 +1,4 @@
+from copy import deepcopy
 import dataclasses
 import enum
 import inspect
@@ -716,6 +717,14 @@ class Message(ABC):
             not in (PLACEHOLDER, self._get_field_default(field_name))
             for field_name in self._betterproto.meta_by_field_name
         )
+
+    def __deepcopy__(self: T, _: Any = {}) -> T:
+        kwargs = {}
+        for name in self._betterproto.meta_by_field_name:
+            value = self.__raw_get(name)
+            if value is not PLACEHOLDER:
+                kwargs[name] = deepcopy(value)
+        return self.__class__(**kwargs)  # type: ignore
 
     @property
     def _betterproto(self) -> ProtoClassMetadata:
