@@ -18,7 +18,7 @@ dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=2.11.2", optional = true }
 typer = { version = "^0.3.2", optional = true }
-rich = { version = "^9.8.2", optional = true }
+rich = { version = "^11.2.0", optional = true }
 python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
@@ -38,7 +38,7 @@ sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 tomlkit = "^0.7.0"
 tox = "^3.15.1"
-protobuf_parser = "1.0.0"
+# protobuf_parser = "1.0.0"
 
 [tool.poetry.scripts]
 betterproto = "betterproto:__main__.main"

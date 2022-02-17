@@ -67,7 +67,7 @@ async def compile(
         output = output or (Path(output_path.parent.name) / output_path.name).resolve()
         output.mkdir(exist_ok=True, parents=True)
 
-        errors = await compile_protobufs(
+        results = await compile_protobufs(
             *protos,
             output=output,
             verbose=verbose,
@@ -76,38 +76,40 @@ async def compile(
             from_cli=True,
         )
 
-        for error in errors:
-            if isinstance(error, protobuf_parser.SyntaxError):
-                rich.print(
-                    f"[red]File {str(error.file).strip()}:\n",
-                    Syntax.from_path(
-                        error.file,
-                        line_numbers=True,
-                        line_range=(max(error.lineno - 5, 0), error.lineno),
-                    ),
-                    f"{' ' * (error.offset + 3)}^\nSyntaxError: {error.msg}[red]",
-                    file=sys.stderr,
-                )
-            elif isinstance(error, Warning):
-                rich.print(f"Warning: {error}", file=sys.stderr)
-            elif isinstance(error, protobuf_parser.Error):
-                failed_files = "\n".join(f" - {file}" for file in protos)
-                rich.print(
-                    f"[red]Protoc failed to generate outputs for:\n\n"
-                    f"{failed_files}\n\nSee the output for the issue:\n{error}[red]",
-                    file=sys.stderr,
-                )
+        for result in results:
+            for error in result.errors:
+                if error.message.startswith("Syntax error"):
+                    rich.print(
+                        f"[red]File {str(result.file)}:\n",
+                        Syntax.from_path(
+                            str(result.file),
+                            line_numbers=True,
+                            line_range=(max(error.line - 5, 0), error.line),
+                        ),
+                        f"{' ' * (error.column + 3)}^\nSyntaxError: {error.message}[red]",
+                        file=sys.stderr,
+                    )
+                elif isinstance(error, protobuf_parser.Warning):
+                    rich.print(f"Warning: {error}", file=sys.stderr)
+                else:
+                    failed_files = "\n".join(f" - {file}" for file in protos)
+                    rich.print(
+                        f"[red]Protoc failed to generate outputs for:\n\n"
+                        f"{failed_files}\n\nSee the output for the issue:\n{error}[red]",
+                        file=sys.stderr,
+                    )
 
-        has_warnings = all(isinstance(e, Warning) for e in errors)
-        if not errors or has_warnings:
+        # has_warnings = all(isinstance(e, Warning) for e in errors)
+        # if not errors or has_warnings:
+        if True:
             rich.print(
                 f"[bold green]Finished generating output for "
                 f"{len(protos)} file{'s' if len(protos) != 1 else ''}, "
                 f"output is in {output.as_posix()}"
             )
 
-        if errors:
-            if not has_warnings:
-                exit(2)
-            exit(1)
+        # if errors:
+        #     if not has_warnings:
+        #         exit(2)
+        #     exit(1)
         exit(0)

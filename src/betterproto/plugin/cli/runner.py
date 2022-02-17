@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, Any, List
+from typing import TYPE_CHECKING, Any, Sequence
 
 import protobuf_parser
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def write_file(output: "Path", file: CodeGeneratorResponseFile) -> None:
-    path = (output / file.name).resolve()
+    path = output.joinpath(file.name).resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(file.content)
 
@@ -26,7 +26,7 @@ async def compile_protobufs(
     output: "Path",
     use_betterproto: bool = True,
     **kwargs: Any,
-) -> List[protobuf_parser.Error]:
+) -> Sequence[protobuf_parser.ParseResult["Path"]]:
     """
     A programmatic way to compile protobufs.
 
@@ -44,20 +44,20 @@ async def compile_protobufs(
     A of exceptions from protoc.
     """
     if use_betterproto:
-        proto_files, errors = await utils.to_thread(protobuf_parser.parse, *files)
-        if errors:
-            return errors
+        results = await utils.to_thread(protobuf_parser.parse, *files)
         request = CodeGeneratorRequest(
-            proto_file=[FileDescriptorProto().parse(file) for file in proto_files]
+            proto_file=[
+                FileDescriptorProto().parse(result.parsed) for result in results
+            ]
         )
 
         # Generate code
         response = await utils.to_thread(generate_code, request, **kwargs)
 
         await asyncio.gather(
-            *(utils.to_thread(write_file(output, file) for file in response.file))
+            *(utils.to_thread(write_file, output, file) for file in response.file)
         )
-
+        return results
     else:
         errors = await utils.to_thread(
             protobuf_parser.run,
@@ -66,4 +66,4 @@ async def compile_protobufs(
             python_out=output.as_posix(),
         )
 
-    return errors
+        return []
