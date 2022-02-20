@@ -68,27 +68,27 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {{ method.comment }}
 
         {% endif %}
-        request = {{ method.input }}()
+        request_ = {{ method.input }}()
         {% for field in method.input_message.properties %}
             {% if field.field_type == 'message' %}
         if {{ field.py_name }} is not None:
-            request.{{ field.py_name }} = {{ field.py_name }}
+            request_.{{ field.py_name }} = {{ field.py_name }}
             {% else %}
-        request.{{ field.py_name }} = {{ field.py_name }}
+        request_.{{ field.py_name }} = {{ field.py_name }}
             {% endif %}
         {% endfor %}
 
         {% if method.server_streaming %}
         async for response in self._unary_stream(
             "{{ method.route }}",
-            request,
+            request_,
             {{ method.output }},
         ):
             yield response
         {% else %}
         return await self._unary_unary(
             "{{ method.route }}",
-            request,
+            request_,
             {{ method.output }},
         )
         {% endif %}
