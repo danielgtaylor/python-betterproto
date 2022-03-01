@@ -97,7 +97,7 @@ shell = "poe generate && tox"
 help = "Run tests with multiple pythons"
 
 [tool.poe.tasks.check-style]
-cmd = "black . --check --diff --exclude tests/output_"
+cmd = "black . --check --diff"
 help = "Check if code style is correct"
 
 
