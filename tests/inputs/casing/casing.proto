@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package casing;
+
 enum my_enum {
   ZERO = 0;
   ONE = 1;

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package repeated_duration_timestamp;
+
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 

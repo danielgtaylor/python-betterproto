@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package nested2;
+
 import "package.proto";
 
 message Game {

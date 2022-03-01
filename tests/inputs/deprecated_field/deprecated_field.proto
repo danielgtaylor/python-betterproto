@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package deprecated_field;
+
 // Some documentation about the Test message.
 message Test {
     // Some documentation about the value.

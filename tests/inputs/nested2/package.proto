@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package equipment;
+package nested2.equipment;
 
 message Weapon {
 

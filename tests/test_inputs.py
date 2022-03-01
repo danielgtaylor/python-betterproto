@@ -23,8 +23,6 @@ from tests.util import (
 # break things because we can't properly reset the symbol database.
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
-from google.protobuf import symbol_database
-from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.json_format import Parse
 
 
@@ -125,13 +123,8 @@ def dict_replace_nans(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
 
 
 @pytest.fixture
-def test_data(request):
+def test_data(request, reset_sys_path):
     test_case_name = request.param
-
-    # Reset the internal symbol database so we can import the `Test` message
-    # multiple times. Ugh.
-    sym = symbol_database.Default()
-    sym.pool = DescriptorPool()
 
     reference_module_root = os.path.join(
         *reference_output_package.split("."), test_case_name
@@ -157,8 +150,6 @@ def test_data(request):
             json_data=get_test_case_json_data(test_case_name),
         )
     )
-
-    sys.path.remove(reference_module_root)
 
 
 @pytest.mark.parametrize("test_data", test_cases.messages, indirect=True)

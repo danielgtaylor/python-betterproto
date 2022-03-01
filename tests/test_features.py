@@ -480,7 +480,7 @@ def test_iso_datetime_list():
 
 
 def test_service_argument__expected_parameter():
-    from tests.output_betterproto.service.service import TestStub
+    from tests.output_betterproto.service import TestStub
 
     sig = signature(TestStub.do_thing)
     do_thing_request_parameter = sig.parameters["do_thing_request"]

@@ -7,12 +7,12 @@ import grpclib.server
 import pytest
 from betterproto.grpc.util.async_channel import AsyncChannel
 from grpclib.testing import ChannelFor
-from tests.output_betterproto.service.service import (
+from tests.output_betterproto.service import (
     DoThingRequest,
     DoThingResponse,
     GetThingRequest,
 )
-from tests.output_betterproto.service.service import TestStub as ThingServiceClient
+from tests.output_betterproto.service import TestStub as ThingServiceClient
 
 from .thing_service import ThingService
 
