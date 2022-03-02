@@ -381,8 +381,7 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ```sh
 # Get set up with the virtual env & dependencies
-poetry run pip install --upgrade pip
-poetry install
+poetry install -E compiler
 
 # Activate the poetry environment
 poetry shell
