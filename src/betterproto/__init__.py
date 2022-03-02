@@ -1,16 +1,15 @@
 import dataclasses
 import enum
-import inspect
 import json
 import math
 import struct
 import sys
 import typing
+import warnings
 from abc import ABC
 from base64 import b64decode, b64encode
 from copy import deepcopy
 from datetime import datetime, timedelta, timezone
-from dateutil.parser import isoparse
 from typing import (
     Any,
     Callable,
@@ -26,11 +25,12 @@ from typing import (
     get_type_hints,
 )
 
+from dateutil.parser import isoparse
+
 from ._types import T
 from ._version import __version__
 from .casing import camel_case, safe_snake_case, snake_case
 from .grpc.grpclib_client import ServiceStub
-
 
 # Proto 3 data types
 TYPE_ENUM = "enum"
@@ -867,7 +867,10 @@ class Message(ABC):
         return field_cls
 
     def _get_field_default(self, field_name: str) -> Any:
-        return self._betterproto.default_gen[field_name]()
+        with warnings.catch_warnings():
+            # ignore warnings when initialising deprecated field defaults
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            return self._betterproto.default_gen[field_name]()
 
     @classmethod
     def _get_field_default_gen(cls, field: dataclasses.Field) -> Any:
@@ -1287,6 +1290,22 @@ class Message(ABC):
             The initialized message.
         """
         return self.from_dict(json.loads(value))
+
+    def is_set(self, name: str) -> bool:
+        """
+        Check if field with the given name has been set.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the field to check for.
+
+        Returns
+        --------
+        :class:`bool`
+            `True` if field has been set, otherwise `False`.
+        """
+        return self.__raw_get(name) is not PLACEHOLDER
 
 
 def serialized_on_wire(message: Message) -> bool:
