@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "child.proto";
 
-package package;
+package import_child_package_from_package.package;
 
 message PackageMessage {
     package.childpackage.ChildMessage c = 1;

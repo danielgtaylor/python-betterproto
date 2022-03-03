@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package namespace_builtin_types;
+
 // Tests that messages may contain fields with names that are python types
 
 message Test {

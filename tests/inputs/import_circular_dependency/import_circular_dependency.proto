@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package import_circular_dependency;
+
 import "root.proto";
 import "other.proto";
 

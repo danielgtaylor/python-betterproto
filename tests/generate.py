@@ -78,7 +78,7 @@ async def generate_test_case_output(
     """
 
     test_case_output_path_reference = output_path_reference.joinpath(test_case_name)
-    test_case_output_path_betterproto = output_path_betterproto.joinpath(test_case_name)
+    test_case_output_path_betterproto = output_path_betterproto
 
     os.makedirs(test_case_output_path_reference, exist_ok=True)
     os.makedirs(test_case_output_path_betterproto, exist_ok=True)

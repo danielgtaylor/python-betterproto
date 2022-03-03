@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package googletypes_service_returns_empty;
+
 import "google/protobuf/empty.proto";
 
 service Test {

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package proto3_field_presence_oneof;
+
 message Test {
     oneof kind {
         Nested nested = 1;

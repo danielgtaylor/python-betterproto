@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package bool;
+
 message Test {
     bool value = 1;
 }

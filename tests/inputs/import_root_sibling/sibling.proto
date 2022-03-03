@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package import_root_sibling;
+
 message SiblingMessage {
 
 }

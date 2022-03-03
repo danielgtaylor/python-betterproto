@@ -1,4 +1,4 @@
-from tests.output_betterproto.service.service import (
+from tests.output_betterproto.service import (
     DoThingResponse,
     DoThingRequest,
     GetThingRequest,

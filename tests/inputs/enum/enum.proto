@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package enum;
+
 // Tests that enums are correctly serialized and that it correctly handles skipped and out-of-order enum values
 message Test {
   Choice choice = 1;

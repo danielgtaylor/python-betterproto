@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package casing_message_field_uppercase;
+
 message Test {
   int32 UPPERCASE = 1;
   int32 UPPERCASE_V2 = 2;

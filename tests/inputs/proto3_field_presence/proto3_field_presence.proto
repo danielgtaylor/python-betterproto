@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package proto3_field_presence;
+
 import "google/protobuf/timestamp.proto";
 
 message InnerTest {
