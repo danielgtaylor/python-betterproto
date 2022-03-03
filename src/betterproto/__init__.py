@@ -610,7 +610,12 @@ class Message(ABC):
             Calls :meth:`__bool__`.
     """
 
-    _serialized_on_wire: bool
+    serialized_on_wire: bool
+    """
+    If this message was or should be serialized on the wire. This can be used to detect
+    presence (e.g. optional wrapper message) and is used internally during
+    parsing/serialization.
+    """
     _unknown_fields: bytes
     _group_current: Dict[str, str]
 
@@ -635,7 +640,7 @@ class Message(ABC):
                     group_current[meta.group] = field_name
 
         # Now that all the defaults are set, reset it!
-        self.__dict__["_serialized_on_wire"] = not all_sentinel
+        self.__dict__["serialized_on_wire"] = not all_sentinel
         self.__dict__["_unknown_fields"] = b""
         self.__dict__["_group_current"] = group_current
 
@@ -695,9 +700,9 @@ class Message(ABC):
         return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        if attr != "_serialized_on_wire":
+        if attr != "serialized_on_wire":
             # Track when a field has been set.
-            self.__dict__["_serialized_on_wire"] = True
+            self.__dict__["serialized_on_wire"] = True
 
         if hasattr(self, "_group_current"):  # __post_init__ had already run
             if attr in self._betterproto.oneof_group_by_field:
@@ -765,7 +770,7 @@ class Message(ABC):
 
             # Empty messages can still be sent on the wire if they were
             # set (or received empty).
-            serialize_empty = isinstance(value, Message) and value._serialized_on_wire
+            serialize_empty = isinstance(value, Message) and value.serialized_on_wire
 
             include_default_value_for_oneof = self._include_default_value_for_oneof(
                 field_name=field_name, meta=meta
@@ -933,7 +938,7 @@ class Message(ABC):
                     value = _get_wrapper(meta.wraps)().parse(value).value
                 else:
                     value = cls().parse(value)
-                    value._serialized_on_wire = True
+                    value.serialized_on_wire = True
             elif meta.proto_type == TYPE_MAP:
                 value = self._betterproto.cls_by_field[field_name]().parse(value)
 
@@ -962,7 +967,7 @@ class Message(ABC):
             The initialized message.
         """
         # Got some data over the wire
-        self._serialized_on_wire = True
+        self.serialized_on_wire = True
         proto_meta = self._betterproto
         for parsed in parse_fields(data):
             field_name = proto_meta.field_name_by_number.get(parsed.number)
@@ -1098,7 +1103,7 @@ class Message(ABC):
                     if include_default_values:
                         output[cased_name] = value
                 elif (
-                    value._serialized_on_wire
+                    value.serialized_on_wire
                     or include_default_values
                     or self._include_default_value_for_oneof(
                         field_name=field_name, meta=meta
@@ -1179,7 +1184,7 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
-        self._serialized_on_wire = True
+        self.serialized_on_wire = True
         for key in value:
             field_name = safe_snake_case(key)
             meta = self._betterproto.meta_by_field_name.get(field_name)
@@ -1288,34 +1293,19 @@ class Message(ABC):
         """
         return self.from_dict(json.loads(value))
 
+    def which_one_of(self, group_name: str) -> Tuple[str, Optional[Any]]:
+        """
+        Return the name and value of a message's one-of field group.
 
-def serialized_on_wire(message: Message) -> bool:
-    """
-    If this message was or should be serialized on the wire. This can be used to detect
-    presence (e.g. optional wrapper message) and is used internally during
-    parsing/serialization.
-
-    Returns
-    --------
-    :class:`bool`
-        Whether this message was or should be serialized on the wire.
-    """
-    return message._serialized_on_wire
-
-
-def which_one_of(message: Message, group_name: str) -> Tuple[str, Optional[Any]]:
-    """
-    Return the name and value of a message's one-of field group.
-
-    Returns
-    --------
-    Tuple[:class:`str`, Any]
-        The field name and the value for that field.
-    """
-    field_name = message._group_current.get(group_name)
-    if not field_name:
-        return "", None
-    return field_name, getattr(message, field_name)
+        Returns
+        --------
+        Tuple[:class:`str`, Any]
+            The field name and the value for that field.
+        """
+        field_name = self._group_current.get(group_name)
+        if not field_name:
+            return "", None
+        return field_name, getattr(self, field_name)
 
 
 # Circular import workaround: google.protobuf depends on base classes defined above.

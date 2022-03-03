@@ -18,23 +18,23 @@ def test_has_field():
 
     # Unset by default
     foo = Foo()
-    assert betterproto.serialized_on_wire(foo.bar) is False
+    assert foo.bar.serialized_on_wire is False
 
     # Serialized after setting something
     foo.bar.baz = 1
-    assert betterproto.serialized_on_wire(foo.bar) is True
+    assert foo.bar.serialized_on_wire is True
 
     # Still has it after setting the default value
     foo.bar.baz = 0
-    assert betterproto.serialized_on_wire(foo.bar) is True
+    assert foo.bar.serialized_on_wire is True
 
     # Manual override (don't do this)
-    foo.bar._serialized_on_wire = False
-    assert betterproto.serialized_on_wire(foo.bar) is False
+    foo.bar.serialized_on_wire = False
+    assert foo.bar.serialized_on_wire is False
 
     # Can manually set it but defaults to false
     foo.bar = Bar()
-    assert betterproto.serialized_on_wire(foo.bar) is False
+    assert foo.bar.serialized_on_wire is False
 
     @dataclass
     class WithCollections(betterproto.Message):
@@ -45,15 +45,15 @@ def test_has_field():
 
     # Is always set from parse, even if all collections are empty
     with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == True
+    assert with_collections_empty.serialized_on_wire == True
     with_collections_list = WithCollections().parse(
         bytes(WithCollections(test_list=["a", "b", "c"]))
     )
-    assert betterproto.serialized_on_wire(with_collections_list) == True
+    assert with_collections_list.serialized_on_wire == True
     with_collections_map = WithCollections().parse(
         bytes(WithCollections(test_map={"a": "b", "c": "d"}))
     )
-    assert betterproto.serialized_on_wire(with_collections_map) == True
+    assert with_collections_map.serialized_on_wire == True
 
 
 def test_class_init():
@@ -125,35 +125,35 @@ def test_oneof_support():
 
     foo = Foo()
 
-    assert betterproto.which_one_of(foo, "group1")[0] == ""
+    assert foo.which_one_of("group1")[0] == ""
 
     foo.bar = 1
     foo.baz = "test"
 
     # Other oneof fields should now be unset
     assert foo.bar == 0
-    assert betterproto.which_one_of(foo, "group1")[0] == "baz"
+    assert foo.which_one_of("group1")[0] == "baz"
 
     foo.sub.val = 1
-    assert betterproto.serialized_on_wire(foo.sub)
+    assert foo.sub.serialized_on_wire
 
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
     assert foo.sub.val == 0
-    assert betterproto.serialized_on_wire(foo.sub) is False
-    assert betterproto.which_one_of(foo, "group2")[0] == "abc"
+    assert foo.sub.serialized_on_wire is False
+    assert foo.which_one_of("group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
     foo = Foo(bar=0)
-    assert betterproto.which_one_of(foo, "group1")[0] == "bar"
+    assert foo.which_one_of("group1")[0] == "bar"
     assert bytes(foo) == b"\x08\x00"
 
     # Round trip should also work
     foo2 = Foo().parse(bytes(foo))
-    assert betterproto.which_one_of(foo2, "group1")[0] == "bar"
+    assert foo2.which_one_of("group1")[0] == "bar"
     assert foo.bar == 0
-    assert betterproto.which_one_of(foo2, "group2")[0] == ""
+    assert foo2.which_one_of("group2")[0] == ""
 
 
 def test_json_casing():
@@ -309,29 +309,29 @@ def test_oneof_default_value_set_causes_writes_wire():
 
     assert bytes(foo1) == b"\x08\x00"
     assert (
-        betterproto.which_one_of(foo1, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo1), "group1")
+        foo1.which_one_of("group1")
+        == _round_trip_serialization(foo1).which_one_of("group1")
         == ("bar", 0)
     )
 
     assert bytes(foo2) == b"\x12\x00"  # Baz is just an empty string
     assert (
-        betterproto.which_one_of(foo2, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo2), "group1")
+        foo2.which_one_of("group1")
+        == _round_trip_serialization(foo2).which_one_of("group1")
         == ("baz", "")
     )
 
     assert bytes(foo3) == b"\x1a\x00"
     assert (
-        betterproto.which_one_of(foo3, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo3), "group1")
+        foo3.which_one_of("group1")
+        == _round_trip_serialization(foo3).which_one_of("group1")
         == ("qux", Empty())
     )
 
     assert bytes(foo4) == b""
     assert (
-        betterproto.which_one_of(foo4, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo4), "group1")
+        foo4.which_one_of("group1")
+        == _round_trip_serialization(foo4).which_one_of("group1")
         == ("", None)
     )
 

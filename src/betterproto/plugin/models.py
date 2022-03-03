@@ -37,7 +37,6 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
 
 import betterproto
-from betterproto import which_one_of
 from betterproto.casing import sanitize_name
 from betterproto.compile.importing import get_type_reference, parse_source_type_name
 from betterproto.compile.naming import (
@@ -108,6 +107,9 @@ PROTO_PACKED_TYPES = (
     FieldDescriptorProtoType.TYPE_SFIXED64,  # 16
     FieldDescriptorProtoType.TYPE_SINT32,  # 17
     FieldDescriptorProtoType.TYPE_SINT64,  # 18
+)
+UNSAFE_FIELD_NAMES = frozenset(dir(betterproto.Message)) | frozenset(
+    betterproto.Message.__annotations__
 )
 
 
@@ -346,7 +348,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
         us to tell whether it was set, via the which_one_of interface.
     """
 
-    return which_one_of(proto_field_obj, "oneof_index")[0] == "oneof_index"
+    return proto_field_obj.which_one_of("oneof_index")[0] == "oneof_index"
 
 
 @dataclass
@@ -492,7 +494,11 @@ class FieldCompiler(MessageCompiler):
     @property
     def py_name(self) -> str:
         """Pythonized name."""
-        return pythonize_field_name(self.proto_name)
+        unsafe_name = pythonize_field_name(self.proto_name)
+        # rename fields in case they clash with things defined in Message
+        if unsafe_name in UNSAFE_FIELD_NAMES:
+            return f"{unsafe_name}_"
+        return unsafe_name
 
     @property
     def proto_name(self) -> str:
