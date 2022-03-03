@@ -21,7 +21,6 @@ python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"
-black = "^21.11b0"
 bpython = "^0.19"
 grpcio-tools = "^1.40.0"
 jinja2 = ">=2.11.2"
@@ -36,6 +35,7 @@ sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 tomlkit = "^0.7.0"
 tox = "^3.15.1"
+pre-commit = "^2.17.0"
 
 
 [tool.poetry.scripts]
@@ -97,12 +97,21 @@ shell = "poe generate && tox"
 help = "Run tests with multiple pythons"
 
 [tool.poe.tasks.check-style]
-cmd = "black . --check --diff --exclude tests/output_"
+cmd = "black . --check --diff"
 help = "Check if code style is correct"
 
 
 [tool.black]
 target-version = ['py36']
+
+[tool.doc8]
+paths = ["docs"]
+max_line_length = 88
+
+[tool.doc8.ignore_path_errors]
+"docs/migrating.rst" = [
+    "D001",  # contains table which is longer than 88 characters long
+]
 
 [tool.coverage.run]
 omit = ["betterproto/tests/*"]
