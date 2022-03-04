@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
-## [Unreleased]
+## [2.0.0b5] - 2022-03-xx
 
 - **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters.
 
@@ -23,15 +23,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     ```
     Servers before:
     ```py
-    async def echo(self, value: str, extra_times: int) -> EchoResponse:
+    async def echo(self, value: str, extra_times: int) -> EchoResponse: ...
     ```
     Servers after:
     ```py
     async def echo(self, echo_request: EchoRequest) -> EchoResponse:
         # Use echo_request.value
         # Use echo_request.extra_times
+        ...
     ```
 
+- Format field comments also as docstrings [#304](https://github.com/danielgtaylor/python-betterproto/pull/304)
+- Implement `__deepcopy__` for `Message` [#339](https://github.com/danielgtaylor/python-betterproto/pull/339)
+
+- Fix message text in `NotImplementedError` [#325](https://github.com/danielgtaylor/python-betterproto/pull/325)
+- Fix `Message.from_dict()` in the presence of optional datetime fields [#329](https://github.com/danielgtaylor/python-betterproto/pull/329)
+- Support Jinja2 3.0 to prevent version conflicts [#330](https://github.com/danielgtaylor/python-betterproto/pull/330)
 
 ## [2.0.0b4] - 2022-01-03
 
