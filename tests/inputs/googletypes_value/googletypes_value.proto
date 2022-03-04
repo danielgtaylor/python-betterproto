@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package googletypes_value;
+
 import "google/protobuf/struct.proto";
 
 // Tests that fields of type google.protobuf.Value can contain arbitrary JSON-values.

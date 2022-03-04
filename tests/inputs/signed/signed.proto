@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package signed;
+
 message Test {
     // todo: rename fields after fixing bug where 'signed_32_positive' will map to 'signed_32Positive' as output json
     sint32 signed32 = 1;    //  signed_32_positive

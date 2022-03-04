@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package oneof_empty;
+
+message Nothing {}
+
+message MaybeNothing {
+  string sometimes = 42;
+}
+
+message Test {
+  oneof empty {
+    Nothing nothing = 1;
+    MaybeNothing maybe1 = 2;
+    MaybeNothing maybe2 = 3;
+  }
+}

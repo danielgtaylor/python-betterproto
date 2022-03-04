@@ -15,6 +15,7 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 {% endif %}
 
 import betterproto
+from betterproto.grpc.grpclib_server import ServiceBase
 {% if output_file.services %}
 import grpclib
 {% endif %}
@@ -27,10 +28,11 @@ class {{ enum.py_name }}(betterproto.Enum):
 
     {% endif %}
     {% for entry in enum.entries %}
+    {{ entry.name }} = {{ entry.value }}
         {% if entry.comment %}
 {{ entry.comment }}
+
         {% endif %}
-    {{ entry.name }} = {{ entry.value }}
     {% endfor %}
 
 
@@ -44,16 +46,17 @@ class {{ message.py_name }}(betterproto.Message):
 
     {% endif %}
     {% for field in message.fields %}
+    {{ field.get_field_string() }}
         {% if field.comment %}
 {{ field.comment }}
+
         {% endif %}
-    {{ field.get_field_string() }}
     {% endfor %}
     {% if not message.fields %}
     pass
     {% endif %}
 
-    {% if message.deprecated or message.deprecated_fields %}
+    {% if message.deprecated or message.has_deprecated_fields %}
     def __post_init__(self) -> None:
         {% if message.deprecated %}
         warnings.warn("{{ message.py_name }} is deprecated", DeprecationWarning)
@@ -72,55 +75,27 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
 {{ service.comment }}
 
+    {% elif not service.methods %}
+    pass
     {% endif %}
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message and method.py_input_message.fields -%}, *,
-                {%- for field in method.py_input_message.fields -%}
-                    {{ field.py_name }}: {% if field.py_name in method.mutable_default_args and not field.annotation.startswith("Optional[") -%}
-                                            Optional[{{ field.annotation }}]
-                                         {%- else -%}
-                                            {{ field.annotation }}
-                                         {%- endif -%} = 
-                                            {%- if field.py_name not in method.mutable_default_args -%}
-                                                {{ field.default_value_string }}
-                                            {%- else -%}
-                                                None
-                                            {% endif -%}
-                    {%- if not loop.last %}, {% endif -%}
-                {%- endfor -%}
-            {%- endif -%}
+            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , request_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
+            , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
         {%- endif -%}
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
         {% endif %}
-        {%- for py_name, zero in method.mutable_default_args.items() %}
-        {{ py_name }} = {{ py_name }} or {{ zero }}
-        {% endfor %}
-
-        {% if not method.client_streaming %}
-        request = {{ method.py_input_message_type }}()
-        {% for field in method.py_input_message.fields %}
-            {% if field.field_type == 'message' %}
-        if {{ field.py_name }} is not None:
-            request.{{ field.py_name }} = {{ field.py_name }}
-            {% else %}
-        request.{{ field.py_name }} = {{ field.py_name }}
-            {% endif %}
-        {% endfor %}
-        {% endif %}
-
         {% if method.server_streaming %}
             {% if method.client_streaming %}
         async for response in self._stream_stream(
             "{{ method.route }}",
-            request_iterator,
+            {{ method.py_input_message_param }}_iterator,
             {{ method.py_input_message_type }},
             {{ method.py_output_message_type.strip('"') }},
         ):
@@ -128,7 +103,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {% else %}{# i.e. not client streaming #}
         async for response in self._unary_stream(
             "{{ method.route }}",
-            request,
+            {{ method.py_input_message_param }},
             {{ method.py_output_message_type.strip('"') }},
         ):
             yield response
@@ -138,20 +113,86 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {% if method.client_streaming %}
         return await self._stream_unary(
             "{{ method.route }}",
-            request_iterator,
+            {{ method.py_input_message_param }}_iterator,
             {{ method.py_input_message_type }},
             {{ method.py_output_message_type.strip('"') }}
         )
             {% else %}{# i.e. not client streaming #}
         return await self._unary_unary(
             "{{ method.route }}",
-            request,
+            {{ method.py_input_message_param }},
             {{ method.py_output_message_type.strip('"') }}
         )
             {% endif %}{# client streaming #}
         {% endif %}
 
     {% endfor %}
+{% endfor %}
+
+{% for service in output_file.services %}
+class {{ service.py_name }}Base(ServiceBase):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% endif %}
+
+    {% for method in service.methods %}
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , {{ method.py_input_message_param }}_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
+        {%- endif -%}
+            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    {% endfor %}
+
+    {% for method in service.methods %}
+    async def __rpc_{{ method.py_name }}(self, stream: grpclib.server.Stream) -> None:
+        {% if not method.client_streaming %}
+        request = await stream.recv_message()
+        {% else %}
+        request = stream.__aiter__()
+        {% endif %}
+        {% if not method.server_streaming %}
+        response = await self.{{ method.py_name }}(request)
+        await stream.send_message(response)
+        {% else %}
+        await self._call_rpc_handler_server_stream(
+            self.{{ method.py_name }},
+            stream,
+            request,
+        )
+        {% endif %}
+
+    {% endfor %}
+
+    def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
+        return {
+        {% for method in service.methods %}
+        "{{ method.route }}": grpclib.const.Handler(
+            self.__rpc_{{ method.py_name }},
+            {% if not method.client_streaming and not method.server_streaming %}
+            grpclib.const.Cardinality.UNARY_UNARY,
+            {% elif not method.client_streaming and method.server_streaming %}
+            grpclib.const.Cardinality.UNARY_STREAM,
+            {% elif method.client_streaming and not method.server_streaming %}
+            grpclib.const.Cardinality.STREAM_UNARY,
+            {% else %}
+            grpclib.const.Cardinality.STREAM_STREAM,
+            {% endif %}
+            {{ method.py_input_message_type }},
+            {{ method.py_output_message_type }},
+        ),
+        {% endfor %}
+        }
+
 {% endfor %}
 
 {% for i in output_file.imports|sort %}

@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package nested;
+
 // A test message with a nested message inside of it.
 message Test {
     // This is the nested type.

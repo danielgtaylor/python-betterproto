@@ -1,8 +1,18 @@
 syntax = "proto3";
 
+package oneof;
+
 message Test {
   oneof foo {
-    int32 count = 1;
-    string name = 2;
+    int32 pitied = 1;
+    string pitier = 2;
+  }
+
+  int32 just_a_regular_field = 3;
+
+  oneof bar {
+    int32 drinks = 11;
+    string bar_name = 12;
   }
 }
+

@@ -2,9 +2,16 @@ syntax = "proto3";
 
 package service;
 
+enum ThingType {
+  UNKNOWN = 0;
+  LIVING = 1;
+  DEAD = 2;
+}
+
 message DoThingRequest {
   string name = 1;
   repeated string comments = 2;
+  ThingType type = 3;
 }
 
 message DoThingResponse {

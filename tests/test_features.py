@@ -1,6 +1,10 @@
-import betterproto
 from dataclasses import dataclass
-from typing import Optional, List, Dict
+from copy import copy, deepcopy
+from datetime import datetime
+from inspect import Parameter, signature
+from typing import Dict, List, Optional
+
+import betterproto
 
 
 def test_has_field():
@@ -286,16 +290,22 @@ def test_to_dict_default_values():
 
 def test_oneof_default_value_set_causes_writes_wire():
     @dataclass
+    class Empty(betterproto.Message):
+        pass
+
+    @dataclass
     class Foo(betterproto.Message):
         bar: int = betterproto.int32_field(1, group="group1")
         baz: str = betterproto.string_field(2, group="group1")
+        qux: Empty = betterproto.message_field(3, group="group1")
 
     def _round_trip_serialization(foo: Foo) -> Foo:
         return Foo().parse(bytes(foo))
 
     foo1 = Foo(bar=0)
     foo2 = Foo(baz="")
-    foo3 = Foo()
+    foo3 = Foo(qux=Empty())
+    foo4 = Foo()
 
     assert bytes(foo1) == b"\x08\x00"
     assert (
@@ -311,10 +321,17 @@ def test_oneof_default_value_set_causes_writes_wire():
         == ("baz", "")
     )
 
-    assert bytes(foo3) == b""
+    assert bytes(foo3) == b"\x1a\x00"
     assert (
         betterproto.which_one_of(foo3, "group1")
         == betterproto.which_one_of(_round_trip_serialization(foo3), "group1")
+        == ("qux", Empty())
+    )
+
+    assert bytes(foo4) == b""
+    assert (
+        betterproto.which_one_of(foo4, "group1")
+        == betterproto.which_one_of(_round_trip_serialization(foo4), "group1")
         == ("", None)
     )
 
@@ -334,10 +351,8 @@ def test_recursive_message():
 
 
 def test_recursive_message_defaults():
-    from tests.output_betterproto.recursivemessage import (
-        Test as RecursiveMessage,
-        Intermediate,
-    )
+    from tests.output_betterproto.recursivemessage import Intermediate
+    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
 
     msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
 
@@ -395,3 +410,98 @@ def test_bool():
     assert t
     t.bar = 0
     assert not t
+
+
+# valid ISO datetimes according to https://www.myintervals.com/blog/2009/05/20/iso-8601-date-validation-that-doesnt-suck/
+iso_candidates = """2009-12-12T12:34
+2009
+2009-05-19
+2009-05-19
+20090519
+2009123
+2009-05
+2009-123
+2009-222
+2009-001
+2009-W01-1
+2009-W51-1
+2009-W33
+2009W511
+2009-05-19
+2009-05-19 00:00
+2009-05-19 14
+2009-05-19 14:31
+2009-05-19 14:39:22
+2009-05-19T14:39Z
+2009-W21-2
+2009-W21-2T01:22
+2009-139
+2009-05-19 14:39:22-06:00
+2009-05-19 14:39:22+0600
+2009-05-19 14:39:22-01
+20090621T0545Z
+2007-04-06T00:00
+2007-04-05T24:00
+2010-02-18T16:23:48.5
+2010-02-18T16:23:48,444
+2010-02-18T16:23:48,3-06:00
+2010-02-18T16:23:00.4
+2010-02-18T16:23:00,25
+2010-02-18T16:23:00.33+0600
+2010-02-18T16:00:00.23334444
+2010-02-18T16:00:00,2283
+2009-05-19 143922
+2009-05-19 1439""".split(
+    "\n"
+)
+
+
+def test_iso_datetime():
+    @dataclass
+    class Envelope(betterproto.Message):
+        ts: datetime = betterproto.message_field(1)
+
+    msg = Envelope()
+
+    for _, candidate in enumerate(iso_candidates):
+        msg.from_dict({"ts": candidate})
+        assert isinstance(msg.ts, datetime)
+
+
+def test_iso_datetime_list():
+    @dataclass
+    class Envelope(betterproto.Message):
+        timestamps: List[datetime] = betterproto.message_field(1)
+
+    msg = Envelope()
+
+    msg.from_dict({"timestamps": iso_candidates})
+    assert all([isinstance(item, datetime) for item in msg.timestamps])
+
+
+def test_service_argument__expected_parameter():
+    from tests.output_betterproto.service import TestStub
+
+    sig = signature(TestStub.do_thing)
+    do_thing_request_parameter = sig.parameters["do_thing_request"]
+    assert do_thing_request_parameter.default is Parameter.empty
+    assert do_thing_request_parameter.annotation == "DoThingRequest"
+
+
+def test_copyability():
+    @dataclass
+    class Spam(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+        bar: int = betterproto.int32_field(2)
+        baz: List[str] = betterproto.string_field(3)
+
+    spam = Spam(bar=12, baz=["hello"])
+    copied = copy(spam)
+    assert spam == copied
+    assert spam is not copied
+    assert spam.baz is copied.baz
+
+    deepcopied = deepcopy(spam)
+    assert spam == deepcopied
+    assert spam is not deepcopied
+    assert spam.baz is not deepcopied.baz

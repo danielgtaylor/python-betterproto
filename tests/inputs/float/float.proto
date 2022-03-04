@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package float;
+
+// Some documentation about the Test message.
+message Test {
+    double positive = 1;
+    double negative = 2;
+    double nan = 3;
+    double three = 4;
+    double three_point_one_four = 5;
+    double neg_three = 6;
+    double neg_three_point_one_four = 7;
+}

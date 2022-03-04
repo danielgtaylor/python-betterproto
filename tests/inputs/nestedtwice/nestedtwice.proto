@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package nestedtwice;
+
 message Test {
   message Top {
     message Middle {
