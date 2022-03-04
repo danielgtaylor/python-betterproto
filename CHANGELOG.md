@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0b5] - 2022-03-xx
 
-- **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters.
+- **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters [#331](https://github.com/danielgtaylor/python-betterproto/pull/311)
 
     Update your client calls and server handlers as follows:
 
