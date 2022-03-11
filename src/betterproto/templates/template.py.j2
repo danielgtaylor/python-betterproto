@@ -16,6 +16,9 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 
 import betterproto
 from betterproto.grpc.grpclib_server import ServiceBase
+{% for i in output_file.imports|sort %}
+{{ i }}
+{% endfor %}
 {% if output_file.services %}
 import grpclib
 {% endif %}
@@ -215,8 +218,4 @@ class {{ service.py_name }}Base(ServiceBase):
         {% endfor %}
         }
 
-{% endfor %}
-
-{% for i in output_file.imports|sort %}
-{{ i }}
 {% endfor %}
