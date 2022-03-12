@@ -44,12 +44,12 @@ def traverse(
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
-            item.name = next_prefix = prefix + item.name
+            item.name = next_prefix = f"{prefix}_{item.name}"
             yield item, path + [i]
 
             if isinstance(item, DescriptorProto):
                 for enum in item.enum_type:
-                    enum.name = next_prefix + enum.name
+                    enum.name = f"{next_prefix}_{enum.name}"
                     yield enum, path + [i, 4]
 
                 if item.nested_type:
