@@ -683,7 +683,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         # add imports required for request arguments timeout, deadline and metadata
         self.output_file.typing_imports.add("Optional")
         self.output_file.imports_type_checking_only.add(
-            "from betterproto.grpc.grpclib_client import _MetadataLike"
+            "from betterproto.grpc.grpclib_client import MetadataLike"
         )
         self.output_file.imports_type_checking_only.add(
             "from grpclib.metadata import Deadline"
