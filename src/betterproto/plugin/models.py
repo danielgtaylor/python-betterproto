@@ -232,6 +232,7 @@ class OutputTemplate:
     messages: List["MessageCompiler"] = field(default_factory=list)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
+    imports_type_checking_only: Set[str] = field(default_factory=set)
 
     @property
     def package(self) -> str:
@@ -678,6 +679,15 @@ class ServiceMethodCompiler(ProtoContentBase):
         # Required by both client and server
         if self.client_streaming or self.server_streaming:
             self.output_file.typing_imports.add("AsyncIterator")
+
+        # add imports required for request arguments timeout, deadline and metadata
+        self.output_file.typing_imports.add("Optional")
+        self.output_file.imports_type_checking_only.add(
+            "from betterproto.grpc.grpclib_client import MetadataLike"
+        )
+        self.output_file.imports_type_checking_only.add(
+            "from grpclib.metadata import Deadline"
+        )
 
         super().__post_init__()  # check for unset fields
 

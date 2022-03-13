@@ -1,9 +1,11 @@
 import asyncio
 import sys
+import uuid
 
 import grpclib
 import grpclib.metadata
 import grpclib.server
+import grpclib.client
 import pytest
 from betterproto.grpc.util.async_channel import AsyncChannel
 from grpclib.testing import ChannelFor
@@ -18,7 +20,7 @@ from .thing_service import ThingService
 
 
 async def _test_client(client: ThingServiceClient, name="clean room", **kwargs):
-    response = await client.do_thing(DoThingRequest(name=name))
+    response = await client.do_thing(DoThingRequest(name=name), **kwargs)
     assert response.names == [name]
 
 
@@ -170,6 +172,55 @@ async def test_service_call_lower_level_with_overrides():
             metadata=kwarg_metadata,
         )
         assert response.names == [THING_TO_DO]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("overrides",),
+    [
+        (dict(timeout=10),),
+        (dict(deadline=grpclib.metadata.Deadline.from_timeout(10)),),
+        (dict(metadata={"authorization": str(uuid.uuid4())}),),
+        (dict(timeout=20, metadata={"authorization": str(uuid.uuid4())}),),
+    ],
+)
+async def test_service_call_high_level_with_overrides(mocker, overrides):
+    request_spy = mocker.spy(grpclib.client.Channel, "request")
+    name = str(uuid.uuid4())
+    defaults = dict(
+        timeout=99,
+        deadline=grpclib.metadata.Deadline.from_timeout(99),
+        metadata={"authorization": name},
+    )
+
+    async with ChannelFor(
+        [
+            ThingService(
+                test_hook=_assert_request_meta_received(
+                    deadline=grpclib.metadata.Deadline.from_timeout(
+                        overrides.get("timeout", 99)
+                    ),
+                    metadata=overrides.get("metadata", defaults.get("metadata")),
+                )
+            )
+        ]
+    ) as channel:
+        client = ThingServiceClient(channel, **defaults)
+        await _test_client(client, name=name, **overrides)
+        assert request_spy.call_count == 1
+
+        # for python <3.8 request_spy.call_args.kwargs do not work
+        _, request_spy_call_kwargs = request_spy.call_args_list[0]
+
+        # ensure all overrides were successful
+        for key, value in overrides.items():
+            assert key in request_spy_call_kwargs
+            assert request_spy_call_kwargs[key] == value
+
+        # ensure default values were retained
+        for key in set(defaults.keys()) - set(overrides.keys()):
+            assert key in request_spy_call_kwargs
+            assert request_spy_call_kwargs[key] == defaults[key]
 
 
 @pytest.mark.asyncio
