@@ -1,6 +1,10 @@
 import json
 
-from tests.output_betterproto.proto3_field_presence import Test, InnerTest, TestEnum
+from tests.output_betterproto.proto3_field_presence import (
+    InnerTest,
+    Test,
+    TestEnum,
+)
 
 
 def test_null_fields_json():

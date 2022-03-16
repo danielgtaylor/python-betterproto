@@ -1,5 +1,6 @@
 import os.path
 
+
 try:
     # betterproto[compiler] specific dependencies
     import black

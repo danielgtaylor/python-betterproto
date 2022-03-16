@@ -7,9 +7,16 @@ import sys
 import typing
 import warnings
 from abc import ABC
-from base64 import b64decode, b64encode
+from base64 import (
+    b64decode,
+    b64encode,
+)
 from copy import deepcopy
-from datetime import datetime, timedelta, timezone
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 from typing import (
     Any,
     Callable,
@@ -29,8 +36,13 @@ from dateutil.parser import isoparse
 
 from ._types import T
 from ._version import __version__
-from .casing import camel_case, safe_snake_case, snake_case
+from .casing import (
+    camel_case,
+    safe_snake_case,
+    snake_case,
+)
 from .grpc.grpclib_client import ServiceStub
+
 
 # Proto 3 data types
 TYPE_ENUM = "enum"

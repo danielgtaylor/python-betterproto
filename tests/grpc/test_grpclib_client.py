@@ -3,18 +3,19 @@ import sys
 import uuid
 
 import grpclib
+import grpclib.client
 import grpclib.metadata
 import grpclib.server
-import grpclib.client
 import pytest
-from betterproto.grpc.util.async_channel import AsyncChannel
 from grpclib.testing import ChannelFor
+
+from betterproto.grpc.util.async_channel import AsyncChannel
 from tests.output_betterproto.service import (
     DoThingRequest,
     DoThingResponse,
     GetThingRequest,
+    TestStub as ThingServiceClient,
 )
-from tests.output_betterproto.service import TestStub as ThingServiceClient
 
 from .thing_service import ThingService
 

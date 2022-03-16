@@ -101,17 +101,14 @@ cmd = "black . --check --diff"
 help = "Check if code style is correct"
 
 [tool.isort]
-py_version = 36
+py_version = 37
 profile = "black"
 force_single_line = false
 combine_as_imports = true
-lines_between_types = 1
 lines_after_imports = 2
+include_trailing_comma = true
+force_grid_wrap = 2
 src_paths = ["src", "tests"]
-extend_skip = [
-    "^tests/output_betterproto",
-    "^tests/output_reference",
-]
 
 [tool.black]
 target-version = ['py36']

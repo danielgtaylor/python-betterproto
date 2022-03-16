@@ -2,7 +2,10 @@ import warnings
 
 import pytest
 
-from tests.output_betterproto.deprecated import Message, Test
+from tests.output_betterproto.deprecated import (
+    Message,
+    Test,
+)
 
 
 @pytest.fixture
