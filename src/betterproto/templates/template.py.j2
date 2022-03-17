@@ -15,9 +15,15 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 {% endif %}
 
 import betterproto
+{% if output_file.parent_request.options.grpc_kind == "grpclib" %}
 from betterproto.grpc.grpclib_server import ServiceBase
-{% if output_file.services %}
+{% endif %}
+{% if output_file.services and output_file.parent_request.options.grpc_kind == "grpclib" %}
 import grpclib
+{% endif %}
+{% if output_file.services and output_file.parent_request.options.grpc_kind == "grpcio" %}
+import grpc
+from betterproto.grpc.grpcio_server import ServicerBase
 {% endif %}
 
 {% if output_file.imports_type_checking_only %}
@@ -77,6 +83,9 @@ class {{ message.py_name }}(betterproto.Message):
 
 
 {% endfor %}
+
+{% if output_file.parent_request.options.grpc_kind == "grpclib" %}
+
 {% for service in output_file.services %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
@@ -216,6 +225,61 @@ class {{ service.py_name }}Base(ServiceBase):
         }
 
 {% endfor %}
+{% endif %}
+
+{% if output_file.parent_request.options.grpc_kind == "grpcio" %}
+{% for service in output_file.services %}
+class {{ service.py_name }}Base(ServicerBase):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% endif %}
+
+    {% for method in service.methods %}
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            , request: "{{ method.py_input_message_type }}"
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , request_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
+        {%- endif -%}
+            , context: grpc.aio.ServicerContext
+            ) -> {% if method.server_streaming %}AsyncGenerator["{{ method.py_output_message_type }}", None]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    {% endfor %}
+
+    __proto_path__ = "{{ service.proto_path }}"
+
+    @property
+    def __rpc_methods__(self):
+        return {
+        {% for method in service.methods %}
+            "{{ method.proto_name }}":
+            {% if not method.client_streaming and not method.server_streaming %}
+                grpc.unary_unary_rpc_method_handler(
+            {% elif method.client_streaming and method.server_streaming %}
+                grpc.stream_stream_rpc_method_handler(
+            {% elif method.client_streaming %}
+                grpc.stream_unary_rpc_method_handler(
+            {% else %}
+                grpc.unary_stream_rpc_method_handler(
+            {% endif %}
+                    self.{{ method.py_name }},
+                    request_deserializer={{ method.py_input_message_type }}.FromString,
+                    response_serializer={{ method.py_input_message_type }}.SerializeToString,
+                ),
+        {% endfor %}
+        }
+
+{% endfor %}
+{% endif %}
 
 {% for i in output_file.imports|sort %}
 {{ i }}

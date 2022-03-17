@@ -213,9 +213,15 @@ class ProtoContentBase:
 
 
 @dataclass
-class PluginRequestCompiler:
+class Options:
+    grpc_kind: str = "grpclib"
+    include_google: bool = False
 
+
+@dataclass
+class PluginRequestCompiler:
     plugin_request_obj: CodeGeneratorRequest
+    options: Options
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
     @property
@@ -667,6 +673,10 @@ class ServiceCompiler(ProtoContentBase):
     @property
     def proto_name(self) -> str:
         return self.proto_obj.name
+
+    @property
+    def proto_path(self) -> str:
+        return self.parent.package + "." + self.proto_name
 
     @property
     def py_name(self) -> str:
