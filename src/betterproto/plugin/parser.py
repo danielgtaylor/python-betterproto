@@ -1,3 +1,15 @@
+import itertools
+import pathlib
+import sys
+from typing import (
+    TYPE_CHECKING,
+    Iterator,
+    List,
+    Set,
+    Tuple,
+    Union,
+)
+
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
@@ -11,10 +23,7 @@ from betterproto.lib.google.protobuf.compiler import (
     CodeGeneratorResponseFeature,
     CodeGeneratorResponseFile,
 )
-import itertools
-import pathlib
-import sys
-from typing import Iterator, List, Set, Tuple, TYPE_CHECKING, Union
+
 from .compiler import outputfile_compiler
 from .models import (
     EnumDefinitionCompiler,
@@ -29,6 +38,7 @@ from .models import (
     is_map,
     is_oneof,
 )
+
 
 if TYPE_CHECKING:
     from google.protobuf.descriptor import Descriptor

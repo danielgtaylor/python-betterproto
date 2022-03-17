@@ -1,7 +1,11 @@
-from typing import AsyncIterable, AsyncIterator
+from typing import (
+    AsyncIterable,
+    AsyncIterator,
+)
 
 import pytest
 from grpclib.testing import ChannelFor
+
 from tests.output_betterproto.example_service import (
     ExampleRequest,
     ExampleResponse,

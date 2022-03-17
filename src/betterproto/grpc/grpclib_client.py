@@ -15,7 +15,11 @@ from typing import (
 
 import grpclib.const
 
-from .._types import ST, T
+from .._types import (
+    ST,
+    T,
+)
+
 
 if TYPE_CHECKING:
     from grpclib.client import Channel

@@ -1,7 +1,7 @@
 from tests.output_betterproto.proto3_field_presence_oneof import (
-    Test,
     InnerNested,
     Nested,
+    Test,
     WithOptional,
 )
 

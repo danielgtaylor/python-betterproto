@@ -5,7 +5,13 @@ import os
 import sys
 from collections import namedtuple
 from types import ModuleType
-from typing import Any, Dict, List, Set, Tuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    Set,
+    Tuple,
+)
 
 import pytest
 
@@ -18,6 +24,7 @@ from tests.util import (
     get_test_case_json_data,
     inputs_path,
 )
+
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
