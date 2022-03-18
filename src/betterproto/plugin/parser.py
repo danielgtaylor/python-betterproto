@@ -1,9 +1,7 @@
-import itertools
 import pathlib
 import sys
 from typing import (
-    TYPE_CHECKING,
-    Iterator,
+    Generator,
     List,
     Set,
     Tuple,
@@ -13,7 +11,6 @@ from typing import (
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
-    FieldDescriptorProto,
     FileDescriptorProto,
     ServiceDescriptorProto,
 )
@@ -40,35 +37,32 @@ from .models import (
 )
 
 
-if TYPE_CHECKING:
-    from google.protobuf.descriptor import Descriptor
-
-
 def traverse(
-    proto_file: FieldDescriptorProto,
-) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
+    proto_file: FileDescriptorProto,
+) -> Generator[
+    Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
+]:
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List["EnumDescriptorProto"], prefix=""
-    ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
+        path: List[int],
+        items: Union[List[EnumDescriptorProto], List[DescriptorProto]],
+        prefix: str = "",
+    ) -> Generator[
+        Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
+    ]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
             item.name = next_prefix = f"{prefix}_{item.name}"
-            yield item, path + [i]
+            yield item, [*path, i]
 
             if isinstance(item, DescriptorProto):
-                for enum in item.enum_type:
-                    enum.name = f"{next_prefix}_{enum.name}"
-                    yield enum, path + [i, 4]
+                # Get nested types.
+                yield from _traverse([*path, i, 4], item.enum_type, next_prefix)
+                yield from _traverse([*path, i, 3], item.nested_type, next_prefix)
 
-                if item.nested_type:
-                    for n, p in _traverse(path + [i, 3], item.nested_type, next_prefix):
-                        yield n, p
-
-    return itertools.chain(
-        _traverse([5], proto_file.enum_type), _traverse([4], proto_file.message_type)
-    )
+    yield from _traverse([5], proto_file.enum_type)
+    yield from _traverse([4], proto_file.message_type)
 
 
 def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
