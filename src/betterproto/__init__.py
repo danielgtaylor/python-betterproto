@@ -695,6 +695,7 @@ class Message(ABC):
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
     if not TYPE_CHECKING:
+
         def __getattribute__(self, name: str) -> Any:
             """
             Lazily initialize default values to avoid infinite recursion for recursive
