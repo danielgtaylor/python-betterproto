@@ -1317,7 +1317,8 @@ class Message(ABC):
         :class:`bool`
             `True` if field has been set, otherwise `False`.
         """
-        return self.__raw_get(name) is not PLACEHOLDER
+        default = PLACEHOLDER if self._betterproto.meta_by_field_name[name].optional is None else None
+        return self.__raw_get(name) is not default
 
 
 def serialized_on_wire(message: Message) -> bool:
