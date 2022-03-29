@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package entry;
+
 // This is a minimal example of a repeated message field that caused issues when
 // checking whether a message is a map.
 //
