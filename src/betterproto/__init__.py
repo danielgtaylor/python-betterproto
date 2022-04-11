@@ -944,9 +944,9 @@ class Message:
             elif meta.proto_type == TYPE_MESSAGE:
                 cls = self._betterproto.cls_by_field[field_name]
 
-                if cls == datetime:
+                if cls is datetime:
                     value = _Timestamp().parse(value).to_datetime()
-                elif cls == timedelta:
+                elif cls is timedelta:
                     value = _Duration().parse(value).to_timedelta()
                 elif meta.wraps:
                     # This is a Google wrapper value message around a single
@@ -1105,9 +1105,9 @@ class Message:
                 elif field_is_repeated:
                     # Convert each item.
                     cls = self._betterproto.cls_by_field[field_name]
-                    if cls == datetime:
+                    if cls is datetime:
                         value = [_Timestamp.timestamp_to_json(i) for i in value]
-                    elif cls == timedelta:
+                    elif cls is timedelta:
                         value = [_Duration.delta_to_json(i) for i in value]
                     else:
                         value = [
