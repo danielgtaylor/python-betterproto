@@ -6,7 +6,6 @@ import struct
 import sys
 import typing
 import warnings
-from abc import ABC
 from base64 import (
     b64decode,
     b64encode,
@@ -605,7 +604,7 @@ class ProtoClassMetadata:
         return field_cls
 
 
-class Message(ABC):
+class Message:
     """
     The base class for protobuf messages, all generated messages will inherit from
     this. This class registers the message fields which are used by the serializers and
