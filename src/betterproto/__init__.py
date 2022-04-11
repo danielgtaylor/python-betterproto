@@ -433,7 +433,7 @@ def _parse_float(value: Any) -> float:
 
     Parameters
     ----------
-    value : Any
+    value: Any
         Value to parse
 
     Returns
@@ -455,20 +455,19 @@ def _dump_float(value: float) -> Union[float, str]:
 
     Parameters
     ----------
-    value : float
+    value: float
         Value to dump
 
     Returns
     -------
     Union[float, str]
-        Dumped valid, either a float or the strings
-        "Infinity" or "-Infinity"
+        Dumped value, either a float or the strings
     """
     if value == float("inf"):
         return INFINITY
     if value == -float("inf"):
         return NEG_INFINITY
-    if value == float("nan"):
+    if math.isnan(value):
         return NAN
     return value
 
