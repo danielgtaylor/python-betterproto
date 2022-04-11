@@ -414,24 +414,25 @@ def _serialize_single(
     """Serializes a single field and value."""
     value = _preprocess_single(proto_type, wraps, value)
 
-    output = bytearray()
     if proto_type in WIRE_VARINT_TYPES:
         key = encode_varint(field_number << 3)
-        output += key + value
+        output = key + value
     elif proto_type in WIRE_FIXED_32_TYPES:
         key = encode_varint((field_number << 3) | 5)
-        output += key + value
+        output = key + value
     elif proto_type in WIRE_FIXED_64_TYPES:
         key = encode_varint((field_number << 3) | 1)
-        output += key + value
+        output = key + value
     elif proto_type in WIRE_LEN_DELIM_TYPES:
-        if len(value) or serialize_empty or wraps:
+        if value or serialize_empty or wraps:
             key = encode_varint((field_number << 3) | 2)
-            output += key + encode_varint(len(value)) + value
+            output = key + encode_varint(len(value)) + value
+        else:
+            output = b""
     else:
         raise NotImplementedError(proto_type)
 
-    return bytes(output)
+    return output
 
 
 def _parse_float(value: Any) -> float:
