@@ -894,14 +894,15 @@ class Message:
     def _get_field_default_gen(cls, field: dataclasses.Field) -> Any:
         t = cls._type_hint(field.name)
 
-        if hasattr(t, "__origin__"):
-            if t.__origin__ in (dict, Dict):
+        origin = getattr(t, "__origin__", None)
+        if origin is not None:
+            if origin is dict:
                 # This is some kind of map (dict in Python).
-                return dict
-            elif t.__origin__ in (list, List):
+                return origin
+            elif origin is list:
                 # This is some kind of list (repeated) field.
-                return list
-            elif t.__origin__ is Union and t.__args__[1] is type(None):
+                return origin
+            elif origin is Union and t.__args__[1] is type(None):
                 # This is an optional field (either wrapped, or using proto3
                 # field presence). For setting the default we really don't care
                 # what kind of field it is.
