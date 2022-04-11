@@ -879,7 +879,7 @@ class Message:
         """Get the message class for a field from the type hints."""
         field_cls = cls._type_hint(field.name)
         args = getattr(field_cls, "__args__", None)
-        if args and index >= 0 and args is not None:
+        if args and index >= 0:
             field_cls = field_cls.__args__[index]
         return field_cls
 
