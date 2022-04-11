@@ -336,16 +336,15 @@ class Enum(enum.IntEnum):
             raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
 
 
-def _pack_fmt(proto_type: str) -> str:
-    """Returns a little-endian format string for reading/writing binary."""
-    return {
-        TYPE_DOUBLE: "<d",
-        TYPE_FLOAT: "<f",
-        TYPE_FIXED32: "<I",
-        TYPE_FIXED64: "<Q",
-        TYPE_SFIXED32: "<i",
-        TYPE_SFIXED64: "<q",
-    }[proto_type]
+_pack_fmt: Callable[[str], struct.Struct] = {
+    TYPE_DOUBLE: struct.Struct("<d"),
+    TYPE_FLOAT: struct.Struct("<f"),
+    TYPE_FIXED32: struct.Struct("<I"),
+    TYPE_FIXED64: struct.Struct("<Q"),
+    TYPE_SFIXED32: struct.Struct("<i"),
+    TYPE_SFIXED64: struct.Struct("<q"),
+}.__getitem__
+"""Returns a little-endian (un)packer for reading/writing binary."""
 
 
 def encode_varint(value: int) -> bytes:
@@ -379,7 +378,7 @@ def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
         # Handle zig-zag encoding.
         return encode_varint(value << 1 if value >= 0 else (value << 1) ^ (~0))
     elif proto_type in FIXED_TYPES:
-        return struct.pack(_pack_fmt(proto_type), value)
+        return _pack_fmt(proto_type).pack(value)
     elif proto_type == TYPE_STRING:
         return value.encode("utf-8")
     elif proto_type == TYPE_MESSAGE:
@@ -658,8 +657,7 @@ class Message:
         self.__dict__["_unknown_fields"] = b""
         self.__dict__["_group_current"] = group_current
 
-    def __raw_get(self, name: str) -> Any:
-        return super().__getattribute__(name)
+    __raw_get = object.__getattribute__
 
     def __eq__(self, other) -> bool:
         if type(self) is not type(other):
@@ -705,7 +703,7 @@ class Message:
         Lazily initialize default values to avoid infinite recursion for recursive
         message types
         """
-        value = super().__getattribute__(name)
+        value = self.__raw_get(name)
         if value is not PLACEHOLDER:
             return value
 
@@ -937,8 +935,7 @@ class Message:
                 # Booleans use a varint encoding, so convert it to true/false.
                 value = value > 0
         elif wire_type in {WIRE_FIXED_32, WIRE_FIXED_64}:
-            fmt = _pack_fmt(meta.proto_type)
-            value = struct.unpack(fmt, value)[0]
+            (value,) = _pack_fmt(meta.proto_type).unpack(value)
         elif wire_type == WIRE_LEN_DELIM:
             if meta.proto_type == TYPE_STRING:
                 value = str(value, "utf-8")
