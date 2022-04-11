@@ -1202,72 +1202,72 @@ class Message:
             The initialized message.
         """
         self._serialized_on_wire = True
-        for key in value:
+        for key, v in value.items():
             field_name = safe_snake_case(key)
             try:
                 meta = self._betterproto.meta_by_field_name[field_name]
             except KeyError:
                 continue
 
-            if value[key] is not None:
-                if meta.proto_type == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[field_name]
-                    if isinstance(v, list):
-                        if cls == datetime:
-                            v = [isoparse(item) for item in value[key]]
-                        elif cls == timedelta:
-                            v = [
-                                timedelta(seconds=float(item[:-1]))
-                                for item in value[key]
-                            ]
-                        else:
-                            v = [cls().from_dict(item) for item in value[key]]
-                    elif cls == datetime:
-                        v = isoparse(value[key])
-                        setattr(self, field_name, v)
-                    elif cls == timedelta:
-                        v = timedelta(seconds=float(value[key][:-1]))
-                        setattr(self, field_name, v)
-                    elif meta.wraps:
-                        setattr(self, field_name, value[key])
-                    elif v is None:
-                        setattr(self, field_name, cls().from_dict(value[key]))
-                    else:
-                        # NOTE: `from_dict` mutates the underlying message, so no
-                        # assignment here is necessary.
-                        v.from_dict(value[key])
-                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                    for k in value[key]:
-                        v[k] = cls().from_dict(value[key][k])
-                else:
-                    v = value[key]
-                    if meta.proto_type in INT_64_TYPES:
-                        if isinstance(value[key], list):
-                            v = [int(n) for n in value[key]]
-                        else:
-                            v = int(value[key])
-                    elif meta.proto_type == TYPE_BYTES:
-                        if isinstance(value[key], list):
-                            v = [b64decode(n) for n in value[key]]
-                        else:
-                            v = b64decode(value[key])
-                    elif meta.proto_type == TYPE_ENUM:
-                        enum_cls = self._betterproto.cls_by_field[field_name]
-                        if isinstance(v, list):
-                            v = [enum_cls.from_string(e) for e in v]
-                        elif isinstance(v, str):
-                            v = enum_cls.from_string(v)
-                    elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
-                        if isinstance(value[key], list):
-                            v = [_parse_float(n) for n in value[key]]
-                        else:
-                            v = _parse_float(value[key])
+            if v is None:
+                continue
 
-                if v is not None:
+            if meta.proto_type == TYPE_MESSAGE:
+                v = getattr(self, field_name)
+                cls = self._betterproto.cls_by_field[field_name]
+                if isinstance(v, list):
+                    if cls is datetime:
+                        v = [isoparse(item) for item in value[key]]
+                    elif cls is timedelta:
+                        v = [timedelta(seconds=float(item[:-1])) for item in value[key]]
+                    else:
+                        v = [cls().from_dict(item) for item in value[key]]
+                elif cls is datetime:
+                    v = isoparse(value[key])
                     setattr(self, field_name, v)
+                elif cls is timedelta:
+                    v = timedelta(seconds=float(value[key][:-1]))
+                    setattr(self, field_name, v)
+                elif meta.wraps:
+                    setattr(self, field_name, value[key])
+                elif v is None:
+                    setattr(self, field_name, cls().from_dict(value[key]))
+                else:
+                    # NOTE: `from_dict` mutates the underlying message, so no
+                    # assignment here is necessary.
+                    v.from_dict(value[key])
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                v = getattr(self, field_name)
+                cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                for k in value[key]:
+                    v[k] = cls().from_dict(value[key][k])
+            elif meta.proto_type in INT_64_TYPES:
+                v = (
+                    [int(n) for n in value[key]]
+                    if isinstance(value[key], list)
+                    else int(value[key])
+                )
+
+            elif meta.proto_type == TYPE_BYTES:
+                v = (
+                    [b64decode(n) for n in value[key]]
+                    if isinstance(value[key], list)
+                    else b64decode(value[key])
+                )
+
+            elif meta.proto_type == TYPE_ENUM:
+                enum_cls = self._betterproto.cls_by_field[field_name]
+                if isinstance(v, list):
+                    v = [enum_cls.from_string(e) for e in v]
+                elif isinstance(v, str):
+                    v = enum_cls.from_string(v)
+            elif meta.proto_type in {TYPE_FLOAT, TYPE_DOUBLE}:
+                if isinstance(value[key], list):
+                    v = [_parse_float(n) for n in value[key]]
+                else:
+                    v = _parse_float(value[key])
+
+            setattr(self, field_name, v)
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:
