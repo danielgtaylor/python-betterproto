@@ -349,7 +349,7 @@ _pack_fmt: Callable[[str], struct.Struct] = {
 
 def encode_varint(value: int) -> bytes:
     """Encodes a single varint value for serialization."""
-    b: List[int] = []
+    b: "List[int]" = []
 
     if value < 0:
         value += 1 << 64
@@ -704,7 +704,7 @@ class Message:
         Lazily initialize default values to avoid infinite recursion for recursive
         message types
         """
-        value = self.__raw_get(name)
+        value = super().__getattribute__(name)
         if value is not PLACEHOLDER:
             return value
 
