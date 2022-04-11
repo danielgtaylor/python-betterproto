@@ -65,35 +65,41 @@ TYPE_MAP = "map"
 
 
 # Fields that use a fixed amount of space (4 or 8 bytes)
-FIXED_TYPES = [
-    TYPE_FLOAT,
-    TYPE_DOUBLE,
-    TYPE_FIXED32,
-    TYPE_SFIXED32,
-    TYPE_FIXED64,
-    TYPE_SFIXED64,
-]
+FIXED_TYPES = frozenset(
+    {
+        TYPE_FLOAT,
+        TYPE_DOUBLE,
+        TYPE_FIXED32,
+        TYPE_SFIXED32,
+        TYPE_FIXED64,
+        TYPE_SFIXED64,
+    }
+)
 
 # Fields that are numerical 64-bit types
-INT_64_TYPES = [TYPE_INT64, TYPE_UINT64, TYPE_SINT64, TYPE_FIXED64, TYPE_SFIXED64]
+INT_64_TYPES = frozenset(
+    {TYPE_INT64, TYPE_UINT64, TYPE_SINT64, TYPE_FIXED64, TYPE_SFIXED64}
+)
 
-# Fields that are efficiently packed when
-PACKED_TYPES = [
-    TYPE_ENUM,
-    TYPE_BOOL,
-    TYPE_INT32,
-    TYPE_INT64,
-    TYPE_UINT32,
-    TYPE_UINT64,
-    TYPE_SINT32,
-    TYPE_SINT64,
-    TYPE_FLOAT,
-    TYPE_DOUBLE,
-    TYPE_FIXED32,
-    TYPE_SFIXED32,
-    TYPE_FIXED64,
-    TYPE_SFIXED64,
-]
+# Fields that are efficiently packed when serialised
+PACKED_TYPES = frozenset(
+    {
+        TYPE_ENUM,
+        TYPE_BOOL,
+        TYPE_INT32,
+        TYPE_INT64,
+        TYPE_UINT32,
+        TYPE_UINT64,
+        TYPE_SINT32,
+        TYPE_SINT64,
+        TYPE_FLOAT,
+        TYPE_DOUBLE,
+        TYPE_FIXED32,
+        TYPE_SFIXED32,
+        TYPE_FIXED64,
+        TYPE_SFIXED64,
+    }
+)
 
 # Wire types
 # https://developers.google.com/protocol-buffers/docs/encoding#structure
@@ -103,20 +109,22 @@ WIRE_LEN_DELIM = 2
 WIRE_FIXED_32 = 5
 
 # Mappings of which Proto 3 types correspond to which wire types.
-WIRE_VARINT_TYPES = [
-    TYPE_ENUM,
-    TYPE_BOOL,
-    TYPE_INT32,
-    TYPE_INT64,
-    TYPE_UINT32,
-    TYPE_UINT64,
-    TYPE_SINT32,
-    TYPE_SINT64,
-]
+WIRE_VARINT_TYPES = frozenset(
+    {
+        TYPE_ENUM,
+        TYPE_BOOL,
+        TYPE_INT32,
+        TYPE_INT64,
+        TYPE_UINT32,
+        TYPE_UINT64,
+        TYPE_SINT32,
+        TYPE_SINT64,
+    }
+)
 
-WIRE_FIXED_32_TYPES = [TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32]
-WIRE_FIXED_64_TYPES = [TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64]
-WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
+WIRE_FIXED_32_TYPES = frozenset({TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32})
+WIRE_FIXED_64_TYPES = frozenset({TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64})
+WIRE_LEN_DELIM_TYPES = frozenset({TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP})
 
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
@@ -358,16 +366,16 @@ def encode_varint(value: int) -> bytes:
 
 def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
     """Adjusts values before serialization."""
-    if proto_type in (
+    if proto_type in {
         TYPE_ENUM,
         TYPE_BOOL,
         TYPE_INT32,
         TYPE_INT64,
         TYPE_UINT32,
         TYPE_UINT64,
-    ):
+    }:
         return encode_varint(value)
-    elif proto_type in (TYPE_SINT32, TYPE_SINT64):
+    elif proto_type in {TYPE_SINT32, TYPE_SINT64}:
         # Handle zig-zag encoding.
         return encode_varint(value << 1 if value >= 0 else (value << 1) ^ (~0))
     elif proto_type in FIXED_TYPES:
@@ -917,18 +925,18 @@ class Message:
     ) -> Any:
         """Adjusts values after parsing."""
         if wire_type == WIRE_VARINT:
-            if meta.proto_type in (TYPE_INT32, TYPE_INT64):
+            if meta.proto_type in {TYPE_INT32, TYPE_INT64}:
                 bits = int(meta.proto_type[3:])
                 value = value & ((1 << bits) - 1)
                 signbit = 1 << (bits - 1)
                 value = int((value ^ signbit) - signbit)
-            elif meta.proto_type in (TYPE_SINT32, TYPE_SINT64):
+            elif meta.proto_type in {TYPE_SINT32, TYPE_SINT64}:
                 # Undo zig-zag encoding
                 value = (value >> 1) ^ (-(value & 1))
             elif meta.proto_type == TYPE_BOOL:
                 # Booleans use a varint encoding, so convert it to true/false.
                 value = value > 0
-        elif wire_type in (WIRE_FIXED_32, WIRE_FIXED_64):
+        elif wire_type in {WIRE_FIXED_32, WIRE_FIXED_64}:
             fmt = _pack_fmt(meta.proto_type)
             value = struct.unpack(fmt, value)[0]
         elif wire_type == WIRE_LEN_DELIM:
@@ -992,10 +1000,10 @@ class Message:
                 pos = 0
                 value = []
                 while pos < len(parsed.value):
-                    if meta.proto_type in (TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32):
+                    if meta.proto_type in {TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32}:
                         decoded, pos = parsed.value[pos : pos + 4], pos + 4
                         wire_type = WIRE_FIXED_32
-                    elif meta.proto_type in (TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64):
+                    elif meta.proto_type in {TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64}:
                         decoded, pos = parsed.value[pos : pos + 8], pos + 8
                         wire_type = WIRE_FIXED_64
                     else:
@@ -1169,7 +1177,7 @@ class Message:
                     else:
                         enum_class = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
-                elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
+                elif meta.proto_type in {TYPE_FLOAT, TYPE_DOUBLE}:
                     if field_is_repeated:
                         output[cased_name] = [_dump_float(n) for n in value]
                     else:
@@ -1373,7 +1381,7 @@ class _Duration(Duration):
     def delta_to_json(delta: timedelta) -> str:
         parts = str(delta.total_seconds()).split(".")
         if len(parts) > 1:
-            while len(parts[1]) not in (3, 6, 9):
+            while len(parts[1]) not in {3, 6, 9}:
                 parts[1] = f"{parts[1]}0"
         return f"{'.'.join(parts)}s"
 
