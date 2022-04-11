@@ -10,19 +10,19 @@
 
 import pathlib
 
-import toml
-
+import tomlkit
 
 # -- Project information -----------------------------------------------------
 
 project = "betterproto"
 copyright = "2019 Daniel G. Taylor"
 author = "danielgtaylor"
-pyproject = toml.load(open(pathlib.Path(__file__).parent.parent / "pyproject.toml"))
-
+pyproject = tomlkit.loads(  # type: ignore
+    (pathlib.Path(__file__).parent.parent / "pyproject.toml").read_text()
+)
 
 # The full version, including alpha/beta/rc tags.
-release = pyproject["tool"]["poetry"]["version"]
+release = str(pyproject["tool"]["poetry"]["version"])
 
 
 # -- General configuration ---------------------------------------------------
