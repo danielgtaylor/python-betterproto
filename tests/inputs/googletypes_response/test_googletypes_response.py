@@ -1,9 +1,18 @@
-from typing import Any, Callable, Optional
+from typing import (
+    Any,
+    Callable,
+    Optional,
+)
+
+import pytest
 
 import betterproto.lib.google.protobuf as protobuf
-import pytest
 from tests.mocks import MockChannel
-from tests.output_betterproto.googletypes_response import Input, TestStub
+from tests.output_betterproto.googletypes_response import (
+    Input,
+    TestStub,
+)
+
 
 test_cases = [
     (TestStub.get_double, protobuf.DoubleValue, 2.5),

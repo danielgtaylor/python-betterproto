@@ -18,6 +18,7 @@ python-dateutil = "^2.8"
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 # Compiler dependecies
 black = { version = "^22.3.0", optional = true }
+isort = {version = "^5.10.1", optional = true}
 jinja2 = { version = ">=2.11.2", optional = true }
 # Docs dependecies
 sphinx = { version = "^4.5.0", optional = true }
@@ -44,7 +45,7 @@ pre-commit = "^2.17.0"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "jinja2"]
+compiler = ["black", "isort", "jinja2"]
 docs = ["sphinx", "sphinx-rtd-theme", "tomlkit"]
 
 
@@ -100,12 +101,30 @@ shell = "poe generate && tox"
 help = "Run tests with multiple pythons"
 
 [tool.poe.tasks.check-style]
-cmd = "black . --check --diff --exclude tests/output_"
+cmd = "black . --check --diff"
 help = "Check if code style is correct"
 
+[tool.isort]
+py_version = 37
+profile = "black"
+force_single_line = false
+combine_as_imports = true
+lines_after_imports = 2
+include_trailing_comma = true
+force_grid_wrap = 2
+src_paths = ["src", "tests"]
 
 [tool.black]
 target-version = ['py36']
+
+[tool.doc8]
+paths = ["docs"]
+max_line_length = 88
+
+[tool.doc8.ignore_path_errors]
+"docs/migrating.rst" = [
+    "D001",  # contains table which is longer than 88 characters long
+]
 
 [tool.coverage.run]
 omit = ["betterproto/tests/*"]

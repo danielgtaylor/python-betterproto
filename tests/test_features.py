@@ -1,8 +1,18 @@
+from copy import (
+    copy,
+    deepcopy,
+)
 from dataclasses import dataclass
-from copy import copy, deepcopy
 from datetime import datetime
-from inspect import Parameter, signature
-from typing import Dict, List, Optional
+from inspect import (
+    Parameter,
+    signature,
+)
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
 
@@ -351,8 +361,10 @@ def test_recursive_message():
 
 
 def test_recursive_message_defaults():
-    from tests.output_betterproto.recursivemessage import Intermediate
-    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
+    from tests.output_betterproto.recursivemessage import (
+        Intermediate,
+        Test as RecursiveMessage,
+    )
 
     msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
 

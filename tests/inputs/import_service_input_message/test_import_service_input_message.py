@@ -1,4 +1,5 @@
 import pytest
+
 from tests.mocks import MockChannel
 from tests.output_betterproto.import_service_input_message import (
     NestedRequestMessage,

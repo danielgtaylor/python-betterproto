@@ -16,10 +16,20 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 
 import betterproto
 from betterproto.grpc.grpclib_server import ServiceBase
+{% for i in output_file.imports|sort %}
+{{ i }}
+{% endfor %}
 {% if output_file.services %}
 import grpclib
 {% endif %}
 
+{% if output_file.imports_type_checking_only %}
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+{% for i in output_file.imports_type_checking_only|sort %}    {{ i }}
+{% endfor %}
+{% endif %}
 
 {% if output_file.enums %}{% for enum in output_file.enums %}
 class {{ enum.py_name }}(betterproto.Enum):
@@ -63,7 +73,7 @@ class {{ message.py_name }}(betterproto.Message):
         {% endif %}
         super().__post_init__()
         {% for field in message.deprecated_fields %}
-        if self.{{ field }}:
+        if self.is_set("{{ field }}"):
             warnings.warn("{{ message.py_name }}.{{ field }} is deprecated", DeprecationWarning)
         {% endfor %}
     {%  endif %}
@@ -86,6 +96,9 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {# Client streaming: need a request iterator instead #}
             , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
         {%- endif -%}
+            , timeout: Optional[float] = None
+            , deadline: Optional["Deadline"] = None
+            , metadata: Optional["_MetadataLike"] = None
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
@@ -98,6 +111,9 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {{ method.py_input_message_param }}_iterator,
             {{ method.py_input_message_type }},
             {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         ):
             yield response
             {% else %}{# i.e. not client streaming #}
@@ -105,6 +121,9 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             "{{ method.route }}",
             {{ method.py_input_message_param }},
             {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         ):
             yield response
 
@@ -115,13 +134,19 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             "{{ method.route }}",
             {{ method.py_input_message_param }}_iterator,
             {{ method.py_input_message_type }},
-            {{ method.py_output_message_type.strip('"') }}
+            {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
             {% else %}{# i.e. not client streaming #}
         return await self._unary_unary(
             "{{ method.route }}",
             {{ method.py_input_message_param }},
-            {{ method.py_output_message_type.strip('"') }}
+            {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
             {% endif %}{# client streaming #}
         {% endif %}
@@ -193,8 +218,4 @@ class {{ service.py_name }}Base(ServiceBase):
         {% endfor %}
         }
 
-{% endfor %}
-
-{% for i in output_file.imports|sort %}
-{{ i }}
 {% endfor %}

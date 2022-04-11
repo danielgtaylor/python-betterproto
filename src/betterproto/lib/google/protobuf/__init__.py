@@ -3,7 +3,10 @@
 # plugin: python-betterproto
 import warnings
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    Dict,
+    List,
+)
 
 import betterproto
 from betterproto.grpc.grpclib_server import ServiceBase

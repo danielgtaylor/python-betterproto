@@ -33,13 +33,28 @@ reference to `A` to `B`'s `fields` attribute.
 import builtins
 import re
 import textwrap
-from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
+from dataclasses import (
+    dataclass,
+    field,
+)
+from typing import (
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
 
 import betterproto
 from betterproto import which_one_of
 from betterproto.casing import sanitize_name
-from betterproto.compile.importing import get_type_reference, parse_source_type_name
+from betterproto.compile.importing import (
+    get_type_reference,
+    parse_source_type_name,
+)
 from betterproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -58,12 +73,16 @@ from betterproto.lib.google.protobuf import (
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
 from ..casing import sanitize_name
-from ..compile.importing import get_type_reference, parse_source_type_name
+from ..compile.importing import (
+    get_type_reference,
+    parse_source_type_name,
+)
 from ..compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
     pythonize_method_name,
 )
+
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
@@ -232,6 +251,7 @@ class OutputTemplate:
     messages: List["MessageCompiler"] = field(default_factory=list)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
+    imports_type_checking_only: Set[str] = field(default_factory=set)
 
     @property
     def package(self) -> str:
@@ -678,6 +698,15 @@ class ServiceMethodCompiler(ProtoContentBase):
         # Required by both client and server
         if self.client_streaming or self.server_streaming:
             self.output_file.typing_imports.add("AsyncIterator")
+
+        # add imports required for request arguments timeout, deadline and metadata
+        self.output_file.typing_imports.add("Optional")
+        self.output_file.imports_type_checking_only.add(
+            "from betterproto.grpc.grpclib_client import MetadataLike"
+        )
+        self.output_file.imports_type_checking_only.add(
+            "from grpclib.metadata import Deadline"
+        )
 
         super().__post_init__()  # check for unset fields
 

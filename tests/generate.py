@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import asyncio
 import os
-from pathlib import Path
 import platform
 import shutil
 import sys
+from pathlib import Path
 from typing import Set
 
 from tests.util import (
@@ -14,6 +14,7 @@ from tests.util import (
     output_path_reference,
     protoc,
 )
+
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
