@@ -1260,7 +1260,8 @@ class Message:
                     else _parse_float(v)
                 )
 
-            setattr(self, field_name, v)
+            if v is not None:
+                setattr(self, field_name, v)
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:
