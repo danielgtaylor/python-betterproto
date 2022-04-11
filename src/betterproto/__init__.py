@@ -1215,56 +1215,50 @@ class Message:
                 v = getattr(self, field_name)
                 cls = self._betterproto.cls_by_field[field_name]
                 if isinstance(v, list):
-                    if cls is datetime:
-                        v = [isoparse(item) for item in value[key]]
-                    elif cls is timedelta:
-                        v = [timedelta(seconds=float(item[:-1])) for item in value[key]]
+                    if cls == datetime:
+                        v = [isoparse(item) for item in v]
+                    elif cls == timedelta:
+                        v = [timedelta(seconds=float(item[:-1])) for item in v]
                     else:
-                        v = [cls().from_dict(item) for item in value[key]]
-                elif cls is datetime:
-                    v = isoparse(value[key])
+                        v = [cls().from_dict(item) for item in v]
+                elif cls == datetime:
+                    v = isoparse(v)
                     setattr(self, field_name, v)
-                elif cls is timedelta:
-                    v = timedelta(seconds=float(value[key][:-1]))
+                elif cls == timedelta:
+                    v = timedelta(seconds=float(v[:-1]))
                     setattr(self, field_name, v)
                 elif meta.wraps:
-                    setattr(self, field_name, value[key])
+                    setattr(self, field_name, v)
                 elif v is None:
-                    setattr(self, field_name, cls().from_dict(value[key]))
+                    setattr(self, field_name, cls().from_dict(v))
                 else:
                     # NOTE: `from_dict` mutates the underlying message, so no
                     # assignment here is necessary.
-                    v.from_dict(value[key])
+                    v.from_dict(v)
             elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                 v = getattr(self, field_name)
                 cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                for k in value[key]:
-                    v[k] = cls().from_dict(value[key][k])
+                target = value[key]
+                for k in target:
+                    v[k] = cls().from_dict(target[k])
             elif meta.proto_type in INT_64_TYPES:
-                v = (
-                    [int(n) for n in value[key]]
-                    if isinstance(value[key], list)
-                    else int(value[key])
-                )
+                v = [int(n) for n in v] if isinstance(v, list) else int(v)
 
             elif meta.proto_type == TYPE_BYTES:
-                v = (
-                    [b64decode(n) for n in value[key]]
-                    if isinstance(value[key], list)
-                    else b64decode(value[key])
-                )
+                v = [b64decode(n) for n in v] if isinstance(v, list) else b64decode(v)
 
             elif meta.proto_type == TYPE_ENUM:
-                enum_cls = self._betterproto.cls_by_field[field_name]
+                enum_cls: Enum = self._betterproto.cls_by_field[field_name]
                 if isinstance(v, list):
                     v = [enum_cls.from_string(e) for e in v]
                 elif isinstance(v, str):
                     v = enum_cls.from_string(v)
             elif meta.proto_type in {TYPE_FLOAT, TYPE_DOUBLE}:
-                if isinstance(value[key], list):
-                    v = [_parse_float(n) for n in value[key]]
-                else:
-                    v = _parse_float(value[key])
+                v = (
+                    [_parse_float(n) for n in v]
+                    if isinstance(v, list)
+                    else _parse_float(v)
+                )
 
             setattr(self, field_name, v)
         return self
