@@ -986,8 +986,9 @@ class Message:
         self._serialized_on_wire = True
         proto_meta = self._betterproto
         for parsed in parse_fields(data):
-            field_name = proto_meta.field_name_by_number.get(parsed.number)
-            if not field_name:
+            try:
+                field_name = proto_meta.field_name_by_number[parsed.number]
+            except KeyError:
                 self._unknown_fields += parsed.raw
                 continue
 
@@ -1203,8 +1204,9 @@ class Message:
         self._serialized_on_wire = True
         for key in value:
             field_name = safe_snake_case(key)
-            meta = self._betterproto.meta_by_field_name.get(field_name)
-            if not meta:
+            try:
+                meta = self._betterproto.meta_by_field_name[field_name]
+            except KeyError:
                 continue
 
             if value[key] is not None:
