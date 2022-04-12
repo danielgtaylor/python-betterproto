@@ -32,6 +32,7 @@ from typing import (
 )
 
 from dateutil.parser import isoparse
+from typing_extensions import Final
 
 from ._types import T
 from ._version import __version__
@@ -44,28 +45,28 @@ from .grpc.grpclib_client import ServiceStub
 
 
 # Proto 3 data types
-TYPE_ENUM = "enum"
-TYPE_BOOL = "bool"
-TYPE_INT32 = "int32"
-TYPE_INT64 = "int64"
-TYPE_UINT32 = "uint32"
-TYPE_UINT64 = "uint64"
-TYPE_SINT32 = "sint32"
-TYPE_SINT64 = "sint64"
-TYPE_FLOAT = "float"
-TYPE_DOUBLE = "double"
-TYPE_FIXED32 = "fixed32"
-TYPE_SFIXED32 = "sfixed32"
-TYPE_FIXED64 = "fixed64"
-TYPE_SFIXED64 = "sfixed64"
-TYPE_STRING = "string"
-TYPE_BYTES = "bytes"
-TYPE_MESSAGE = "message"
-TYPE_MAP = "map"
+TYPE_ENUM: Final = "enum"
+TYPE_BOOL: Final = "bool"
+TYPE_INT32: Final = "int32"
+TYPE_INT64: Final = "int64"
+TYPE_UINT32: Final = "uint32"
+TYPE_UINT64: Final = "uint64"
+TYPE_SINT32: Final = "sint32"
+TYPE_SINT64: Final = "sint64"
+TYPE_FLOAT: Final = "float"
+TYPE_DOUBLE: Final = "double"
+TYPE_FIXED32: Final = "fixed32"
+TYPE_SFIXED32: Final = "sfixed32"
+TYPE_FIXED64: Final = "fixed64"
+TYPE_SFIXED64: Final = "sfixed64"
+TYPE_STRING: Final = "string"
+TYPE_BYTES: Final = "bytes"
+TYPE_MESSAGE: Final = "message"
+TYPE_MAP: Final = "map"
 
 
 # Fields that use a fixed amount of space (4 or 8 bytes)
-FIXED_TYPES = frozenset(
+FIXED_TYPES: Final = frozenset(
     {
         TYPE_FLOAT,
         TYPE_DOUBLE,
@@ -77,12 +78,12 @@ FIXED_TYPES = frozenset(
 )
 
 # Fields that are numerical 64-bit types
-INT_64_TYPES = frozenset(
+INT_64_TYPES: Final = frozenset(
     {TYPE_INT64, TYPE_UINT64, TYPE_SINT64, TYPE_FIXED64, TYPE_SFIXED64}
 )
 
 # Fields that are efficiently packed when serialised
-PACKED_TYPES = frozenset(
+PACKED_TYPES: Final = frozenset(
     {
         TYPE_ENUM,
         TYPE_BOOL,
@@ -103,13 +104,13 @@ PACKED_TYPES = frozenset(
 
 # Wire types
 # https://developers.google.com/protocol-buffers/docs/encoding#structure
-WIRE_VARINT = 0
-WIRE_FIXED_64 = 1
-WIRE_LEN_DELIM = 2
-WIRE_FIXED_32 = 5
+WIRE_VARINT: Final = 0
+WIRE_FIXED_64: Final = 1
+WIRE_LEN_DELIM: Final = 2
+WIRE_FIXED_32: Final = 5
 
 # Mappings of which Proto 3 types correspond to which wire types.
-WIRE_VARINT_TYPES = frozenset(
+WIRE_VARINT_TYPES: Final = frozenset(
     {
         TYPE_ENUM,
         TYPE_BOOL,
@@ -122,9 +123,11 @@ WIRE_VARINT_TYPES = frozenset(
     }
 )
 
-WIRE_FIXED_32_TYPES = frozenset({TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32})
-WIRE_FIXED_64_TYPES = frozenset({TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64})
-WIRE_LEN_DELIM_TYPES = frozenset({TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP})
+WIRE_FIXED_32_TYPES: Final = frozenset({TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32})
+WIRE_FIXED_64_TYPES: Final = frozenset({TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64})
+WIRE_LEN_DELIM_TYPES: Final = frozenset(
+    {TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP}
+)
 
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
@@ -136,9 +139,9 @@ DATETIME_ZERO = datetime_default_gen()
 
 
 # Special protobuf json doubles
-INFINITY = "Infinity"
-NEG_INFINITY = "-Infinity"
-NAN = "NaN"
+INFINITY: Final = "Infinity"
+NEG_INFINITY: Final = "-Infinity"
+NAN: Final = "NaN"
 
 
 class Casing(enum.Enum):
@@ -148,7 +151,7 @@ class Casing(enum.Enum):
     SNAKE = snake_case  #: A snake_case sterilization function.
 
 
-PLACEHOLDER: Any = object()
+PLACEHOLDER: Final[Any] = object()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -1201,64 +1204,73 @@ class Message:
             The initialized message.
         """
         self._serialized_on_wire = True
-        for key, v in value.items():
+        for key, value_ in value.items():
             field_name = safe_snake_case(key)
             try:
                 meta = self._betterproto.meta_by_field_name[field_name]
             except KeyError:
                 continue
 
-            if v is None:
+            if value_ is None:
                 continue
 
             if meta.proto_type == TYPE_MESSAGE:
                 v = getattr(self, field_name)
-                cls = self._betterproto.cls_by_field[field_name]
+                cls: type[Message] = self._betterproto.cls_by_field[field_name]
                 if isinstance(v, list):
-                    if cls == datetime:
-                        v = [isoparse(item) for item in v]
-                    elif cls == timedelta:
-                        v = [timedelta(seconds=float(item[:-1])) for item in v]
+                    if cls is datetime:
+                        v = [isoparse(item) for item in value_]
+                    elif cls is timedelta:
+                        v = [timedelta(seconds=float(item[:-1])) for item in value_]
                     else:
-                        v = [cls().from_dict(item) for item in v]
-                elif cls == datetime:
-                    v = isoparse(v)
+                        v = [cls().from_dict(item) for item in value_]
+                elif cls is datetime:
+                    v = isoparse(value_)
                     setattr(self, field_name, v)
-                elif cls == timedelta:
-                    v = timedelta(seconds=float(v[:-1]))
+                elif cls is timedelta:
+                    v = timedelta(seconds=float(value_[:-1]))
                     setattr(self, field_name, v)
                 elif meta.wraps:
-                    setattr(self, field_name, v)
+                    setattr(self, field_name, value_)
                 elif v is None:
-                    setattr(self, field_name, cls().from_dict(v))
+                    setattr(self, field_name, cls().from_dict(value_))
                 else:
                     # NOTE: `from_dict` mutates the underlying message, so no
                     # assignment here is necessary.
-                    v.from_dict(v)
+                    v.from_dict(value_)
             elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                 v = getattr(self, field_name)
                 cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                target = value[key]
-                for k in target:
-                    v[k] = cls().from_dict(target[k])
+                for k in value_:
+                    v[k] = cls().from_dict(value_[k])
             elif meta.proto_type in INT_64_TYPES:
-                v = [int(n) for n in v] if isinstance(v, list) else int(v)
-
-            elif meta.proto_type == TYPE_BYTES:
-                v = [b64decode(n) for n in v] if isinstance(v, list) else b64decode(v)
-
-            elif meta.proto_type == TYPE_ENUM:
-                enum_cls: Enum = self._betterproto.cls_by_field[field_name]
-                if isinstance(v, list):
-                    v = [enum_cls.from_string(e) for e in v]
-                elif isinstance(v, str):
-                    v = enum_cls.from_string(v)
-            elif meta.proto_type in {TYPE_FLOAT, TYPE_DOUBLE}:
                 v = (
-                    [_parse_float(n) for n in v]
-                    if isinstance(v, list)
-                    else _parse_float(v)
+                    [int(n) for n in value_]
+                    if isinstance(value_, list)
+                    else int(value_)
                 )
+            elif meta.proto_type == TYPE_BYTES:
+                v = (
+                    [b64decode(n) for n in value_]
+                    if isinstance(value_, list)
+                    else b64decode(value_)
+                )
+            elif meta.proto_type == TYPE_ENUM:
+                enum_cls: type[Enum] = self._betterproto.cls_by_field[field_name]
+                if isinstance(value_, list):
+                    v = [enum_cls.from_string(e) for e in value_]
+                elif isinstance(value_, str):
+                    v = enum_cls.from_string(value_)
+                else:
+                    v = value_
+            elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
+                v = (
+                    [_parse_float(n) for n in value_]
+                    if isinstance(value_, list)
+                    else _parse_float(value_)
+                )
+            else:
+                v = value_
 
             if v is not None:
                 setattr(self, field_name, v)
