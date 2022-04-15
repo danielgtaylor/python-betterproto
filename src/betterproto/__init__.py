@@ -853,20 +853,19 @@ class Message:
         return bytes(output)
 
     # For compatibility with other libraries
-    def SerializeToString(self: T) -> bytes:
-        """
-        Get the binary encoded Protobuf representation of this message instance.
+    SerializeToString = __bytes__
+    """
+    Get the binary encoded Protobuf representation of this message instance.
 
-        .. note::
-            This is a method for compatibility with other libraries,
-            you should really use ``bytes(x)``.
+    .. note::
+        This is a method for compatibility with other libraries,
+        you should really use ``bytes(x)``.
 
-        Returns
-        --------
-        :class:`bytes`
-            The binary encoded Protobuf representation of this message instance
-        """
-        return bytes(self)
+    Returns
+    --------
+    :class:`bytes`
+        The binary encoded Protobuf representation of this message instance
+    """
 
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
@@ -883,7 +882,7 @@ class Message:
         field_cls = cls._type_hint(field.name)
         args = getattr(field_cls, "__args__", None)
         if args and index >= 0:
-            field_cls = field_cls.__args__[index]
+            field_cls = args[index]
         return field_cls
 
     def _get_field_default(self, field_name: str) -> Any:
