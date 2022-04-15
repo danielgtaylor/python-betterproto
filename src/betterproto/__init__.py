@@ -659,9 +659,9 @@ class Message:
                     group_current[meta.group] = field_name
 
         # Now that all the defaults are set, reset it!
-        super().__setattr__("_serialized_on_wire", not all_sentinel)
-        super().__setattr__("_unknown_fields", b"")
-        super().__setattr__("_group_current", group_current)
+        object.__setattr__(self, "_serialized_on_wire", not all_sentinel)
+        object.__setattr__(self, "_unknown_fields", b"")
+        object.__setattr__(self, "_group_current", group_current)
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
@@ -897,12 +897,12 @@ class Message:
 
         origin = getattr(t, "__origin__", None)
         if origin is not None:
-            if origin is dict:
+            if origin in {dict, Dict}:
                 # This is some kind of map (dict in Python).
-                return origin
-            elif origin is list:
+                return dict
+            elif origin is {list, List}:
                 # This is some kind of list (repeated) field.
-                return origin
+                return list
             elif origin is Union and t.__args__[1] is type(None):
                 # This is an optional field (either wrapped, or using proto3
                 # field presence). For setting the default we really don't care
