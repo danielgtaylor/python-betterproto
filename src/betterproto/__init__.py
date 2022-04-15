@@ -881,7 +881,7 @@ class Message:
         """Get the message class for a field from the type hints."""
         field_cls = cls._type_hint(field.name)
         args = getattr(field_cls, "__args__", None)
-        if args and index >= 0:
+        if args:
             field_cls = args[index]
         return field_cls
 
@@ -900,7 +900,7 @@ class Message:
             if origin in {dict, Dict}:
                 # This is some kind of map (dict in Python).
                 return dict
-            elif origin is {list, List}:
+            elif origin in {list, List}:
                 # This is some kind of list (repeated) field.
                 return list
             elif origin is Union and t.__args__[1] is type(None):
