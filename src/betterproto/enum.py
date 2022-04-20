@@ -1,8 +1,22 @@
+import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Dict, NoReturn, Optional, TypeVar, Type, Tuple
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    NoReturn,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+)
+
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Mapping
+    from collections.abc import (
+        Generator,
+        Mapping,
+    )
 
     from typing_extensions import Self
 
@@ -64,7 +78,7 @@ class EnumType(type):
 
         return cls
 
-    def __call__(cls: Type[E], value: int) -> E:
+    def __call__(cls, value: int) -> "Enum":
         try:
             return cls._value_map_[value]
         except (KeyError, TypeError):
@@ -73,18 +87,23 @@ class EnumType(type):
     def __repr__(cls) -> str:
         return f"<enum {cls.__name__!r}>"
 
-    def __iter__(cls: Type[E]) -> "Generator[E, None, None]":
+    def __iter__(cls) -> "Generator[Enum, None, None]":
         yield from cls._member_map_.values()
 
-    def __reversed__(cls: Type[E]) -> "Generator[E, None, None]":
-        yield from reversed(
-            tuple(cls._member_map_.values())
-        )  # can remove tuple cast after 3.7
+    if sys.version_info >= (3, 8):  # 3.8 added __reversed__ to dict_values
+
+        def __reversed__(cls) -> "Generator[Enum, None, None]":
+            yield from reversed(cls._member_map_.values())
+
+    else:
+
+        def __reversed__(cls) -> "Generator[Enum, None, None]":
+            yield from reversed(tuple(cls._member_map_.values()))
 
     def __len__(cls) -> int:
         return len(cls._member_map_)
 
-    def __getitem__(cls: Type[E], key: str) -> E:
+    def __getitem__(cls, key: str) -> "Enum":
         return cls._member_map_[key]
 
     def __setattr__(cls, name: str, value: Any) -> NoReturn:
@@ -97,84 +116,92 @@ class EnumType(type):
         return isinstance(member, cls) and member.name in cls._member_map_
 
     @property
-    def __members__(cls: Type[E]) -> "MappingProxyType[str, E]":
+    def __members__(cls) -> "MappingProxyType[str, Enum]":
         return MappingProxyType(cls._member_map_)
 
 
-class Enum(int, metaclass=EnumType):
-    """
-    The base class for protobuf enumerations, all generated enumerations will inherit
-    from this. Emulates `enum.IntEnum`.
-    """
-
-    name: Optional[str]
-    value: int
-
-    def __new__(cls, *, name: str, value: Any) -> "Self":
-        self = super().__new__(cls, value)  # it's a mixin enum
-        super().__setattr__(self, "name", name)
-        super().__setattr__(self, "value", value)
-        return self
-
-    def __str__(self) -> str:
-        return self.name or "None"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}.{self.name}"
-
-    def __setattr__(self, key: str, value: Any) -> NoReturn:
-        raise AttributeError(
-            f"{self.__class__.__name__} Cannot reassign an Enum members attribute's."
-        )
-
-    def __delattr__(self, item: Any) -> NoReturn:
-        raise AttributeError(
-            f"{self.__class__.__name__} Cannot delete an Enum members attribute's."
-        )
-
-    @classmethod
-    def try_value(cls, value: int = 0) -> "Self":
-        """Return the value which corresponds to the value.
-
-        Parameters
-        -----------
-        value: :class:`int`
-            The value of the enum member to get.
-
-        Returns
-        -------
-        :class:`Enum`
-            The corresponding member or a new instance of the enum if
-            ``value`` isn't actually a member.
-        """
-        try:
-            return cls._value_map_[value]
-        except (KeyError, TypeError):
-            return cls.__new__(cls, name=None, value=value)
-
-    @classmethod
-    def from_string(cls, name: str) -> "Self":
-        """Return the value which corresponds to the string name.
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the enum member to get.
-
-        Raises
-        -------
-        :exc:`ValueError`
-            The member was not found in the Enum.
-        """
-        try:
-            return cls._member_map_[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
-
-
 if TYPE_CHECKING:  # make type checkers not entirely hate this
-    _Enum = Enum
     from enum import IntEnum
 
-    class Enum(_Enum, IntEnum):
-        ...
+    class Enum(IntEnum):
+        name: Optional[str]
+
+        @classmethod
+        def try_value(cls, value: int = 0) -> "Self":
+            ...
+
+        @classmethod
+        def from_string(cls, name: str) -> "Self":
+            ...
+
+else:
+
+    class Enum(int, metaclass=EnumType):
+        """
+        The base class for protobuf enumerations, all generated enumerations will
+        inherit from this. Emulates `enum.IntEnum`.
+        """
+
+        name: Optional[str]
+        value: int
+
+        def __new__(cls, *, name: str, value: Any) -> "Self":
+            self = super().__new__(cls, value)
+            super().__setattr__(self, "name", name)
+            super().__setattr__(self, "value", value)
+            return self
+
+        def __str__(self) -> str:
+            return self.name or "None"
+
+        def __repr__(self) -> str:
+            return f"{self.__class__.__name__}.{self.name}"
+
+        def __setattr__(self, key: str, value: Any) -> NoReturn:
+            raise AttributeError(
+                f"{self.__class__.__name__} Cannot reassign a member's attributes."
+            )
+
+        def __delattr__(self, item: Any) -> NoReturn:
+            raise AttributeError(
+                f"{self.__class__.__name__} Cannot delete a member's attributes."
+            )
+
+        @classmethod
+        def try_value(cls, value: int = 0) -> "Self":
+            """Return the value which corresponds to the value.
+
+            Parameters
+            -----------
+            value: :class:`int`
+                The value of the enum member to get.
+
+            Returns
+            -------
+            :class:`Enum`
+                The corresponding member or a new instance of the enum if
+                ``value`` isn't actually a member.
+            """
+            try:
+                return cls._value_map_[value]
+            except (KeyError, TypeError):
+                return cls.__new__(cls, name=None, value=value)
+
+        @classmethod
+        def from_string(cls, name: str) -> "Self":
+            """Return the value which corresponds to the string name.
+
+            Parameters
+            -----------
+            name: :class:`str`
+                The name of the enum member to get.
+
+            Raises
+            -------
+            :exc:`ValueError`
+                The member was not found in the Enum.
+            """
+            try:
+                return cls._member_map_[name]
+            except KeyError as e:
+                raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
