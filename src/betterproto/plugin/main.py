@@ -7,9 +7,8 @@ from betterproto.lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponse,
 )
-
-from betterproto.plugin.parser import generate_code
 from betterproto.plugin.models import monkey_patch_oneof_index
+from betterproto.plugin.parser import generate_code
 
 
 def main() -> None:
@@ -28,11 +27,8 @@ def main() -> None:
     if dump_file:
         dump_request(dump_file, request)
 
-    # Create response
-    response = CodeGeneratorResponse()
-
     # Generate code
-    generate_code(request, response)
+    response = generate_code(request)
 
     # Serialise response message
     output = response.SerializeToString()

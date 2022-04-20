@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package repeated;
+
 message Test {
     repeated string names = 1;
 }

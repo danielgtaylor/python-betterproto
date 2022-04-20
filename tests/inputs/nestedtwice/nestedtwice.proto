@@ -1,26 +1,40 @@
 syntax = "proto3";
 
+package nestedtwice;
+
+/* Test doc. */
 message Test {
+  /* Top doc. */
   message Top {
+    /* Middle doc. */
     message Middle {
+      /* TopMiddleBottom doc.*/
       message TopMiddleBottom {
+        // TopMiddleBottom.a doc.
         string a = 1;
       }
+      /* EnumBottom doc. */
       enum EnumBottom{
+        /* EnumBottom.A doc. */
         A = 0;
         B = 1;
       }
+      /* Bottom doc. */
       message Bottom {
+        /* Bottom.foo doc. */
         string foo = 1;
       }
       reserved 1;
+      /* Middle.bottom doc. */
       repeated Bottom bottom = 2;
       repeated EnumBottom enumBottom=3;
       repeated TopMiddleBottom topMiddleBottom=4;
       bool bar = 5;
     }
+    /* Top.name doc. */
     string name = 1;
     Middle middle = 2;
   }
+  /* Test.top doc. */
   Top top = 1;
 }

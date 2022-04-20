@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package namespace_keywords;
+
 // Tests that messages may contain fields that are Python keywords
 //
 // Generated with Python 3.7.6

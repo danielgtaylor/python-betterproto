@@ -1,8 +1,20 @@
-import betterproto
+from copy import (
+    copy,
+    deepcopy,
+)
 from dataclasses import dataclass
-from typing import Optional, List, Dict
 from datetime import datetime
-from inspect import signature
+from inspect import (
+    Parameter,
+    signature,
+)
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
+
+import betterproto
 
 
 def test_has_field():
@@ -350,8 +362,8 @@ def test_recursive_message():
 
 def test_recursive_message_defaults():
     from tests.output_betterproto.recursivemessage import (
-        Test as RecursiveMessage,
         Intermediate,
+        Test as RecursiveMessage,
     )
 
     msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
@@ -479,8 +491,29 @@ def test_iso_datetime_list():
     assert all([isinstance(item, datetime) for item in msg.timestamps])
 
 
-def test_enum_service_argument__expected_default_value():
-    from tests.output_betterproto.service.service import ThingType, TestStub
+def test_service_argument__expected_parameter():
+    from tests.output_betterproto.service import TestStub
 
     sig = signature(TestStub.do_thing)
-    assert sig.parameters["type"].default == ThingType.UNKNOWN
+    do_thing_request_parameter = sig.parameters["do_thing_request"]
+    assert do_thing_request_parameter.default is Parameter.empty
+    assert do_thing_request_parameter.annotation == "DoThingRequest"
+
+
+def test_copyability():
+    @dataclass
+    class Spam(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+        bar: int = betterproto.int32_field(2)
+        baz: List[str] = betterproto.string_field(3)
+
+    spam = Spam(bar=12, baz=["hello"])
+    copied = copy(spam)
+    assert spam == copied
+    assert spam is not copied
+    assert spam.baz is copied.baz
+
+    deepcopied = deepcopy(spam)
+    assert spam == deepcopied
+    assert spam is not deepcopied
+    assert spam.baz is not deepcopied.baz

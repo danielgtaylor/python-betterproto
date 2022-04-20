@@ -39,6 +39,8 @@
 
 syntax = "proto2";
 
+package example;
+
 // package google.protobuf;
 
 option go_package = "google.golang.org/protobuf/types/descriptorpb";

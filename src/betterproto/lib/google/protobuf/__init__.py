@@ -3,9 +3,13 @@
 # plugin: python-betterproto
 import warnings
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    Dict,
+    List,
+)
 
 import betterproto
+from betterproto.grpc.grpclib_server import ServiceBase
 
 
 class Syntax(betterproto.Enum):
@@ -44,17 +48,6 @@ class FieldCardinality(betterproto.Enum):
     CARDINALITY_OPTIONAL = 1
     CARDINALITY_REQUIRED = 2
     CARDINALITY_REPEATED = 3
-
-
-class NullValue(betterproto.Enum):
-    """
-    `NullValue` is a singleton enumeration to represent the null value for the
-    `Value` type union.  The JSON representation for `NullValue` is JSON
-    `null`.
-    """
-
-    # Null value.
-    NULL_VALUE = 0
 
 
 class FieldDescriptorProtoType(betterproto.Enum):
@@ -108,165 +101,15 @@ class MethodOptionsIdempotencyLevel(betterproto.Enum):
     IDEMPOTENT = 2
 
 
-@dataclass(eq=False, repr=False)
-class Timestamp(betterproto.Message):
+class NullValue(betterproto.Enum):
     """
-    A Timestamp represents a point in time independent of any time zone or
-    local calendar, encoded as a count of seconds and fractions of seconds at
-    nanosecond resolution. The count is relative to an epoch at UTC midnight on
-    January 1, 1970, in the proleptic Gregorian calendar which extends the
-    Gregorian calendar backwards to year one. All minutes are 60 seconds long.
-    Leap seconds are "smeared" so that no leap second table is needed for
-    interpretation, using a [24-hour linear
-    smear](https://developers.google.com/time/smear). The range is from
-    0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By restricting to
-    that range, we ensure that we can convert to and from [RFC
-    3339](https://www.ietf.org/rfc/rfc3339.txt) date strings. # Examples
-    Example 1: Compute Timestamp from POSIX `time()`.     Timestamp timestamp;
-    timestamp.set_seconds(time(NULL));     timestamp.set_nanos(0); Example 2:
-    Compute Timestamp from POSIX `gettimeofday()`.     struct timeval tv;
-    gettimeofday(&tv, NULL);     Timestamp timestamp;
-    timestamp.set_seconds(tv.tv_sec);     timestamp.set_nanos(tv.tv_usec *
-    1000); Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
-    FILETIME ft;     GetSystemTimeAsFileTime(&ft);     UINT64 ticks =
-    (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;     // A Windows
-    tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z     // is
-    11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.     Timestamp
-    timestamp;     timestamp.set_seconds((INT64) ((ticks / 10000000) -
-    11644473600LL));     timestamp.set_nanos((INT32) ((ticks % 10000000) *
-    100)); Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
-    long millis = System.currentTimeMillis();     Timestamp timestamp =
-    Timestamp.newBuilder().setSeconds(millis / 1000)         .setNanos((int)
-    ((millis % 1000) * 1000000)).build(); Example 5: Compute Timestamp from
-    current time in Python.     timestamp = Timestamp()
-    timestamp.GetCurrentTime() # JSON Mapping In JSON format, the Timestamp
-    type is encoded as a string in the [RFC
-    3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the format is
-    "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z" where {year} is
-    always expressed using four digits while {month}, {day}, {hour}, {min}, and
-    {sec} are zero-padded to two digits each. The fractional seconds, which can
-    go up to 9 digits (i.e. up to 1 nanosecond resolution), are optional. The
-    "Z" suffix indicates the timezone ("UTC"); the timezone is required. A
-    proto3 JSON serializer should always use UTC (as indicated by "Z") when
-    printing the Timestamp type and a proto3 JSON parser should be able to
-    accept both UTC and other timezones (as indicated by an offset). For
-    example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past 01:30 UTC on
-    January 15, 2017. In JavaScript, one can convert a Date object to this
-    format using the standard [toISOString()](https://developer.mozilla.org/en-
-    US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString) method.
-    In Python, a standard `datetime.datetime` object can be converted to this
-    format using
-    [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)
-    with the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one
-    can use the Joda Time's [`ISODateTimeFormat.dateTime()`](
-    http://www.joda.org/joda-
-    time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime%2D%2D )
-    to obtain a formatter capable of generating timestamps in this format.
+    `NullValue` is a singleton enumeration to represent the null value for the
+    `Value` type union.  The JSON representation for `NullValue` is JSON
+    `null`.
     """
 
-    # Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must
-    # be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.
-    seconds: int = betterproto.int64_field(1)
-    # Non-negative fractions of a second at nanosecond resolution. Negative
-    # second values with fractions must still have non-negative nanos values that
-    # count forward in time. Must be from 0 to 999,999,999 inclusive.
-    nanos: int = betterproto.int32_field(2)
-
-
-@dataclass(eq=False, repr=False)
-class FieldMask(betterproto.Message):
-    """
-    `FieldMask` represents a set of symbolic field paths, for example:
-    paths: "f.a"     paths: "f.b.d" Here `f` represents a field in some root
-    message, `a` and `b` fields in the message found in `f`, and `d` a field
-    found in the message in `f.b`. Field masks are used to specify a subset of
-    fields that should be returned by a get operation or modified by an update
-    operation. Field masks also have a custom JSON encoding (see below). #
-    Field Masks in Projections When used in the context of a projection, a
-    response message or sub-message is filtered by the API to only contain
-    those fields as specified in the mask. For example, if the mask in the
-    previous example is applied to a response message as follows:     f {
-    a : 22       b {         d : 1         x : 2       }       y : 13     }
-    z: 8 The result will not contain specific values for fields x,y and z
-    (their value will be set to the default, and omitted in proto text output):
-    f {       a : 22       b {         d : 1       }     } A repeated field is
-    not allowed except at the last position of a paths string. If a FieldMask
-    object is not present in a get operation, the operation applies to all
-    fields (as if a FieldMask of all fields had been specified). Note that a
-    field mask does not necessarily apply to the top-level response message. In
-    case of a REST get operation, the field mask applies directly to the
-    response, but in case of a REST list operation, the mask instead applies to
-    each individual message in the returned resource list. In case of a REST
-    custom method, other definitions may be used. Where the mask applies will
-    be clearly documented together with its declaration in the API.  In any
-    case, the effect on the returned resource/resources is required behavior
-    for APIs. # Field Masks in Update Operations A field mask in update
-    operations specifies which fields of the targeted resource are going to be
-    updated. The API is required to only change the values of the fields as
-    specified in the mask and leave the others untouched. If a resource is
-    passed in to describe the updated values, the API ignores the values of all
-    fields not covered by the mask. If a repeated field is specified for an
-    update operation, new values will be appended to the existing repeated
-    field in the target resource. Note that a repeated field is only allowed in
-    the last position of a `paths` string. If a sub-message is specified in the
-    last position of the field mask for an update operation, then new value
-    will be merged into the existing sub-message in the target resource. For
-    example, given the target message:     f {       b {         d: 1
-    x: 2       }       c: [1]     } And an update message:     f {       b {
-    d: 10       }       c: [2]     } then if the field mask is:  paths: ["f.b",
-    "f.c"] then the result will be:     f {       b {         d: 10         x:
-    2       }       c: [1, 2]     } An implementation may provide options to
-    override this default behavior for repeated and message fields. In order to
-    reset a field's value to the default, the field must be in the mask and set
-    to the default value in the provided resource. Hence, in order to reset all
-    fields of a resource, provide a default instance of the resource and set
-    all fields in the mask, or do not provide a mask as described below. If a
-    field mask is not present on update, the operation applies to all fields
-    (as if a field mask of all fields has been specified). Note that in the
-    presence of schema evolution, this may mean that fields the client does not
-    know and has therefore not filled into the request will be reset to their
-    default. If this is unwanted behavior, a specific service may require a
-    client to always specify a field mask, producing an error if not. As with
-    get operations, the location of the resource which describes the updated
-    values in the request message depends on the operation kind. In any case,
-    the effect of the field mask is required to be honored by the API. ##
-    Considerations for HTTP REST The HTTP kind of an update operation which
-    uses a field mask must be set to PATCH instead of PUT in order to satisfy
-    HTTP semantics (PUT must only be used for full updates). # JSON Encoding of
-    Field Masks In JSON, a field mask is encoded as a single string where paths
-    are separated by a comma. Fields name in each path are converted to/from
-    lower-camel naming conventions. As an example, consider the following
-    message declarations:     message Profile {       User user = 1;
-    Photo photo = 2;     }     message User {       string display_name = 1;
-    string address = 2;     } In proto a field mask for `Profile` may look as
-    such:     mask {       paths: "user.display_name"       paths: "photo"
-    } In JSON, the same mask is represented as below:     {       mask:
-    "user.displayName,photo"     } # Field Masks and Oneof Fields Field masks
-    treat fields in oneofs just as regular fields. Consider the following
-    message:     message SampleMessage {       oneof test_oneof {
-    string name = 4;         SubMessage sub_message = 9;       }     } The
-    field mask can be:     mask {       paths: "name"     } Or:     mask {
-    paths: "sub_message"     } Note that oneof type names ("test_oneof" in this
-    case) cannot be used in paths. ## Field Mask Verification The
-    implementation of any API method which has a FieldMask type field in the
-    request should verify the included field paths, and return an
-    `INVALID_ARGUMENT` error if any path is unmappable.
-    """
-
-    # The set of field mask paths.
-    paths: List[str] = betterproto.string_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class SourceContext(betterproto.Message):
-    """
-    `SourceContext` represents information about the source of a protobuf
-    element, like the file in which it is defined.
-    """
-
-    # The path-qualified name of the .proto file that contained the associated
-    # protobuf element.  For example: `"google/protobuf/source_context.proto"`.
-    file_name: str = betterproto.string_field(1)
+    # Null value.
+    NULL_VALUE = 0
 
 
 @dataclass(eq=False, repr=False)
@@ -283,24 +126,25 @@ class Any(betterproto.Message):
     Example 3: Pack and unpack a message in Python.     foo = Foo(...)     any
     = Any()     any.Pack(foo)     ...     if any.Is(Foo.DESCRIPTOR):
     any.Unpack(foo)       ...  Example 4: Pack and unpack a message in Go
-    foo := &pb.Foo{...}      any, err := ptypes.MarshalAny(foo)      ...
-    foo := &pb.Foo{}      if err := ptypes.UnmarshalAny(any, foo); err != nil {
-    ...      } The pack methods provided by protobuf library will by default
-    use 'type.googleapis.com/full.type.name' as the type URL and the unpack
-    methods only use the fully qualified type name after the last '/' in the
-    type URL, for example "foo.bar.com/x/y.z" will yield type name "y.z". JSON
-    ==== The JSON representation of an `Any` value uses the regular
-    representation of the deserialized, embedded message, with an additional
-    field `@type` which contains the type URL. Example:     package
-    google.profile;     message Person {       string first_name = 1;
-    string last_name = 2;     }     {       "@type":
-    "type.googleapis.com/google.profile.Person",       "firstName": <string>,
-    "lastName": <string>     } If the embedded message type is well-known and
-    has a custom JSON representation, that representation will be embedded
-    adding a field `value` which holds the custom JSON in addition to the
-    `@type` field. Example (for message [google.protobuf.Duration][]):     {
-    "@type": "type.googleapis.com/google.protobuf.Duration",       "value":
-    "1.212s"     }
+    foo := &pb.Foo{...}      any, err := anypb.New(foo)      if err != nil {
+    ...      }      ...      foo := &pb.Foo{}      if err :=
+    any.UnmarshalTo(foo); err != nil {        ...      } The pack methods
+    provided by protobuf library will by default use
+    'type.googleapis.com/full.type.name' as the type URL and the unpack methods
+    only use the fully qualified type name after the last '/' in the type URL,
+    for example "foo.bar.com/x/y.z" will yield type name "y.z". JSON ==== The
+    JSON representation of an `Any` value uses the regular representation of
+    the deserialized, embedded message, with an additional field `@type` which
+    contains the type URL. Example:     package google.profile;     message
+    Person {       string first_name = 1;       string last_name = 2;     }
+    {       "@type": "type.googleapis.com/google.profile.Person",
+    "firstName": <string>,       "lastName": <string>     } If the embedded
+    message type is well-known and has a custom JSON representation, that
+    representation will be embedded adding a field `value` which holds the
+    custom JSON in addition to the `@type` field. Example (for message
+    [google.protobuf.Duration][]):     {       "@type":
+    "type.googleapis.com/google.protobuf.Duration",       "value": "1.212s"
+    }
     """
 
     # A URL/resource name that uniquely identifies the type of the serialized
@@ -325,6 +169,18 @@ class Any(betterproto.Message):
     type_url: str = betterproto.string_field(1)
     # Must be a valid serialized protocol buffer of the above specified type.
     value: bytes = betterproto.bytes_field(2)
+
+
+@dataclass(eq=False, repr=False)
+class SourceContext(betterproto.Message):
+    """
+    `SourceContext` represents information about the source of a protobuf
+    element, like the file in which it is defined.
+    """
+
+    # The path-qualified name of the .proto file that contained the associated
+    # protobuf element.  For example: `"google/protobuf/source_context.proto"`.
+    file_name: str = betterproto.string_field(1)
 
 
 @dataclass(eq=False, repr=False)
@@ -510,7 +366,7 @@ class Mixin(betterproto.Message):
     implies that all methods in `AccessControl` are also declared with same
     name and request/response types in `Storage`. A documentation generator or
     annotation processor will see the effective `Storage.GetAcl` method after
-    inherting documentation and annotations as follows:     service Storage {
+    inheriting documentation and annotations as follows:     service Storage {
     // Get the underlying ACL object.       rpc GetAcl(GetAclRequest) returns
     (Acl) {         option (google.api.http).get = "/v2/{resource=**}:getAcl";
     }       ...     } Note how the version in the path pattern changed from
@@ -528,215 +384,6 @@ class Mixin(betterproto.Message):
     name: str = betterproto.string_field(1)
     # If non-empty specifies a path under which inherited HTTP paths are rooted.
     root: str = betterproto.string_field(2)
-
-
-@dataclass(eq=False, repr=False)
-class Duration(betterproto.Message):
-    """
-    A Duration represents a signed, fixed-length span of time represented as a
-    count of seconds and fractions of seconds at nanosecond resolution. It is
-    independent of any calendar and concepts like "day" or "month". It is
-    related to Timestamp in that the difference between two Timestamp values is
-    a Duration and it can be added or subtracted from a Timestamp. Range is
-    approximately +-10,000 years. # Examples Example 1: Compute Duration from
-    two Timestamps in pseudo code.     Timestamp start = ...;     Timestamp end
-    = ...;     Duration duration = ...;     duration.seconds = end.seconds -
-    start.seconds;     duration.nanos = end.nanos - start.nanos;     if
-    (duration.seconds < 0 && duration.nanos > 0) {       duration.seconds += 1;
-    duration.nanos -= 1000000000;     } else if (duration.seconds > 0 &&
-    duration.nanos < 0) {       duration.seconds -= 1;       duration.nanos +=
-    1000000000;     } Example 2: Compute Timestamp from Timestamp + Duration in
-    pseudo code.     Timestamp start = ...;     Duration duration = ...;
-    Timestamp end = ...;     end.seconds = start.seconds + duration.seconds;
-    end.nanos = start.nanos + duration.nanos;     if (end.nanos < 0) {
-    end.seconds -= 1;       end.nanos += 1000000000;     } else if (end.nanos
-    >= 1000000000) {       end.seconds += 1;       end.nanos -= 1000000000;
-    } Example 3: Compute Duration from datetime.timedelta in Python.     td =
-    datetime.timedelta(days=3, minutes=10)     duration = Duration()
-    duration.FromTimedelta(td) # JSON Mapping In JSON format, the Duration type
-    is encoded as a string rather than an object, where the string ends in the
-    suffix "s" (indicating seconds) and is preceded by the number of seconds,
-    with nanoseconds expressed as fractional seconds. For example, 3 seconds
-    with 0 nanoseconds should be encoded in JSON format as "3s", while 3
-    seconds and 1 nanosecond should be expressed in JSON format as
-    "3.000000001s", and 3 seconds and 1 microsecond should be expressed in JSON
-    format as "3.000001s".
-    """
-
-    # Signed seconds of the span of time. Must be from -315,576,000,000 to
-    # +315,576,000,000 inclusive. Note: these bounds are computed from: 60
-    # sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
-    seconds: int = betterproto.int64_field(1)
-    # Signed fractions of a second at nanosecond resolution of the span of time.
-    # Durations less than one second are represented with a 0 `seconds` field and
-    # a positive or negative `nanos` field. For durations of one second or more,
-    # a non-zero value for the `nanos` field must be of the same sign as the
-    # `seconds` field. Must be from -999,999,999 to +999,999,999 inclusive.
-    nanos: int = betterproto.int32_field(2)
-
-
-@dataclass(eq=False, repr=False)
-class Struct(betterproto.Message):
-    """
-    `Struct` represents a structured data value, consisting of fields which map
-    to dynamically typed values. In some languages, `Struct` might be supported
-    by a native representation. For example, in scripting languages like JS a
-    struct is represented as an object. The details of that representation are
-    described together with the proto support for the language. The JSON
-    representation for `Struct` is JSON object.
-    """
-
-    # Unordered map of dynamically typed values.
-    fields: Dict[str, "Value"] = betterproto.map_field(
-        1, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
-    )
-
-
-@dataclass(eq=False, repr=False)
-class Value(betterproto.Message):
-    """
-    `Value` represents a dynamically typed value which can be either null, a
-    number, a string, a boolean, a recursive struct value, or a list of values.
-    A producer of value is expected to set one of that variants, absence of any
-    variant indicates an error. The JSON representation for `Value` is JSON
-    value.
-    """
-
-    # Represents a null value.
-    null_value: "NullValue" = betterproto.enum_field(1, group="kind")
-    # Represents a double value.
-    number_value: float = betterproto.double_field(2, group="kind")
-    # Represents a string value.
-    string_value: str = betterproto.string_field(3, group="kind")
-    # Represents a boolean value.
-    bool_value: bool = betterproto.bool_field(4, group="kind")
-    # Represents a structured value.
-    struct_value: "Struct" = betterproto.message_field(5, group="kind")
-    # Represents a repeated `Value`.
-    list_value: "ListValue" = betterproto.message_field(6, group="kind")
-
-
-@dataclass(eq=False, repr=False)
-class ListValue(betterproto.Message):
-    """
-    `ListValue` is a wrapper around a repeated field of values. The JSON
-    representation for `ListValue` is JSON array.
-    """
-
-    # Repeated field of dynamically typed values.
-    values: List["Value"] = betterproto.message_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class DoubleValue(betterproto.Message):
-    """
-    Wrapper message for `double`. The JSON representation for `DoubleValue` is
-    JSON number.
-    """
-
-    # The double value.
-    value: float = betterproto.double_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class FloatValue(betterproto.Message):
-    """
-    Wrapper message for `float`. The JSON representation for `FloatValue` is
-    JSON number.
-    """
-
-    # The float value.
-    value: float = betterproto.float_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class Int64Value(betterproto.Message):
-    """
-    Wrapper message for `int64`. The JSON representation for `Int64Value` is
-    JSON string.
-    """
-
-    # The int64 value.
-    value: int = betterproto.int64_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class UInt64Value(betterproto.Message):
-    """
-    Wrapper message for `uint64`. The JSON representation for `UInt64Value` is
-    JSON string.
-    """
-
-    # The uint64 value.
-    value: int = betterproto.uint64_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class Int32Value(betterproto.Message):
-    """
-    Wrapper message for `int32`. The JSON representation for `Int32Value` is
-    JSON number.
-    """
-
-    # The int32 value.
-    value: int = betterproto.int32_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class UInt32Value(betterproto.Message):
-    """
-    Wrapper message for `uint32`. The JSON representation for `UInt32Value` is
-    JSON number.
-    """
-
-    # The uint32 value.
-    value: int = betterproto.uint32_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class BoolValue(betterproto.Message):
-    """
-    Wrapper message for `bool`. The JSON representation for `BoolValue` is JSON
-    `true` and `false`.
-    """
-
-    # The bool value.
-    value: bool = betterproto.bool_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class StringValue(betterproto.Message):
-    """
-    Wrapper message for `string`. The JSON representation for `StringValue` is
-    JSON string.
-    """
-
-    # The string value.
-    value: str = betterproto.string_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class BytesValue(betterproto.Message):
-    """
-    Wrapper message for `bytes`. The JSON representation for `BytesValue` is
-    JSON string.
-    """
-
-    # The bytes value.
-    value: bytes = betterproto.bytes_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class Empty(betterproto.Message):
-    """
-    A generic empty message that you can re-use to avoid defining duplicated
-    empty messages in your APIs. A typical example is to use it as the request
-    or the response type of an API method. For instance:     service Foo {
-    rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);     } The
-    JSON representation for `Empty` is empty JSON object `{}`.
-    """
-
-    pass
 
 
 @dataclass(eq=False, repr=False)
@@ -855,6 +502,23 @@ class FieldDescriptorProto(betterproto.Message):
     # camelCase.
     json_name: str = betterproto.string_field(10)
     options: "FieldOptions" = betterproto.message_field(8)
+    # If true, this is a proto3 "optional". When a proto3 field is optional, it
+    # tracks presence regardless of field type. When proto3_optional is true,
+    # this field must be belong to a oneof to signal to old proto3 clients that
+    # presence is tracked for this field. This oneof is known as a "synthetic"
+    # oneof, and this field must be its sole member (each proto3 optional field
+    # gets its own synthetic oneof). Synthetic oneofs exist in the descriptor
+    # only, and do not generate any API. Synthetic oneofs must be ordered after
+    # all "real" oneofs. For message fields, proto3_optional doesn't create any
+    # semantic change, since non-repeated message fields always track presence.
+    # However it still indicates the semantic detail of whether the user wrote
+    # "optional" or not. This can be useful for round-tripping the .proto file.
+    # For consistency we give message fields a synthetic oneof also, even though
+    # it is not required to track presence. This is especially important because
+    # the parser can't tell if a field is a message or an enum, so it must always
+    # create a synthetic oneof. Proto2 optional fields do not set this flag,
+    # because they already indicate optional with `LABEL_OPTIONAL`.
+    proto3_optional: bool = betterproto.bool_field(17)
 
 
 @dataclass(eq=False, repr=False)
@@ -937,17 +601,18 @@ class FileOptions(betterproto.Message):
     # inappropriate because proto packages do not normally start with backwards
     # domain names.
     java_package: str = betterproto.string_field(1)
-    # If set, all the classes from the .proto file are wrapped in a single outer
-    # class with the given name.  This applies to both Proto1 (equivalent to the
-    # old "--one_java_file" option) and Proto2 (where a .proto always translates
-    # to a single class, but you may want to explicitly choose the class name).
+    # Controls the name of the wrapper Java class generated for the .proto file.
+    # That class will always contain the .proto file's getDescriptor() method as
+    # well as any top-level extensions defined in the .proto file. If
+    # java_multiple_files is disabled, then all the other classes from the .proto
+    # file will be nested inside the single wrapper outer class.
     java_outer_classname: str = betterproto.string_field(8)
-    # If set true, then the Java code generator will generate a separate .java
+    # If enabled, then the Java code generator will generate a separate .java
     # file for each top-level message, enum, and service defined in the .proto
-    # file.  Thus, these types will *not* be nested inside the outer class named
-    # by java_outer_classname.  However, the outer class will still be generated
-    # to contain the file's getDescriptor() method as well as any top-level
-    # extensions defined in the file.
+    # file.  Thus, these types will *not* be nested inside the wrapper class
+    # named by java_outer_classname.  However, the wrapper class will still be
+    # generated to contain the file's getDescriptor() method as well as any top-
+    # level extensions defined in the file.
     java_multiple_files: bool = betterproto.bool_field(10)
     # This option does nothing.
     java_generate_equals_and_hash: bool = betterproto.bool_field(20)
@@ -1315,3 +980,363 @@ class GeneratedCodeInfoAnnotation(betterproto.Message):
     # the identified offset. The end offset should be one past the last relevant
     # byte (so the length of the text = end - begin).
     end: int = betterproto.int32_field(4)
+
+
+@dataclass(eq=False, repr=False)
+class Duration(betterproto.Message):
+    """
+    A Duration represents a signed, fixed-length span of time represented as a
+    count of seconds and fractions of seconds at nanosecond resolution. It is
+    independent of any calendar and concepts like "day" or "month". It is
+    related to Timestamp in that the difference between two Timestamp values is
+    a Duration and it can be added or subtracted from a Timestamp. Range is
+    approximately +-10,000 years. # Examples Example 1: Compute Duration from
+    two Timestamps in pseudo code.     Timestamp start = ...;     Timestamp end
+    = ...;     Duration duration = ...;     duration.seconds = end.seconds -
+    start.seconds;     duration.nanos = end.nanos - start.nanos;     if
+    (duration.seconds < 0 && duration.nanos > 0) {       duration.seconds += 1;
+    duration.nanos -= 1000000000;     } else if (duration.seconds > 0 &&
+    duration.nanos < 0) {       duration.seconds -= 1;       duration.nanos +=
+    1000000000;     } Example 2: Compute Timestamp from Timestamp + Duration in
+    pseudo code.     Timestamp start = ...;     Duration duration = ...;
+    Timestamp end = ...;     end.seconds = start.seconds + duration.seconds;
+    end.nanos = start.nanos + duration.nanos;     if (end.nanos < 0) {
+    end.seconds -= 1;       end.nanos += 1000000000;     } else if (end.nanos
+    >= 1000000000) {       end.seconds += 1;       end.nanos -= 1000000000;
+    } Example 3: Compute Duration from datetime.timedelta in Python.     td =
+    datetime.timedelta(days=3, minutes=10)     duration = Duration()
+    duration.FromTimedelta(td) # JSON Mapping In JSON format, the Duration type
+    is encoded as a string rather than an object, where the string ends in the
+    suffix "s" (indicating seconds) and is preceded by the number of seconds,
+    with nanoseconds expressed as fractional seconds. For example, 3 seconds
+    with 0 nanoseconds should be encoded in JSON format as "3s", while 3
+    seconds and 1 nanosecond should be expressed in JSON format as
+    "3.000000001s", and 3 seconds and 1 microsecond should be expressed in JSON
+    format as "3.000001s".
+    """
+
+    # Signed seconds of the span of time. Must be from -315,576,000,000 to
+    # +315,576,000,000 inclusive. Note: these bounds are computed from: 60
+    # sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
+    seconds: int = betterproto.int64_field(1)
+    # Signed fractions of a second at nanosecond resolution of the span of time.
+    # Durations less than one second are represented with a 0 `seconds` field and
+    # a positive or negative `nanos` field. For durations of one second or more,
+    # a non-zero value for the `nanos` field must be of the same sign as the
+    # `seconds` field. Must be from -999,999,999 to +999,999,999 inclusive.
+    nanos: int = betterproto.int32_field(2)
+
+
+@dataclass(eq=False, repr=False)
+class Empty(betterproto.Message):
+    """
+    A generic empty message that you can re-use to avoid defining duplicated
+    empty messages in your APIs. A typical example is to use it as the request
+    or the response type of an API method. For instance:     service Foo {
+    rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);     } The
+    JSON representation for `Empty` is empty JSON object `{}`.
+    """
+
+    pass
+
+
+@dataclass(eq=False, repr=False)
+class FieldMask(betterproto.Message):
+    """
+    `FieldMask` represents a set of symbolic field paths, for example:
+    paths: "f.a"     paths: "f.b.d" Here `f` represents a field in some root
+    message, `a` and `b` fields in the message found in `f`, and `d` a field
+    found in the message in `f.b`. Field masks are used to specify a subset of
+    fields that should be returned by a get operation or modified by an update
+    operation. Field masks also have a custom JSON encoding (see below). #
+    Field Masks in Projections When used in the context of a projection, a
+    response message or sub-message is filtered by the API to only contain
+    those fields as specified in the mask. For example, if the mask in the
+    previous example is applied to a response message as follows:     f {
+    a : 22       b {         d : 1         x : 2       }       y : 13     }
+    z: 8 The result will not contain specific values for fields x,y and z
+    (their value will be set to the default, and omitted in proto text output):
+    f {       a : 22       b {         d : 1       }     } A repeated field is
+    not allowed except at the last position of a paths string. If a FieldMask
+    object is not present in a get operation, the operation applies to all
+    fields (as if a FieldMask of all fields had been specified). Note that a
+    field mask does not necessarily apply to the top-level response message. In
+    case of a REST get operation, the field mask applies directly to the
+    response, but in case of a REST list operation, the mask instead applies to
+    each individual message in the returned resource list. In case of a REST
+    custom method, other definitions may be used. Where the mask applies will
+    be clearly documented together with its declaration in the API.  In any
+    case, the effect on the returned resource/resources is required behavior
+    for APIs. # Field Masks in Update Operations A field mask in update
+    operations specifies which fields of the targeted resource are going to be
+    updated. The API is required to only change the values of the fields as
+    specified in the mask and leave the others untouched. If a resource is
+    passed in to describe the updated values, the API ignores the values of all
+    fields not covered by the mask. If a repeated field is specified for an
+    update operation, new values will be appended to the existing repeated
+    field in the target resource. Note that a repeated field is only allowed in
+    the last position of a `paths` string. If a sub-message is specified in the
+    last position of the field mask for an update operation, then new value
+    will be merged into the existing sub-message in the target resource. For
+    example, given the target message:     f {       b {         d: 1
+    x: 2       }       c: [1]     } And an update message:     f {       b {
+    d: 10       }       c: [2]     } then if the field mask is:  paths: ["f.b",
+    "f.c"] then the result will be:     f {       b {         d: 10         x:
+    2       }       c: [1, 2]     } An implementation may provide options to
+    override this default behavior for repeated and message fields. In order to
+    reset a field's value to the default, the field must be in the mask and set
+    to the default value in the provided resource. Hence, in order to reset all
+    fields of a resource, provide a default instance of the resource and set
+    all fields in the mask, or do not provide a mask as described below. If a
+    field mask is not present on update, the operation applies to all fields
+    (as if a field mask of all fields has been specified). Note that in the
+    presence of schema evolution, this may mean that fields the client does not
+    know and has therefore not filled into the request will be reset to their
+    default. If this is unwanted behavior, a specific service may require a
+    client to always specify a field mask, producing an error if not. As with
+    get operations, the location of the resource which describes the updated
+    values in the request message depends on the operation kind. In any case,
+    the effect of the field mask is required to be honored by the API. ##
+    Considerations for HTTP REST The HTTP kind of an update operation which
+    uses a field mask must be set to PATCH instead of PUT in order to satisfy
+    HTTP semantics (PUT must only be used for full updates). # JSON Encoding of
+    Field Masks In JSON, a field mask is encoded as a single string where paths
+    are separated by a comma. Fields name in each path are converted to/from
+    lower-camel naming conventions. As an example, consider the following
+    message declarations:     message Profile {       User user = 1;
+    Photo photo = 2;     }     message User {       string display_name = 1;
+    string address = 2;     } In proto a field mask for `Profile` may look as
+    such:     mask {       paths: "user.display_name"       paths: "photo"
+    } In JSON, the same mask is represented as below:     {       mask:
+    "user.displayName,photo"     } # Field Masks and Oneof Fields Field masks
+    treat fields in oneofs just as regular fields. Consider the following
+    message:     message SampleMessage {       oneof test_oneof {
+    string name = 4;         SubMessage sub_message = 9;       }     } The
+    field mask can be:     mask {       paths: "name"     } Or:     mask {
+    paths: "sub_message"     } Note that oneof type names ("test_oneof" in this
+    case) cannot be used in paths. ## Field Mask Verification The
+    implementation of any API method which has a FieldMask type field in the
+    request should verify the included field paths, and return an
+    `INVALID_ARGUMENT` error if any path is unmappable.
+    """
+
+    # The set of field mask paths.
+    paths: List[str] = betterproto.string_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class Struct(betterproto.Message):
+    """
+    `Struct` represents a structured data value, consisting of fields which map
+    to dynamically typed values. In some languages, `Struct` might be supported
+    by a native representation. For example, in scripting languages like JS a
+    struct is represented as an object. The details of that representation are
+    described together with the proto support for the language. The JSON
+    representation for `Struct` is JSON object.
+    """
+
+    # Unordered map of dynamically typed values.
+    fields: Dict[str, "Value"] = betterproto.map_field(
+        1, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
+    )
+
+
+@dataclass(eq=False, repr=False)
+class Value(betterproto.Message):
+    """
+    `Value` represents a dynamically typed value which can be either null, a
+    number, a string, a boolean, a recursive struct value, or a list of values.
+    A producer of value is expected to set one of that variants, absence of any
+    variant indicates an error. The JSON representation for `Value` is JSON
+    value.
+    """
+
+    # Represents a null value.
+    null_value: "NullValue" = betterproto.enum_field(1, group="kind")
+    # Represents a double value.
+    number_value: float = betterproto.double_field(2, group="kind")
+    # Represents a string value.
+    string_value: str = betterproto.string_field(3, group="kind")
+    # Represents a boolean value.
+    bool_value: bool = betterproto.bool_field(4, group="kind")
+    # Represents a structured value.
+    struct_value: "Struct" = betterproto.message_field(5, group="kind")
+    # Represents a repeated `Value`.
+    list_value: "ListValue" = betterproto.message_field(6, group="kind")
+
+
+@dataclass(eq=False, repr=False)
+class ListValue(betterproto.Message):
+    """
+    `ListValue` is a wrapper around a repeated field of values. The JSON
+    representation for `ListValue` is JSON array.
+    """
+
+    # Repeated field of dynamically typed values.
+    values: List["Value"] = betterproto.message_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class Timestamp(betterproto.Message):
+    """
+    A Timestamp represents a point in time independent of any time zone or
+    local calendar, encoded as a count of seconds and fractions of seconds at
+    nanosecond resolution. The count is relative to an epoch at UTC midnight on
+    January 1, 1970, in the proleptic Gregorian calendar which extends the
+    Gregorian calendar backwards to year one. All minutes are 60 seconds long.
+    Leap seconds are "smeared" so that no leap second table is needed for
+    interpretation, using a [24-hour linear
+    smear](https://developers.google.com/time/smear). The range is from
+    0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By restricting to
+    that range, we ensure that we can convert to and from [RFC
+    3339](https://www.ietf.org/rfc/rfc3339.txt) date strings. # Examples
+    Example 1: Compute Timestamp from POSIX `time()`.     Timestamp timestamp;
+    timestamp.set_seconds(time(NULL));     timestamp.set_nanos(0); Example 2:
+    Compute Timestamp from POSIX `gettimeofday()`.     struct timeval tv;
+    gettimeofday(&tv, NULL);     Timestamp timestamp;
+    timestamp.set_seconds(tv.tv_sec);     timestamp.set_nanos(tv.tv_usec *
+    1000); Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+    FILETIME ft;     GetSystemTimeAsFileTime(&ft);     UINT64 ticks =
+    (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;     // A Windows
+    tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z     // is
+    11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.     Timestamp
+    timestamp;     timestamp.set_seconds((INT64) ((ticks / 10000000) -
+    11644473600LL));     timestamp.set_nanos((INT32) ((ticks % 10000000) *
+    100)); Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+    long millis = System.currentTimeMillis();     Timestamp timestamp =
+    Timestamp.newBuilder().setSeconds(millis / 1000)         .setNanos((int)
+    ((millis % 1000) * 1000000)).build(); Example 5: Compute Timestamp from
+    Java `Instant.now()`.     Instant now = Instant.now();     Timestamp
+    timestamp =         Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+    .setNanos(now.getNano()).build(); Example 6: Compute Timestamp from current
+    time in Python.     timestamp = Timestamp()     timestamp.GetCurrentTime()
+    # JSON Mapping In JSON format, the Timestamp type is encoded as a string in
+    the [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+    format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z" where
+    {year} is always expressed using four digits while {month}, {day}, {hour},
+    {min}, and {sec} are zero-padded to two digits each. The fractional
+    seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+    are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+    is required. A proto3 JSON serializer should always use UTC (as indicated
+    by "Z") when printing the Timestamp type and a proto3 JSON parser should be
+    able to accept both UTC and other timezones (as indicated by an offset).
+    For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past 01:30 UTC
+    on January 15, 2017. In JavaScript, one can convert a Date object to this
+    format using the standard [toISOString()](https://developer.mozilla.org/en-
+    US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString) method.
+    In Python, a standard `datetime.datetime` object can be converted to this
+    format using
+    [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)
+    with the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one
+    can use the Joda Time's [`ISODateTimeFormat.dateTime()`](
+    http://www.joda.org/joda-
+    time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime%2D%2D )
+    to obtain a formatter capable of generating timestamps in this format.
+    """
+
+    # Represents seconds of UTC time since Unix epoch 1970-01-01T00:00:00Z. Must
+    # be from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59Z inclusive.
+    seconds: int = betterproto.int64_field(1)
+    # Non-negative fractions of a second at nanosecond resolution. Negative
+    # second values with fractions must still have non-negative nanos values that
+    # count forward in time. Must be from 0 to 999,999,999 inclusive.
+    nanos: int = betterproto.int32_field(2)
+
+
+@dataclass(eq=False, repr=False)
+class DoubleValue(betterproto.Message):
+    """
+    Wrapper message for `double`. The JSON representation for `DoubleValue` is
+    JSON number.
+    """
+
+    # The double value.
+    value: float = betterproto.double_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class FloatValue(betterproto.Message):
+    """
+    Wrapper message for `float`. The JSON representation for `FloatValue` is
+    JSON number.
+    """
+
+    # The float value.
+    value: float = betterproto.float_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class Int64Value(betterproto.Message):
+    """
+    Wrapper message for `int64`. The JSON representation for `Int64Value` is
+    JSON string.
+    """
+
+    # The int64 value.
+    value: int = betterproto.int64_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class UInt64Value(betterproto.Message):
+    """
+    Wrapper message for `uint64`. The JSON representation for `UInt64Value` is
+    JSON string.
+    """
+
+    # The uint64 value.
+    value: int = betterproto.uint64_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class Int32Value(betterproto.Message):
+    """
+    Wrapper message for `int32`. The JSON representation for `Int32Value` is
+    JSON number.
+    """
+
+    # The int32 value.
+    value: int = betterproto.int32_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class UInt32Value(betterproto.Message):
+    """
+    Wrapper message for `uint32`. The JSON representation for `UInt32Value` is
+    JSON number.
+    """
+
+    # The uint32 value.
+    value: int = betterproto.uint32_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class BoolValue(betterproto.Message):
+    """
+    Wrapper message for `bool`. The JSON representation for `BoolValue` is JSON
+    `true` and `false`.
+    """
+
+    # The bool value.
+    value: bool = betterproto.bool_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class StringValue(betterproto.Message):
+    """
+    Wrapper message for `string`. The JSON representation for `StringValue` is
+    JSON string.
+    """
+
+    # The string value.
+    value: str = betterproto.string_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class BytesValue(betterproto.Message):
+    """
+    Wrapper message for `bytes`. The JSON representation for `BytesValue` is
+    JSON string.
+    """
+
+    # The bytes value.
+    value: bytes = betterproto.bytes_field(1)

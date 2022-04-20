@@ -1,0 +1,11 @@
+// https://github.com/danielgtaylor/python-betterproto/issues/344
+syntax = "proto3";
+
+package casing_inner_class;
+
+message Test {
+  message inner_class {
+    sint32 old_exp = 1;
+  }
+  inner_class inner = 2;
+}

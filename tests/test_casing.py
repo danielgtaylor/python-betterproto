@@ -1,6 +1,10 @@
 import pytest
 
-from betterproto.casing import camel_case, pascal_case, snake_case
+from betterproto.casing import (
+    camel_case,
+    pascal_case,
+    snake_case,
+)
 
 
 @pytest.mark.parametrize(

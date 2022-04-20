@@ -1,4 +1,7 @@
-from tests.output_betterproto.enum import ArithmeticOperator, Test, Choice
+from tests.output_betterproto.enum import (
+    Choice,
+    Test,
+)
 
 
 def test_enum_set_and_get():

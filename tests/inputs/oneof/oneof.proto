@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package oneof;
+
 message Test {
   oneof foo {
     int32 pitied = 1;

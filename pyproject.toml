@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "betterproto"
-version = "2.0.0b3"
+version = "2.0.0b4"
 description = "A better Protobuf / gRPC generator & library"
 authors = ["Daniel G. Taylor <danielgtaylor@gmail.com>"]
 readme = "README.md"
@@ -16,19 +16,19 @@ python = ">=3.6.2,<4.0"
 black = { version = ">=19.3b0", optional = true }
 dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.4.1"
-jinja2 = { version = "^2.11.2", optional = true }
+jinja2 = { version = ">=2.11.2", optional = true }
 python-dateutil = "^2.8"
+isort = {version = "^5.10.1", optional = true}
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"
-black = "^21.11b0"
 bpython = "^0.19"
-grpcio-tools = "^1.30.0"
-jinja2 = "^2.11.2"
-mypy = "^0.770"
+grpcio-tools = "^1.40.0"
+jinja2 = ">=2.11.2"
+mypy = "^0.930"
 poethepoet = ">=0.9.0"
 protobuf = "^3.12.2"
-pytest = "^5.4.2"
+pytest = "^6.2.5"
 pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
@@ -36,13 +36,14 @@ sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 tomlkit = "^0.7.0"
 tox = "^3.15.1"
+pre-commit = "^2.17.0"
 
 
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "jinja2"]
+compiler = ["black", "isort", "jinja2"]
 
 
 # Dev workflow tasks
@@ -97,12 +98,30 @@ shell = "poe generate && tox"
 help = "Run tests with multiple pythons"
 
 [tool.poe.tasks.check-style]
-cmd = "black . --check --diff --exclude tests/output_"
+cmd = "black . --check --diff"
 help = "Check if code style is correct"
 
+[tool.isort]
+py_version = 37
+profile = "black"
+force_single_line = false
+combine_as_imports = true
+lines_after_imports = 2
+include_trailing_comma = true
+force_grid_wrap = 2
+src_paths = ["src", "tests"]
 
 [tool.black]
 target-version = ['py36']
+
+[tool.doc8]
+paths = ["docs"]
+max_line_length = 88
+
+[tool.doc8.ignore_path_errors]
+"docs/migrating.rst" = [
+    "D001",  # contains table which is longer than 88 characters long
+]
 
 [tool.coverage.run]
 omit = ["betterproto/tests/*"]
@@ -111,7 +130,7 @@ omit = ["betterproto/tests/*"]
 legacy_tox_ini = """
 [tox]
 isolated_build = true
-envlist = py36, py37, py38
+envlist = py36, py37, py38, py310
 
 [testenv]
 whitelist_externals = poetry
