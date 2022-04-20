@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package google_impl_behavior_equivalence;
+
 message Foo{
   int64 bar = 1;
 }

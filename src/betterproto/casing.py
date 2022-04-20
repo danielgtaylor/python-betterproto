@@ -1,6 +1,7 @@
 import keyword
 import re
 
+
 # Word delimiters and symbols that will not be preserved when re-casing.
 # language=PythonRegExp
 SYMBOLS = "[^a-zA-Z0-9]*"

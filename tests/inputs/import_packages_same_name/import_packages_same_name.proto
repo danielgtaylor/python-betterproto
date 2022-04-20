@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package import_packages_same_name;
+
 import "users_v1.proto";
 import "posts_v1.proto";
 

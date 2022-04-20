@@ -1,14 +1,14 @@
 import pytest
-
 from google.protobuf import json_format
+
 import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
-    Test,
     Foo,
+    Test,
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
-    Test as ReferenceTest,
     Foo as ReferenceFoo,
+    Test as ReferenceTest,
 )
 
 

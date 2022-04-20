@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import asyncio
 import os
-from pathlib import Path
 import platform
 import shutil
 import sys
+from pathlib import Path
 from typing import Set
 
 from tests.util import (
@@ -14,6 +14,7 @@ from tests.util import (
     output_path_reference,
     protoc,
 )
+
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
@@ -78,7 +79,7 @@ async def generate_test_case_output(
     """
 
     test_case_output_path_reference = output_path_reference.joinpath(test_case_name)
-    test_case_output_path_betterproto = output_path_betterproto.joinpath(test_case_name)
+    test_case_output_path_betterproto = output_path_betterproto
 
     os.makedirs(test_case_output_path_reference, exist_ok=True)
     os.makedirs(test_case_output_path_betterproto, exist_ok=True)
@@ -159,9 +160,19 @@ def main():
         whitelist = set(sys.argv[1:])
 
     if platform.system() == "Windows":
-        asyncio.set_event_loop(asyncio.ProactorEventLoop())
+        # for python version prior to 3.8, loop policy needs to be set explicitly
+        # https://docs.python.org/3/library/asyncio-policy.html#asyncio.DefaultEventLoopPolicy
+        try:
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        except AttributeError:
+            # python < 3.7 does not have asyncio.WindowsProactorEventLoopPolicy
+            asyncio.get_event_loop_policy().set_event_loop(asyncio.ProactorEventLoop())
 
-    asyncio.get_event_loop().run_until_complete(generate(whitelist, verbose))
+    try:
+        asyncio.run(generate(whitelist, verbose))
+    except AttributeError:
+        # compatibility code for python < 3.7
+        asyncio.get_event_loop().run_until_complete(generate(whitelist, verbose))
 
 
 if __name__ == "__main__":

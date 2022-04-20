@@ -1,6 +1,6 @@
 from tests.output_betterproto.enum import (
-    Test,
     Choice,
+    Test,
 )
 
 

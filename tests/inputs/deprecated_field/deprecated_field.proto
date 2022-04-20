@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-// Some documentation about the Test message.
-message Test {
-    // Some documentation about the value.
-    int32 v = 1 [deprecated=true];
-    int32 value = 2;
-}

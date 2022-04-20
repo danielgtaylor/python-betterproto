@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [Unreleased]
+
+- **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters.
+
+    Update your client calls and server handlers as follows:
+
+    Clients before:
+    ```py
+    response = await service.echo(value="hello", extra_times=1)
+    ```
+    Clients after:
+    ```py
+    response = await service.echo(EchoRequest(value="hello", extra_times=1))
+    ```
+    Servers before:
+    ```py
+    async def echo(self, value: str, extra_times: int) -> EchoResponse:
+    ```
+    Servers after:
+    ```py
+    async def echo(self, echo_request: EchoRequest) -> EchoResponse:
+        # Use echo_request.value
+        # Use echo_request.extra_times
+    ```
+
+
+## [2.0.0b4] - 2022-01-03
+
+- **Breaking**: the minimum Python version has been bumped to `3.6.2`
+
+- Always add `AsyncIterator` to imports if there are services [#264](https://github.com/danielgtaylor/python-betterproto/pull/264)
+- Allow parsing of messages from `ByteStrings` [#266](https://github.com/danielgtaylor/python-betterproto/pull/266)
+- Add support for proto3 optional [#281](https://github.com/danielgtaylor/python-betterproto/pull/281)
+
+- Fix compilation of fields with names identical to builtin types [#294](https://github.com/danielgtaylor/python-betterproto/pull/294)
+- Fix default values for enum service args [#299](https://github.com/danielgtaylor/python-betterproto/pull/299)
+
 ## [2.0.0b3] - 2021-04-07
 
 - Generate grpclib service stubs [#170](https://github.com/danielgtaylor/python-betterproto/pull/170)
@@ -54,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0b1] - 2020-07-04
 
-[Upgrade Guide](./docs/upgrading.md) 
+[Upgrade Guide](./docs/upgrading.md)
 
 > Several bugfixes and improvements required or will require small breaking changes, necessitating a new version.
 > `2.0.0` will be released once the interface is stable.

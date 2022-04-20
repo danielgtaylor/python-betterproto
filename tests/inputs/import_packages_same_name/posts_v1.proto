@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package posts.v1;
+package import_packages_same_name.posts.v1;
 
 message Post {
 

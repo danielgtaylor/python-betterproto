@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package import_service_input_message;
+
 import "request_message.proto";
 import "child_package_request_message.proto";
 
