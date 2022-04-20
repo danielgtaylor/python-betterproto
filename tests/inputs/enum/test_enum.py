@@ -1,4 +1,5 @@
 from tests.output_betterproto.enum import (
+    ArithmeticOperator,
     Choice,
     Test,
 )
