@@ -138,6 +138,6 @@ def sanitize_name(value: str) -> str:
     # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
     if keyword.iskeyword(value):
         return f"{value}_"
-    if value.isidentifier():
+    if not value.isidentifier():
         return f"_{value}"
     return value
