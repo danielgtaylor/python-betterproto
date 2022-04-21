@@ -18,6 +18,7 @@ from datetime import (
     timezone,
 )
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -693,18 +694,20 @@ class Message(ABC):
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
-    def __getattribute__(self, name: str) -> Any:
-        """
-        Lazily initialize default values to avoid infinite recursion for recursive
-        message types
-        """
-        value = super().__getattribute__(name)
-        if value is not PLACEHOLDER:
-            return value
+    if not TYPE_CHECKING:
 
-        value = self._get_field_default(name)
-        super().__setattr__(name, value)
-        return value
+        def __getattribute__(self, name: str) -> Any:
+            """
+            Lazily initialize default values to avoid infinite recursion for recursive
+            message types
+            """
+            value = super().__getattribute__(name)
+            if value is not PLACEHOLDER:
+                return value
+
+            value = self._get_field_default(name)
+            super().__setattr__(name, value)
+            return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
