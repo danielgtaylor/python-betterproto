@@ -1319,7 +1319,7 @@ class Message(ABC):
         """
         default = (
             PLACEHOLDER
-            if self._betterproto.meta_by_field_name[name].optional is None
+            if not self._betterproto.meta_by_field_name[name].optional
             else None
         )
         return self.__raw_get(name) is not default
