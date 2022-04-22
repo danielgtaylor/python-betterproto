@@ -1,27 +1,25 @@
-import itertools
 import pathlib
 import sys
-from typing import TYPE_CHECKING, Iterator, List, Tuple, Union, Set
+from typing import (
+    Generator,
+    List,
+    Set,
+    Tuple,
+    Union,
+)
 
-try:
-    # betterproto[compiler] specific dependencies
-    from google.protobuf.compiler import plugin_pb2 as plugin
-    from google.protobuf.descriptor_pb2 import (
-        DescriptorProto,
-        EnumDescriptorProto,
-        FieldDescriptorProto,
-        ServiceDescriptorProto,
-    )
-except ImportError as err:
-    print(
-        "\033[31m"
-        f"Unable to import `{err.name}` from betterproto plugin! "
-        "Please ensure that you've installed betterproto as "
-        '`pip install "betterproto[compiler]"` so that compiler dependencies '
-        "are included."
-        "\033[0m"
-    )
-    raise SystemExit(1)
+from betterproto.lib.google.protobuf import (
+    DescriptorProto,
+    EnumDescriptorProto,
+    FileDescriptorProto,
+    ServiceDescriptorProto,
+)
+from betterproto.lib.google.protobuf.compiler import (
+    CodeGeneratorRequest,
+    CodeGeneratorResponse,
+    CodeGeneratorResponseFeature,
+    CodeGeneratorResponseFile,
+)
 
 from .compiler import outputfile_compiler
 from .models import (
@@ -38,41 +36,40 @@ from .models import (
     is_oneof,
 )
 
-if TYPE_CHECKING:
-    from google.protobuf.descriptor import Descriptor
-
 
 def traverse(
-    proto_file: FieldDescriptorProto,
-) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
+    proto_file: FileDescriptorProto,
+) -> Generator[
+    Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
+]:
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List["Descriptor"], prefix=""
-    ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
+        path: List[int],
+        items: Union[List[EnumDescriptorProto], List[DescriptorProto]],
+        prefix: str = "",
+    ) -> Generator[
+        Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
+    ]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
-            item.name = next_prefix = prefix + item.name
-            yield item, path + [i]
+            item.name = next_prefix = f"{prefix}_{item.name}"
+            yield item, [*path, i]
 
             if isinstance(item, DescriptorProto):
-                for enum in item.enum_type:
-                    enum.name = next_prefix + enum.name
-                    yield enum, path + [i, 4]
+                # Get nested types.
+                yield from _traverse([*path, i, 4], item.enum_type, next_prefix)
+                yield from _traverse([*path, i, 3], item.nested_type, next_prefix)
 
-                if item.nested_type:
-                    for n, p in _traverse(path + [i, 3], item.nested_type, next_prefix):
-                        yield n, p
-
-    return itertools.chain(
-        _traverse([5], proto_file.enum_type), _traverse([4], proto_file.message_type)
-    )
+    yield from _traverse([5], proto_file.enum_type)
+    yield from _traverse([4], proto_file.message_type)
 
 
-def generate_code(
-    request: plugin.CodeGeneratorRequest, response: plugin.CodeGeneratorResponse
-) -> None:
+def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
+    response = CodeGeneratorResponse()
+
     plugin_options = request.parameter.split(",") if request.parameter else []
+    response.supported_features = CodeGeneratorResponseFeature.FEATURE_PROTO3_OPTIONAL
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
@@ -100,7 +97,12 @@ def generate_code(
     for output_package_name, output_package in request_data.output_packages.items():
         for proto_input_file in output_package.input_files:
             for item, path in traverse(proto_input_file):
-                read_protobuf_type(item=item, path=path, output_package=output_package)
+                read_protobuf_type(
+                    source_file=proto_input_file,
+                    item=item,
+                    path=path,
+                    output_package=output_package,
+                )
 
     # Read Services
     for output_package_name, output_package in request_data.output_packages.items():
@@ -116,11 +118,13 @@ def generate_code(
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
         output_paths.add(output_path)
 
-        f: response.File = response.file.add()
-        f.name = str(output_path)
-
-        # Render and then format the output file
-        f.content = outputfile_compiler(output_file=output_package)
+        response.file.append(
+            CodeGeneratorResponseFile(
+                name=str(output_path),
+                # Render and then format the output file
+                content=outputfile_compiler(output_file=output_package),
+            )
+        )
 
     # Make each output directory a package with __init__ file
     init_files = {
@@ -130,38 +134,55 @@ def generate_code(
     } - output_paths
 
     for init_file in init_files:
-        init = response.file.add()
-        init.name = str(init_file)
+        response.file.append(CodeGeneratorResponseFile(name=str(init_file)))
 
     for output_package_name in sorted(output_paths.union(init_files)):
         print(f"Writing {output_package_name}", file=sys.stderr)
 
+    return response
+
 
 def read_protobuf_type(
-    item: DescriptorProto, path: List[int], output_package: OutputTemplate
+    item: DescriptorProto,
+    path: List[int],
+    source_file: "FileDescriptorProto",
+    output_package: OutputTemplate,
 ) -> None:
     if isinstance(item, DescriptorProto):
         if item.options.map_entry:
             # Skip generated map entry messages since we just use dicts
             return
         # Process Message
-        message_data = MessageCompiler(parent=output_package, proto_obj=item, path=path)
+        message_data = MessageCompiler(
+            source_file=source_file, parent=output_package, proto_obj=item, path=path
+        )
         for index, field in enumerate(item.field):
             if is_map(field, item):
                 MapEntryCompiler(
-                    parent=message_data, proto_obj=field, path=path + [2, index]
+                    source_file=source_file,
+                    parent=message_data,
+                    proto_obj=field,
+                    path=path + [2, index],
                 )
             elif is_oneof(field):
                 OneOfFieldCompiler(
-                    parent=message_data, proto_obj=field, path=path + [2, index]
+                    source_file=source_file,
+                    parent=message_data,
+                    proto_obj=field,
+                    path=path + [2, index],
                 )
             else:
                 FieldCompiler(
-                    parent=message_data, proto_obj=field, path=path + [2, index]
+                    source_file=source_file,
+                    parent=message_data,
+                    proto_obj=field,
+                    path=path + [2, index],
                 )
     elif isinstance(item, EnumDescriptorProto):
         # Enum
-        EnumDefinitionCompiler(parent=output_package, proto_obj=item, path=path)
+        EnumDefinitionCompiler(
+            source_file=source_file, parent=output_package, proto_obj=item, path=path
+        )
 
 
 def read_protobuf_service(

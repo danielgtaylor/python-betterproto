@@ -1,0 +1,7 @@
+/* Empty service without comments */
+syntax = "proto3";
+
+package empty_service;
+
+service Test {
+}

@@ -1,6 +1,7 @@
 # Better Protobuf / gRPC Support for Python
 
 ![](https://github.com/danielgtaylor/python-betterproto/workflows/CI/badge.svg)
+> :octocat: If you're reading this on github, please be aware that it might mention unreleased features! See the latest released README on [pypi](https://pypi.org/project/betterproto/).
 
 This project aims to provide an improved experience when using Protobuf / gRPC in a modern Python environment by making use of modern language features and generating readable, understandable, idiomatic Python code. It will not support legacy features or environments (e.g. Protobuf 2). The following are supported:
 
@@ -37,6 +38,8 @@ This project exists because I am unhappy with the state of the official Google p
   - Uses `SerializeToString()` rather than the built-in `__bytes__()`
   - Special wrapped types don't use Python's `None`
   - Timestamp/duration types don't use Python's built-in `datetime` module
+
+
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
 ## Installation
@@ -57,7 +60,7 @@ pip install betterproto
 
 ### Compiling proto files
 
-Now, given you installed the compiler and have a proto file, e.g `example.proto`:
+Given you installed the compiler and have a proto file, e.g `example.proto`:
 
 ```protobuf
 syntax = "proto3";
@@ -159,6 +162,12 @@ service Echo {
 }
 ```
 
+Generate echo proto file:
+
+```
+python -m grpc_tools.protoc -I . --python_betterproto_out=. echo.proto
+```
+
 A client can be implemented as follows:
 ```python
 import asyncio
@@ -170,10 +179,10 @@ from grpclib.client import Channel
 async def main():
     channel = Channel(host="127.0.0.1", port=50051)
     service = echo.EchoStub(channel)
-    response = await service.echo(value="hello", extra_times=1)
+    response = await service.echo(echo.EchoRequest(value="hello", extra_times=1))
     print(response)
 
-    async for response in service.echo_stream(value="hello", extra_times=1):
+    async for response in service.echo_stream(echo.EchoRequest(value="hello", extra_times=1)):
         print(response)
 
     # don't forget to close the channel when done!
@@ -185,6 +194,7 @@ if __name__ == "__main__":
     loop.run_until_complete(main())
 
 ```
+
 which would output
 ```python
 EchoResponse(values=['hello', 'hello'])
@@ -198,28 +208,29 @@ To use them, simply subclass the base class in the generated files and override 
 service methods:
 
 ```python
-from echo import EchoBase
+import asyncio
+from echo import EchoBase, EchoRequest, EchoResponse, EchoStreamResponse
 from grpclib.server import Server
 from typing import AsyncIterator
 
 
 class EchoService(EchoBase):
-    async def echo(self, value: str, extra_times: int) -> "EchoResponse":
-        return value
+    async def echo(self, echo_request: "EchoRequest") -> "EchoResponse":
+        return EchoResponse([echo_request.value for _ in range(echo_request.extra_times)])
 
-    async def echo_stream(
-        self, value: str, extra_times: int
-    ) -> AsyncIterator["EchoStreamResponse"]:
-        for _ in range(extra_times):
-            yield value
+    async def echo_stream(self, echo_request: "EchoRequest") -> AsyncIterator["EchoStreamResponse"]:
+        for _ in range(echo_request.extra_times):
+            yield EchoStreamResponse(echo_request.value)
 
 
-async def start_server():
-    HOST = "127.0.0.1"
-    PORT = 1337
+async def main():
     server = Server([EchoService()])
-    await server.start(HOST, PORT)
-    await server.serve_forever()
+    await server.start("127.0.0.1", 50051)
+    await server.wait_closed()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
 ```
 
 ### JSON
@@ -373,8 +384,7 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ```sh
 # Get set up with the virtual env & dependencies
-poetry run pip install --upgrade pip
-poetry install
+poetry install -E compiler
 
 # Activate the poetry environment
 poetry shell
@@ -443,9 +453,9 @@ Assuming your `google.protobuf` source files (included with all releases of `pro
 
 ```sh
 protoc \
-    --plugin=protoc-gen-custom=betterproto/plugin.py \
+    --plugin=protoc-gen-custom=src/betterproto/plugin/main.py \
     --custom_opt=INCLUDE_GOOGLE \
-    --custom_out=betterproto/lib \
+    --custom_out=src/betterproto/lib \
     -I /usr/local/include/ \
     /usr/local/include/google/protobuf/*.proto
 ```

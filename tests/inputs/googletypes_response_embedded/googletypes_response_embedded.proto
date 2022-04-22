@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package googletypes_response_embedded;
+
 import "google/protobuf/wrappers.proto";
 
 // Tests that wrapped values are supported as part of output message

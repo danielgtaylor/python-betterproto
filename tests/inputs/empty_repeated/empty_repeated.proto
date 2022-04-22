@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package empty_repeated;
+
+message MessageA {
+  repeated float values = 1;
+}
+
+message Test {
+  repeated MessageA msg = 1;
+}

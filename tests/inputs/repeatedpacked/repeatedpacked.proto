@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package repeatedpacked;
+
 message Test {
     repeated int32 counts = 1;
     repeated sint64 signed = 2;

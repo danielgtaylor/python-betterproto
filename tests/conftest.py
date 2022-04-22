@@ -1,3 +1,6 @@
+import copy
+import sys
+
 import pytest
 
 
@@ -10,3 +13,10 @@ def pytest_addoption(parser):
 @pytest.fixture(scope="session")
 def repeat(request):
     return request.config.getoption("repeat")
+
+
+@pytest.fixture
+def reset_sys_path():
+    original = copy.deepcopy(sys.path)
+    yield
+    sys.path = original

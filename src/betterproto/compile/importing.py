@@ -1,10 +1,17 @@
 import os
 import re
-from typing import Dict, List, Set, Tuple, Type
+from typing import (
+    Dict,
+    List,
+    Set,
+    Tuple,
+    Type,
+)
 
 from ..casing import safe_snake_case
 from ..lib.google import protobuf as google_protobuf
 from .naming import pythonize_class_name
+
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,
@@ -100,8 +107,9 @@ def reference_descendent(
     current_package: List[str], imports: Set[str], py_package: List[str], py_type: str
 ) -> str:
     """
-    Returns a reference to a python type in a package that is a descendent of the current package,
-    and adds the required import that is aliased to avoid name conflicts.
+    Returns a reference to a python type in a package that is a descendent of the
+    current package, and adds the required import that is aliased to avoid name
+    conflicts.
     """
     importing_descendent = py_package[len(current_package) :]
     string_from = ".".join(importing_descendent[:-1])
@@ -119,8 +127,9 @@ def reference_ancestor(
     current_package: List[str], imports: Set[str], py_package: List[str], py_type: str
 ) -> str:
     """
-    Returns a reference to a python type in a package which is an ancestor to the current package,
-    and adds the required import that is aliased (if possible) to avoid name conflicts.
+    Returns a reference to a python type in a package which is an ancestor to the
+    current package, and adds the required import that is aliased (if possible) to avoid
+    name conflicts.
 
     Adds trailing __ to avoid name mangling (python.org/dev/peps/pep-0008/#id34).
     """
@@ -141,10 +150,10 @@ def reference_cousin(
     current_package: List[str], imports: Set[str], py_package: List[str], py_type: str
 ) -> str:
     """
-    Returns a reference to a python type in a package that is not descendent, ancestor or sibling,
-    and adds the required import that is aliased to avoid name conflicts.
+    Returns a reference to a python type in a package that is not descendent, ancestor
+    or sibling, and adds the required import that is aliased to avoid name conflicts.
     """
-    shared_ancestry = os.path.commonprefix([current_package, py_package])
+    shared_ancestry = os.path.commonprefix([current_package, py_package])  # type: ignore
     distance_up = len(current_package) - len(shared_ancestry)
     string_from = f".{'.' * distance_up}" + ".".join(
         py_package[len(shared_ancestry) : -1]

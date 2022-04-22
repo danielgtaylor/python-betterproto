@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package mapmessage;
+
 message Test {
   map<string, Nested> items = 1;
 }
