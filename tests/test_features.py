@@ -517,3 +517,13 @@ def test_copyability():
     assert spam == deepcopied
     assert spam is not deepcopied
     assert spam.baz is not deepcopied.baz
+
+
+def test_is_set():
+    @dataclass
+    class Spam(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+        bar: Optional[int] = betterproto.int32_field(2, optional=True)
+
+    assert not Spam().is_set("foo")
+    assert not Spam().is_set("bar")
