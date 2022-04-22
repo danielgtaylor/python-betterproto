@@ -467,7 +467,7 @@ def _dump_float(value: float) -> Union[float, str]:
         return INFINITY
     if value == -float("inf"):
         return NEG_INFINITY
-    if math.isnan(value):
+    if isinstance(value, float) and math.isnan(value):
         return NAN
     return value
 
