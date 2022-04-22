@@ -1328,7 +1328,6 @@ class Message(ABC):
             The python dict representation of this object.
         """
         output: Dict[str, Any] = {}
-        field_types = self._type_hints()
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
