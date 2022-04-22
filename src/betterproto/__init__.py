@@ -43,6 +43,22 @@ from .casing import (
 )
 from .grpc.grpclib_client import ServiceStub
 
+# Circular import workaround: google.protobuf depends on base classes defined above.
+from .lib.google.protobuf import DoubleValue  # noqa
+from .lib.google.protobuf import (
+    BoolValue,
+    BytesValue,
+    Duration,
+    EnumValue,
+    FloatValue,
+    Int32Value,
+    Int64Value,
+    StringValue,
+    Timestamp,
+    UInt32Value,
+    UInt64Value,
+)
+
 
 # Proto 3 data types
 TYPE_ENUM: Final = "enum"
@@ -454,7 +470,7 @@ def _parse_float(value: Any) -> float:
     if value == INFINITY:
         return float("inf")
     if value == NEG_INFINITY:
-        return -float("inf")
+        return float("-inf")
     if value == NAN:
         return float("nan")
     return float(value)
@@ -476,7 +492,7 @@ def _dump_float(value: float) -> Union[float, str]:
     """
     if value == float("inf"):
         return INFINITY
-    if value == -float("inf"):
+    if value == float("-inf"):
         return NEG_INFINITY
     if value == float("nan"):
         return NAN
@@ -1162,9 +1178,7 @@ class Message:
                 elif meta.proto_type == TYPE_ENUM:
                     if field_is_repeated:
                         enum_class = field_types[field_name].__args__[0]
-                        if isinstance(value, typing.Iterable) and not isinstance(
-                            value, str
-                        ):
+                        if hasattr(value, "__iter__") and not isinstance(value, str):
                             output[cased_name] = [enum_class(el).name for el in value]
                         else:
                             # transparently upgrade single value to repeated
@@ -1360,23 +1374,6 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Optional[Any]]
     if not field_name:
         return "", None
     return field_name, getattr(message, field_name)
-
-
-# Circular import workaround: google.protobuf depends on base classes defined above.
-from .lib.google.protobuf import (  # noqa
-    BoolValue,
-    BytesValue,
-    DoubleValue,
-    Duration,
-    EnumValue,
-    FloatValue,
-    Int32Value,
-    Int64Value,
-    StringValue,
-    Timestamp,
-    UInt32Value,
-    UInt64Value,
-)
 
 
 class _Duration(Duration):
