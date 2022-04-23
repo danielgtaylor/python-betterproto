@@ -127,7 +127,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         directory / "__init__.py"
         for path in output_paths
         for directory in path.parents
-        if not directory.joinpath( "__init__.py").exists()
+        if not directory.joinpath("__init__.py").exists()
     } - output_paths
 
     for init_file in init_files:
