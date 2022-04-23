@@ -200,11 +200,11 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "dataclasses"
-version = "0.6"
+version = "0.7"
 description = "A backport of the dataclasses module for Python 3.6"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6, <3.7"
 
 [[package]]
 name = "distlib"
@@ -944,7 +944,7 @@ compiler = ["black", "isort", "jinja2"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.2,<4.0"
-content-hash = "55103cf74b0244e87d6aa3cca4b427d429ecd5dd023b96d31865df1f9d574c09"
+content-hash = "a0f218c6f1282445d0a68e2e308e98beb4667d087bce2bdf986a1cb8ce46a93f"
 
 [metadata.files]
 alabaster = [
@@ -1100,8 +1100,8 @@ cwcwidth = [
     {file = "cwcwidth-0.1.5.tar.gz", hash = "sha256:2c840e7d85f6de45c45986b416d79312c91882e1121b78d4c347e49c4238c09d"},
 ]
 dataclasses = [
-    {file = "dataclasses-0.6-py3-none-any.whl", hash = "sha256:454a69d788c7fda44efd71e259be79577822f5e3f53f029a22d08004e951dc9f"},
-    {file = "dataclasses-0.6.tar.gz", hash = "sha256:6988bd2b895eef432d562370bb707d540f32f7360ab13da45340101bc2307d84"},
+    {file = "dataclasses-0.7-py3-none-any.whl", hash = "sha256:3459118f7ede7c8bea0fe795bff7c6c2ce287d01dd226202f7c9ebc0610a7836"},
+    {file = "dataclasses-0.7.tar.gz", hash = "sha256:494a6dcae3b8bcf80848eea2ef64c0cc5cd307ffc263e17cdf42f3e5420808e6"},
 ]
 distlib = [
     {file = "distlib-0.3.4-py2.py3-none-any.whl", hash = "sha256:6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b"},
