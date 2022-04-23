@@ -42,22 +42,6 @@ from .casing import (
 )
 from .grpc.grpclib_client import ServiceStub
 
-# Circular import workaround: google.protobuf depends on base classes defined above.
-from .lib.google.protobuf import DoubleValue  # noqa
-from .lib.google.protobuf import (
-    BoolValue,
-    BytesValue,
-    Duration,
-    EnumValue,
-    FloatValue,
-    Int32Value,
-    Int64Value,
-    StringValue,
-    Timestamp,
-    UInt32Value,
-    UInt64Value,
-)
-
 
 # Proto 3 data types
 TYPE_ENUM: Final = "enum"
@@ -1373,6 +1357,23 @@ def which_one_of(message: Message, group_name: str) -> Tuple[str, Optional[Any]]
     if not field_name:
         return "", None
     return field_name, getattr(message, field_name)
+
+
+# Circular import workaround: google.protobuf depends on base classes defined above.
+from .lib.google.protobuf import (
+    BoolValue,
+    BytesValue,
+    DoubleValue,
+    Duration,
+    EnumValue,
+    FloatValue,
+    Int32Value,
+    Int64Value,
+    StringValue,
+    Timestamp,
+    UInt32Value,
+    UInt64Value,
+)
 
 
 class _Duration(Duration):
