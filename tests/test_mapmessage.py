@@ -4,7 +4,7 @@ from tests.output_betterproto.mapmessage import (
 )
 
 
-def test_mapmessage():
+def test_mapmessage_to_dict_preserves_message():
     message = Test(
         items={
             "test": Nested(
