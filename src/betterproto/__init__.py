@@ -4,7 +4,6 @@ import json
 import math
 import struct
 import sys
-import typing
 import warnings
 from base64 import (
     b64decode,
