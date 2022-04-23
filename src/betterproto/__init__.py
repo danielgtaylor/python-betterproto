@@ -1225,11 +1225,9 @@ class Message(ABC):
                         else:
                             v = b64decode(value[key])
                     elif meta.proto_type == TYPE_ENUM:
-                        enum_cls: Enum = self._betterproto.cls_by_field[field_name]
+                        enum_cls = self._betterproto.cls_by_field[field_name]
                         if isinstance(v, list):
                             v = [enum_cls.from_string(e) for e in v]
-                        elif isinstance(v, int):
-                            v = enum_cls.try_value(v)
                         elif isinstance(v, str):
                             v = enum_cls.from_string(v)
                     elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
