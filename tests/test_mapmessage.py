@@ -13,6 +13,6 @@ def test_mapmessage_to_dict_preserves_message():
         }
     )
 
-    message.to_json()
+    message.to_dict()
 
-    assert isinstance(message.items["test"], Nested), "Wrong nested type after to_json"
+    assert isinstance(message.items["test"], Nested), "Wrong nested type after to_dict"
