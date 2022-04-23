@@ -1124,7 +1124,7 @@ class Message(ABC):
                 ):
                     output[cased_name] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == TYPE_MAP:
-                output_map = {}
+                output_map = {**value}
                 for k in value:
                     if hasattr(value[k], "to_dict"):
                         output_map[k] = value[k].to_dict(casing, include_default_values)
