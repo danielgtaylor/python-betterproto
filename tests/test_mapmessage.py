@@ -1,7 +1,8 @@
 from tests.output_betterproto.mapmessage import (
-    Test,
     Nested,
+    Test,
 )
+
 
 def test_mapmessage():
     message = Test(
