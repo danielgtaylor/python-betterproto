@@ -528,3 +528,4 @@ def test_is_set():
     assert not Spam().is_set("foo")
     assert not Spam().is_set("bar")
     assert Spam(foo=True).is_set("foo")
+    assert Spam(foo=True, bar=0).is_set("bar")
