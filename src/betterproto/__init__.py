@@ -351,7 +351,7 @@ _pack_fmt: Callable[[str], struct.Struct] = {
 
 def encode_varint(value: int) -> bytes:
     """Encodes a single varint value for serialization."""
-    b: "List[int]" = []
+    b: List[int] = []
 
     if value < 0:
         value += 1 << 64
@@ -1212,7 +1212,7 @@ class Message:
 
             if meta.proto_type == TYPE_MESSAGE:
                 v = getattr(self, field_name)
-                cls: type[Message] = self._betterproto.cls_by_field[field_name]
+                cls: Type[Message] = self._betterproto.cls_by_field[field_name]
                 if isinstance(v, list):
                     if cls is datetime:
                         v = [isoparse(item) for item in value_]
@@ -1252,7 +1252,7 @@ class Message:
                     else b64decode(value_)
                 )
             elif meta.proto_type == TYPE_ENUM:
-                enum_cls: type[Enum] = self._betterproto.cls_by_field[field_name]
+                enum_cls: Type[Enum] = self._betterproto.cls_by_field[field_name]
                 if isinstance(value_, list):
                     v = [enum_cls.from_string(e) for e in value_]
                 elif isinstance(value_, str):
