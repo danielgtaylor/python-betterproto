@@ -944,7 +944,7 @@ compiler = ["black", "isort", "jinja2"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.2,<4.0"
-content-hash = "2c06b9d0ccd3b40ec6eb8f5e946f42c50710d2aef296a95ba0e0b14432b8b808"
+content-hash = "579549014bf85cf283d298ae165952f0ec48b78cec0142e1a4076d620958b143"
 
 [metadata.files]
 alabaster = [
