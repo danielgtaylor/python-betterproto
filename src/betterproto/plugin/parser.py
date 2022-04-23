@@ -125,7 +125,8 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     # Make each output directory a package with __init__ file
     init_files = {
         directory / "__init__.py"
-        for path in output_paths for directory in path.parents
+        for path in output_paths
+        for directory in path.parents
         if not directory.joinpath( "__init__.py").exists()
     } - output_paths
 
