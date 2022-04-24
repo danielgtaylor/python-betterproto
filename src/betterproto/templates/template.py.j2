@@ -15,11 +15,9 @@ from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if no
 {% endif %}
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
-{% for i in output_file.imports|sort %}
-{{ i }}
-{% endfor %}
+
 {% if output_file.services %}
+from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
 {% endif %}
 
@@ -96,9 +94,11 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {# Client streaming: need a request iterator instead #}
             , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
         {%- endif -%}
+            ,
+            *
             , timeout: Optional[float] = None
             , deadline: Optional["Deadline"] = None
-            , metadata: Optional["_MetadataLike"] = None
+            , metadata: Optional["MetadataLike"] = None
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
@@ -179,7 +179,7 @@ class {{ service.py_name }}Base(ServiceBase):
     {% endfor %}
 
     {% for method in service.methods %}
-    async def __rpc_{{ method.py_name }}(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_{{ method.py_name }}(self, stream: "grpclib.server.Stream[{{ method.py_input_message_type }}, {{ method.py_output_message_type }}]") -> None:
         {% if not method.client_streaming %}
         request = await stream.recv_message()
         {% else %}
@@ -218,4 +218,8 @@ class {{ service.py_name }}Base(ServiceBase):
         {% endfor %}
         }
 
+{% endfor %}
+
+{% for i in output_file.imports|sort %}
+{{ i }}
 {% endfor %}
