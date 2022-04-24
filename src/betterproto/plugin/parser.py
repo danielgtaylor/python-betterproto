@@ -88,7 +88,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
             and "INCLUDE_GOOGLE" not in plugin_options
         ):
             # If not INCLUDE_GOOGLE,
-            # skip outputting & re-compiling Google's well-known types
+            # skip outputting Google's well-known types
             request_data.output_packages[output_package_name].output = False
 
     # Read Messages and Enums

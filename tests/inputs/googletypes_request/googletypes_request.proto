@@ -7,7 +7,7 @@ import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-// Tests that wrapped values can be used directly as return values
+// Tests that google types can be used as params
 
 service Test {
     rpc SendDouble (google.protobuf.DoubleValue) returns (Input);
