@@ -38,6 +38,8 @@ This project exists because I am unhappy with the state of the official Google p
   - Uses `SerializeToString()` rather than the built-in `__bytes__()`
   - Special wrapped types don't use Python's `None`
   - Timestamp/duration types don't use Python's built-in `datetime` module
+
+
 This project is a reimplementation from the ground up focused on idiomatic modern Python to help fix some of the above. While it may not be a 1:1 drop-in replacement due to changed method names and call patterns, the wire format is identical.
 
 ## Installation
@@ -58,7 +60,7 @@ pip install betterproto
 
 ### Compiling proto files
 
-Now, given you installed the compiler and have a proto file, e.g `example.proto`:
+Given you installed the compiler and have a proto file, e.g `example.proto`:
 
 ```protobuf
 syntax = "proto3";
@@ -192,6 +194,7 @@ if __name__ == "__main__":
     loop.run_until_complete(main())
 
 ```
+
 which would output
 ```python
 EchoResponse(values=['hello', 'hello'])

@@ -16,6 +16,7 @@ from datetime import (
     timezone,
 )
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -442,7 +443,7 @@ def _parse_float(value: Any) -> float:
 
     Parameters
     ----------
-    value : Any
+    value: Any
         Value to parse
 
     Returns
@@ -464,20 +465,19 @@ def _dump_float(value: float) -> Union[float, str]:
 
     Parameters
     ----------
-    value : float
+    value: float
         Value to dump
 
     Returns
     -------
     Union[float, str]
-        Dumped valid, either a float or the strings
-        "Infinity" or "-Infinity"
+        Dumped value, either a float or the strings
     """
     if value == float("inf"):
         return INFINITY
     if value == float("-inf"):
         return NEG_INFINITY
-    if value == float("nan"):
+    if isinstance(value, float) and math.isnan(value):
         return NAN
     return value
 
@@ -698,18 +698,20 @@ class Message:
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
-    def __getattribute__(self, name: str) -> Any:
-        """
-        Lazily initialize default values to avoid infinite recursion for recursive
-        message types
-        """
-        value = super().__getattribute__(name)
-        if value is not PLACEHOLDER:
-            return value
+    if not TYPE_CHECKING:
 
-        value = self._get_field_default(name)
-        super().__setattr__(name, value)
-        return value
+        def __getattribute__(self, name: str) -> Any:
+            """
+            Lazily initialize default values to avoid infinite recursion for recursive
+            message types
+            """
+            value = super().__getattribute__(name)
+            if value is not PLACEHOLDER:
+                return value
+
+            value = self._get_field_default(name)
+            super().__setattr__(name, value)
+            return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
@@ -1327,7 +1329,12 @@ class Message:
         :class:`bool`
             `True` if field has been set, otherwise `False`.
         """
-        return object.__getattribute__(self, name) is not PLACEHOLDER
+        default = (
+            PLACEHOLDER
+            if not self._betterproto.meta_by_field_name[name].optional
+            else None
+        )
+        return object.__getattribute__(self, name) is not default
 
 
 def serialized_on_wire(message: Message) -> bool:
