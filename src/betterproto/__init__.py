@@ -1306,6 +1306,136 @@ class Message(ABC):
         """
         return self.from_dict(json.loads(value))
 
+    def to_pydict(
+        self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Returns a python dict representation of this object.
+
+        Parameters
+        -----------
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        Returns
+        --------
+        Dict[:class:`str`, Any]
+            The python dict representation of this object.
+        """
+        output: Dict[str, Any] = {}
+        defaults = self._betterproto.default_gen
+        for field_name, meta in self._betterproto.meta_by_field_name.items():
+            field_is_repeated = defaults[field_name] is list
+            value = getattr(self, field_name)
+            cased_name = casing(field_name).rstrip("_")  # type: ignore
+            if meta.proto_type == TYPE_MESSAGE:
+                if isinstance(value, datetime):
+                    if (
+                        value != DATETIME_ZERO
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
+                        output[cased_name] = value
+                elif isinstance(value, timedelta):
+                    if (
+                        value != timedelta(0)
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
+                        output[cased_name] = value
+                elif meta.wraps:
+                    if value is not None or include_default_values:
+                        output[cased_name] = value
+                elif field_is_repeated:
+                    # Convert each item.
+                    value = [i.to_pydict(casing, include_default_values) for i in value]
+                    if value or include_default_values:
+                        output[cased_name] = value
+                elif (
+                    value._serialized_on_wire
+                    or include_default_values
+                    or self._include_default_value_for_oneof(
+                        field_name=field_name, meta=meta
+                    )
+                ):
+                    output[cased_name] = value.to_pydict(casing, include_default_values)
+            elif meta.proto_type == TYPE_MAP:
+                for k in value:
+                    if hasattr(value[k], "to_pydict"):
+                        value[k] = value[k].to_pydict(casing, include_default_values)
+
+                if value or include_default_values:
+                    output[cased_name] = value
+            elif (
+                value != self._get_field_default(field_name)
+                or include_default_values
+                or self._include_default_value_for_oneof(
+                    field_name=field_name, meta=meta
+                )
+            ):
+                output[cased_name] = value
+        return output
+
+    def from_pydict(self: T, value: Dict[str, Any]) -> T:
+        """
+        Parse the key/value pairs into the current message instance. This returns the
+        instance itself and is therefore assignable and chainable.
+
+        Parameters
+        -----------
+        value: Dict[:class:`str`, Any]
+            The dictionary to parse from.
+
+        Returns
+        --------
+        :class:`Message`
+            The initialized message.
+        """
+        self._serialized_on_wire = True
+        for key in value:
+            field_name = safe_snake_case(key)
+            meta = self._betterproto.meta_by_field_name.get(field_name)
+            if not meta:
+                continue
+
+            if value[key] is not None:
+                if meta.proto_type == TYPE_MESSAGE:
+                    v = getattr(self, field_name)
+                    if isinstance(v, list):
+                        cls = self._betterproto.cls_by_field[field_name]
+                        for item in value[key]:
+                            v.append(cls().from_pydict(item))
+                    elif isinstance(v, datetime):
+                        v = value[key]
+                    elif isinstance(v, timedelta):
+                        v = value[key]
+                    elif meta.wraps:
+                        v = value[key]
+                    else:
+                        # NOTE: `from_pydict` mutates the underlying message, so no
+                        # assignment here is necessary.
+                        v.from_pydict(value[key])
+                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                    v = getattr(self, field_name)
+                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                    for k in value[key]:
+                        v[k] = cls().from_pydict(value[key][k])
+                else:
+                    v = value[key]
+
+                if v is not None:
+                    setattr(self, field_name, v)
+        return self
+
     def is_set(self, name: str) -> bool:
         """
         Check if field with the given name has been set.
