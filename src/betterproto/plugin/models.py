@@ -403,6 +403,10 @@ class FieldCompiler(MessageCompiler):
         args = []
         if self.field_wraps:
             args.append(f"wraps={self.field_wraps}")
+        if self.repeated:
+            args.append(f"repeated=True")
+        if self.field_special:
+            args.append(f"special={self.field_special}")
         if self.optional:
             args.append(f"optional=True")
         return args
@@ -428,6 +432,11 @@ class FieldCompiler(MessageCompiler):
             imports.add("List")
         if "Dict[" in annotation:
             imports.add("Dict")
+        # TODO this is absolutely horrible, rewrite this to take it straight from get_type_reference
+        if "Union[" in annotation:
+            imports.add("Union")
+        if "AnyType" in annotation:
+            imports.add("Any as AnyType")
         return imports
 
     @property
@@ -452,6 +461,14 @@ class FieldCompiler(MessageCompiler):
             if hasattr(betterproto, wrapped_type):
                 return f"betterproto.{wrapped_type}"
         return None
+
+    @property
+    def field_special(self) -> Optional[str]:
+        try:
+            special_type = betterproto.SpecialTypes(self.proto_obj.type_name)
+            return f"betterproto.SpecialTypes.{special_type.name}"
+        except ValueError:
+            return None
 
     @property
     def repeated(self) -> bool:
@@ -573,6 +590,7 @@ class MapEntryCompiler(FieldCompiler):
     py_v_type: Type = PLACEHOLDER
     proto_k_type: str = PLACEHOLDER
     proto_v_type: str = PLACEHOLDER
+    proto_v_type_name: str = PLACEHOLDER
 
     def __post_init__(self) -> None:
         """Explore nested types and set k_type and v_type if unset."""
@@ -597,11 +615,18 @@ class MapEntryCompiler(FieldCompiler):
                 # Get proto types
                 self.proto_k_type = FieldDescriptorProtoType(nested.field[0].type).name
                 self.proto_v_type = FieldDescriptorProtoType(nested.field[1].type).name
+                self.proto_v_type_name = nested.field[1].type_name
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     @property
     def betterproto_field_args(self) -> List[str]:
-        return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+        field_args = [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+        try:
+            special_type = betterproto.SpecialTypes(self.proto_v_type_name)
+            field_args.append(f"value_special=betterproto.SpecialTypes.{special_type.name}")
+        except ValueError:
+            pass
+        return field_args
 
     @property
     def field_type(self) -> str:

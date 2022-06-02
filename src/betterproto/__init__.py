@@ -35,6 +35,7 @@ from typing import (
 
 from dateutil.parser import isoparse
 
+import betterproto
 from ._types import T
 from ._version import __version__
 from .casing import (
@@ -64,6 +65,13 @@ TYPE_STRING = "string"
 TYPE_BYTES = "bytes"
 TYPE_MESSAGE = "message"
 TYPE_MAP = "map"
+
+
+class SpecialTypes(enum.Enum):
+    GOOGLE_VALUE = ".google.protobuf.Value"
+    GOOGLE_STRUCT = ".google.protobuf.Struct"
+    GOOGLE_LIST_VALUE = ".google.protobuf.ListValue"
+    GOOGLE_NULL_VALUE = ".google.protobuf.NullValue"
 
 
 # Fields that use a fixed amount of space (4 or 8 bytes)
@@ -155,10 +163,14 @@ class FieldMetadata:
     proto_type: str
     # Map information if the proto_type is a map
     map_types: Optional[Tuple[str, str]] = None
+    # If this field is repeated (a list)
+    repeated: Optional[bool] = False
     # Groups several "one-of" fields together
     group: Optional[str] = None
     # Describes the wrapped type (e.g. when using google.protobuf.BoolValue)
     wraps: Optional[str] = None
+    # Describes the wrapped type with special conversion handling (e.g. google.protobuf.Struct, google.protobuf.Value)
+    special: Optional[SpecialTypes] = None
     # Is the field optional
     optional: Optional[bool] = False
 
@@ -173,8 +185,10 @@ def dataclass_field(
     proto_type: str,
     *,
     map_types: Optional[Tuple[str, str]] = None,
+    repeated: Optional[bool] = False,
     group: Optional[str] = None,
     wraps: Optional[str] = None,
+    special: Optional[SpecialTypes] = None,
     optional: bool = False,
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
@@ -182,7 +196,7 @@ def dataclass_field(
         default=None if optional else PLACEHOLDER,
         metadata={
             "betterproto": FieldMetadata(
-                number, proto_type, map_types, group, wraps, optional
+                number, proto_type, map_types, repeated, group, wraps, special, optional
             )
         },
     )
@@ -193,114 +207,116 @@ def dataclass_field(
 # out at runtime. The generated dataclass variables are still typed correctly.
 
 
-def enum_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
-    return dataclass_field(number, TYPE_ENUM, group=group, optional=optional)
+def enum_field(number: int, repeated: Optional[bool] = False, group: Optional[str] = None, special: Optional[SpecialTypes] = None, optional: bool = False) -> Any:
+    return dataclass_field(number, TYPE_ENUM, repeated=repeated, group=group, special=special, optional=optional)
 
 
-def bool_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
-    return dataclass_field(number, TYPE_BOOL, group=group, optional=optional)
+def bool_field(number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False) -> Any:
+    return dataclass_field(number, TYPE_BOOL, repeated=repeated, group=group, optional=optional)
 
 
 def int32_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_INT32, group=group, optional=optional)
+    return dataclass_field(number, TYPE_INT32, repeated=repeated, group=group, optional=optional)
 
 
 def int64_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_INT64, group=group, optional=optional)
+    return dataclass_field(number, TYPE_INT64, repeated=repeated, group=group, optional=optional)
 
 
 def uint32_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_UINT32, group=group, optional=optional)
+    return dataclass_field(number, TYPE_UINT32, repeated=repeated, group=group, optional=optional)
 
 
 def uint64_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_UINT64, group=group, optional=optional)
+    return dataclass_field(number, TYPE_UINT64, repeated=repeated, group=group, optional=optional)
 
 
 def sint32_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_SINT32, group=group, optional=optional)
+    return dataclass_field(number, TYPE_SINT32, repeated=repeated, group=group, optional=optional)
 
 
 def sint64_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_SINT64, group=group, optional=optional)
+    return dataclass_field(number, TYPE_SINT64, repeated=repeated, group=group, optional=optional)
 
 
 def float_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_FLOAT, group=group, optional=optional)
+    return dataclass_field(number, TYPE_FLOAT, repeated=repeated, group=group, optional=optional)
 
 
 def double_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_DOUBLE, group=group, optional=optional)
+    return dataclass_field(number, TYPE_DOUBLE, repeated=repeated, group=group, optional=optional)
 
 
 def fixed32_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_FIXED32, group=group, optional=optional)
+    return dataclass_field(number, TYPE_FIXED32, repeated=repeated, group=group, optional=optional)
 
 
 def fixed64_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_FIXED64, group=group, optional=optional)
+    return dataclass_field(number, TYPE_FIXED64, repeated=repeated, group=group, optional=optional)
 
 
 def sfixed32_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_SFIXED32, group=group, optional=optional)
+    return dataclass_field(number, TYPE_SFIXED32, repeated=repeated, group=group, optional=optional)
 
 
 def sfixed64_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_SFIXED64, group=group, optional=optional)
+    return dataclass_field(number, TYPE_SFIXED64, repeated=repeated, group=group, optional=optional)
 
 
 def string_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_STRING, group=group, optional=optional)
+    return dataclass_field(number, TYPE_STRING, repeated=repeated, group=group, optional=optional)
 
 
 def bytes_field(
-    number: int, group: Optional[str] = None, optional: bool = False
+    number: int, repeated: Optional[bool] = False, group: Optional[str] = None, optional: bool = False
 ) -> Any:
-    return dataclass_field(number, TYPE_BYTES, group=group, optional=optional)
+    return dataclass_field(number, TYPE_BYTES, repeated=repeated, group=group, optional=optional)
 
 
 def message_field(
     number: int,
+    repeated: Optional[bool] = False,
     group: Optional[str] = None,
     wraps: Optional[str] = None,
+    special: Optional[SpecialTypes] = None,
     optional: bool = False,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MESSAGE, group=group, wraps=wraps, optional=optional
+        number, TYPE_MESSAGE, repeated=repeated, group=group, wraps=wraps, special=special, optional=optional
     )
 
 
 def map_field(
-    number: int, key_type: str, value_type: str, group: Optional[str] = None
+    number: int, key_type: str, value_type: str, group: Optional[str] = None, value_special: Optional[SpecialTypes] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MAP, map_types=(key_type, value_type), group=group
+        number, TYPE_MAP, map_types=(key_type, value_type), group=group, special=value_special
     )
 
 
@@ -358,7 +374,8 @@ def encode_varint(value: int) -> bytes:
     return bytes(b + [bits])
 
 
-def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
+def _preprocess_single(proto_type: str, wraps: str, special: Optional[SpecialTypes], value: Any) -> bytes:
+    # print("_preprocess_single: proto_type:", proto_type, ", wraps:", wraps, ", special:", special, ", value:", value)
     """Adjusts values before serialization."""
     if proto_type in (
         TYPE_ENUM,
@@ -392,7 +409,8 @@ def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
             if value is None:
                 return b""
             value = _get_wrapper(wraps)(value=value)
-
+        # elif special:
+        #     value = get_special_type(special)(value)
         return bytes(value)
 
     return value
@@ -405,9 +423,10 @@ def _serialize_single(
     *,
     serialize_empty: bool = False,
     wraps: str = "",
+    special: Optional[SpecialTypes] = None,
 ) -> bytes:
     """Serializes a single field and value."""
-    value = _preprocess_single(proto_type, wraps, value)
+    value = _preprocess_single(proto_type, wraps, special, value)
 
     output = bytearray()
     if proto_type in WIRE_VARINT_TYPES:
@@ -759,14 +778,23 @@ class Message(ABC):
         """
         output = bytearray()
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            value = getattr(self, field_name)
+            _value = getattr(self, field_name)
+            # print("1. field_name:", field_name, ", meta:", meta, ", value: ", value)
+
+            # If this field is to be converted from/to a message type with special handling, convert it here
+            # We skip this step if the value is repeated or a map to not infinitely recurse wrapping {} and []
+            if meta.special and not meta.map_types and not meta.repeated:
+                value = get_special_type(meta.special)(_value)
+            else:
+                value = _value
 
             if value is None:
                 # Optional items should be skipped. This is used for the Google
                 # wrapper types and proto3 field presence/optional fields.
+                # print("2. field_name:", field_name, ", value is none, skipped")
                 continue
 
-            # Being selected in a a group means this field is the one that is
+            # Being selected in a group means this field is the one that is
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
             #
@@ -792,6 +820,9 @@ class Message(ABC):
                 # if this is the selected oneof item or if we know we have to
                 # serialize an empty message (i.e. zero value was explicitly
                 # set by the user).
+
+                # TODO this skips google.protobuf.NullValue
+                # print("2. field_name:", field_name, ", value is default (", value, "), skipped")
                 continue
 
             if isinstance(value, list):
@@ -801,7 +832,7 @@ class Message(ABC):
                     # treat it like a field of raw bytes.
                     buf = bytearray()
                     for item in value:
-                        buf += _preprocess_single(meta.proto_type, "", item)
+                        buf += _preprocess_single(meta.proto_type, "", None, item)
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
                 else:
                     for item in value:
@@ -811,6 +842,7 @@ class Message(ABC):
                                 meta.proto_type,
                                 item,
                                 wraps=meta.wraps or "",
+                                special=meta.special,
                             )
                             # if it's an empty message it still needs to be represented
                             # as an item in the repeated list
@@ -819,6 +851,9 @@ class Message(ABC):
 
             elif isinstance(value, dict):
                 for k, v in value.items():
+                    if meta.special:
+                        v = get_special_type(meta.special)(v)
+                    # TODO get map_types from type referenced by meta.special if applicable?
                     assert meta.map_types
                     sk = _serialize_single(1, meta.map_types[0], k)
                     sv = _serialize_single(2, meta.map_types[1], v)
@@ -841,6 +876,7 @@ class Message(ABC):
                     value,
                     serialize_empty=serialize_empty or bool(selected_in_group),
                     wraps=meta.wraps or "",
+                    special=meta.special,
                 )
 
         output += self._unknown_fields
@@ -897,7 +933,7 @@ class Message(ABC):
             elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
                 return list
-            elif t.__origin__ is Union and t.__args__[1] is type(None):
+            elif t.__origin__ is Union and type(None) in t.__args__:
                 # This is an optional field (either wrapped, or using proto3
                 # field presence). For setting the default we really don't care
                 # what kind of field it is.
@@ -918,6 +954,7 @@ class Message(ABC):
     def _postprocess_single(
         self, wire_type: int, meta: FieldMetadata, field_name: str, value: Any
     ) -> Any:
+        # print("wire_type: ", wire_type, ", meta: ", meta, ", field_name: ", field_name, ", value: ", value)
         """Adjusts values after parsing."""
         if wire_type == WIRE_VARINT:
             if meta.proto_type in (TYPE_INT32, TYPE_INT64):
@@ -940,6 +977,8 @@ class Message(ABC):
             elif meta.proto_type == TYPE_MESSAGE:
                 cls = self._betterproto.cls_by_field[field_name]
 
+                # print("cls: ", cls, "meta: ", meta, ", value: ", value)
+
                 if cls == datetime:
                     value = _Timestamp().parse(value).to_datetime()
                 elif cls == timedelta:
@@ -948,6 +987,9 @@ class Message(ABC):
                     # This is a Google wrapper value message around a single
                     # scalar type.
                     value = _get_wrapper(meta.wraps)().parse(value).value
+                elif meta.special:
+                    # This is a Google well-known type that has special handling
+                    value = get_special_type(meta.special)().parse(value)
                 else:
                     value = cls().parse(value)
                     value._serialized_on_wire = True
@@ -1095,8 +1137,8 @@ class Message(ABC):
                         )
                     ):
                         output[cased_name] = _Duration.delta_to_json(value)
-                elif meta.wraps:
-                    if value is not None or include_default_values:
+                elif meta.wraps or meta.special:
+                    if meta.special or value is not None or include_default_values:
                         output[cased_name] = value
                 elif field_is_repeated:
                     # Convert each item.
@@ -1204,6 +1246,8 @@ class Message(ABC):
             if not meta:
                 continue
 
+            # TODO none has to be an accepted value for google NullValue
+            #  maybe it doesn't matter because the field will always be defaulted to None anyway? a bit confusing
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
@@ -1220,14 +1264,12 @@ class Message(ABC):
                             v = [cls().from_dict(item) for item in value[key]]
                     elif cls == datetime:
                         v = isoparse(value[key])
-                        setattr(self, field_name, v)
                     elif cls == timedelta:
                         v = timedelta(seconds=float(value[key][:-1]))
-                        setattr(self, field_name, v)
-                    elif meta.wraps:
-                        setattr(self, field_name, value[key])
+                    elif meta.wraps or meta.special:
+                        v = value[key]
                     elif v is None:
-                        setattr(self, field_name, cls().from_dict(value[key]))
+                        v = cls().from_dict(value[key])
                     else:
                         # NOTE: `from_dict` mutates the underlying message, so no
                         # assignment here is necessary.
@@ -1501,6 +1543,10 @@ from .lib.google.protobuf import (  # noqa
     Timestamp,
     UInt32Value,
     UInt64Value,
+    Value,
+    ListValue,
+    NullValue,
+    Struct,
 )
 
 
@@ -1543,8 +1589,6 @@ class _Timestamp(Timestamp):
 
 def _get_wrapper(proto_type: str) -> Type:
     """Get the wrapper message class for a wrapped type."""
-
-    # TODO: include ListValue and NullValue?
     return {
         TYPE_BOOL: BoolValue,
         TYPE_BYTES: BytesValue,
@@ -1557,3 +1601,87 @@ def _get_wrapper(proto_type: str) -> Type:
         TYPE_UINT32: UInt32Value,
         TYPE_UINT64: UInt64Value,
     }[proto_type]
+
+
+class BetterprotoValue(Value):
+    # TODO replace this with type alias for Value
+    def __init__(self, value: Optional[Any] = None):
+        super().__init__()
+        # print("BetterprotoValue.__init__, value:", value)
+        if value:
+            if isinstance(value, str):
+                self.string_value = value
+            elif isinstance(value, bool):
+                self.bool_value = value
+            elif isinstance(value, int) or isinstance(value, float):
+                self.number_value = value
+            elif isinstance(value, dict) and all(isinstance(k, str) for k in value.keys()):
+                self.struct_value = value
+            elif isinstance(value, list):
+                self.list_value = value
+            elif value is None:
+                self.null_value = value
+            else:
+                raise TypeError(f"Value '{value}' with type '{type(value)}'"
+                                f" is not supported for .google.protobuf.Value")
+        # print("BetterprotoValue.__init__, self result:", self)
+
+    def parse(self: T, data: bytes) -> T:
+        result = super().parse(data)
+        # print("BetterprotoValue.parse, super parse result: ", result)
+        return betterproto.which_one_of(result, "kind")[1]
+
+
+class BetterprotoStruct(Struct):
+    # TODO replace this with type alias for Struct / jsonobject
+    def __init__(self, value: Optional[Dict[str, Any]] = None):
+        # print("BetterprotoStruct.__init__, value:", value)
+        # TODO is this correct or do we need to manually convert the Value items here?
+        if value:
+            # super().__init__(fields={k: BetterprotoValue(v) for k, v in value.items()})
+            super().__init__(fields=value)
+            # print("BetterprotoStruct.__init__, self result:", self)
+        else:
+            super().__init__()
+
+    def parse(self: T, data: bytes):
+        result = super().parse(data)
+        # print("BetterprotoStruct.parse, super parse result: ", result)
+        # TODO is this correct or do we need to manually parse the Value items here?
+        return result.fields
+
+
+class BetterprotoListValue(ListValue):
+    # TODO replace the Any with type alias for Value
+    def __init__(self, value: Optional[List[Any]] = None):
+        # print("BetterprotoListValue.__init__, value:", value)
+        if value:
+            super().__init__(values=value)
+            # print("BetterprotoListValue.__init__, self result:", self)
+        else:
+            super().__init__()
+
+    def parse(self: T, data: bytes):
+        result = super().parse(data)
+        # print("BetterprotoListValue.parse, super parse result: ", result)
+        # TODO is this correct or do we need to manually parse the Value items here?
+        return result.values
+
+
+class BetterprotoNullValue:
+    def __new__(cls, value: Optional[None] = PLACEHOLDER):
+        return NullValue(NullValue.NULL_VALUE)
+
+    # TODO what
+    def parse(self: T, _: bytes):
+        return None
+
+
+def get_special_type(special_type: SpecialTypes):
+    # TODO include NullValue
+    return {
+        SpecialTypes.GOOGLE_VALUE: BetterprotoValue,
+        SpecialTypes.GOOGLE_STRUCT: BetterprotoStruct,
+        SpecialTypes.GOOGLE_LIST_VALUE: BetterprotoListValue,
+        SpecialTypes.GOOGLE_NULL_VALUE: BetterprotoNullValue,
+    }.get(special_type, None)

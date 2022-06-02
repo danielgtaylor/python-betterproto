@@ -60,6 +60,21 @@ def get_type_reference(
         elif source_type == ".google.protobuf.Timestamp":
             return "datetime"
 
+        elif source_type == ".google.protobuf.Value":
+            # TODO replace `Any` with recursive type in self-reference
+            return "Union[None, int, float, str, bool, Dict[str, AnyType], List[AnyType]]"
+
+        elif source_type == ".google.protobuf.ListValue":
+            # TODO replace list item with Value type
+            return "List[Union[None, int, float, str, bool, Dict[str, AnyType], List[AnyType]]]"
+
+        elif source_type == ".google.protobuf.Struct":
+            # TODO replace `Any` with Value type
+            return "Dict[str, AnyType]"
+
+        elif source_type == ".google.protobuf.NullValue":
+            return "None"
+
     source_package, source_type = parse_source_type_name(source_type)
 
     current_package: List[str] = package.split(".") if package else []

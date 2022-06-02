@@ -209,14 +209,14 @@ def test_binary_compatibility(repeat, test_data: TestData) -> None:
             plugin_instance_from_json: betterproto.Message = (
                 plugin_module.Test().from_json(sample.json)
             )
-            plugin_instance_from_binary = plugin_module.Test.FromString(
-                reference_binary_output
-            )
-
             # Generally this can't be relied on, but here we are aiming to match the
             # existing Python implementation and aren't doing anything tricky.
             # https://developers.google.com/protocol-buffers/docs/encoding#implications
             assert bytes(plugin_instance_from_json) == reference_binary_output
+
+            plugin_instance_from_binary = plugin_module.Test.FromString(
+                reference_binary_output
+            )
             assert bytes(plugin_instance_from_binary) == reference_binary_output
 
             assert plugin_instance_from_json == plugin_instance_from_binary
