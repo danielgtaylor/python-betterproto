@@ -14,18 +14,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Update your client calls and server handlers as follows:
 
     Clients before:
+
     ```py
     response = await service.echo(value="hello", extra_times=1)
     ```
+
     Clients after:
+
     ```py
     response = await service.echo(EchoRequest(value="hello", extra_times=1))
     ```
+
     Servers before:
+
     ```py
     async def echo(self, value: str, extra_times: int) -> EchoResponse: ...
     ```
+
     Servers after:
+
     ```py
     async def echo(self, echo_request: EchoRequest) -> EchoResponse:
         # Use echo_request.value
@@ -33,12 +40,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         ...
     ```
 
+- Add `to/from_pydict()` for `Message` [#203](https://github.com/danielgtaylor/python-betterproto/pull/203)
 - Format field comments also as docstrings [#304](https://github.com/danielgtaylor/python-betterproto/pull/304)
 - Implement `__deepcopy__` for `Message` [#339](https://github.com/danielgtaylor/python-betterproto/pull/339)
+- compiler: Run isort on compiled code [#355](https://github.com/danielgtaylor/python-betterproto/pull/355)
+- Expose timeout, deadline and metadata parameters from grpclib [#352](https://github.com/danielgtaylor/python-betterproto/pull/352)
+- Make `Message.__getattribute__` invisible to type checkers [#359](https://github.com/danielgtaylor/python-betterproto/pull/359)
 
+- Fix map field edge-case [#254](https://github.com/danielgtaylor/python-betterproto/pull/254)
 - Fix message text in `NotImplementedError` [#325](https://github.com/danielgtaylor/python-betterproto/pull/325)
 - Fix `Message.from_dict()` in the presence of optional datetime fields [#329](https://github.com/danielgtaylor/python-betterproto/pull/329)
 - Support Jinja2 3.0 to prevent version conflicts [#330](https://github.com/danielgtaylor/python-betterproto/pull/330)
+- Fix overwriting top level `__init__.py` [#337](https://github.com/danielgtaylor/python-betterproto/pull/337)
+- Remove deprecation warnings when fields are initialised with non-default values [#348](https://github.com/danielgtaylor/python-betterproto/pull/348)
+- Ensure nested class names are converted to PascalCase [#353](https://github.com/danielgtaylor/python-betterproto/pull/353)
+- Fix `Message.to_dict()` mutating the underlying Message [#378](https://github.com/danielgtaylor/python-betterproto/pull/378)
+- Fix some parameters being missing from services [#381](https://github.com/danielgtaylor/python-betterproto/pull/381)
 
 ## [2.0.0b4] - 2022-01-03
 
