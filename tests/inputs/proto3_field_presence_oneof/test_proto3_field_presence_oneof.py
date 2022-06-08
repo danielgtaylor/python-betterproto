@@ -1,3 +1,4 @@
+import betterproto
 from tests.output_betterproto.proto3_field_presence_oneof import (
     InnerNested,
     Nested,
@@ -17,8 +18,7 @@ def test_serialization():
         assert bytes(message) == bytearray.fromhex("0a 00")
 
     test_empty_nested(Test(nested=Nested()))
-    test_empty_nested(Test(nested=Nested(inner=None)))
-    test_empty_nested(Test(nested=Nested(inner=InnerNested(a=None))))
+    test_empty_nested(Test(nested=Nested(inner=InnerNested(a=betterproto.NOT_SET))))
 
     def test_empty_with_optional(message: Test) -> None:
         # '12' => tag 2, length delimited
@@ -26,4 +26,4 @@ def test_serialization():
         assert bytes(message) == bytearray.fromhex("12 00")
 
     test_empty_with_optional(Test(with_optional=WithOptional()))
-    test_empty_with_optional(Test(with_optional=WithOptional(b=None)))
+    test_empty_with_optional(Test(with_optional=WithOptional(b=betterproto.NOT_SET)))

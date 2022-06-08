@@ -6,7 +6,7 @@ import struct
 import sys
 import typing
 import warnings
-from abc import ABC
+from abc import ABC, abstractmethod
 from base64 import (
     b64decode,
     b64encode,
@@ -150,7 +150,21 @@ class Casing(enum.Enum):
     SNAKE = snake_case  #: A snake_case sterilization function.
 
 
-PLACEHOLDER: Any = object()
+class NotSetType:
+    def __repr__(self):
+        return "NOT_SET"
+
+
+class PlaceholderType:
+    def __repr__(self):
+        return "PLACEHOLDER"
+
+
+NOT_SET: Any = NotSetType()
+PLACEHOLDER: Any = PlaceholderType()
+
+X = typing.TypeVar("X")
+ProtoOptional = Union[X, NotSetType]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -193,7 +207,7 @@ def dataclass_field(
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     return dataclasses.field(
-        default=None if optional else PLACEHOLDER,
+        default=NOT_SET if optional else PLACEHOLDER,
         metadata={
             "betterproto": FieldMetadata(
                 number, proto_type, map_types, repeated, group, wraps, special, optional
@@ -374,7 +388,7 @@ def encode_varint(value: int) -> bytes:
     return bytes(b + [bits])
 
 
-def _preprocess_single(proto_type: str, wraps: str, special: Optional[SpecialTypes], value: Any) -> bytes:
+def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
     # print("_preprocess_single: proto_type:", proto_type, ", wraps:", wraps, ", special:", special, ", value:", value)
     """Adjusts values before serialization."""
     if proto_type in (
@@ -406,11 +420,9 @@ def _preprocess_single(proto_type: str, wraps: str, special: Optional[SpecialTyp
             nanos = int((total_ms % 1e6) * 1e3)
             value = _Duration(seconds=seconds, nanos=nanos)
         elif wraps:
-            if value is None:
+            if value is NOT_SET:
                 return b""
             value = _get_wrapper(wraps)(value=value)
-        # elif special:
-        #     value = get_special_type(special)(value)
         return bytes(value)
 
     return value
@@ -423,10 +435,9 @@ def _serialize_single(
     *,
     serialize_empty: bool = False,
     wraps: str = "",
-    special: Optional[SpecialTypes] = None,
 ) -> bytes:
     """Serializes a single field and value."""
-    value = _preprocess_single(proto_type, wraps, special, value)
+    value = _preprocess_single(proto_type, wraps, value)
 
     output = bytearray()
     if proto_type in WIRE_VARINT_TYPES:
@@ -657,7 +668,7 @@ class Message(ABC):
                 group_current.setdefault(meta.group)
 
             value = self.__raw_get(field_name)
-            if value != PLACEHOLDER and not (meta.optional and value is None):
+            if value != PLACEHOLDER and not (meta.optional and value is NOT_SET):
                 # Found a non-sentinel value
                 all_sentinel = False
 
@@ -712,17 +723,20 @@ class Message(ABC):
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
-    if not TYPE_CHECKING:
+    def __get(self, name: str, notset_defaults: bool = False):
+        value = super().__getattribute__(name)
+        if value not in (PLACEHOLDER, NOT_SET,) or (value is NOT_SET and not notset_defaults):
+            return value
+        default_value = self._get_field_default(name)
+        if value is PLACEHOLDER:
+            super().__setattr__(name, default_value)
+        return default_value
 
+    if not TYPE_CHECKING:
         def __getattribute__(self, name: str) -> Any:
-            """
-            Lazily initialize default values to avoid infinite recursion for recursive
-            message types
-            """
             value = super().__getattribute__(name)
             if value is not PLACEHOLDER:
                 return value
-
             value = self._get_field_default(name)
             super().__setattr__(name, value)
             return value
@@ -778,21 +792,21 @@ class Message(ABC):
         """
         output = bytearray()
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            _value = getattr(self, field_name)
             # print("1. field_name:", field_name, ", meta:", meta, ", value: ", value)
+
+            if not self.is_set(field_name):
+                # Optional items should be skipped. This is used for the Google
+                # wrapper types and proto3 field presence/optional fields.
+                continue
+
+            _value = self.__get(field_name)
 
             # If this field is to be converted from/to a message type with special handling, convert it here
             # We skip this step if the value is repeated or a map to not infinitely recurse wrapping {} and []
             if meta.special and not meta.map_types and not meta.repeated:
-                value = get_special_type(meta.special)(_value)
+                value = get_special_transform(meta.special).create_type(_value)
             else:
                 value = _value
-
-            if value is None:
-                # Optional items should be skipped. This is used for the Google
-                # wrapper types and proto3 field presence/optional fields.
-                # print("2. field_name:", field_name, ", value is none, skipped")
-                continue
 
             # Being selected in a group means this field is the one that is
             # currently set in a `oneof` group, so it must be serialized even
@@ -820,9 +834,6 @@ class Message(ABC):
                 # if this is the selected oneof item or if we know we have to
                 # serialize an empty message (i.e. zero value was explicitly
                 # set by the user).
-
-                # TODO this skips google.protobuf.NullValue
-                # print("2. field_name:", field_name, ", value is default (", value, "), skipped")
                 continue
 
             if isinstance(value, list):
@@ -832,7 +843,7 @@ class Message(ABC):
                     # treat it like a field of raw bytes.
                     buf = bytearray()
                     for item in value:
-                        buf += _preprocess_single(meta.proto_type, "", None, item)
+                        buf += _preprocess_single(meta.proto_type, "", item)
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
                 else:
                     for item in value:
@@ -842,7 +853,6 @@ class Message(ABC):
                                 meta.proto_type,
                                 item,
                                 wraps=meta.wraps or "",
-                                special=meta.special,
                             )
                             # if it's an empty message it still needs to be represented
                             # as an item in the repeated list
@@ -852,7 +862,7 @@ class Message(ABC):
             elif isinstance(value, dict):
                 for k, v in value.items():
                     if meta.special:
-                        v = get_special_type(meta.special)(v)
+                        v = get_special_transform(meta.special).create_type(v)
                     # TODO get map_types from type referenced by meta.special if applicable?
                     assert meta.map_types
                     sk = _serialize_single(1, meta.map_types[0], k)
@@ -875,8 +885,7 @@ class Message(ABC):
                     meta.proto_type,
                     value,
                     serialize_empty=serialize_empty or bool(selected_in_group),
-                    wraps=meta.wraps or "",
-                    special=meta.special,
+                    wraps=meta.wraps or ""
                 )
 
         output += self._unknown_fields
@@ -933,7 +942,7 @@ class Message(ABC):
             elif t.__origin__ in (list, List):
                 # This is some kind of list (repeated) field.
                 return list
-            elif t.__origin__ is Union and type(None) in t.__args__:
+            elif t.__origin__ is Union and (type(None) in t.__args__ or NotSetType in t.__args__):
                 # This is an optional field (either wrapped, or using proto3
                 # field presence). For setting the default we really don't care
                 # what kind of field it is.
@@ -956,7 +965,10 @@ class Message(ABC):
     ) -> Any:
         # print("wire_type: ", wire_type, ", meta: ", meta, ", field_name: ", field_name, ", value: ", value)
         """Adjusts values after parsing."""
-        if wire_type == WIRE_VARINT:
+        if meta.special:
+            transform = get_special_transform(meta.special)
+            value = transform.parse(value)
+        elif wire_type == WIRE_VARINT:
             if meta.proto_type in (TYPE_INT32, TYPE_INT64):
                 bits = int(meta.proto_type[3:])
                 value = value & ((1 << bits) - 1)
@@ -976,9 +988,6 @@ class Message(ABC):
                 value = str(value, "utf-8")
             elif meta.proto_type == TYPE_MESSAGE:
                 cls = self._betterproto.cls_by_field[field_name]
-
-                # print("cls: ", cls, "meta: ", meta, ", value: ", value)
-
                 if cls == datetime:
                     value = _Timestamp().parse(value).to_datetime()
                 elif cls == timedelta:
@@ -987,9 +996,6 @@ class Message(ABC):
                     # This is a Google wrapper value message around a single
                     # scalar type.
                     value = _get_wrapper(meta.wraps)().parse(value).value
-                elif meta.special:
-                    # This is a Google well-known type that has special handling
-                    value = get_special_type(meta.special)().parse(value)
                 else:
                     value = cls().parse(value)
                     value._serialized_on_wire = True
@@ -1055,7 +1061,7 @@ class Message(ABC):
                     parsed.wire_type, meta, field_name, parsed.value
                 )
 
-            current = getattr(self, field_name)
+            current = self.__get(field_name)
             if meta.proto_type == TYPE_MAP:
                 # Value represents a single key/value pair entry in the map.
                 current[value.key] = value.value
@@ -1113,16 +1119,15 @@ class Message(ABC):
         """
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
-        defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            field_is_repeated = defaults[field_name] is list
-            value = getattr(self, field_name)
+            value = self.__get(field_name, notset_defaults=include_default_values)
+            if not include_default_values and value is NOT_SET:
+                continue
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
                 if isinstance(value, datetime):
                     if (
                         value != DATETIME_ZERO
-                        or include_default_values
                         or self._include_default_value_for_oneof(
                             field_name=field_name, meta=meta
                         )
@@ -1131,7 +1136,6 @@ class Message(ABC):
                 elif isinstance(value, timedelta):
                     if (
                         value != timedelta(0)
-                        or include_default_values
                         or self._include_default_value_for_oneof(
                             field_name=field_name, meta=meta
                         )
@@ -1140,7 +1144,7 @@ class Message(ABC):
                 elif meta.wraps or meta.special:
                     if meta.special or value is not None or include_default_values:
                         output[cased_name] = value
-                elif field_is_repeated:
+                elif meta.repeated:
                     # Convert each item.
                     cls = self._betterproto.cls_by_field[field_name]
                     if cls == datetime:
@@ -1151,11 +1155,9 @@ class Message(ABC):
                         value = [
                             i.to_dict(casing, include_default_values) for i in value
                         ]
-                    if value or include_default_values:
-                        output[cased_name] = value
+                    output[cased_name] = value
                 elif value is None:
-                    if include_default_values:
-                        output[cased_name] = value
+                    output[cased_name] = value
                 elif (
                     value._serialized_on_wire
                     or include_default_values
@@ -1170,8 +1172,7 @@ class Message(ABC):
                     if hasattr(value[k], "to_dict"):
                         output_map[k] = value[k].to_dict(casing, include_default_values)
 
-                if value or include_default_values:
-                    output[cased_name] = output_map
+                output[cased_name] = output_map
             elif (
                 value != self._get_field_default(field_name)
                 or include_default_values
@@ -1180,24 +1181,23 @@ class Message(ABC):
                 )
             ):
                 if meta.proto_type in INT_64_TYPES:
-                    if field_is_repeated:
+                    if meta.repeated:
                         output[cased_name] = [str(n) for n in value]
                     elif value is None:
-                        if include_default_values:
-                            output[cased_name] = value
+                        output[cased_name] = value
                     else:
                         output[cased_name] = str(value)
                 elif meta.proto_type == TYPE_BYTES:
-                    if field_is_repeated:
+                    if meta.repeated:
                         output[cased_name] = [
                             b64encode(b).decode("utf8") for b in value
                         ]
-                    elif value is None and include_default_values:
+                    elif value is None:
                         output[cased_name] = value
                     else:
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
-                    if field_is_repeated:
+                    if meta.repeated:
                         enum_class = field_types[field_name].__args__[0]
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
@@ -1207,8 +1207,7 @@ class Message(ABC):
                             # transparently upgrade single value to repeated
                             output[cased_name] = [enum_class(value).name]
                     elif value is None:
-                        if include_default_values:
-                            output[cased_name] = value
+                        output[cased_name] = value
                     elif meta.optional:
                         enum_class = field_types[field_name].__args__[0]
                         output[cased_name] = enum_class(value).name
@@ -1216,7 +1215,7 @@ class Message(ABC):
                         enum_class = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
-                    if field_is_repeated:
+                    if meta.repeated:
                         output[cased_name] = [_dump_float(n) for n in value]
                     else:
                         output[cased_name] = _dump_float(value)
@@ -1245,66 +1244,63 @@ class Message(ABC):
             meta = self._betterproto.meta_by_field_name.get(field_name)
             if not meta:
                 continue
-
-            # TODO none has to be an accepted value for google NullValue
-            #  maybe it doesn't matter because the field will always be defaulted to None anyway? a bit confusing
-            if value[key] is not None:
-                if meta.proto_type == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[field_name]
-                    if isinstance(v, list):
-                        if cls == datetime:
-                            v = [isoparse(item) for item in value[key]]
-                        elif cls == timedelta:
-                            v = [
-                                timedelta(seconds=float(item[:-1]))
-                                for item in value[key]
-                            ]
-                        else:
-                            v = [cls().from_dict(item) for item in value[key]]
-                    elif cls == datetime:
-                        v = isoparse(value[key])
+            if not meta.special and value[key] is None:
+                continue
+            if meta.proto_type == TYPE_MESSAGE:
+                v = self.__get(field_name, notset_defaults=True)
+                cls = self._betterproto.cls_by_field[field_name]
+                if isinstance(v, list):
+                    if cls == datetime:
+                        v = [isoparse(item) for item in value[key]]
                     elif cls == timedelta:
-                        v = timedelta(seconds=float(value[key][:-1]))
-                    elif meta.wraps or meta.special:
-                        v = value[key]
-                    elif v is None:
-                        v = cls().from_dict(value[key])
+                        v = [
+                            timedelta(seconds=float(item[:-1]))
+                            for item in value[key]
+                        ]
                     else:
-                        # NOTE: `from_dict` mutates the underlying message, so no
-                        # assignment here is necessary.
-                        v.from_dict(value[key])
-                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                    for k in value[key]:
-                        v[k] = cls().from_dict(value[key][k])
-                else:
+                        v = [cls().from_dict(item) for item in value[key]]
+                elif cls == datetime:
+                    v = isoparse(value[key])
+                elif cls == timedelta:
+                    v = timedelta(seconds=float(value[key][:-1]))
+                elif meta.wraps or meta.special:
                     v = value[key]
-                    if meta.proto_type in INT_64_TYPES:
-                        if isinstance(value[key], list):
-                            v = [int(n) for n in value[key]]
-                        else:
-                            v = int(value[key])
-                    elif meta.proto_type == TYPE_BYTES:
-                        if isinstance(value[key], list):
-                            v = [b64decode(n) for n in value[key]]
-                        else:
-                            v = b64decode(value[key])
-                    elif meta.proto_type == TYPE_ENUM:
-                        enum_cls = self._betterproto.cls_by_field[field_name]
-                        if isinstance(v, list):
-                            v = [enum_cls.from_string(e) for e in v]
-                        elif isinstance(v, str):
-                            v = enum_cls.from_string(v)
-                    elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
-                        if isinstance(value[key], list):
-                            v = [_parse_float(n) for n in value[key]]
-                        else:
-                            v = _parse_float(value[key])
-
-                if v is not None:
-                    setattr(self, field_name, v)
+                elif v is None:
+                    v = cls().from_dict(value[key])
+                else:
+                    # NOTE: `from_dict` mutates the underlying message, so no
+                    # assignment here is necessary.
+                    v.from_dict(value[key])
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                v = self.__get(field_name, notset_defaults=True)
+                cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                for k in value[key]:
+                    v[k] = cls().from_dict(value[key][k])
+            else:
+                v = value[key]
+                if meta.proto_type in INT_64_TYPES:
+                    if isinstance(value[key], list):
+                        v = [int(n) for n in value[key]]
+                    else:
+                        v = int(value[key])
+                elif meta.proto_type == TYPE_BYTES:
+                    if isinstance(value[key], list):
+                        v = [b64decode(n) for n in value[key]]
+                    else:
+                        v = b64decode(value[key])
+                elif meta.proto_type == TYPE_ENUM:
+                    enum_cls = self._betterproto.cls_by_field[field_name]
+                    if isinstance(v, list):
+                        v = [enum_cls.from_string(e) for e in v]
+                    elif isinstance(v, str):
+                        v = enum_cls.from_string(v)
+                elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
+                    if isinstance(value[key], list):
+                        v = [_parse_float(n) for n in value[key]]
+                    else:
+                        v = _parse_float(value[key])
+            if v is not None:
+                setattr(self, field_name, v)
         return self
 
     def to_json(self, indent: Union[None, int, str] = None) -> str:
@@ -1372,7 +1368,6 @@ class Message(ABC):
         output: Dict[str, Any] = {}
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            field_is_repeated = defaults[field_name] is list
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
@@ -1394,10 +1389,10 @@ class Message(ABC):
                         )
                     ):
                         output[cased_name] = value
-                elif meta.wraps:
-                    if value is not None or include_default_values:
-                        output[cased_name] = value
-                elif field_is_repeated:
+                elif meta.wraps or meta.special:
+                    if value is not NOT_SET or include_default_values:
+                        output[cased_name] = None if NOT_SET else value
+                elif meta.repeated:
                     # Convert each item.
                     value = [i.to_pydict(casing, include_default_values) for i in value]
                     if value or include_default_values:
@@ -1449,33 +1444,31 @@ class Message(ABC):
             if not meta:
                 continue
 
-            if value[key] is not None:
-                if meta.proto_type == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    if isinstance(v, list):
-                        cls = self._betterproto.cls_by_field[field_name]
-                        for item in value[key]:
-                            v.append(cls().from_pydict(item))
-                    elif isinstance(v, datetime):
-                        v = value[key]
-                    elif isinstance(v, timedelta):
-                        v = value[key]
-                    elif meta.wraps:
-                        v = value[key]
-                    else:
-                        # NOTE: `from_pydict` mutates the underlying message, so no
-                        # assignment here is necessary.
-                        v.from_pydict(value[key])
-                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                    for k in value[key]:
-                        v[k] = cls().from_pydict(value[key][k])
-                else:
+            if meta.proto_type == TYPE_MESSAGE:
+                v = getattr(self, field_name)
+                if isinstance(v, list):
+                    cls = self._betterproto.cls_by_field[field_name]
+                    for item in value[key]:
+                        v.append(cls().from_pydict(item))
+                elif isinstance(v, datetime):
                     v = value[key]
+                elif isinstance(v, timedelta):
+                    v = value[key]
+                elif meta.wraps or meta.special:
+                    v = value[key]
+                else:
+                    # NOTE: `from_pydict` mutates the underlying message, so no
+                    # assignment here is necessary.
+                    v.from_pydict(value[key])
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                v = getattr(self, field_name)
+                cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                for k in value[key]:
+                    v[k] = cls().from_pydict(value[key][k])
+            else:
+                v = value[key]
 
-                if v is not None:
-                    setattr(self, field_name, v)
+            setattr(self, field_name, v)
         return self
 
     def is_set(self, name: str) -> bool:
@@ -1495,7 +1488,7 @@ class Message(ABC):
         default = (
             PLACEHOLDER
             if not self._betterproto.meta_by_field_name[name].optional
-            else None
+            else NOT_SET
         )
         return self.__raw_get(name) is not default
 
@@ -1603,85 +1596,100 @@ def _get_wrapper(proto_type: str) -> Type:
     }[proto_type]
 
 
-class BetterprotoValue(Value):
-    # TODO replace this with type alias for Value
-    def __init__(self, value: Optional[Any] = None):
-        super().__init__()
-        # print("BetterprotoValue.__init__, value:", value)
-        if value:
-            if isinstance(value, str):
-                self.string_value = value
-            elif isinstance(value, bool):
-                self.bool_value = value
-            elif isinstance(value, int) or isinstance(value, float):
-                self.number_value = value
-            elif isinstance(value, dict) and all(isinstance(k, str) for k in value.keys()):
-                self.struct_value = value
-            elif isinstance(value, list):
-                self.list_value = value
-            elif value is None:
-                self.null_value = value
-            else:
-                raise TypeError(f"Value '{value}' with type '{type(value)}'"
-                                f" is not supported for .google.protobuf.Value")
-        # print("BetterprotoValue.__init__, self result:", self)
+class SpecialTransform(ABC):
+    @staticmethod
+    @abstractmethod
+    def create_type(value: Optional[Any]):
+        """
+        Creates a specially handled type from the given value
+        e.g. dict -> .google.protobuf.Struct
+        """
+        raise NotImplementedError
 
-    def parse(self: T, data: bytes) -> T:
-        result = super().parse(data)
-        # print("BetterprotoValue.parse, super parse result: ", result)
-        return betterproto.which_one_of(result, "kind")[1]
+    @staticmethod
+    @abstractmethod
+    def parse(data: bytes):
+        """
+        Parses the given buffer as specially handled type down to the contained value
+        e.g. bytes -> .google.protobuf.Struct -> dict
+        """
+        raise NotImplementedError
 
 
-class BetterprotoStruct(Struct):
-    # TODO replace this with type alias for Struct / jsonobject
-    def __init__(self, value: Optional[Dict[str, Any]] = None):
-        # print("BetterprotoStruct.__init__, value:", value)
-        # TODO is this correct or do we need to manually convert the Value items here?
-        if value:
-            # super().__init__(fields={k: BetterprotoValue(v) for k, v in value.items()})
-            super().__init__(fields=value)
-            # print("BetterprotoStruct.__init__, self result:", self)
+class ValueTransform(SpecialTransform):
+
+    # TODO replace type hint for value with JSONValue type
+    @staticmethod
+    def create_type(value: Optional[Any] = PLACEHOLDER) -> Value:
+        message = Value()
+        if value is PLACEHOLDER:
+            return message
+        if isinstance(value, str):
+            message.string_value = value
+        elif isinstance(value, bool):
+            message.bool_value = value
+        elif isinstance(value, int) or isinstance(value, float):
+            message.number_value = value
+        elif isinstance(value, dict) and all(isinstance(k, str) for k in value.keys()):
+            message.struct_value = value
+        elif isinstance(value, list):
+            message.list_value = value
+        elif value is None:
+            message.null_value = value
         else:
-            super().__init__()
+            raise TypeError(f"Value '{value}' with type '{type(value)}'"
+                            f" is not supported for .google.protobuf.Value")
+        return message
 
-    def parse(self: T, data: bytes):
-        result = super().parse(data)
-        # print("BetterprotoStruct.parse, super parse result: ", result)
-        # TODO is this correct or do we need to manually parse the Value items here?
-        return result.fields
+    # TODO replace the return type with type alias for JSONValue
+    @staticmethod
+    def parse(data) -> Any:
+        value = Value().parse(data)
+        return betterproto.which_one_of(value, "kind")[1]
 
 
-class BetterprotoListValue(ListValue):
-    # TODO replace the Any with type alias for Value
-    def __init__(self, value: Optional[List[Any]] = None):
-        # print("BetterprotoListValue.__init__, value:", value)
+class StructTransform(SpecialTransform):
+
+    @staticmethod
+    def create_type(value: Optional[Dict[str, Any]] = None):
         if value:
-            super().__init__(values=value)
-            # print("BetterprotoListValue.__init__, self result:", self)
-        else:
-            super().__init__()
+            return Struct(fields=value)
+        return Struct()
 
-    def parse(self: T, data: bytes):
-        result = super().parse(data)
-        # print("BetterprotoListValue.parse, super parse result: ", result)
-        # TODO is this correct or do we need to manually parse the Value items here?
-        return result.values
+    @staticmethod
+    def parse(data):
+        return Struct().parse(data).fields
 
 
-class BetterprotoNullValue:
-    def __new__(cls, value: Optional[None] = PLACEHOLDER):
+class ListValueTransform(SpecialTransform):
+
+    @staticmethod
+    def create_type(value: Optional[List[Any]]):
+        if value:
+            return ListValue(values=value)
+        return ListValue()
+
+    @staticmethod
+    def parse(data):
+        return ListValue().parse(data).values
+
+
+class NullValueTransform(SpecialTransform):
+
+    @staticmethod
+    def create_type(value: Optional[None] = PLACEHOLDER):
         return NullValue(NullValue.NULL_VALUE)
 
-    # TODO what
-    def parse(self: T, _: bytes):
+    @staticmethod
+    def parse(_):
+        # If a NullValue exists, the result is always None
         return None
 
 
-def get_special_type(special_type: SpecialTypes):
-    # TODO include NullValue
+def get_special_transform(special_type: SpecialTypes):
     return {
-        SpecialTypes.GOOGLE_VALUE: BetterprotoValue,
-        SpecialTypes.GOOGLE_STRUCT: BetterprotoStruct,
-        SpecialTypes.GOOGLE_LIST_VALUE: BetterprotoListValue,
-        SpecialTypes.GOOGLE_NULL_VALUE: BetterprotoNullValue,
+        SpecialTypes.GOOGLE_VALUE: ValueTransform,
+        SpecialTypes.GOOGLE_STRUCT: StructTransform,
+        SpecialTypes.GOOGLE_LIST_VALUE: ListValueTransform,
+        SpecialTypes.GOOGLE_NULL_VALUE: NullValueTransform,
     }.get(special_type, None)

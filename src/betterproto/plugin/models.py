@@ -501,7 +501,7 @@ class FieldCompiler(MessageCompiler):
         if self.repeated:
             return "[]"
         if self.optional:
-            return "None"
+            return "betterproto.NotSetType"
         if self.py_type == "int":
             return "0"
         if self.py_type == "float":
@@ -570,7 +570,7 @@ class FieldCompiler(MessageCompiler):
         if self.repeated:
             return f"List[{py_type}]"
         if self.optional:
-            return f"Optional[{py_type}]"
+            return f"betterproto.ProtoOptional[{py_type}]"
         return py_type
 
 
