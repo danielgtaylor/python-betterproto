@@ -214,7 +214,7 @@ def test_binary_compatibility(repeat, test_data: TestData) -> None:
             # https://developers.google.com/protocol-buffers/docs/encoding#implications
             assert bytes(plugin_instance_from_json) == reference_binary_output
 
-            plugin_instance_from_binary = plugin_module.Test.FromString(
+            plugin_instance_from_binary = plugin_module.Test().parse(
                 reference_binary_output
             )
             assert bytes(plugin_instance_from_binary) == reference_binary_output

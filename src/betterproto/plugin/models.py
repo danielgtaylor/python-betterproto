@@ -432,7 +432,6 @@ class FieldCompiler(MessageCompiler):
             imports.add("List")
         if "Dict[" in annotation:
             imports.add("Dict")
-        # TODO this is absolutely horrible, rewrite this to take it straight from get_type_reference
         if "Union[" in annotation:
             imports.add("Union")
         if "AnyType" in annotation:

@@ -389,7 +389,6 @@ def encode_varint(value: int) -> bytes:
 
 
 def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
-    # print("_preprocess_single: proto_type:", proto_type, ", wraps:", wraps, ", special:", special, ", value:", value)
     """Adjusts values before serialization."""
     if proto_type in (
         TYPE_ENUM,
@@ -792,21 +791,17 @@ class Message(ABC):
         """
         output = bytearray()
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            # print("1. field_name:", field_name, ", meta:", meta, ", value: ", value)
-
             if not self.is_set(field_name):
                 # Optional items should be skipped. This is used for the Google
                 # wrapper types and proto3 field presence/optional fields.
                 continue
 
-            _value = self.__get(field_name)
+            value = self.__get(field_name)
 
             # If this field is to be converted from/to a message type with special handling, convert it here
             # We skip this step if the value is repeated or a map to not infinitely recurse wrapping {} and []
             if meta.special and not meta.map_types and not meta.repeated:
-                value = get_special_transform(meta.special).create_type(_value)
-            else:
-                value = _value
+                value = get_special_transform(meta.special).create_type(value)
 
             # Being selected in a group means this field is the one that is
             # currently set in a `oneof` group, so it must be serialized even
@@ -843,10 +838,14 @@ class Message(ABC):
                     # treat it like a field of raw bytes.
                     buf = bytearray()
                     for item in value:
+                        if meta.special:
+                            item = get_special_transform(meta.special).create_type(item)
                         buf += _preprocess_single(meta.proto_type, "", item)
                     output += _serialize_single(meta.number, TYPE_BYTES, buf)
                 else:
                     for item in value:
+                        if meta.special:
+                            item = get_special_transform(meta.special).create_type(item)
                         output += (
                             _serialize_single(
                                 meta.number,
@@ -863,7 +862,6 @@ class Message(ABC):
                 for k, v in value.items():
                     if meta.special:
                         v = get_special_transform(meta.special).create_type(v)
-                    # TODO get map_types from type referenced by meta.special if applicable?
                     assert meta.map_types
                     sk = _serialize_single(1, meta.map_types[0], k)
                     sv = _serialize_single(2, meta.map_types[1], v)
@@ -963,12 +961,8 @@ class Message(ABC):
     def _postprocess_single(
         self, wire_type: int, meta: FieldMetadata, field_name: str, value: Any
     ) -> Any:
-        # print("wire_type: ", wire_type, ", meta: ", meta, ", field_name: ", field_name, ", value: ", value)
         """Adjusts values after parsing."""
-        if meta.special:
-            transform = get_special_transform(meta.special)
-            value = transform.parse(value)
-        elif wire_type == WIRE_VARINT:
+        if wire_type == WIRE_VARINT:
             if meta.proto_type in (TYPE_INT32, TYPE_INT64):
                 bits = int(meta.proto_type[3:])
                 value = value & ((1 << bits) - 1)
@@ -1038,7 +1032,10 @@ class Message(ABC):
             meta = proto_meta.meta_by_field_name[field_name]
 
             value: Any
-            if parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
+            if meta.special:
+                transform = get_special_transform(meta.special)
+                value = transform.parse(parsed.value)
+            elif parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
                 # This is a packed repeated field.
                 pos = 0
                 value = []
