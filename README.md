@@ -444,7 +444,7 @@ poe full-test
 
 ### (Re)compiling Google Well-known Types
 
-Betterproto includes compiled versions for Google's well-known types at [betterproto/lib/google](betterproto/lib/google).
+Betterproto includes compiled versions for Google's well-known types at [src/betterproto/lib/google](src/betterproto/lib/google).
 Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
 
 Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
