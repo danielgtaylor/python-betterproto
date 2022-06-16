@@ -1215,7 +1215,6 @@ class Message:
                 meta = self._betterproto.meta_by_field_name[field_name]
             except KeyError:
                 continue
-
             if value_ is None:
                 continue
 
@@ -1268,7 +1267,7 @@ class Message:
                     v = enum_cls.from_string(value_)
                 else:
                     v = value_
-            elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
+            elif meta.proto_type in {TYPE_FLOAT, TYPE_DOUBLE}:
                 v = (
                     [_parse_float(n) for n in value_]
                     if isinstance(value_, list)
@@ -1417,39 +1416,37 @@ class Message:
             The initialized message.
         """
         self._serialized_on_wire = True
-        for key in value:
+        for key, value_ in value.items():
             field_name = safe_snake_case(key)
-            meta = self._betterproto.meta_by_field_name.get(field_name)
-            if not meta:
+            try:
+                meta = self._betterproto.meta_by_field_name.get(field_name)
+            except KeyError:
+                continue
+            if value_ is None:
                 continue
 
-            if value[key] is not None:
-                if meta.proto_type == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    if isinstance(v, list):
-                        cls = self._betterproto.cls_by_field[field_name]
-                        for item in value[key]:
-                            v.append(cls().from_pydict(item))
-                    elif isinstance(v, datetime):
-                        v = value[key]
-                    elif isinstance(v, timedelta):
-                        v = value[key]
-                    elif meta.wraps:
-                        v = value[key]
-                    else:
-                        # NOTE: `from_pydict` mutates the underlying message, so no
-                        # assignment here is necessary.
-                        v.from_pydict(value[key])
-                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                    for k in value[key]:
-                        v[k] = cls().from_pydict(value[key][k])
+            if meta.proto_type == TYPE_MESSAGE:
+                v = getattr(self, field_name)
+                if isinstance(v, list):
+                    cls = self._betterproto.cls_by_field[field_name]
+                    for item in value_:
+                        v.append(cls().from_pydict(item))
+                elif isinstance(v, datetime) or isinstance(v, timedelta) or meta.wraps:
+                    v = value_
                 else:
-                    v = value[key]
+                    # NOTE: `from_pydict` mutates the underlying message, so no
+                    # assignment here is necessary.
+                    v.from_pydict(value_)
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                v = getattr(self, field_name)
+                cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                for k in value_:
+                    v[k] = cls().from_pydict(value_[k])
+            else:
+                v = value_
 
-                if v is not None:
-                    setattr(self, field_name, v)
+            if v is not None:
+                setattr(self, field_name, v)
         return self
 
     def is_set(self, name: str) -> bool:
