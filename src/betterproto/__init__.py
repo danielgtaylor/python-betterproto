@@ -32,7 +32,10 @@ from typing import (
 )
 
 from dateutil.parser import isoparse
-from typing_extensions import Final
+from typing_extensions import (
+    Final,
+    final,
+)
 
 from ._types import T
 from ._version import __version__
@@ -144,11 +147,14 @@ NEG_INFINITY: Final = "-Infinity"
 NAN: Final = "NaN"
 
 
-class Casing(enum.Enum):
+@final
+class Casing:
     """Casing constants for serialization."""
 
-    CAMEL = camel_case  #: A camelCase sterilization function.
-    SNAKE = snake_case  #: A snake_case sterilization function.
+    __slots__ = ()
+
+    CAMEL: Final = camel_case  #: A camelCase sterilization function.
+    SNAKE: Final = snake_case  #: A snake_case sterilization function.
 
 
 PLACEHOLDER: Final[Any] = object()
