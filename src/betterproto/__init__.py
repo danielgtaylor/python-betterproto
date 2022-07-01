@@ -11,6 +11,7 @@ from base64 import (
     b64decode,
     b64encode,
 )
+from collections.abc import Iterable
 from copy import deepcopy
 from datetime import (
     datetime,
@@ -511,13 +512,13 @@ def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
         if wire_type == WIRE_VARINT:
             decoded, i = decode_varint(value, i)
         elif wire_type == WIRE_FIXED_64:
-            decoded, i = value[i : i + 8], i + 8
+            decoded, i = value[i: i + 8], i + 8
         elif wire_type == WIRE_LEN_DELIM:
             length, i = decode_varint(value, i)
-            decoded = value[i : i + length]
+            decoded = value[i: i + length]
             i += length
         elif wire_type == WIRE_FIXED_32:
-            decoded, i = value[i : i + 4], i + 4
+            decoded, i = value[i: i + 4], i + 4
 
         yield ParsedField(
             number=number, wire_type=wire_type, value=decoded, raw=value[start:i]
@@ -794,7 +795,7 @@ class Message(ABC):
                 # set by the user).
                 continue
 
-            if isinstance(value, list):
+            if isinstance(value, Iterable):
                 if meta.proto_type in PACKED_TYPES:
                     # Packed lists look like a length-delimited field. First,
                     # preprocess/encode each value into a buffer and then
@@ -996,10 +997,10 @@ class Message(ABC):
                 value = []
                 while pos < len(parsed.value):
                     if meta.proto_type in (TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32):
-                        decoded, pos = parsed.value[pos : pos + 4], pos + 4
+                        decoded, pos = parsed.value[pos: pos + 4], pos + 4
                         wire_type = WIRE_FIXED_32
                     elif meta.proto_type in (TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64):
-                        decoded, pos = parsed.value[pos : pos + 8], pos + 8
+                        decoded, pos = parsed.value[pos: pos + 8], pos + 8
                         wire_type = WIRE_FIXED_64
                     else:
                         decoded, pos = decode_varint(parsed.value, pos)
