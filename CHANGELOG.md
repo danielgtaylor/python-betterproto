@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
-## [2.0.0b5] - 2022-03-xx
+## [2.0.0b5] - 2022-07-09
 
 - **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters [#331](https://github.com/danielgtaylor/python-betterproto/pull/311)
 
