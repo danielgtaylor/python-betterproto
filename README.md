@@ -419,7 +419,7 @@ Adding a standard test case is easy.
 
 It will be picked up automatically when you run the tests.
 
-- See also: [Standard Tests Development Guide](betterproto/tests/README.md)
+- See also: [Standard Tests Development Guide](tests/README.md)
 
 #### Custom tests
 
