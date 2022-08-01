@@ -15,17 +15,22 @@ from typing import (
 
 import grpclib.const
 
-from .._types import ST, T
 
 if TYPE_CHECKING:
     from grpclib.client import Channel
     from grpclib.metadata import Deadline
 
+    from .._types import (
+        ST,
+        IProtoMessage,
+        Message,
+        T,
+    )
 
-_Value = Union[str, bytes]
-_MetadataLike = Union[Mapping[str, _Value], Collection[Tuple[str, _Value]]]
-_MessageLike = Union[T, ST]
-_MessageSource = Union[Iterable[ST], AsyncIterable[ST]]
+
+Value = Union[str, bytes]
+MetadataLike = Union[Mapping[str, Value], Collection[Tuple[str, Value]]]
+MessageSource = Union[Iterable["IProtoMessage"], AsyncIterable["IProtoMessage"]]
 
 
 class ServiceStub(ABC):
@@ -39,7 +44,7 @@ class ServiceStub(ABC):
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
+        metadata: Optional[MetadataLike] = None,
     ) -> None:
         self.channel = channel
         self.timeout = timeout
@@ -50,7 +55,7 @@ class ServiceStub(ABC):
         self,
         timeout: Optional[float],
         deadline: Optional["Deadline"],
-        metadata: Optional[_MetadataLike],
+        metadata: Optional[MetadataLike],
     ):
         return {
             "timeout": self.timeout if timeout is None else timeout,
@@ -61,13 +66,13 @@ class ServiceStub(ABC):
     async def _unary_unary(
         self,
         route: str,
-        request: _MessageLike,
-        response_type: Type[T],
+        request: "IProtoMessage",
+        response_type: Type["T"],
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> T:
+        metadata: Optional[MetadataLike] = None,
+    ) -> "T":
         """Make a unary request and return the response."""
         async with self.channel.request(
             route,
@@ -84,13 +89,13 @@ class ServiceStub(ABC):
     async def _unary_stream(
         self,
         route: str,
-        request: _MessageLike,
-        response_type: Type[T],
+        request: "IProtoMessage",
+        response_type: Type["T"],
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> AsyncIterator[T]:
+        metadata: Optional[MetadataLike] = None,
+    ) -> AsyncIterator["T"]:
         """Make a unary request and return the stream response iterator."""
         async with self.channel.request(
             route,
@@ -106,14 +111,14 @@ class ServiceStub(ABC):
     async def _stream_unary(
         self,
         route: str,
-        request_iterator: _MessageSource,
-        request_type: Type[ST],
-        response_type: Type[T],
+        request_iterator: MessageSource,
+        request_type: Type["IProtoMessage"],
+        response_type: Type["T"],
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> T:
+        metadata: Optional[MetadataLike] = None,
+    ) -> "T":
         """Make a stream request and return the response."""
         async with self.channel.request(
             route,
@@ -130,14 +135,14 @@ class ServiceStub(ABC):
     async def _stream_stream(
         self,
         route: str,
-        request_iterator: _MessageSource,
-        request_type: Type[ST],
-        response_type: Type[T],
+        request_iterator: MessageSource,
+        request_type: Type["IProtoMessage"],
+        response_type: Type["T"],
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
-        metadata: Optional[_MetadataLike] = None,
-    ) -> AsyncIterator[T]:
+        metadata: Optional[MetadataLike] = None,
+    ) -> AsyncIterator["T"]:
         """
         Make a stream request and return an AsyncIterator to iterate over response
         messages.
@@ -161,7 +166,7 @@ class ServiceStub(ABC):
                 raise
 
     @staticmethod
-    async def _send_messages(stream, messages: _MessageSource):
+    async def _send_messages(stream, messages: MessageSource):
         if isinstance(messages, AsyncIterable):
             async for message in messages:
                 await stream.send_message(message)

@@ -1,12 +1,14 @@
+from typing import Dict
+
+import grpclib
+import grpclib.server
+
 from tests.output_betterproto.service import (
-    DoThingResponse,
     DoThingRequest,
+    DoThingResponse,
     GetThingRequest,
     GetThingResponse,
 )
-import grpclib
-import grpclib.server
-from typing import Dict
 
 
 class ThingService:

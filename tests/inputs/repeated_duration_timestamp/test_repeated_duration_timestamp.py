@@ -1,4 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 
 from tests.output_betterproto.repeated_duration_timestamp import Test
 

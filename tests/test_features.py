@@ -1,8 +1,21 @@
+from copy import (
+    copy,
+    deepcopy,
+)
 from dataclasses import dataclass
-from copy import copy, deepcopy
-from datetime import datetime
-from inspect import Parameter, signature
-from typing import Dict, List, Optional
+from datetime import (
+    datetime,
+    timedelta,
+)
+from inspect import (
+    Parameter,
+    signature,
+)
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
 
@@ -69,6 +82,7 @@ def test_class_init():
     foo = Foo(name="foo", child=Bar(name="bar"))
 
     assert foo.to_dict() == {"name": "foo", "child": {"name": "bar"}}
+    assert foo.to_pydict() == {"name": "foo", "child": {"name": "bar"}}
 
 
 def test_enum_as_int_json():
@@ -87,6 +101,11 @@ def test_enum_as_int_json():
     # Plain-ol'-ints should serialize properly too.
     foo.bar = 1
     assert foo.to_dict() == {"bar": "ONE"}
+
+    # Similar expectations for pydict
+    foo = Foo().from_pydict({"bar": 1})
+    assert foo.bar == TestEnum.ONE
+    assert foo.to_pydict() == {"bar": TestEnum.ONE}
 
 
 def test_unknown_fields():
@@ -178,8 +197,20 @@ def test_json_casing():
         "snakeCase": 3,
         "kabobCase": 4,
     }
+    assert test.to_pydict() == {
+        "pascalCase": 1,
+        "camelCase": 2,
+        "snakeCase": 3,
+        "kabobCase": 4,
+    }
 
     assert test.to_dict(casing=betterproto.Casing.SNAKE) == {
+        "pascal_case": 1,
+        "camel_case": 2,
+        "snake_case": 3,
+        "kabob_case": 4,
+    }
+    assert test.to_pydict(casing=betterproto.Casing.SNAKE) == {
         "pascal_case": 1,
         "camel_case": 2,
         "snake_case": 3,
@@ -220,12 +251,32 @@ def test_to_dict_default_values():
         "someBool": False,
     }
 
+    test = TestMessage().from_pydict({})
+
+    assert test.to_pydict(include_default_values=True) == {
+        "someInt": 0,
+        "someDouble": 0.0,
+        "someStr": "",
+        "someBool": False,
+    }
+
     # All default values
     test = TestMessage().from_dict(
         {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
     )
 
     assert test.to_dict(include_default_values=True) == {
+        "someInt": 0,
+        "someDouble": 0.0,
+        "someStr": "",
+        "someBool": False,
+    }
+
+    test = TestMessage().from_pydict(
+        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
+    )
+
+    assert test.to_pydict(include_default_values=True) == {
         "someInt": 0,
         "someDouble": 0.0,
         "someStr": "",
@@ -268,6 +319,30 @@ def test_to_dict_default_values():
         "someDefaultBool": False,
     }
 
+    test = TestMessage2().from_pydict(
+        {
+            "someInt": 2,
+            "someDouble": 1.2,
+            "someStr": "hello",
+            "someBool": True,
+            "someDefaultInt": 0,
+            "someDefaultDouble": 0.0,
+            "someDefaultStr": "",
+            "someDefaultBool": False,
+        }
+    )
+
+    assert test.to_pydict(include_default_values=True) == {
+        "someInt": 2,
+        "someDouble": 1.2,
+        "someStr": "hello",
+        "someBool": True,
+        "someDefaultInt": 0,
+        "someDefaultDouble": 0.0,
+        "someDefaultStr": "",
+        "someDefaultBool": False,
+    }
+
     # Nested messages
     @dataclass
     class TestChildMessage(betterproto.Message):
@@ -285,6 +360,36 @@ def test_to_dict_default_values():
         "someInt": 0,
         "someDouble": 1.2,
         "someMessage": {"someOtherInt": 0},
+    }
+
+    test = TestParentMessage().from_pydict({"someInt": 0, "someDouble": 1.2})
+
+    assert test.to_pydict(include_default_values=True) == {
+        "someInt": 0,
+        "someDouble": 1.2,
+        "someMessage": {"someOtherInt": 0},
+    }
+
+
+def test_to_dict_datetime_values():
+    @dataclass
+    class TestDatetimeMessage(betterproto.Message):
+        bar: datetime = betterproto.message_field(1)
+        baz: timedelta = betterproto.message_field(2)
+
+    test = TestDatetimeMessage().from_dict(
+        {"bar": "2020-01-01T00:00:00Z", "baz": "86400.000s"}
+    )
+
+    assert test.to_dict() == {"bar": "2020-01-01T00:00:00Z", "baz": "86400.000s"}
+
+    test = TestDatetimeMessage().from_pydict(
+        {"bar": datetime(year=2020, month=1, day=1), "baz": timedelta(days=1)}
+    )
+
+    assert test.to_pydict() == {
+        "bar": datetime(year=2020, month=1, day=1),
+        "baz": timedelta(days=1),
     }
 
 
@@ -351,8 +456,10 @@ def test_recursive_message():
 
 
 def test_recursive_message_defaults():
-    from tests.output_betterproto.recursivemessage import Intermediate
-    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
+    from tests.output_betterproto.recursivemessage import (
+        Intermediate,
+        Test as RecursiveMessage,
+    )
 
     msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
 
@@ -505,3 +612,15 @@ def test_copyability():
     assert spam == deepcopied
     assert spam is not deepcopied
     assert spam.baz is not deepcopied.baz
+
+
+def test_is_set():
+    @dataclass
+    class Spam(betterproto.Message):
+        foo: bool = betterproto.bool_field(1)
+        bar: Optional[int] = betterproto.int32_field(2, optional=True)
+
+    assert not Spam().is_set("foo")
+    assert not Spam().is_set("bar")
+    assert Spam(foo=True).is_set("foo")
+    assert Spam(foo=True, bar=0).is_set("bar")
