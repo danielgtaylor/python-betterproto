@@ -43,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `to/from_pydict()` for `Message` [#203](https://github.com/danielgtaylor/python-betterproto/pull/203)
 - Format field comments also as docstrings [#304](https://github.com/danielgtaylor/python-betterproto/pull/304)
 - Implement `__deepcopy__` for `Message` [#339](https://github.com/danielgtaylor/python-betterproto/pull/339)
-- compiler: Run isort on compiled code [#355](https://github.com/danielgtaylor/python-betterproto/pull/355)
+- Run isort on compiled code [#355](https://github.com/danielgtaylor/python-betterproto/pull/355)
 - Expose timeout, deadline and metadata parameters from grpclib [#352](https://github.com/danielgtaylor/python-betterproto/pull/352)
 - Make `Message.__getattribute__` invisible to type checkers [#359](https://github.com/danielgtaylor/python-betterproto/pull/359)
 
