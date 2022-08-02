@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package googletypes_request;
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+// Tests that google types can be used as params
+
+service Test {
+    rpc SendDouble (google.protobuf.DoubleValue) returns (Input);
+    rpc SendFloat (google.protobuf.FloatValue) returns (Input);
+    rpc SendInt64 (google.protobuf.Int64Value) returns (Input);
+    rpc SendUInt64 (google.protobuf.UInt64Value) returns (Input);
+    rpc SendInt32 (google.protobuf.Int32Value) returns (Input);
+    rpc SendUInt32 (google.protobuf.UInt32Value) returns (Input);
+    rpc SendBool (google.protobuf.BoolValue) returns (Input);
+    rpc SendString (google.protobuf.StringValue) returns (Input);
+    rpc SendBytes (google.protobuf.BytesValue) returns (Input);
+    rpc SendDatetime (google.protobuf.Timestamp) returns (Input);
+    rpc SendTimedelta (google.protobuf.Duration) returns (Input);
+    rpc SendEmpty (google.protobuf.Empty) returns (Input);
+}
+
+message Input {
+
+}
