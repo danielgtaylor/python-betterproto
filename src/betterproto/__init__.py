@@ -1419,7 +1419,7 @@ class Message:
         for key, value_ in value.items():
             field_name = safe_snake_case(key)
             try:
-                meta = self._betterproto.meta_by_field_name.get(field_name)
+                meta = self._betterproto.meta_by_field_name[field_name]
             except KeyError:
                 continue
             if value_ is None:
