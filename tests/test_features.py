@@ -1,3 +1,4 @@
+import json
 from copy import (
     copy,
     deepcopy,
@@ -191,6 +192,37 @@ def test_json_casing():
     assert test == CasingTest(1, 2, 3, 4)
 
     # Serializing should be strict.
+    assert json.loads(test.to_json()) == {
+        "pascalCase": 1,
+        "camelCase": 2,
+        "snakeCase": 3,
+        "kabobCase": 4,
+    }
+
+    assert json.loads(test.to_json(casing=betterproto.Casing.SNAKE)) == {
+        "pascal_case": 1,
+        "camel_case": 2,
+        "snake_case": 3,
+        "kabob_case": 4,
+    }
+
+
+def test_dict_casing():
+    @dataclass
+    class CasingTest(betterproto.Message):
+        pascal_case: int = betterproto.int32_field(1)
+        camel_case: int = betterproto.int32_field(2)
+        snake_case: int = betterproto.int32_field(3)
+        kabob_case: int = betterproto.int32_field(4)
+
+    # Parsing should accept almost any input
+    test = CasingTest().from_dict(
+        {"PascalCase": 1, "camelCase": 2, "snake_case": 3, "kabob-case": 4}
+    )
+
+    assert test == CasingTest(1, 2, 3, 4)
+
+    # Serializing should be strict.
     assert test.to_dict() == {
         "pascalCase": 1,
         "camelCase": 2,
@@ -231,6 +263,37 @@ def test_optional_flag():
     # Differentiate between not passed and the zero-value.
     assert Request().parse(b"").flag is None
     assert Request().parse(b"\n\x00").flag is False
+
+
+def test_to_json_default_values():
+    @dataclass
+    class TestMessage(betterproto.Message):
+        some_int: int = betterproto.int32_field(1)
+        some_double: float = betterproto.double_field(2)
+        some_str: str = betterproto.string_field(3)
+        some_bool: bool = betterproto.bool_field(4)
+
+    # Empty dict
+    test = TestMessage().from_dict({})
+
+    assert json.loads(test.to_json(include_default_values=True)) == {
+        "someInt": 0,
+        "someDouble": 0.0,
+        "someStr": "",
+        "someBool": False,
+    }
+
+    # All default values
+    test = TestMessage().from_dict(
+        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
+    )
+
+    assert json.loads(test.to_json(include_default_values=True)) == {
+        "someInt": 0,
+        "someDouble": 0.0,
+        "someStr": "",
+        "someBool": False,
+    }
 
 
 def test_to_dict_default_values():
