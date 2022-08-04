@@ -5,7 +5,13 @@
 {% for i in output_file.python_module_imports|sort %}
 import {{ i }}
 {% endfor %}
+
+{% if output_file.pydantic_dataclasses %}
+from pydantic.dataclasses import dataclass
+{%- else -%}
 from dataclasses import dataclass
+{% endif %}
+
 {% if output_file.datetime_imports %}
 from datetime import {% for i in output_file.datetime_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 

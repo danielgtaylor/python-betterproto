@@ -91,6 +91,11 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
             # skip outputting Google's well-known types
             request_data.output_packages[output_package_name].output = False
 
+        if "pydantic_dataclasses" in plugin_options:
+            request_data.output_packages[
+                output_package_name
+            ].pydantic_dataclasses = True
+
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
     # get the references to input/output messages for each service
