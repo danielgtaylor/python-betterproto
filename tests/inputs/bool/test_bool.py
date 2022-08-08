@@ -1,4 +1,5 @@
 import pytest
+
 from tests.output_betterproto.bool import Test
 from tests.output_betterproto_pydantic.bool import Test as TestPyd
 
