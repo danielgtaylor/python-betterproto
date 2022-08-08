@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package oneof_struct;
+
+message Bar {
+    int32 i = 1;
+}
+
+message OBar {
+    int32 i = 1;
+}
+
+message Test {
+  oneof foo {
+    Bar bar = 1;
+    Bar obar = 2;
+  }
+}
+
