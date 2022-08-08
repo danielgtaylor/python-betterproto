@@ -98,7 +98,7 @@ class {{ message.py_name }}(betterproto.Message):
     {% if output_file.pydantic_dataclasses and message.has_oneof_fields %}
     @root_validator()
     def check_oneof(cls, values):
-        meta = cls._betterproto_meta.oneof_field_by_group
+        meta = cls._betterproto_meta.oneof_field_by_group # type: ignore
 
         for group, field_set in meta.items():
             set_fields = [
@@ -262,6 +262,6 @@ class {{ service.py_name }}Base(ServiceBase):
 
 {% if output_file.pydantic_dataclasses %}
 {% for message in output_file.messages %}
-{{ message.py_name }}.__pydantic_model__.update_forward_refs()
+{{ message.py_name }}.__pydantic_model__.update_forward_refs() # type: ignore
 {% endfor %}
 {% endif %}
