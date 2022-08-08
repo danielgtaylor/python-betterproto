@@ -247,6 +247,7 @@ class OutputTemplate:
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
+    pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
     messages: List["MessageCompiler"] = field(default_factory=list)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
@@ -334,6 +335,10 @@ class MessageCompiler(ProtoContentBase):
     @property
     def has_deprecated_fields(self) -> bool:
         return any(self.deprecated_fields)
+
+    @property
+    def has_oneof_fields(self) -> bool:
+        return any(filter(lambda f: isinstance(f, OneOfFieldCompiler), self.fields))
 
 
 def is_map(
@@ -433,6 +438,10 @@ class FieldCompiler(MessageCompiler):
         return imports
 
     @property
+    def pydantic_imports(self) -> Set[str]:
+        return set()
+
+    @property
     def use_builtins(self) -> bool:
         return self.py_type in self.parent.builtins_types or (
             self.py_type == self.py_name and self.py_name in dir(builtins)
@@ -441,6 +450,7 @@ class FieldCompiler(MessageCompiler):
     def add_imports_to(self, output_file: OutputTemplate) -> None:
         output_file.datetime_imports.update(self.datetime_imports)
         output_file.typing_imports.update(self.typing_imports)
+        output_file.pydantic_imports.update(self.pydantic_imports)
         output_file.builtins_import = output_file.builtins_import or self.use_builtins
 
     @property
@@ -567,6 +577,20 @@ class OneOfFieldCompiler(FieldCompiler):
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
         args.append(f'group="{group}"')
         return args
+
+
+@dataclass
+class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
+    @property
+    def optional(self) -> bool:
+        # Force the optional to be True. This will allow the pydantic dataclass
+        # to validate the object correctly by allowing the field to be let empty.
+        # We add a pydantic validator later to ensure exactly one field is defined.
+        return True
+
+    @property
+    def pydantic_imports(self) -> Set[str]:
+        return set(["root_validator"])
 
 
 @dataclass
