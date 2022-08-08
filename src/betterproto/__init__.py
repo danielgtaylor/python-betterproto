@@ -1260,7 +1260,12 @@ class Message(ABC):
                     setattr(self, field_name, v)
         return self
 
-    def to_json(self, indent: Union[None, int, str] = None) -> str:
+    def to_json(
+        self,
+        indent: Union[None, int, str] = None,
+        include_default_values: bool = False,
+        casing: Casing = Casing.CAMEL,
+    ) -> str:
         """A helper function to parse the message instance into its JSON
         representation.
 
@@ -1273,12 +1278,24 @@ class Message(ABC):
         indent: Optional[Union[:class:`int`, :class:`str`]]
             The indent to pass to :func:`json.dumps`.
 
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+
         Returns
         --------
         :class:`str`
             The JSON representation of the message.
         """
-        return json.dumps(self.to_dict(), indent=indent)
+        return json.dumps(
+            self.to_dict(include_default_values=include_default_values, casing=casing),
+            indent=indent,
+        )
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
         """A helper function to return the message instance from its JSON
