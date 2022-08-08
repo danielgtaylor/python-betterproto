@@ -47,13 +47,16 @@ async def protoc(
     python_out_option: str = "python_betterproto_out" if not reference else "python_out"
 
     if pydantic_dataclasses:
+        plugin_path = Path("src/betterproto/plugin/main.py")
         command = [
-            "protoc",
-            "--plugin=protoc-gen-custom=src/betterproto/plugin/main.py",
+            sys.executable,
+            "-m",
+            "grpc.tools.protoc",
+            f"--plugin=protoc-gen-custom={plugin_path.as_posix()}",
             "--experimental_allow_proto3_optional",
             "--custom_opt=pydantic_dataclasses",
-            f"--proto_path={path}",
-            f"--custom_out={output_dir}",
+            f"--proto_path={path.as_posix()}",
+            f"--custom_out={output_dir.as_posix()}",
             *[p.as_posix() for p in path.glob("*.proto")],
         ]
     else:

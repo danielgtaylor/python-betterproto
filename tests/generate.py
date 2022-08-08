@@ -147,7 +147,6 @@ async def generate_test_case_output(
             f"\033[31;1;4mFailed to generate plugin (pydantic compatible) output for {test_case_name!r}\033[0m"
         )
 
-    verbose = True
     if verbose:
         if plg_out_pyd:
             print("Plugin stdout:")
