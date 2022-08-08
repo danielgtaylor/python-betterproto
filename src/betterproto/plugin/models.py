@@ -338,7 +338,15 @@ class MessageCompiler(ProtoContentBase):
 
     @property
     def has_oneof_fields(self) -> bool:
-        return any(filter(lambda f: isinstance(f, OneOfFieldCompiler), self.fields))
+        return any(
+            map(lambda field: isinstance(field, OneOfFieldCompiler), self.fields)
+        )
+
+    @property
+    def has_message_field(self) -> bool:
+        return any(
+            map(lambda field: field.proto_obj.type in PROTO_MESSAGE_TYPES, self.fields)
+        )
 
 
 def is_map(

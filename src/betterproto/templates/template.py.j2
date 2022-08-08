@@ -262,6 +262,8 @@ class {{ service.py_name }}Base(ServiceBase):
 
 {% if output_file.pydantic_dataclasses %}
 {% for message in output_file.messages %}
+{% if message.has_message_field %}
 {{ message.py_name }}.__pydantic_model__.update_forward_refs() # type: ignore
+{% endif %}
 {% endfor %}
 {% endif %}
