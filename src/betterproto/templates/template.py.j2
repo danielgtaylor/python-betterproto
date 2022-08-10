@@ -106,7 +106,9 @@ class {{ message.py_name }}(betterproto.Message):
                 for field in field_set
                 if values[field.name] is not None
             ]
-            if len(set_fields) == 0:
+            if len(field_set) == 1:
+                pass
+            elif len(set_fields) == 0:
                 raise ValueError(f"Group {group} has no value; all fields are None")
             elif len(set_fields) > 1:
                 set_fields_str = ", ".join(set_fields)
