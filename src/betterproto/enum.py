@@ -1,5 +1,8 @@
 import sys
-from enum import IntEnum, EnumMeta
+from enum import (
+    EnumMeta,
+    IntEnum,
+)
 from types import MappingProxyType
 from typing import (
     TYPE_CHECKING,
@@ -77,6 +80,7 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         return cls
 
     if not TYPE_CHECKING:
+
         def __call__(cls, value: int) -> "Enum":
             try:
                 return cls._value_map_[value]
