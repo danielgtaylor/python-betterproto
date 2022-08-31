@@ -806,6 +806,7 @@ class Message(ABC):
                                 meta.proto_type,
                                 item,
                                 wraps=meta.wraps or "",
+                                serialize_empty=True,
                             )
                             # if it's an empty message it still needs to be represented
                             # as an item in the repeated list

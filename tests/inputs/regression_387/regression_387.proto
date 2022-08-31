@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package regression_387;
+
+message Test {
+  uint64 id = 1;
+}
+
+message ParentElement {
+  string name = 1;
+  repeated Test elems = 2;
+}
