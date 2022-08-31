@@ -1,14 +1,19 @@
+from datetime import datetime, timezone
+
 import pytest
 from google.protobuf import json_format
+from google.protobuf.timestamp_pb2 import Timestamp
 
 import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
     Foo,
     Test,
+    Spam,
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
     Foo as ReferenceFoo,
     Test as ReferenceTest,
+    Spam as ReferenceSpam,
 )
 
 
@@ -53,3 +58,18 @@ def test_bytes_are_the_same_for_oneof():
 
     assert isinstance(message_reference.foo, ReferenceFoo)
     assert isinstance(message_reference2.foo, ReferenceFoo)
+
+
+@pytest.mark.parametrize(
+    "dt",
+    (
+        datetime.min.replace(tzinfo=timezone.utc),
+    )
+)
+def test_datetime_clamping(dt):  # see #407
+    ts = Timestamp()
+    ts.FromDatetime(dt)
+    assert bytes(Spam(dt)) == ReferenceSpam(ts=ts).SerializeToString()
+    message_bytes = bytes(Spam(dt))
+
+    assert Spam().parse(message_bytes).ts.timestamp() == ReferenceSpam.FromString(message_bytes).ts.seconds
