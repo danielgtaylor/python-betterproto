@@ -1,6 +1,6 @@
 from tests.output_betterproto.regression_387 import (
-    Test,
     ParentElement,
+    Test,
 )
 
 
