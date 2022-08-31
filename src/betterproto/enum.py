@@ -20,8 +20,6 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-E = TypeVar("E", bound="Enum")
-
 
 def _is_descriptor(obj: object) -> bool:
     return (
