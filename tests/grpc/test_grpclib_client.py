@@ -177,15 +177,16 @@ async def test_service_call_lower_level_with_overrides():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("overrides",),
+    ("overrides_gen",),
     [
-        (dict(timeout=10),),
-        (dict(deadline=grpclib.metadata.Deadline.from_timeout(10)),),
-        (dict(metadata={"authorization": str(uuid.uuid4())}),),
-        (dict(timeout=20, metadata={"authorization": str(uuid.uuid4())}),),
+        (lambda: dict(timeout=10),),
+        (lambda: dict(deadline=grpclib.metadata.Deadline.from_timeout(10)),),
+        (lambda: dict(metadata={"authorization": str(uuid.uuid4())}),),
+        (lambda: dict(timeout=20, metadata={"authorization": str(uuid.uuid4())}),),
     ],
 )
-async def test_service_call_high_level_with_overrides(mocker, overrides):
+async def test_service_call_high_level_with_overrides(mocker, overrides_gen):
+    overrides = overrides_gen()
     request_spy = mocker.spy(grpclib.client.Channel, "request")
     name = str(uuid.uuid4())
     defaults = dict(

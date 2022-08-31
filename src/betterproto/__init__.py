@@ -18,6 +18,7 @@ from datetime import (
     timezone,
 )
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -353,15 +354,10 @@ def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
     elif proto_type == TYPE_MESSAGE:
         if isinstance(value, datetime):
             # Convert the `datetime` to a timestamp message.
-            seconds = int(value.timestamp())
-            nanos = int(value.microsecond * 1e3)
-            value = _Timestamp(seconds=seconds, nanos=nanos)
+            value = _Timestamp.from_datetime(value)
         elif isinstance(value, timedelta):
             # Convert the `timedelta` to a duration message.
-            total_ms = value // timedelta(microseconds=1)
-            seconds = int(total_ms / 1e6)
-            nanos = int((total_ms % 1e6) * 1e3)
-            value = _Duration(seconds=seconds, nanos=nanos)
+            value = _Duration.from_timedelta(value)
         elif wraps:
             if value is None:
                 return b""
@@ -408,7 +404,7 @@ def _parse_float(value: Any) -> float:
 
     Parameters
     ----------
-    value : Any
+    value: Any
         Value to parse
 
     Returns
@@ -430,20 +426,19 @@ def _dump_float(value: float) -> Union[float, str]:
 
     Parameters
     ----------
-    value : float
+    value: float
         Value to dump
 
     Returns
     -------
     Union[float, str]
-        Dumped valid, either a float or the strings
-        "Infinity" or "-Infinity"
+        Dumped value, either a float or the strings
     """
     if value == float("inf"):
         return INFINITY
     if value == -float("inf"):
         return NEG_INFINITY
-    if value == float("nan"):
+    if isinstance(value, float) and math.isnan(value):
         return NAN
     return value
 
@@ -668,18 +663,20 @@ class Message(ABC):
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
-    def __getattribute__(self, name: str) -> Any:
-        """
-        Lazily initialize default values to avoid infinite recursion for recursive
-        message types
-        """
-        value = super().__getattribute__(name)
-        if value is not PLACEHOLDER:
-            return value
+    if not TYPE_CHECKING:
 
-        value = self._get_field_default(name)
-        super().__setattr__(name, value)
-        return value
+        def __getattribute__(self, name: str) -> Any:
+            """
+            Lazily initialize default values to avoid infinite recursion for recursive
+            message types
+            """
+            value = super().__getattribute__(name)
+            if value is not PLACEHOLDER:
+                return value
+
+            value = self._get_field_default(name)
+            super().__setattr__(name, value)
+            return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if attr != "_serialized_on_wire":
@@ -784,6 +781,7 @@ class Message(ABC):
                                 meta.proto_type,
                                 item,
                                 wraps=meta.wraps or "",
+                                serialize_empty=True,
                             )
                             # if it's an empty message it still needs to be represented
                             # as an item in the repeated list
@@ -1099,12 +1097,13 @@ class Message(ABC):
                 ):
                     output[cased_name] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == TYPE_MAP:
+                output_map = {**value}
                 for k in value:
                     if hasattr(value[k], "to_dict"):
-                        value[k] = value[k].to_dict(casing, include_default_values)
+                        output_map[k] = value[k].to_dict(casing, include_default_values)
 
                 if value or include_default_values:
-                    output[cased_name] = value
+                    output[cased_name] = output_map
             elif (
                 value != self._get_field_default(field_name)
                 or include_default_values
@@ -1240,7 +1239,12 @@ class Message(ABC):
                     setattr(self, field_name, v)
         return self
 
-    def to_json(self, indent: Union[None, int, str] = None) -> str:
+    def to_json(
+        self,
+        indent: Union[None, int, str] = None,
+        include_default_values: bool = False,
+        casing: Casing = Casing.CAMEL,
+    ) -> str:
         """A helper function to parse the message instance into its JSON
         representation.
 
@@ -1253,12 +1257,24 @@ class Message(ABC):
         indent: Optional[Union[:class:`int`, :class:`str`]]
             The indent to pass to :func:`json.dumps`.
 
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+
         Returns
         --------
         :class:`str`
             The JSON representation of the message.
         """
-        return json.dumps(self.to_dict(), indent=indent)
+        return json.dumps(
+            self.to_dict(include_default_values=include_default_values, casing=casing),
+            indent=indent,
+        )
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
         """A helper function to return the message instance from its JSON
@@ -1281,6 +1297,136 @@ class Message(ABC):
         """
         return self.from_dict(json.loads(value))
 
+    def to_pydict(
+        self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Returns a python dict representation of this object.
+
+        Parameters
+        -----------
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        Returns
+        --------
+        Dict[:class:`str`, Any]
+            The python dict representation of this object.
+        """
+        output: Dict[str, Any] = {}
+        defaults = self._betterproto.default_gen
+        for field_name, meta in self._betterproto.meta_by_field_name.items():
+            field_is_repeated = defaults[field_name] is list
+            value = getattr(self, field_name)
+            cased_name = casing(field_name).rstrip("_")  # type: ignore
+            if meta.proto_type == TYPE_MESSAGE:
+                if isinstance(value, datetime):
+                    if (
+                        value != DATETIME_ZERO
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
+                        output[cased_name] = value
+                elif isinstance(value, timedelta):
+                    if (
+                        value != timedelta(0)
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
+                        output[cased_name] = value
+                elif meta.wraps:
+                    if value is not None or include_default_values:
+                        output[cased_name] = value
+                elif field_is_repeated:
+                    # Convert each item.
+                    value = [i.to_pydict(casing, include_default_values) for i in value]
+                    if value or include_default_values:
+                        output[cased_name] = value
+                elif (
+                    value._serialized_on_wire
+                    or include_default_values
+                    or self._include_default_value_for_oneof(
+                        field_name=field_name, meta=meta
+                    )
+                ):
+                    output[cased_name] = value.to_pydict(casing, include_default_values)
+            elif meta.proto_type == TYPE_MAP:
+                for k in value:
+                    if hasattr(value[k], "to_pydict"):
+                        value[k] = value[k].to_pydict(casing, include_default_values)
+
+                if value or include_default_values:
+                    output[cased_name] = value
+            elif (
+                value != self._get_field_default(field_name)
+                or include_default_values
+                or self._include_default_value_for_oneof(
+                    field_name=field_name, meta=meta
+                )
+            ):
+                output[cased_name] = value
+        return output
+
+    def from_pydict(self: T, value: Dict[str, Any]) -> T:
+        """
+        Parse the key/value pairs into the current message instance. This returns the
+        instance itself and is therefore assignable and chainable.
+
+        Parameters
+        -----------
+        value: Dict[:class:`str`, Any]
+            The dictionary to parse from.
+
+        Returns
+        --------
+        :class:`Message`
+            The initialized message.
+        """
+        self._serialized_on_wire = True
+        for key in value:
+            field_name = safe_snake_case(key)
+            meta = self._betterproto.meta_by_field_name.get(field_name)
+            if not meta:
+                continue
+
+            if value[key] is not None:
+                if meta.proto_type == TYPE_MESSAGE:
+                    v = getattr(self, field_name)
+                    if isinstance(v, list):
+                        cls = self._betterproto.cls_by_field[field_name]
+                        for item in value[key]:
+                            v.append(cls().from_pydict(item))
+                    elif isinstance(v, datetime):
+                        v = value[key]
+                    elif isinstance(v, timedelta):
+                        v = value[key]
+                    elif meta.wraps:
+                        v = value[key]
+                    else:
+                        # NOTE: `from_pydict` mutates the underlying message, so no
+                        # assignment here is necessary.
+                        v.from_pydict(value[key])
+                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                    v = getattr(self, field_name)
+                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                    for k in value[key]:
+                        v[k] = cls().from_pydict(value[key][k])
+                else:
+                    v = value[key]
+
+                if v is not None:
+                    setattr(self, field_name, v)
+        return self
+
     def is_set(self, name: str) -> bool:
         """
         Check if field with the given name has been set.
@@ -1295,7 +1441,12 @@ class Message(ABC):
         :class:`bool`
             `True` if field has been set, otherwise `False`.
         """
-        return self.__raw_get(name) is not PLACEHOLDER
+        default = (
+            PLACEHOLDER
+            if not self._betterproto.meta_by_field_name[name].optional
+            else None
+        )
+        return self.__raw_get(name) is not default
 
 
 def serialized_on_wire(message: Message) -> bool:
@@ -1345,6 +1496,15 @@ from .lib.google.protobuf import (  # noqa
 
 
 class _Duration(Duration):
+    @classmethod
+    def from_timedelta(
+        cls, delta: timedelta, *, _1_microsecond: timedelta = timedelta(microseconds=1)
+    ) -> "_Duration":
+        total_ms = delta // _1_microsecond
+        seconds = int(total_ms / 1e6)
+        nanos = int((total_ms % 1e6) * 1e3)
+        return cls(seconds, nanos)
+
     def to_timedelta(self) -> timedelta:
         return timedelta(seconds=self.seconds, microseconds=self.nanos / 1e3)
 
@@ -1358,6 +1518,12 @@ class _Duration(Duration):
 
 
 class _Timestamp(Timestamp):
+    @classmethod
+    def from_datetime(cls, dt: datetime) -> "_Timestamp":
+        seconds = int(dt.timestamp())
+        nanos = int(dt.microsecond * 1e3)
+        return cls(seconds, nanos)
+
     def to_datetime(self) -> datetime:
         ts = self.seconds + (self.nanos / 1e9)
         return datetime.fromtimestamp(ts, tz=timezone.utc)

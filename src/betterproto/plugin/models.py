@@ -252,6 +252,7 @@ class OutputTemplate:
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
     imports_type_checking_only: Set[str] = field(default_factory=set)
+    output: bool = True
 
     @property
     def package(self) -> str:
@@ -339,6 +340,9 @@ def is_map(
 ) -> bool:
     """True if proto_field_obj is a map, otherwise False."""
     if proto_field_obj.type == FieldDescriptorProtoType.TYPE_MESSAGE:
+        if not hasattr(parent_message, "nested_type"):
+            return False
+
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
         map_entry = f"{proto_field_obj.name.replace('_', '').lower()}entry"
@@ -701,6 +705,7 @@ class ServiceMethodCompiler(ProtoContentBase):
 
         # add imports required for request arguments timeout, deadline and metadata
         self.output_file.typing_imports.add("Optional")
+        self.output_file.imports_type_checking_only.add("import grpclib.server")
         self.output_file.imports_type_checking_only.add(
             "from betterproto.grpc.grpclib_client import MetadataLike"
         )
@@ -765,6 +770,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             package=self.output_file.package,
             imports=self.output_file.imports,
             source_type=self.proto_obj.input_type,
+            unwrap=False,
         ).strip('"')
 
     @property

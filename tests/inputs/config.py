@@ -9,6 +9,7 @@ xfail = {
 }
 
 services = {
+    "googletypes_request",
     "googletypes_response",
     "googletypes_response_embedded",
     "service",
