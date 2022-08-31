@@ -61,7 +61,7 @@ cmd  = "mypy src --ignore-missing-imports"
 help = "Check types with mypy"
 
 [tool.poe.tasks.format]
-cmd  = "black . --exclude tests/output_"
+cmd  = "black . --extend-exclude tests/output_"
 help = "Apply black formatting to source code"
 
 [tool.poe.tasks.docs]
