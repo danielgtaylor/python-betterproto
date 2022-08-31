@@ -1,4 +1,7 @@
-from datetime import datetime, timezone
+from datetime import (
+    datetime,
+    timezone,
+)
 
 import pytest
 from google.protobuf import json_format
@@ -7,13 +10,13 @@ from google.protobuf.timestamp_pb2 import Timestamp
 import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
     Foo,
-    Test,
     Spam,
+    Test,
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
     Foo as ReferenceFoo,
-    Test as ReferenceTest,
     Spam as ReferenceSpam,
+    Test as ReferenceTest,
 )
 
 
