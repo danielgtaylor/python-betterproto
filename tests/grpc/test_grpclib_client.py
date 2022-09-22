@@ -272,3 +272,27 @@ async def test_async_gen_for_stream_stream_request():
         assert response_index == len(
             expected_things
         ), "Didn't receive all expected responses"
+
+
+@pytest.mark.asyncio
+async def test_stream_unary_with_empty_iterable():
+    things = []  # empty
+
+    async with ChannelFor([ThingService()]) as channel:
+        client = ThingServiceClient(channel)
+        requests = [DoThingRequest(name) for name in things]
+        response = await client.do_many_things(requests)
+        assert len(response.names) == 0
+
+
+@pytest.mark.asyncio
+async def test_stream_stream_with_empty_iterable():
+    things = []  # empty
+
+    async with ChannelFor([ThingService()]) as channel:
+        client = ThingServiceClient(channel)
+        requests = [GetThingRequest(name) for name in things]
+        responses = [
+            response async for response in client.get_different_things(requests)
+        ]
+        assert len(responses) == 0
