@@ -6,4 +6,5 @@ import "google/protobuf/struct.proto";
 
 message Test {
   google.protobuf.Struct struct = 1;
+  google.protobuf.Struct empty_struct = 2;
 }

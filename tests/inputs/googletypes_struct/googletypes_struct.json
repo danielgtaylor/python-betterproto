@@ -1,5 +1,8 @@
 {
   "struct": {
-    "key": true
+    "key": 1
+  },
+  "emptyStruct": {
+
   }
 }
