@@ -1032,10 +1032,7 @@ class Message(ABC):
             meta = proto_meta.meta_by_field_name[field_name]
 
             value: Any
-            if meta.special:
-                transform = get_special_transform(meta.special)
-                value = transform.parse(parsed.value)
-            elif parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
+            if parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
                 # This is a packed repeated field.
                 pos = 0
                 value = []
@@ -1053,6 +1050,9 @@ class Message(ABC):
                         wire_type, meta, field_name, decoded
                     )
                     value.append(decoded)
+            elif meta.special:
+                transform = get_special_transform(meta.special)
+                value = transform.parse(parsed.value)
             else:
                 value = self._postprocess_single(
                     parsed.wire_type, meta, field_name, parsed.value
