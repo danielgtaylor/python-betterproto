@@ -1,7 +1,9 @@
 import asyncio
 import importlib
 import os
+import platform
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -48,17 +50,39 @@ async def protoc(
 
     if pydantic_dataclasses:
         plugin_path = Path("src/betterproto/plugin/main.py")
-        command = [
-            sys.executable,
-            "-m",
-            "grpc.tools.protoc",
-            f"--plugin=protoc-gen-custom={plugin_path.as_posix()}",
-            "--experimental_allow_proto3_optional",
-            "--custom_opt=pydantic_dataclasses",
-            f"--proto_path={path.as_posix()}",
-            f"--custom_out={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("*.proto")],
-        ]
+
+        # Running python files directly on Windows is a bit tricky.
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="UTF-8", suffix=".bat", delete=False
+        ) as tf:
+            redirect_file = tf.name
+
+            # See https://stackoverflow.com/a/42622705
+            tf.writelines(
+                [
+                    "@echo off",
+                    f"\nchdir {os.getcwd()}",
+                    f"\npython -u {plugin_path.as_posix()}",
+                ]
+            )
+
+            tf.flush()
+
+            executable_plugin_path = (
+                redirect_file if "Win" in platform.system() else plugin_path.as_posix()
+            )
+
+            command = [
+                sys.executable,
+                "-m",
+                "grpc.tools.protoc",
+                f"--plugin=protoc-gen-custom={executable_plugin_path}",
+                "--experimental_allow_proto3_optional",
+                "--custom_opt=pydantic_dataclasses",
+                f"--proto_path={path.as_posix()}",
+                f"--custom_out={output_dir.as_posix()}",
+                *[p.as_posix() for p in path.glob("*.proto")],
+            ]
     else:
         command = [
             sys.executable,
