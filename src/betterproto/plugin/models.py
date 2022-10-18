@@ -345,7 +345,14 @@ class MessageCompiler(ProtoContentBase):
     @property
     def has_message_field(self) -> bool:
         return any(
-            map(lambda field: field.proto_obj.type in PROTO_MESSAGE_TYPES, self.fields)
+            map(
+                lambda field: field.proto_obj.type in PROTO_MESSAGE_TYPES,
+                (
+                    field
+                    for field in self.fields
+                    if isinstance(field.proto_obj, FieldDescriptorProto)
+                ),
+            )
         )
 
 

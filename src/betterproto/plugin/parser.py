@@ -162,7 +162,7 @@ def _make_one_of_field_compiler(
 
     pydantic = output_package.pydantic_dataclasses
     Cls = PydanticOneOfFieldCompiler if pydantic else OneOfFieldCompiler
-    Cls(
+    return Cls(
         source_file=source_file,
         parent=parent,
         proto_obj=proto_obj,
