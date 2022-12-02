@@ -1,4 +1,5 @@
 import inspect
+
 from tests.output_betterproto.service_uppercase import TestStub
 
 
