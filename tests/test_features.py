@@ -439,20 +439,30 @@ def test_to_dict_datetime_values():
     class TestDatetimeMessage(betterproto.Message):
         bar: datetime = betterproto.message_field(1)
         baz: timedelta = betterproto.message_field(2)
+        bat: timedelta = betterproto.message_field(3)
 
     test = TestDatetimeMessage().from_dict(
-        {"bar": "2020-01-01T00:00:00Z", "baz": "86400.000s"}
+        {"bar": "2020-01-01T00:00:00Z", "baz": "86400.000s", "bat": "0.000001s"}
     )
 
-    assert test.to_dict() == {"bar": "2020-01-01T00:00:00Z", "baz": "86400.000s"}
+    assert test.to_dict() == {
+        "bar": "2020-01-01T00:00:00Z",
+        "baz": "86400.000s",
+        "bat":"0.000001s",
+    }
 
     test = TestDatetimeMessage().from_pydict(
-        {"bar": datetime(year=2020, month=1, day=1), "baz": timedelta(days=1)}
+        {
+            "bar": datetime(year=2020, month=1, day=1),
+            "baz": timedelta(days=1),
+            "bat": timedelta(microseconds=1),
+        }
     )
 
     assert test.to_pydict() == {
         "bar": datetime(year=2020, month=1, day=1),
         "baz": timedelta(days=1),
+        "bat": timedelta(microseconds=1),
     }
 
 
