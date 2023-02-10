@@ -887,10 +887,10 @@ class Message(ABC):
         t = cls._type_hint(field.name)
 
         if hasattr(t, "__origin__"):
-            if t.__origin__ in (dict, Dict):
+            if t.__origin__ is dict:
                 # This is some kind of map (dict in Python).
                 return dict
-            elif t.__origin__ in (list, List):
+            elif t.__origin__ is list:
                 # This is some kind of list (repeated) field.
                 return list
             elif t.__origin__ is Union and t.__args__[1] is type(None):
