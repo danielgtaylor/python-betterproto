@@ -1808,4 +1808,4 @@ compiler = ["black", "isort", "jinja2"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "ea7256716415338178182d51882a7fbe26859159c11c45e2102df16486303e99"
+content-hash = "80c6215b1b18ae9de0b8ed966cfab05018272dd7eff7dde0fb28d2b2231ac051"
