@@ -98,7 +98,7 @@ class {{ message.py_name }}(betterproto.Message):
     {% if output_file.pydantic_dataclasses and message.has_oneof_fields %}
     @root_validator()
     def check_oneof(cls, values):
-        return cls._validate_field_groups()
+        return cls._validate_field_groups(values)
     {%  endif %}
 
 {% endfor %}
