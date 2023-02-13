@@ -214,7 +214,6 @@ class ProtoContentBase:
 
 @dataclass
 class PluginRequestCompiler:
-
     plugin_request_obj: CodeGeneratorRequest
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
@@ -345,13 +344,10 @@ class MessageCompiler(ProtoContentBase):
     @property
     def has_message_field(self) -> bool:
         return any(
-            map(
-                lambda field: field.proto_obj.type in PROTO_MESSAGE_TYPES,
-                (
-                    field
-                    for field in self.fields
-                    if isinstance(field.proto_obj, FieldDescriptorProto)
-                ),
+            (
+                field.proto_obj.type in PROTO_MESSAGE_TYPES
+                for field in self.fields
+                if isinstance(field.proto_obj, FieldDescriptorProto)
             )
         )
 
@@ -605,7 +601,7 @@ class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
 
     @property
     def pydantic_imports(self) -> Set[str]:
-        return set(["root_validator"])
+        return {"root_validator"}
 
 
 @dataclass
@@ -719,7 +715,6 @@ class ServiceCompiler(ProtoContentBase):
 
 @dataclass
 class ServiceMethodCompiler(ProtoContentBase):
-
     parent: ServiceCompiler
     proto_obj: MethodDescriptorProto
     path: List[int] = PLACEHOLDER

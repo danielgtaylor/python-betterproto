@@ -61,7 +61,7 @@ async def protoc(
                     [
                         "@echo off",
                         f"\nchdir {os.getcwd()}",
-                        f"\npython -u {plugin_path.as_posix()}",
+                        f"\n{sys.executable} -u {plugin_path.as_posix()}",
                     ]
                 )
 
