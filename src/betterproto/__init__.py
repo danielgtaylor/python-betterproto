@@ -628,7 +628,6 @@ class Message(ABC):
         # Set current field of each group after `__init__` has already been run.
         group_current: Dict[str, Optional[str]] = {}
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-
             if meta.group:
                 group_current.setdefault(meta.group)
 
@@ -1469,6 +1468,24 @@ class Message(ABC):
             else None
         )
         return self.__raw_get(name) is not default
+
+    @classmethod
+    def _validate_field_groups(cls, values):
+        meta = cls._betterproto_meta.oneof_field_by_group  # type: ignore
+
+        for group, field_set in meta.items():
+            set_fields = [
+                field.name for field in field_set if values[field.name] is not None
+            ]
+            if not set_fields:
+                raise ValueError(f"Group {group} has no value; all fields are None")
+            elif len(set_fields) > 1:
+                set_fields_str = ", ".join(set_fields)
+                raise ValueError(
+                    f"Group {group} has more than one value; fields {set_fields_str} are not None"
+                )
+
+        return values
 
 
 def serialized_on_wire(message: Message) -> bool:
