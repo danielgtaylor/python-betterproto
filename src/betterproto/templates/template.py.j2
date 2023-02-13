@@ -7,11 +7,7 @@ import {{ i }}
 {% endfor %}
 
 {% if output_file.pydantic_dataclasses %}
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 {%- else -%}
 from dataclasses import dataclass
 {% endif %}
