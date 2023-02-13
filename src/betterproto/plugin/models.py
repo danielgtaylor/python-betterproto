@@ -337,9 +337,7 @@ class MessageCompiler(ProtoContentBase):
 
     @property
     def has_oneof_fields(self) -> bool:
-        return any(
-            isinstance(field, OneOfFieldCompiler) for field in self.fields
-        )
+        return any(isinstance(field, OneOfFieldCompiler) for field in self.fields)
 
     @property
     def has_message_field(self) -> bool:
