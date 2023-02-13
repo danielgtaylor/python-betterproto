@@ -17,7 +17,7 @@ black = { version = ">=19.3b0", optional = true }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
-isort = {version = "^5.10.1", optional = true}
+isort = {version = "^5.11.5", optional = true}
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"
