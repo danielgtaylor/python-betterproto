@@ -12,13 +12,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.6.2,<4.0"
+python = "^3.7"
 black = { version = ">=19.3b0", optional = true }
-dataclasses = { version = "^0.7", python = ">=3.6, <3.7" }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
-isort = {version = "^5.10.1", optional = true}
+isort = {version = "^5.11.5", optional = true}
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"
@@ -113,7 +112,7 @@ force_grid_wrap = 2
 src_paths = ["src", "tests"]
 
 [tool.black]
-target-version = ['py36']
+target-version = ['py37']
 
 [tool.doc8]
 paths = ["docs"]
@@ -131,7 +130,7 @@ omit = ["betterproto/tests/*"]
 legacy_tox_ini = """
 [tox]
 isolated_build = true
-envlist = py36, py37, py38, py310
+envlist = py37, py38, py310
 
 [testenv]
 whitelist_externals = poetry

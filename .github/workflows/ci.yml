@@ -16,15 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [Ubuntu, MacOS, Windows]
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
-        exclude:
-          - os: Windows
-            python-version: 3.6
+        python-version: ['3.7', '3.8', '3.9', '3.10']
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -44,7 +41,7 @@ jobs:
         run: poetry config virtualenvs.in-project true
 
       - name: Set up cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: cache
         with:
           path: .venv

@@ -7,7 +7,7 @@ This project aims to provide an improved experience when using Protobuf / gRPC i
 
 - Protobuf 3 & gRPC code generation
   - Both binary & JSON serialization is built-in
-- Python 3.6+ making use of:
+- Python 3.7+ making use of:
   - Enums
   - Dataclasses
   - `async`/`await`
@@ -371,7 +371,7 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ### Requirements
 
-- Python (3.6 or higher)
+- Python (3.7 or higher)
 
 - [poetry](https://python-poetry.org/docs/#installation)
   *Needed to install dependencies in a virtual environment*
@@ -447,7 +447,7 @@ poe full-test
 Betterproto includes compiled versions for Google's well-known types at [src/betterproto/lib/google](src/betterproto/lib/google).
 Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
 
-Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
+Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`.
 
 Assuming your `google.protobuf` source files (included with all releases of `protoc`) are located in `/usr/local/include`, you can regenerate them as follows:
 
