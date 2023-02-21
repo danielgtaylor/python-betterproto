@@ -1471,12 +1471,24 @@ class Message(ABC):
 
     @classmethod
     def _validate_field_groups(cls, values):
-        meta = cls._betterproto_meta.oneof_field_by_group  # type: ignore
+        group_to_one_ofs = cls._betterproto_meta.oneof_field_by_group  # type: ignore
+        field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
 
-        for group, field_set in meta.items():
+        for group, field_set in group_to_one_ofs.items():
+
+            if len(field_set) == 1:
+                (field,) = field_set
+                field_name = field.name
+                meta = field_name_to_meta[field_name]
+
+                # This is a synthetic oneof; we should ignore it's presence and not consider it as a oneof.
+                if meta.optional:
+                    continue
+
             set_fields = [
                 field.name for field in field_set if values[field.name] is not None
             ]
+
             if not set_fields:
                 raise ValueError(f"Group {group} has no value; all fields are None")
             elif len(set_fields) > 1:
