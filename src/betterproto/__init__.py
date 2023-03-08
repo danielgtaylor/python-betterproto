@@ -25,6 +25,7 @@ from typing import (
     Generator,
     Iterable,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -1177,7 +1178,7 @@ class Message(ABC):
                     output[cased_name] = value
         return output
 
-    def from_dict(self: T, value: Dict[str, Any]) -> T:
+    def from_dict(self: T, value: Mapping[str, Any]) -> T:
         """
         Parse the key/value pairs into the current message instance. This returns the
         instance itself and is therefore assignable and chainable.
@@ -1397,7 +1398,7 @@ class Message(ABC):
                 output[cased_name] = value
         return output
 
-    def from_pydict(self: T, value: Dict[str, Any]) -> T:
+    def from_pydict(self: T, value: Mapping[str, Any]) -> T:
         """
         Parse the key/value pairs into the current message instance. This returns the
         instance itself and is therefore assignable and chainable.
