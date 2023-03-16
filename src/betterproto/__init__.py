@@ -1583,6 +1583,9 @@ class _Timestamp(Timestamp):
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
         nanos = dt.microsecond * 1e3
+        if dt.tzinfo is not None:
+            # change timezone aware datetime objects to utc
+            dt = dt.astimezone(timezone.utc)
         copy = dt.replace(microsecond=0, tzinfo=None)
         result = copy.isoformat()
         if (nanos % 1e9) == 0:
