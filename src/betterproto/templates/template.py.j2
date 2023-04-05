@@ -113,17 +113,17 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: {{ method.py_input_message_type }}{%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
+            , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable[{{ method.py_input_message_type }}], Iterable[{{ method.py_input_message_type }}]]
         {%- endif -%}
             ,
             *
             , timeout: Optional[float] = None
             , deadline: Optional["Deadline"] = None
             , metadata: Optional["MetadataLike"] = None
-            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> {% if method.server_streaming %}AsyncIterator[{{ method.py_output_message_type }}]{% else %}{{ method.py_output_message_type }}{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
@@ -188,12 +188,12 @@ class {{ service.py_name }}Base(ServiceBase):
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: {{ method.py_input_message_type }}{%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
+            , {{ method.py_input_message_param }}_iterator: AsyncIterator[{{ method.py_input_message_type }}]
         {%- endif -%}
-            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> {% if method.server_streaming %}AsyncIterator[{{ method.py_output_message_type }}]{% else %}{{ method.py_output_message_type }}{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
@@ -206,7 +206,7 @@ class {{ service.py_name }}Base(ServiceBase):
     {% endfor %}
 
     {% for method in service.methods %}
-    async def __rpc_{{ method.py_name }}(self, stream: "grpclib.server.Stream[{{ method.py_input_message_type }}, {{ method.py_output_message_type }}]") -> None:
+    async def __rpc_{{ method.py_name }}(self, stream: grpclib.server.Stream[{{ method.py_input_message_type }}, {{ method.py_output_message_type }}]) -> None:
         {% if not method.client_streaming %}
         request = await stream.recv_message()
         {% else %}

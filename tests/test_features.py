@@ -650,12 +650,12 @@ def test_iso_datetime_list():
 
 
 def test_service_argument__expected_parameter():
-    from tests.output_betterproto.service import TestStub
+    from tests.output_betterproto.service import TestStub, DoThingRequest
 
     sig = signature(TestStub.do_thing)
     do_thing_request_parameter = sig.parameters["do_thing_request"]
     assert do_thing_request_parameter.default is Parameter.empty
-    assert do_thing_request_parameter.annotation == "DoThingRequest"
+    assert do_thing_request_parameter.annotation == DoThingRequest
 
 
 def test_copyability():
