@@ -1,5 +1,5 @@
-import tests.output_betterproto.casing as casing
-from tests.output_betterproto.casing import Test
+import tests.output_bananaproto.casing as casing
+from tests.output_bananaproto.casing import Test
 
 
 def test_message_attributes():

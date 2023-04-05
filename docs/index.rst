@@ -1,7 +1,7 @@
-Welcome to betterproto's documentation!
+Welcome to bananaproto's documentation!
 =======================================
 
-betterproto is a protobuf compiler and interpreter. It improves the experience of using
+bananaproto is a protobuf compiler and interpreter. It improves the experience of using
 Protobuf and gRPC in Python, by generating readable, understandable, and idiomatic
 Python code, using modern language features.
 

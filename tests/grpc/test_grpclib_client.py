@@ -9,8 +9,8 @@ import grpclib.server
 import pytest
 from grpclib.testing import ChannelFor
 
-from betterproto.grpc.util.async_channel import AsyncChannel
-from tests.output_betterproto.service import (
+from bananaproto.grpc.util.async_channel import AsyncChannel
+from tests.output_bananaproto.service import (
     DoThingRequest,
     DoThingResponse,
     GetThingRequest,

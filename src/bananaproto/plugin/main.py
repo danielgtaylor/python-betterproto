@@ -3,12 +3,12 @@
 import os
 import sys
 
-from betterproto.lib.google.protobuf.compiler import (
+from bananaproto.lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponse,
 )
-from betterproto.plugin.models import monkey_patch_oneof_index
-from betterproto.plugin.parser import generate_code
+from bananaproto.plugin.models import monkey_patch_oneof_index
+from bananaproto.plugin.parser import generate_code
 
 
 def main() -> None:
@@ -23,7 +23,7 @@ def main() -> None:
     request = CodeGeneratorRequest()
     request.parse(data)
 
-    dump_file = os.getenv("BETTERPROTO_DUMP")
+    dump_file = os.getenv("BANANAPROTO_DUMP")
     if dump_file:
         dump_request(dump_file, request)
 
@@ -40,7 +40,7 @@ def main() -> None:
 def dump_request(dump_file: str, request: CodeGeneratorRequest) -> None:
     """
     For developers: Supports running plugin.py standalone so its possible to debug it.
-    Run protoc (or generate.py) with BETTERPROTO_DUMP="yourfile.bin" to write the request to a file.
+    Run protoc (or generate.py) with BANANAPROTO_DUMP="yourfile.bin" to write the request to a file.
     Then run plugin.py from your IDE in debugging mode, and redirect stdin to the file.
     """
     with open(str(dump_file), "wb") as fh:

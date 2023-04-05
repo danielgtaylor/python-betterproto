@@ -24,8 +24,8 @@ os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 root_path = Path(__file__).resolve().parent
 inputs_path = root_path.joinpath("inputs")
 output_path_reference = root_path.joinpath("output_reference")
-output_path_betterproto = root_path.joinpath("output_betterproto")
-output_path_betterproto_pydantic = root_path.joinpath("output_betterproto_pydantic")
+output_path_bananaproto = root_path.joinpath("output_bananaproto")
+output_path_bananaproto_pydantic = root_path.joinpath("output_bananaproto_pydantic")
 
 
 def get_files(path, suffix: str) -> Generator[str, None, None]:
@@ -47,10 +47,10 @@ async def protoc(
 ):
     path: Path = Path(path).resolve()
     output_dir: Path = Path(output_dir).resolve()
-    python_out_option: str = "python_betterproto_out" if not reference else "python_out"
+    python_out_option: str = "python_bananaproto_out" if not reference else "python_out"
 
     if pydantic_dataclasses:
-        plugin_path = Path("src/betterproto/plugin/main.py")
+        plugin_path = Path("src/bananaproto/plugin/main.py")
 
         if "Win" in platform.system():
             with tempfile.NamedTemporaryFile(

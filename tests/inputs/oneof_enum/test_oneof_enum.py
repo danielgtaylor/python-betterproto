@@ -1,7 +1,7 @@
 import pytest
 
-import betterproto
-from tests.output_betterproto.oneof_enum import (
+import bananaproto
+from tests.output_bananaproto.oneof_enum import (
     Move,
     Signal,
     Test,
@@ -22,7 +22,7 @@ def test_which_one_of_returns_enum_with_default_value():
         x=0, y=0
     )  # Proto3 will default this as there is no null
     assert message.signal == Signal.PASS
-    assert betterproto.which_one_of(message, "action") == ("signal", Signal.PASS)
+    assert bananaproto.which_one_of(message, "action") == ("signal", Signal.PASS)
 
 
 def test_which_one_of_returns_enum_with_non_default_value():
@@ -37,7 +37,7 @@ def test_which_one_of_returns_enum_with_non_default_value():
         x=0, y=0
     )  # Proto3 will default this as there is no null
     assert message.signal == Signal.RESIGN
-    assert betterproto.which_one_of(message, "action") == ("signal", Signal.RESIGN)
+    assert bananaproto.which_one_of(message, "action") == ("signal", Signal.RESIGN)
 
 
 def test_which_one_of_returns_second_field_when_set():
@@ -45,4 +45,4 @@ def test_which_one_of_returns_second_field_when_set():
     message.from_json(get_test_case_json_data("oneof_enum")[0].json)
     assert message.move == Move(x=2, y=3)
     assert message.signal == Signal.PASS
-    assert betterproto.which_one_of(message, "action") == ("move", Move(x=2, y=3))
+    assert bananaproto.which_one_of(message, "action") == ("move", Move(x=2, y=3))

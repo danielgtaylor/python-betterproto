@@ -18,67 +18,67 @@ from typing import (
     Optional,
 )
 
-import betterproto
+import bananaproto
 
 
 def test_has_field():
     @dataclass
-    class Bar(betterproto.Message):
-        baz: int = betterproto.int32_field(1)
+    class Bar(bananaproto.Message):
+        baz: int = bananaproto.int32_field(1)
 
     @dataclass
-    class Foo(betterproto.Message):
-        bar: Bar = betterproto.message_field(1)
+    class Foo(bananaproto.Message):
+        bar: Bar = bananaproto.message_field(1)
 
     # Unset by default
     foo = Foo()
-    assert betterproto.serialized_on_wire(foo.bar) is False
+    assert bananaproto.serialized_on_wire(foo.bar) is False
 
     # Serialized after setting something
     foo.bar.baz = 1
-    assert betterproto.serialized_on_wire(foo.bar) is True
+    assert bananaproto.serialized_on_wire(foo.bar) is True
 
     # Still has it after setting the default value
     foo.bar.baz = 0
-    assert betterproto.serialized_on_wire(foo.bar) is True
+    assert bananaproto.serialized_on_wire(foo.bar) is True
 
     # Manual override (don't do this)
     foo.bar._serialized_on_wire = False
-    assert betterproto.serialized_on_wire(foo.bar) is False
+    assert bananaproto.serialized_on_wire(foo.bar) is False
 
     # Can manually set it but defaults to false
     foo.bar = Bar()
-    assert betterproto.serialized_on_wire(foo.bar) is False
+    assert bananaproto.serialized_on_wire(foo.bar) is False
 
     @dataclass
-    class WithCollections(betterproto.Message):
-        test_list: List[str] = betterproto.string_field(1)
-        test_map: Dict[str, str] = betterproto.map_field(
-            2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
+    class WithCollections(bananaproto.Message):
+        test_list: List[str] = bananaproto.string_field(1)
+        test_map: Dict[str, str] = bananaproto.map_field(
+            2, bananaproto.TYPE_STRING, bananaproto.TYPE_STRING
         )
 
     # Is always set from parse, even if all collections are empty
     with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == True
+    assert bananaproto.serialized_on_wire(with_collections_empty) == True
     with_collections_list = WithCollections().parse(
         bytes(WithCollections(test_list=["a", "b", "c"]))
     )
-    assert betterproto.serialized_on_wire(with_collections_list) == True
+    assert bananaproto.serialized_on_wire(with_collections_list) == True
     with_collections_map = WithCollections().parse(
         bytes(WithCollections(test_map={"a": "b", "c": "d"}))
     )
-    assert betterproto.serialized_on_wire(with_collections_map) == True
+    assert bananaproto.serialized_on_wire(with_collections_map) == True
 
 
 def test_class_init():
     @dataclass
-    class Bar(betterproto.Message):
-        name: str = betterproto.string_field(1)
+    class Bar(bananaproto.Message):
+        name: str = bananaproto.string_field(1)
 
     @dataclass
-    class Foo(betterproto.Message):
-        name: str = betterproto.string_field(1)
-        child: Bar = betterproto.message_field(2)
+    class Foo(bananaproto.Message):
+        name: str = bananaproto.string_field(1)
+        child: Bar = bananaproto.message_field(2)
 
     foo = Foo(name="foo", child=Bar(name="bar"))
 
@@ -87,13 +87,13 @@ def test_class_init():
 
 
 def test_enum_as_int_json():
-    class TestEnum(betterproto.Enum):
+    class TestEnum(bananaproto.Enum):
         ZERO = 0
         ONE = 1
 
     @dataclass
-    class Foo(betterproto.Message):
-        bar: TestEnum = betterproto.enum_field(1)
+    class Foo(bananaproto.Message):
+        bar: TestEnum = bananaproto.enum_field(1)
 
     # JSON strings are supported, but ints should still be supported too.
     foo = Foo().from_dict({"bar": 1})
@@ -111,14 +111,14 @@ def test_enum_as_int_json():
 
 def test_unknown_fields():
     @dataclass
-    class Newer(betterproto.Message):
-        foo: bool = betterproto.bool_field(1)
-        bar: int = betterproto.int32_field(2)
-        baz: str = betterproto.string_field(3)
+    class Newer(bananaproto.Message):
+        foo: bool = bananaproto.bool_field(1)
+        bar: int = bananaproto.int32_field(2)
+        baz: str = bananaproto.string_field(3)
 
     @dataclass
-    class Older(betterproto.Message):
-        foo: bool = betterproto.bool_field(1)
+    class Older(bananaproto.Message):
+        foo: bool = bananaproto.bool_field(1)
 
     newer = Newer(foo=True, bar=1, baz="Hello")
     serialized_newer = bytes(newer)
@@ -133,56 +133,56 @@ def test_unknown_fields():
 
 def test_oneof_support():
     @dataclass
-    class Sub(betterproto.Message):
-        val: int = betterproto.int32_field(1)
+    class Sub(bananaproto.Message):
+        val: int = bananaproto.int32_field(1)
 
     @dataclass
-    class Foo(betterproto.Message):
-        bar: int = betterproto.int32_field(1, group="group1")
-        baz: str = betterproto.string_field(2, group="group1")
-        sub: Sub = betterproto.message_field(3, group="group2")
-        abc: str = betterproto.string_field(4, group="group2")
+    class Foo(bananaproto.Message):
+        bar: int = bananaproto.int32_field(1, group="group1")
+        baz: str = bananaproto.string_field(2, group="group1")
+        sub: Sub = bananaproto.message_field(3, group="group2")
+        abc: str = bananaproto.string_field(4, group="group2")
 
     foo = Foo()
 
-    assert betterproto.which_one_of(foo, "group1")[0] == ""
+    assert bananaproto.which_one_of(foo, "group1")[0] == ""
 
     foo.bar = 1
     foo.baz = "test"
 
     # Other oneof fields should now be unset
     assert foo.bar == 0
-    assert betterproto.which_one_of(foo, "group1")[0] == "baz"
+    assert bananaproto.which_one_of(foo, "group1")[0] == "baz"
 
     foo.sub.val = 1
-    assert betterproto.serialized_on_wire(foo.sub)
+    assert bananaproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
     assert foo.sub.val == 0
-    assert betterproto.serialized_on_wire(foo.sub) is False
-    assert betterproto.which_one_of(foo, "group2")[0] == "abc"
+    assert bananaproto.serialized_on_wire(foo.sub) is False
+    assert bananaproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
     foo = Foo(bar=0)
-    assert betterproto.which_one_of(foo, "group1")[0] == "bar"
+    assert bananaproto.which_one_of(foo, "group1")[0] == "bar"
     assert bytes(foo) == b"\x08\x00"
 
     # Round trip should also work
     foo2 = Foo().parse(bytes(foo))
-    assert betterproto.which_one_of(foo2, "group1")[0] == "bar"
+    assert bananaproto.which_one_of(foo2, "group1")[0] == "bar"
     assert foo.bar == 0
-    assert betterproto.which_one_of(foo2, "group2")[0] == ""
+    assert bananaproto.which_one_of(foo2, "group2")[0] == ""
 
 
 def test_json_casing():
     @dataclass
-    class CasingTest(betterproto.Message):
-        pascal_case: int = betterproto.int32_field(1)
-        camel_case: int = betterproto.int32_field(2)
-        snake_case: int = betterproto.int32_field(3)
-        kabob_case: int = betterproto.int32_field(4)
+    class CasingTest(bananaproto.Message):
+        pascal_case: int = bananaproto.int32_field(1)
+        camel_case: int = bananaproto.int32_field(2)
+        snake_case: int = bananaproto.int32_field(3)
+        kabob_case: int = bananaproto.int32_field(4)
 
     # Parsing should accept almost any input
     test = CasingTest().from_dict(
@@ -199,7 +199,7 @@ def test_json_casing():
         "kabobCase": 4,
     }
 
-    assert json.loads(test.to_json(casing=betterproto.Casing.SNAKE)) == {
+    assert json.loads(test.to_json(casing=bananaproto.Casing.SNAKE)) == {
         "pascal_case": 1,
         "camel_case": 2,
         "snake_case": 3,
@@ -209,11 +209,11 @@ def test_json_casing():
 
 def test_dict_casing():
     @dataclass
-    class CasingTest(betterproto.Message):
-        pascal_case: int = betterproto.int32_field(1)
-        camel_case: int = betterproto.int32_field(2)
-        snake_case: int = betterproto.int32_field(3)
-        kabob_case: int = betterproto.int32_field(4)
+    class CasingTest(bananaproto.Message):
+        pascal_case: int = bananaproto.int32_field(1)
+        camel_case: int = bananaproto.int32_field(2)
+        snake_case: int = bananaproto.int32_field(3)
+        kabob_case: int = bananaproto.int32_field(4)
 
     # Parsing should accept almost any input
     test = CasingTest().from_dict(
@@ -236,13 +236,13 @@ def test_dict_casing():
         "kabobCase": 4,
     }
 
-    assert test.to_dict(casing=betterproto.Casing.SNAKE) == {
+    assert test.to_dict(casing=bananaproto.Casing.SNAKE) == {
         "pascal_case": 1,
         "camel_case": 2,
         "snake_case": 3,
         "kabob_case": 4,
     }
-    assert test.to_pydict(casing=betterproto.Casing.SNAKE) == {
+    assert test.to_pydict(casing=bananaproto.Casing.SNAKE) == {
         "pascal_case": 1,
         "camel_case": 2,
         "snake_case": 3,
@@ -252,8 +252,8 @@ def test_dict_casing():
 
 def test_optional_flag():
     @dataclass
-    class Request(betterproto.Message):
-        flag: Optional[bool] = betterproto.message_field(1, wraps=betterproto.TYPE_BOOL)
+    class Request(bananaproto.Message):
+        flag: Optional[bool] = bananaproto.message_field(1, wraps=bananaproto.TYPE_BOOL)
 
     # Serialization of not passed vs. set vs. zero-value.
     assert bytes(Request()) == b""
@@ -267,11 +267,11 @@ def test_optional_flag():
 
 def test_to_json_default_values():
     @dataclass
-    class TestMessage(betterproto.Message):
-        some_int: int = betterproto.int32_field(1)
-        some_double: float = betterproto.double_field(2)
-        some_str: str = betterproto.string_field(3)
-        some_bool: bool = betterproto.bool_field(4)
+    class TestMessage(bananaproto.Message):
+        some_int: int = bananaproto.int32_field(1)
+        some_double: float = bananaproto.double_field(2)
+        some_str: str = bananaproto.string_field(3)
+        some_bool: bool = bananaproto.bool_field(4)
 
     # Empty dict
     test = TestMessage().from_dict({})
@@ -298,11 +298,11 @@ def test_to_json_default_values():
 
 def test_to_dict_default_values():
     @dataclass
-    class TestMessage(betterproto.Message):
-        some_int: int = betterproto.int32_field(1)
-        some_double: float = betterproto.double_field(2)
-        some_str: str = betterproto.string_field(3)
-        some_bool: bool = betterproto.bool_field(4)
+    class TestMessage(bananaproto.Message):
+        some_int: int = bananaproto.int32_field(1)
+        some_double: float = bananaproto.double_field(2)
+        some_str: str = bananaproto.string_field(3)
+        some_bool: bool = bananaproto.bool_field(4)
 
     # Empty dict
     test = TestMessage().from_dict({})
@@ -348,15 +348,15 @@ def test_to_dict_default_values():
 
     # Some default and some other values
     @dataclass
-    class TestMessage2(betterproto.Message):
-        some_int: int = betterproto.int32_field(1)
-        some_double: float = betterproto.double_field(2)
-        some_str: str = betterproto.string_field(3)
-        some_bool: bool = betterproto.bool_field(4)
-        some_default_int: int = betterproto.int32_field(5)
-        some_default_double: float = betterproto.double_field(6)
-        some_default_str: str = betterproto.string_field(7)
-        some_default_bool: bool = betterproto.bool_field(8)
+    class TestMessage2(bananaproto.Message):
+        some_int: int = bananaproto.int32_field(1)
+        some_double: float = bananaproto.double_field(2)
+        some_str: str = bananaproto.string_field(3)
+        some_bool: bool = bananaproto.bool_field(4)
+        some_default_int: int = bananaproto.int32_field(5)
+        some_default_double: float = bananaproto.double_field(6)
+        some_default_str: str = bananaproto.string_field(7)
+        some_default_bool: bool = bananaproto.bool_field(8)
 
     test = TestMessage2().from_dict(
         {
@@ -408,14 +408,14 @@ def test_to_dict_default_values():
 
     # Nested messages
     @dataclass
-    class TestChildMessage(betterproto.Message):
-        some_other_int: int = betterproto.int32_field(1)
+    class TestChildMessage(bananaproto.Message):
+        some_other_int: int = bananaproto.int32_field(1)
 
     @dataclass
-    class TestParentMessage(betterproto.Message):
-        some_int: int = betterproto.int32_field(1)
-        some_double: float = betterproto.double_field(2)
-        some_message: TestChildMessage = betterproto.message_field(3)
+    class TestParentMessage(bananaproto.Message):
+        some_int: int = bananaproto.int32_field(1)
+        some_double: float = bananaproto.double_field(2)
+        some_message: TestChildMessage = bananaproto.message_field(3)
 
     test = TestParentMessage().from_dict({"someInt": 0, "someDouble": 1.2})
 
@@ -436,9 +436,9 @@ def test_to_dict_default_values():
 
 def test_to_dict_datetime_values():
     @dataclass
-    class TestDatetimeMessage(betterproto.Message):
-        bar: datetime = betterproto.message_field(1)
-        baz: timedelta = betterproto.message_field(2)
+    class TestDatetimeMessage(bananaproto.Message):
+        bar: datetime = bananaproto.message_field(1)
+        baz: timedelta = bananaproto.message_field(2)
 
     test = TestDatetimeMessage().from_dict(
         {"bar": "2020-01-01T00:00:00Z", "baz": "86400.000s"}
@@ -458,14 +458,14 @@ def test_to_dict_datetime_values():
 
 def test_oneof_default_value_set_causes_writes_wire():
     @dataclass
-    class Empty(betterproto.Message):
+    class Empty(bananaproto.Message):
         pass
 
     @dataclass
-    class Foo(betterproto.Message):
-        bar: int = betterproto.int32_field(1, group="group1")
-        baz: str = betterproto.string_field(2, group="group1")
-        qux: Empty = betterproto.message_field(3, group="group1")
+    class Foo(bananaproto.Message):
+        bar: int = bananaproto.int32_field(1, group="group1")
+        baz: str = bananaproto.string_field(2, group="group1")
+        qux: Empty = bananaproto.message_field(3, group="group1")
 
     def _round_trip_serialization(foo: Foo) -> Foo:
         return Foo().parse(bytes(foo))
@@ -477,35 +477,35 @@ def test_oneof_default_value_set_causes_writes_wire():
 
     assert bytes(foo1) == b"\x08\x00"
     assert (
-        betterproto.which_one_of(foo1, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo1), "group1")
+        bananaproto.which_one_of(foo1, "group1")
+        == bananaproto.which_one_of(_round_trip_serialization(foo1), "group1")
         == ("bar", 0)
     )
 
     assert bytes(foo2) == b"\x12\x00"  # Baz is just an empty string
     assert (
-        betterproto.which_one_of(foo2, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo2), "group1")
+        bananaproto.which_one_of(foo2, "group1")
+        == bananaproto.which_one_of(_round_trip_serialization(foo2), "group1")
         == ("baz", "")
     )
 
     assert bytes(foo3) == b"\x1a\x00"
     assert (
-        betterproto.which_one_of(foo3, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo3), "group1")
+        bananaproto.which_one_of(foo3, "group1")
+        == bananaproto.which_one_of(_round_trip_serialization(foo3), "group1")
         == ("qux", Empty())
     )
 
     assert bytes(foo4) == b""
     assert (
-        betterproto.which_one_of(foo4, "group1")
-        == betterproto.which_one_of(_round_trip_serialization(foo4), "group1")
+        bananaproto.which_one_of(foo4, "group1")
+        == bananaproto.which_one_of(_round_trip_serialization(foo4), "group1")
         == ("", None)
     )
 
 
 def test_recursive_message():
-    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
+    from tests.output_bananaproto.recursivemessage import Test as RecursiveMessage
 
     msg = RecursiveMessage()
 
@@ -519,7 +519,7 @@ def test_recursive_message():
 
 
 def test_recursive_message_defaults():
-    from tests.output_betterproto.recursivemessage import (
+    from tests.output_bananaproto.recursivemessage import (
         Intermediate,
         Test as RecursiveMessage,
     )
@@ -546,7 +546,7 @@ def test_recursive_message_defaults():
 
 
 def test_message_repr():
-    from tests.output_betterproto.recursivemessage import Test
+    from tests.output_bananaproto.recursivemessage import Test
 
     assert repr(Test(name="Loki")) == "Test(name='Loki')"
     assert repr(Test(child=Test(), name="Loki")) == "Test(name='Loki', child=Test())"
@@ -566,12 +566,12 @@ def test_bool():
     """
 
     @dataclass
-    class Falsy(betterproto.Message):
+    class Falsy(bananaproto.Message):
         pass
 
     @dataclass
-    class Truthy(betterproto.Message):
-        bar: int = betterproto.int32_field(1)
+    class Truthy(bananaproto.Message):
+        bar: int = bananaproto.int32_field(1)
 
     assert not Falsy()
     t = Truthy()
@@ -628,8 +628,8 @@ iso_candidates = """2009-12-12T12:34
 
 def test_iso_datetime():
     @dataclass
-    class Envelope(betterproto.Message):
-        ts: datetime = betterproto.message_field(1)
+    class Envelope(bananaproto.Message):
+        ts: datetime = bananaproto.message_field(1)
 
     msg = Envelope()
 
@@ -640,8 +640,8 @@ def test_iso_datetime():
 
 def test_iso_datetime_list():
     @dataclass
-    class Envelope(betterproto.Message):
-        timestamps: List[datetime] = betterproto.message_field(1)
+    class Envelope(bananaproto.Message):
+        timestamps: List[datetime] = bananaproto.message_field(1)
 
     msg = Envelope()
 
@@ -650,7 +650,7 @@ def test_iso_datetime_list():
 
 
 def test_service_argument__expected_parameter():
-    from tests.output_betterproto.service import (
+    from tests.output_bananaproto.service import (
         DoThingRequest,
         TestStub,
     )
@@ -663,10 +663,10 @@ def test_service_argument__expected_parameter():
 
 def test_copyability():
     @dataclass
-    class Spam(betterproto.Message):
-        foo: bool = betterproto.bool_field(1)
-        bar: int = betterproto.int32_field(2)
-        baz: List[str] = betterproto.string_field(3)
+    class Spam(bananaproto.Message):
+        foo: bool = bananaproto.bool_field(1)
+        bar: int = bananaproto.int32_field(2)
+        baz: List[str] = bananaproto.string_field(3)
 
     spam = Spam(bar=12, baz=["hello"])
     copied = copy(spam)
@@ -682,9 +682,9 @@ def test_copyability():
 
 def test_is_set():
     @dataclass
-    class Spam(betterproto.Message):
-        foo: bool = betterproto.bool_field(1)
-        bar: Optional[int] = betterproto.int32_field(2, optional=True)
+    class Spam(bananaproto.Message):
+        foo: bool = bananaproto.bool_field(1)
+        bar: Optional[int] = bananaproto.int32_field(2, optional=True)
 
     assert not Spam().is_set("foo")
     assert not Spam().is_set("bar")

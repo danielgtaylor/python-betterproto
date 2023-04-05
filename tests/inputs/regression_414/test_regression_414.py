@@ -1,4 +1,4 @@
-from tests.output_betterproto.regression_414 import Test
+from tests.output_bananaproto.regression_414 import Test
 
 
 def test_full_cycle():

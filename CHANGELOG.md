@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-- Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
+- Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre bananaproto`.
 
 ## [2.0.0b5] - 2022-08-01
 

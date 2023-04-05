@@ -1,8 +1,8 @@
 import pytest
 from google.protobuf import json_format
 
-import betterproto
-from tests.output_betterproto.google_impl_behavior_equivalence import (
+import bananaproto
+from tests.output_bananaproto.google_impl_behavior_equivalence import (
     Foo,
     Test,
 )

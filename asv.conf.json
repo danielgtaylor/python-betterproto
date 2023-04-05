@@ -4,10 +4,10 @@
     "version": 1,
 
     // The name of the project being benchmarked
-    "project": "python-betterproto",
+    "project": "python-bananaproto",
 
     // The project's homepage
-    "project_url": "https://github.com/danielgtaylor/python-betterproto",
+    "project_url": "https://github.com/BananaLoaf/python-bananaproto",
 
     // The URL or local path of the source code repository for the
     // project being benchmarked

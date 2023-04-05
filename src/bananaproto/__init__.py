@@ -166,7 +166,7 @@ class FieldMetadata:
     @staticmethod
     def get(field: dataclasses.Field) -> "FieldMetadata":
         """Returns the field metadata for a dataclass field."""
-        return field.metadata["betterproto"]
+        return field.metadata["bananaproto"]
 
 
 def dataclass_field(
@@ -182,7 +182,7 @@ def dataclass_field(
     return dataclasses.field(
         default=None if optional else PLACEHOLDER,
         metadata={
-            "betterproto": FieldMetadata(
+            "bananaproto": FieldMetadata(
                 number, proto_type, map_types, group, wraps, optional
             )
         },
@@ -628,7 +628,7 @@ class Message(ABC):
 
         # Set current field of each group after `__init__` has already been run.
         group_current: Dict[str, Optional[str]] = {}
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
+        for field_name, meta in self._bananaproto.meta_by_field_name.items():
             if meta.group:
                 group_current.setdefault(meta.group)
 
@@ -653,7 +653,7 @@ class Message(ABC):
         if type(self) is not type(other):
             return False
 
-        for field_name in self._betterproto.meta_by_field_name:
+        for field_name in self._bananaproto.meta_by_field_name:
             self_val = self.__raw_get(field_name)
             other_val = other.__raw_get(field_name)
             if self_val is PLACEHOLDER:
@@ -682,7 +682,7 @@ class Message(ABC):
     def __repr__(self) -> str:
         parts = [
             f"{field_name}={value!r}"
-            for field_name in self._betterproto.sorted_field_names
+            for field_name in self._bananaproto.sorted_field_names
             for value in (self.__raw_get(field_name),)
             if value is not PLACEHOLDER
         ]
@@ -709,9 +709,9 @@ class Message(ABC):
             self.__dict__["_serialized_on_wire"] = True
 
         if hasattr(self, "_group_current"):  # __post_init__ had already run
-            if attr in self._betterproto.oneof_group_by_field:
-                group = self._betterproto.oneof_group_by_field[attr]
-                for field in self._betterproto.oneof_field_by_group[group]:
+            if attr in self._bananaproto.oneof_group_by_field:
+                group = self._bananaproto.oneof_group_by_field[attr]
+                for field in self._bananaproto.oneof_field_by_group[group]:
                     if field.name == attr:
                         self._group_current[group] = field.name
                     else:
@@ -724,28 +724,28 @@ class Message(ABC):
         return any(
             self.__raw_get(field_name)
             not in (PLACEHOLDER, self._get_field_default(field_name))
-            for field_name in self._betterproto.meta_by_field_name
+            for field_name in self._bananaproto.meta_by_field_name
         )
 
     def __deepcopy__(self: T, _: Any = {}) -> T:
         kwargs = {}
-        for name in self._betterproto.sorted_field_names:
+        for name in self._bananaproto.sorted_field_names:
             value = self.__raw_get(name)
             if value is not PLACEHOLDER:
                 kwargs[name] = deepcopy(value)
         return self.__class__(**kwargs)  # type: ignore
 
     @property
-    def _betterproto(self) -> ProtoClassMetadata:
+    def _bananaproto(self) -> ProtoClassMetadata:
         """
         Lazy initialize metadata for each protobuf class.
         It may be initialized multiple times in a multi-threaded environment,
         but that won't affect the correctness.
         """
-        meta = getattr(self.__class__, "_betterproto_meta", None)
+        meta = getattr(self.__class__, "_bananaproto_meta", None)
         if not meta:
             meta = ProtoClassMetadata(self.__class__)
-            self.__class__._betterproto_meta = meta  # type: ignore
+            self.__class__._bananaproto_meta = meta  # type: ignore
         return meta
 
     def __bytes__(self) -> bytes:
@@ -753,7 +753,7 @@ class Message(ABC):
         Get the binary encoded Protobuf representation of this message instance.
         """
         output = bytearray()
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
+        for field_name, meta in self._bananaproto.meta_by_field_name.items():
             value = getattr(self, field_name)
 
             if value is None:
@@ -880,7 +880,7 @@ class Message(ABC):
         with warnings.catch_warnings():
             # ignore warnings when initialising deprecated field defaults
             warnings.filterwarnings("ignore", category=DeprecationWarning)
-            return self._betterproto.default_gen[field_name]()
+            return self._bananaproto.default_gen[field_name]()
 
     @classmethod
     def _get_field_default_gen(cls, field: dataclasses.Field) -> Any:
@@ -934,7 +934,7 @@ class Message(ABC):
             if meta.proto_type == TYPE_STRING:
                 value = str(value, "utf-8")
             elif meta.proto_type == TYPE_MESSAGE:
-                cls = self._betterproto.cls_by_field[field_name]
+                cls = self._bananaproto.cls_by_field[field_name]
 
                 if cls == datetime:
                     value = _Timestamp().parse(value).to_datetime()
@@ -948,7 +948,7 @@ class Message(ABC):
                     value = cls().parse(value)
                     value._serialized_on_wire = True
             elif meta.proto_type == TYPE_MAP:
-                value = self._betterproto.cls_by_field[field_name]().parse(value)
+                value = self._bananaproto.cls_by_field[field_name]().parse(value)
 
         return value
 
@@ -976,7 +976,7 @@ class Message(ABC):
         """
         # Got some data over the wire
         self._serialized_on_wire = True
-        proto_meta = self._betterproto
+        proto_meta = self._bananaproto
         for parsed in parse_fields(data):
             field_name = proto_meta.field_name_by_number.get(parsed.number)
             if not field_name:
@@ -1067,8 +1067,8 @@ class Message(ABC):
         """
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
-        defaults = self._betterproto.default_gen
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
+        defaults = self._bananaproto.default_gen
+        for field_name, meta in self._bananaproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
@@ -1096,7 +1096,7 @@ class Message(ABC):
                         output[cased_name] = value
                 elif field_is_repeated:
                     # Convert each item.
-                    cls = self._betterproto.cls_by_field[field_name]
+                    cls = self._bananaproto.cls_by_field[field_name]
                     if cls == datetime:
                         value = [_Timestamp.timestamp_to_json(i) for i in value]
                     elif cls == timedelta:
@@ -1196,14 +1196,14 @@ class Message(ABC):
         self._serialized_on_wire = True
         for key in value:
             field_name = safe_snake_case(key)
-            meta = self._betterproto.meta_by_field_name.get(field_name)
+            meta = self._bananaproto.meta_by_field_name.get(field_name)
             if not meta:
                 continue
 
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[field_name]
+                    cls = self._bananaproto.cls_by_field[field_name]
                     if isinstance(v, list):
                         if cls == datetime:
                             v = [isoparse(item) for item in value[key]]
@@ -1230,7 +1230,7 @@ class Message(ABC):
                         v.from_dict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                    cls = self._bananaproto.cls_by_field[f"{field_name}.value"]
                     for k in value[key]:
                         v[k] = cls().from_dict(value[key][k])
                 else:
@@ -1246,7 +1246,7 @@ class Message(ABC):
                         else:
                             v = b64decode(value[key])
                     elif meta.proto_type == TYPE_ENUM:
-                        enum_cls = self._betterproto.cls_by_field[field_name]
+                        enum_cls = self._bananaproto.cls_by_field[field_name]
                         if isinstance(v, list):
                             v = [enum_cls.from_string(e) for e in v]
                         elif isinstance(v, str):
@@ -1341,8 +1341,8 @@ class Message(ABC):
             The python dict representation of this object.
         """
         output: Dict[str, Any] = {}
-        defaults = self._betterproto.default_gen
-        for field_name, meta in self._betterproto.meta_by_field_name.items():
+        defaults = self._bananaproto.default_gen
+        for field_name, meta in self._bananaproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
@@ -1416,7 +1416,7 @@ class Message(ABC):
         self._serialized_on_wire = True
         for key in value:
             field_name = safe_snake_case(key)
-            meta = self._betterproto.meta_by_field_name.get(field_name)
+            meta = self._bananaproto.meta_by_field_name.get(field_name)
             if not meta:
                 continue
 
@@ -1424,7 +1424,7 @@ class Message(ABC):
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
                     if isinstance(v, list):
-                        cls = self._betterproto.cls_by_field[field_name]
+                        cls = self._bananaproto.cls_by_field[field_name]
                         for item in value[key]:
                             v.append(cls().from_pydict(item))
                     elif isinstance(v, datetime):
@@ -1439,7 +1439,7 @@ class Message(ABC):
                         v.from_pydict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                    cls = self._bananaproto.cls_by_field[f"{field_name}.value"]
                     for k in value[key]:
                         v[k] = cls().from_pydict(value[key][k])
                 else:
@@ -1465,15 +1465,15 @@ class Message(ABC):
         """
         default = (
             PLACEHOLDER
-            if not self._betterproto.meta_by_field_name[name].optional
+            if not self._bananaproto.meta_by_field_name[name].optional
             else None
         )
         return self.__raw_get(name) is not default
 
     @classmethod
     def _validate_field_groups(cls, values):
-        group_to_one_ofs = cls._betterproto_meta.oneof_field_by_group  # type: ignore
-        field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
+        group_to_one_ofs = cls._bananaproto_meta.oneof_field_by_group  # type: ignore
+        field_name_to_meta = cls._bananaproto_meta.meta_by_field_name  # type: ignore
 
         for group, field_set in group_to_one_ofs.items():
             if len(field_set) == 1:

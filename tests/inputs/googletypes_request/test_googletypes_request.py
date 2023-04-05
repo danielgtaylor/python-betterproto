@@ -9,9 +9,9 @@ from typing import (
 
 import pytest
 
-import betterproto.lib.google.protobuf as protobuf
+import bananaproto.lib.google.protobuf as protobuf
 from tests.mocks import MockChannel
-from tests.output_betterproto.googletypes_request import (
+from tests.output_bananaproto.googletypes_request import (
     Input,
     TestStub,
 )

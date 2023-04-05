@@ -1,9 +1,5 @@
 # Contributing
 
-There's lots to do, and we're working hard, so any help is welcome!
-
-- :speech_balloon: Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
-
 What can you do?
 
 - :+1: Vote on [issues](https://github.com/danielgtaylor/python-betterproto/issues).

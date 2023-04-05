@@ -2,8 +2,8 @@ import datetime
 
 import pytest
 
-import betterproto
-from tests.output_betterproto.oneof_default_value_serialization import (
+import bananaproto
+from tests.output_bananaproto.oneof_default_value_serialization import (
     Message,
     NestedMessage,
     Test,
@@ -11,7 +11,7 @@ from tests.output_betterproto.oneof_default_value_serialization import (
 
 
 def assert_round_trip_serialization_works(message: Test) -> None:
-    assert betterproto.which_one_of(message, "value_type") == betterproto.which_one_of(
+    assert bananaproto.which_one_of(message, "value_type") == bananaproto.which_one_of(
         Test().from_json(message.to_json()), "value_type"
     )
 
@@ -37,7 +37,7 @@ def test_oneof_default_value_serialization_works_for_all_values():
         ),
         Test(duration_value=datetime.timedelta(0)),
         Test(wrapped_message_value=Message(value=0)),
-        # NOTE: Do NOT use betterproto.BoolValue here, it will cause JSON serialization
+        # NOTE: Do NOT use bananaproto.BoolValue here, it will cause JSON serialization
         # errors.
         # TODO: Do we want to allow use of BoolValue directly within a wrapped field or
         # should we simply hard fail here?
@@ -50,8 +50,8 @@ def test_oneof_default_value_serialization_works_for_all_values():
 def test_oneof_no_default_values_passed():
     message = Test()
     assert (
-        betterproto.which_one_of(message, "value_type")
-        == betterproto.which_one_of(Test().from_json(message.to_json()), "value_type")
+        bananaproto.which_one_of(message, "value_type")
+        == bananaproto.which_one_of(Test().from_json(message.to_json()), "value_type")
         == ("", None)
     )
 
@@ -66,8 +66,8 @@ def test_oneof_nested_oneof_messages_are_serialized_with_defaults():
         )
     )
     assert (
-        betterproto.which_one_of(message, "value_type")
-        == betterproto.which_one_of(Test().from_json(message.to_json()), "value_type")
+        bananaproto.which_one_of(message, "value_type")
+        == bananaproto.which_one_of(Test().from_json(message.to_json()), "value_type")
         == (
             "wrapped_nested_message_value",
             NestedMessage(id=0, wrapped_message_value=Message(value=0)),

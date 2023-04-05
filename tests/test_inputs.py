@@ -15,7 +15,7 @@ from typing import (
 
 import pytest
 
-import betterproto
+import bananaproto
 from tests.inputs import config as test_input_config
 from tests.mocks import MockChannel
 from tests.util import (
@@ -70,7 +70,7 @@ test_cases = TestCases(
     xfail=test_input_config.xfail,
 )
 
-plugin_output_package = "tests.output_betterproto"
+plugin_output_package = "tests.output_bananaproto"
 reference_output_package = "tests.output_reference"
 
 TestData = namedtuple("TestData", ["plugin_module", "reference_module", "json_data"])
@@ -100,7 +100,7 @@ def list_replace_nans(items: List) -> List[Any]:
         elif isinstance(item, dict):
             result.append(dict_replace_nans(item))
         elif isinstance(item, float) and math.isnan(item):
-            result.append(betterproto.NAN)
+            result.append(bananaproto.NAN)
     return result
 
 
@@ -124,7 +124,7 @@ def dict_replace_nans(input_dict: Dict[Any, Any]) -> Dict[Any, Any]:
         elif isinstance(value, list):
             value = list_replace_nans(value)
         elif isinstance(value, float) and math.isnan(value):
-            value = betterproto.NAN
+            value = bananaproto.NAN
         result[key] = value
     return result
 
@@ -182,7 +182,7 @@ def test_message_json(repeat, test_data: TestData) -> None:
             if sample.belongs_to(test_input_config.non_symmetrical_json):
                 continue
 
-            message: betterproto.Message = plugin_module.Test()
+            message: bananaproto.Message = plugin_module.Test()
 
             message.from_json(sample.json)
             message_json = message.to_json(0)
@@ -206,7 +206,7 @@ def test_binary_compatibility(repeat, test_data: TestData) -> None:
         reference_binary_output = reference_instance.SerializeToString()
 
         for _ in range(repeat):
-            plugin_instance_from_json: betterproto.Message = (
+            plugin_instance_from_json: bananaproto.Message = (
                 plugin_module.Test().from_json(sample.json)
             )
             plugin_instance_from_binary = plugin_module.Test.FromString(

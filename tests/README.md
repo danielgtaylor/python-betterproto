@@ -1,6 +1,6 @@
 # Standard Tests Development Guide
 
-Standard test cases are found in [betterproto/tests/inputs](inputs), where each subdirectory represents a testcase, that is verified in isolation.
+Standard test cases are found in [bananaproto/tests/inputs](inputs), where each subdirectory represents a testcase, that is verified in isolation.
 
 ```
 inputs/
@@ -50,7 +50,7 @@ You can add multiple `.proto` files to the test case, as long as one file matche
 `test_<name>.py` &mdash; *Custom test to validate specific aspects of the generated class*
 
 ```python
-from tests.output_betterproto.bool.bool import Test
+from tests.output_bananaproto.bool.bool import Test
 
 def test_value():
     message = Test()
@@ -70,8 +70,8 @@ The following tests are automatically executed for all cases:
 
 - `pipenv run generate`  
   This generates:
-  - `betterproto/tests/output_betterproto` &mdash; *the plugin generated python classes*
-  - `betterproto/tests/output_reference` &mdash; *reference implementation classes*
+  - `bananaproto/tests/output_bananaproto` &mdash; *the plugin generated python classes*
+  - `bananaproto/tests/output_reference` &mdash; *reference implementation classes*
 - `pipenv run test`
 
 ## Intentionally Failing tests
@@ -81,7 +81,7 @@ The standard test suite includes tests that fail by intention. These tests docum
 When running `pytest`, they show up as `x` or  `X` in the test results.
 
 ```
-betterproto/tests/test_inputs.py ..x...x..x...x.X........xx........x.....x.......x.xx....x...................... [ 84%]
+bananaproto/tests/test_inputs.py ..x...x..x...x.X........xx........x.....x.......x.xx....x...................... [ 84%]
 ```
 
 - `.` &mdash; PASSED

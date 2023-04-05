@@ -1,6 +1,6 @@
 import pytest
 
-from tests.output_betterproto.nestedtwice import (
+from tests.output_bananaproto.nestedtwice import (
     Test,
     TestTop,
     TestTopMiddle,
