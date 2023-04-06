@@ -9,6 +9,8 @@ from typing import (
 import grpclib
 import grpclib.server
 
+from bananaproto.grpc.grpclib_client import MetadataLike
+
 
 class ServiceBase(ABC):
     """
@@ -20,8 +22,9 @@ class ServiceBase(ABC):
         handler: Callable,
         stream: grpclib.server.Stream,
         request: Any,
+        metadata: MetadataLike,
     ) -> None:
-        response_iter = handler(request)
+        response_iter = handler(request, metadata)
         # check if response is actually an AsyncIterator
         # this might be false if the method just returns without
         # yielding at least once

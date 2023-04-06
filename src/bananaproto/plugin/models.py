@@ -741,12 +741,10 @@ class ServiceMethodCompiler(ProtoContentBase):
         # add imports required for request arguments timeout, deadline and metadata
         self.output_file.typing_imports.add("Optional")
         self.output_file.imports_type_checking_only.add("import grpclib.server")
-        self.output_file.imports_type_checking_only.add(
+        self.output_file.imports.add(
             "from bananaproto.grpc.grpclib_client import MetadataLike"
         )
-        self.output_file.imports_type_checking_only.add(
-            "from grpclib.metadata import Deadline"
-        )
+        self.output_file.imports.add("from grpclib.metadata import Deadline")
 
         super().__post_init__()  # check for unset fields
 

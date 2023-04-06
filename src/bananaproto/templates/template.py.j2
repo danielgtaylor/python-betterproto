@@ -111,18 +111,17 @@ class {{ service.py_name }}Stub(bananaproto.ServiceStub):
     pass
     {% endif %}
     {% for method in service.methods %}
-    async def {{ method.py_name }}(self
+    async def {{ method.py_name }}(self,
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: {{ method.py_input_message_type }}{%- endif -%}
+            {%- if method.py_input_message -%} msg: {{ method.py_input_message_type }}, {%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable[{{ method.py_input_message_type }}], Iterable[{{ method.py_input_message_type }}]]
+            msg_iter: Union[AsyncIterable[{{ method.py_input_message_type }}], Iterable[{{ method.py_input_message_type }}]],
         {%- endif -%}
-            ,
-            *
-            , timeout: Optional[float] = None
-            , deadline: Optional["Deadline"] = None
-            , metadata: Optional["MetadataLike"] = None
+            *,
+            timeout: Optional[float] = None,
+            deadline: Optional[Deadline] = None,
+            metadata: Optional[MetadataLike] = None,
             ) -> {% if method.server_streaming %}AsyncIterator[{{ method.py_output_message_type }}]{% else %}{{ method.py_output_message_type }}{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
@@ -132,7 +131,7 @@ class {{ service.py_name }}Stub(bananaproto.ServiceStub):
             {% if method.client_streaming %}
         async for response in self._stream_stream(
             "{{ method.route }}",
-            {{ method.py_input_message_param }}_iterator,
+            msg_iter,
             {{ method.py_input_message_type }},
             {{ method.py_output_message_type.strip('"') }},
             timeout=timeout,
@@ -143,7 +142,7 @@ class {{ service.py_name }}Stub(bananaproto.ServiceStub):
             {% else %}{# i.e. not client streaming #}
         async for response in self._unary_stream(
             "{{ method.route }}",
-            {{ method.py_input_message_param }},
+            msg,
             {{ method.py_output_message_type.strip('"') }},
             timeout=timeout,
             deadline=deadline,
@@ -156,7 +155,7 @@ class {{ service.py_name }}Stub(bananaproto.ServiceStub):
             {% if method.client_streaming %}
         return await self._stream_unary(
             "{{ method.route }}",
-            {{ method.py_input_message_param }}_iterator,
+            msg_iter,
             {{ method.py_input_message_type }},
             {{ method.py_output_message_type.strip('"') }},
             timeout=timeout,
@@ -166,7 +165,7 @@ class {{ service.py_name }}Stub(bananaproto.ServiceStub):
             {% else %}{# i.e. not client streaming #}
         return await self._unary_unary(
             "{{ method.route }}",
-            {{ method.py_input_message_param }},
+            msg,
             {{ method.py_output_message_type.strip('"') }},
             timeout=timeout,
             deadline=deadline,
@@ -186,22 +185,20 @@ class {{ service.py_name }}Base(ServiceBase):
     {% endif %}
 
     {% for method in service.methods %}
-    async def {{ method.py_name }}(self
+    async def {{ method.py_name }}(self,
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: {{ method.py_input_message_type }}{%- endif -%}
+            {%- if method.py_input_message -%}msg: {{ method.py_input_message_type }}, {%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: AsyncIterator[{{ method.py_input_message_type }}]
+            msg_iter: AsyncIterator[{{ method.py_input_message_type }}],
         {%- endif -%}
+            metadata: MetadataLike,
             ) -> {% if method.server_streaming %}AsyncIterator[{{ method.py_output_message_type }}]{% else %}{{ method.py_output_message_type }}{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
         {% endif %}
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
-        {% if method.server_streaming %}
-        yield {{ method.py_output_message_type }}()
-        {% endif %}
 
     {% endfor %}
 
@@ -213,13 +210,14 @@ class {{ service.py_name }}Base(ServiceBase):
         request = stream.__aiter__()
         {% endif %}
         {% if not method.server_streaming %}
-        response = await self.{{ method.py_name }}(request)
+        response = await self.{{ method.py_name }}(request, stream.metadata)
         await stream.send_message(response)
         {% else %}
         await self._call_rpc_handler_server_stream(
             self.{{ method.py_name }},
             stream,
             request,
+            stream.metadata,
         )
         {% endif %}
 

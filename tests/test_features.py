@@ -656,9 +656,9 @@ def test_service_argument__expected_parameter():
     )
 
     sig = signature(TestStub.do_thing)
-    do_thing_request_parameter = sig.parameters["do_thing_request"]
-    assert do_thing_request_parameter.default is Parameter.empty
-    assert do_thing_request_parameter.annotation == DoThingRequest
+    msg_parameter = sig.parameters["msg"]
+    assert msg_parameter.default is Parameter.empty
+    assert msg_parameter.annotation == DoThingRequest
 
 
 def test_copyability():

@@ -527,7 +527,7 @@ protoc \
 - [ ] Add *Reflections* chapter to README
 - [ ] Return original folder structure
   - [ ] Automatically import *_pb2 for reflections
-- [ ] Pass metadata to Service methods
+- [x] Pass metadata to Service methods
 - [ ] Fix comments in generated code
 - [ ] Omit Empty argument from Stub and Service
 
