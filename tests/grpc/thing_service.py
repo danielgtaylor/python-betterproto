@@ -3,7 +3,7 @@ from typing import Dict
 import grpclib
 import grpclib.server
 
-from tests.output_betterproto.service import (
+from tests.output_bananaproto.service import (
     DoThingRequest,
     DoThingResponse,
     GetThingRequest,

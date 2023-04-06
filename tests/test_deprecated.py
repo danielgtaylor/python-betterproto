@@ -2,7 +2,7 @@ import warnings
 
 import pytest
 
-from tests.output_betterproto.deprecated import (
+from tests.output_bananaproto.deprecated import (
     Message,
     Test,
 )

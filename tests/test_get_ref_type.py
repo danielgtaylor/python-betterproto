@@ -1,6 +1,6 @@
 import pytest
 
-from betterproto.compile.importing import (
+from bananaproto.compile.importing import (
     get_type_reference,
     parse_source_type_name,
 )
@@ -11,23 +11,23 @@ from betterproto.compile.importing import (
     [
         (
             ".google.protobuf.Empty",
-            '"betterproto_lib_google_protobuf.Empty"',
-            "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
+            '"bananaproto_lib_google_protobuf.Empty"',
+            "import bananaproto.lib.google.protobuf as bananaproto_lib_google_protobuf",
         ),
         (
             ".google.protobuf.Struct",
-            '"betterproto_lib_google_protobuf.Struct"',
-            "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
+            '"bananaproto_lib_google_protobuf.Struct"',
+            "import bananaproto.lib.google.protobuf as bananaproto_lib_google_protobuf",
         ),
         (
             ".google.protobuf.ListValue",
-            '"betterproto_lib_google_protobuf.ListValue"',
-            "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
+            '"bananaproto_lib_google_protobuf.ListValue"',
+            "import bananaproto.lib.google.protobuf as bananaproto_lib_google_protobuf",
         ),
         (
             ".google.protobuf.Value",
-            '"betterproto_lib_google_protobuf.Value"',
-            "import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf",
+            '"bananaproto_lib_google_protobuf.Value"',
+            "import bananaproto.lib.google.protobuf as bananaproto_lib_google_protobuf",
         ),
     ],
 )
@@ -72,25 +72,25 @@ def test_referenceing_google_wrappers_unwraps_them(
     [
         (
             ".google.protobuf.DoubleValue",
-            '"betterproto_lib_google_protobuf.DoubleValue"',
+            '"bananaproto_lib_google_protobuf.DoubleValue"',
         ),
-        (".google.protobuf.FloatValue", '"betterproto_lib_google_protobuf.FloatValue"'),
-        (".google.protobuf.Int32Value", '"betterproto_lib_google_protobuf.Int32Value"'),
-        (".google.protobuf.Int64Value", '"betterproto_lib_google_protobuf.Int64Value"'),
+        (".google.protobuf.FloatValue", '"bananaproto_lib_google_protobuf.FloatValue"'),
+        (".google.protobuf.Int32Value", '"bananaproto_lib_google_protobuf.Int32Value"'),
+        (".google.protobuf.Int64Value", '"bananaproto_lib_google_protobuf.Int64Value"'),
         (
             ".google.protobuf.UInt32Value",
-            '"betterproto_lib_google_protobuf.UInt32Value"',
+            '"bananaproto_lib_google_protobuf.UInt32Value"',
         ),
         (
             ".google.protobuf.UInt64Value",
-            '"betterproto_lib_google_protobuf.UInt64Value"',
+            '"bananaproto_lib_google_protobuf.UInt64Value"',
         ),
-        (".google.protobuf.BoolValue", '"betterproto_lib_google_protobuf.BoolValue"'),
+        (".google.protobuf.BoolValue", '"bananaproto_lib_google_protobuf.BoolValue"'),
         (
             ".google.protobuf.StringValue",
-            '"betterproto_lib_google_protobuf.StringValue"',
+            '"bananaproto_lib_google_protobuf.StringValue"',
         ),
-        (".google.protobuf.BytesValue", '"betterproto_lib_google_protobuf.BytesValue"'),
+        (".google.protobuf.BytesValue", '"bananaproto_lib_google_protobuf.BytesValue"'),
     ],
 )
 def test_referenceing_google_wrappers_without_unwrapping(

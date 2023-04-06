@@ -1,37 +1,37 @@
 from dataclasses import dataclass
 from typing import List
 
-import betterproto
+import bananaproto
 
 
 @dataclass
-class TestMessage(betterproto.Message):
-    foo: int = betterproto.uint32_field(0)
-    bar: str = betterproto.string_field(1)
-    baz: float = betterproto.float_field(2)
+class TestMessage(bananaproto.Message):
+    foo: int = bananaproto.uint32_field(0)
+    bar: str = bananaproto.string_field(1)
+    baz: float = bananaproto.float_field(2)
 
 
 @dataclass
-class TestNestedChildMessage(betterproto.Message):
-    str_key: str = betterproto.string_field(0)
-    bytes_key: bytes = betterproto.bytes_field(1)
-    bool_key: bool = betterproto.bool_field(2)
-    float_key: float = betterproto.float_field(3)
-    int_key: int = betterproto.uint64_field(4)
+class TestNestedChildMessage(bananaproto.Message):
+    str_key: str = bananaproto.string_field(0)
+    bytes_key: bytes = bananaproto.bytes_field(1)
+    bool_key: bool = bananaproto.bool_field(2)
+    float_key: float = bananaproto.float_field(3)
+    int_key: int = bananaproto.uint64_field(4)
 
 
 @dataclass
-class TestNestedMessage(betterproto.Message):
-    foo: TestNestedChildMessage = betterproto.message_field(0)
-    bar: TestNestedChildMessage = betterproto.message_field(1)
-    baz: TestNestedChildMessage = betterproto.message_field(2)
+class TestNestedMessage(bananaproto.Message):
+    foo: TestNestedChildMessage = bananaproto.message_field(0)
+    bar: TestNestedChildMessage = bananaproto.message_field(1)
+    baz: TestNestedChildMessage = bananaproto.message_field(2)
 
 
 @dataclass
-class TestRepeatedMessage(betterproto.Message):
-    foo_repeat: List[str] = betterproto.string_field(0)
-    bar_repeat: List[int] = betterproto.int64_field(1)
-    baz_repeat: List[bool] = betterproto.bool_field(2)
+class TestRepeatedMessage(bananaproto.Message):
+    foo_repeat: List[str] = bananaproto.string_field(0)
+    bar_repeat: List[int] = bananaproto.int64_field(1)
+    baz_repeat: List[bool] = bananaproto.bool_field(2)
 
 
 class BenchMessage:
@@ -70,10 +70,10 @@ class BenchMessage:
         """Overhead in class definition."""
 
         @dataclass
-        class Message(betterproto.Message):
-            foo: int = betterproto.uint32_field(0)
-            bar: str = betterproto.string_field(1)
-            baz: float = betterproto.float_field(2)
+        class Message(bananaproto.Message):
+            foo: int = bananaproto.uint32_field(0)
+            bar: str = bananaproto.string_field(1)
+            baz: float = bananaproto.float_field(2)
 
     def time_instantiation(self):
         """Time instantiation"""

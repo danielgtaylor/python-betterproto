@@ -1,31 +1,31 @@
-.. currentmodule:: betterproto
+.. currentmodule:: bananaproto
 
 API reference
 =============
 
-The following document outlines betterproto's api. **None** of these classes should be
+The following document outlines bananaproto's api. **None** of these classes should be
 extended by the user manually.
 
 
 Message
 --------
 
-.. autoclass:: betterproto.Message
+.. autoclass:: bananaproto.Message
     :members:
     :special-members: __bytes__, __bool__
 
 
-.. autofunction:: betterproto.serialized_on_wire
+.. autofunction:: bananaproto.serialized_on_wire
 
-.. autofunction:: betterproto.which_one_of
+.. autofunction:: bananaproto.which_one_of
 
 
 Enumerations
 -------------
 
-.. autoclass:: betterproto.Enum()
+.. autoclass:: bananaproto.Enum()
     :members:
 
 
-.. autoclass:: betterproto.Casing()
+.. autoclass:: bananaproto.Casing()
     :members:

@@ -1,6 +1,6 @@
 import inspect
 
-from tests.output_betterproto.service_uppercase import TestStub
+from tests.output_bananaproto.service_uppercase import TestStub
 
 
 def test_parameters():

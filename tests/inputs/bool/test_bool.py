@@ -1,7 +1,7 @@
 import pytest
 
-from tests.output_betterproto.bool import Test
-from tests.output_betterproto_pydantic.bool import Test as TestPyd
+from tests.output_bananaproto.bool import Test
+from tests.output_bananaproto_pydantic.bool import Test as TestPyd
 
 
 def test_value():

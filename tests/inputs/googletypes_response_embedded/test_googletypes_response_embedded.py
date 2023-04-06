@@ -1,7 +1,7 @@
 import pytest
 
 from tests.mocks import MockChannel
-from tests.output_betterproto.googletypes_response_embedded import (
+from tests.output_bananaproto.googletypes_response_embedded import (
     Input,
     Output,
     TestStub,

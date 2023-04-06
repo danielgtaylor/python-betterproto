@@ -48,19 +48,19 @@ from typing import (
     Union,
 )
 
-import betterproto
-from betterproto import which_one_of
-from betterproto.casing import sanitize_name
-from betterproto.compile.importing import (
+import bananaproto
+from bananaproto import which_one_of
+from bananaproto.casing import sanitize_name
+from bananaproto.compile.importing import (
     get_type_reference,
     parse_source_type_name,
 )
-from betterproto.compile.naming import (
+from bananaproto.compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
     pythonize_method_name,
 )
-from betterproto.lib.google.protobuf import (
+from bananaproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
     Field,
@@ -70,7 +70,7 @@ from betterproto.lib.google.protobuf import (
     FileDescriptorProto,
     MethodDescriptorProto,
 )
-from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
+from bananaproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
 from ..casing import sanitize_name
 from ..compile.importing import (
@@ -139,13 +139,13 @@ def monkey_patch_oneof_index():
     """
     object.__setattr__(
         FieldDescriptorProto.__dataclass_fields__["oneof_index"].metadata[
-            "betterproto"
+            "bananaproto"
         ],
         "group",
         "oneof_index",
     )
     object.__setattr__(
-        Field.__dataclass_fields__["oneof_index"].metadata["betterproto"],
+        Field.__dataclass_fields__["oneof_index"].metadata["bananaproto"],
         "group",
         "oneof_index",
     )
@@ -178,7 +178,7 @@ class ProtoContentBase:
     source_file: FileDescriptorProto
     path: List[int]
     comment_indent: int = 4
-    parent: Union["betterproto.Message", "OutputTemplate"]
+    parent: Union["bananaproto.Message", "OutputTemplate"]
 
     __dataclass_fields__: Dict[str, object]
 
@@ -376,7 +376,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
     True if proto_field_obj is a OneOf, otherwise False.
 
     .. warning::
-        Becuase the message from protoc is defined in proto2, and betterproto works with
+        Becuase the message from protoc is defined in proto2, and bananaproto works with
         proto3, and interpreting the FieldDescriptorProto.oneof_index field requires
         distinguishing between default and unset values (which proto3 doesn't support),
         we have to hack the generated FieldDescriptorProto class for this to work.
@@ -405,17 +405,17 @@ class FieldCompiler(MessageCompiler):
         name = f"{self.py_name}"
         annotations = f": {self.annotation}"
         field_args = ", ".join(
-            ([""] + self.betterproto_field_args) if self.betterproto_field_args else []
+            ([""] + self.bananaproto_field_args) if self.bananaproto_field_args else []
         )
-        betterproto_field_type = (
-            f"betterproto.{self.field_type}_field({self.proto_obj.number}{field_args})"
+        bananaproto_field_type = (
+            f"bananaproto.{self.field_type}_field({self.proto_obj.number}{field_args})"
         )
         if self.py_name in dir(builtins):
             self.parent.builtins_types.add(self.py_name)
-        return f"{name}{annotations} = {betterproto_field_type}"
+        return f"{name}{annotations} = {bananaproto_field_type}"
 
     @property
-    def betterproto_field_args(self) -> List[str]:
+    def bananaproto_field_args(self) -> List[str]:
         args = []
         if self.field_wraps:
             args.append(f"wraps={self.field_wraps}")
@@ -464,14 +464,14 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def field_wraps(self) -> Optional[str]:
-        """Returns betterproto wrapped field type or None."""
+        """Returns bananaproto wrapped field type or None."""
         match_wrapper = re.match(
             r"\.google\.protobuf\.(.+)Value$", self.proto_obj.type_name
         )
         if match_wrapper:
             wrapped_type = "TYPE_" + match_wrapper.group(1).upper()
-            if hasattr(betterproto, wrapped_type):
-                return f"betterproto.{wrapped_type}"
+            if hasattr(bananaproto, wrapped_type):
+                return f"bananaproto.{wrapped_type}"
         return None
 
     @property
@@ -581,8 +581,8 @@ class FieldCompiler(MessageCompiler):
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
     @property
-    def betterproto_field_args(self) -> List[str]:
-        args = super().betterproto_field_args
+    def bananaproto_field_args(self) -> List[str]:
+        args = super().bananaproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
         args.append(f'group="{group}"')
         return args
@@ -635,8 +635,8 @@ class MapEntryCompiler(FieldCompiler):
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     @property
-    def betterproto_field_args(self) -> List[str]:
-        return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+    def bananaproto_field_args(self) -> List[str]:
+        return [f"bananaproto.{self.proto_k_type}", f"bananaproto.{self.proto_v_type}"]
 
     @property
     def field_type(self) -> str:
@@ -723,6 +723,8 @@ class ServiceMethodCompiler(ProtoContentBase):
         self.parent.methods.append(self)
 
         # Check for imports
+        if "Optional" in self.py_input_message_type:
+            self.output_file.typing_imports.add("Optional")
         if "Optional" in self.py_output_message_type:
             self.output_file.typing_imports.add("Optional")
 
@@ -740,7 +742,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         self.output_file.typing_imports.add("Optional")
         self.output_file.imports_type_checking_only.add("import grpclib.server")
         self.output_file.imports_type_checking_only.add(
-            "from betterproto.grpc.grpclib_client import MetadataLike"
+            "from bananaproto.grpc.grpclib_client import MetadataLike"
         )
         self.output_file.imports_type_checking_only.add(
             "from grpclib.metadata import Deadline"

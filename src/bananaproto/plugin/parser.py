@@ -8,14 +8,14 @@ from typing import (
     Union,
 )
 
-from betterproto.lib.google.protobuf import (
+from bananaproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
     FieldDescriptorProto,
     FileDescriptorProto,
     ServiceDescriptorProto,
 )
-from betterproto.lib.google.protobuf.compiler import (
+from bananaproto.lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponse,
     CodeGeneratorResponseFeature,
@@ -159,7 +159,6 @@ def _make_one_of_field_compiler(
     proto_obj: "FieldDescriptorProto",
     path: List[int],
 ) -> FieldCompiler:
-
     pydantic = output_package.pydantic_dataclasses
     Cls = PydanticOneOfFieldCompiler if pydantic else OneOfFieldCompiler
     return Cls(

@@ -4,13 +4,13 @@ from typing import AsyncIterator
 
 import pytest
 
-import betterproto
-from betterproto.grpc.util.async_channel import AsyncChannel
+import bananaproto
+from bananaproto.grpc.util.async_channel import AsyncChannel
 
 
 @dataclass
-class Message(betterproto.Message):
-    body: str = betterproto.string_field(1)
+class Message(bananaproto.Message):
+    body: str = bananaproto.string_field(1)
 
 
 @pytest.fixture

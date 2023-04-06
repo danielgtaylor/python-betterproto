@@ -2,16 +2,16 @@ import os.path
 
 
 try:
-    # betterproto[compiler] specific dependencies
+    # bananaproto[compiler] specific dependencies
     import black
     import isort.api
     import jinja2
 except ImportError as err:
     print(
         "\033[31m"
-        f"Unable to import `{err.name}` from betterproto plugin! "
-        "Please ensure that you've installed betterproto as "
-        '`pip install "betterproto[compiler]"` so that compiler dependencies '
+        f"Unable to import `{err.name}` from bananaproto plugin! "
+        "Please ensure that you've installed bananaproto as "
+        '`pip install "bananaproto[compiler]"` so that compiler dependencies '
         "are included."
         "\033[0m"
     )
@@ -21,7 +21,6 @@ from .models import OutputTemplate
 
 
 def outputfile_compiler(output_file: OutputTemplate) -> str:
-
     templates_folder = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "templates")
     )
@@ -43,7 +42,7 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
         lines_after_imports=2,
         quiet=True,
         force_grid_wrap=2,
-        known_third_party=["grpclib", "betterproto"],
+        known_third_party=["grpclib", "bananaproto"],
     )
     return black.format_str(
         src_contents=code,

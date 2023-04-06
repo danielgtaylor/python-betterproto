@@ -3,7 +3,7 @@ from datetime import (
     timedelta,
 )
 
-from tests.output_betterproto.repeated_duration_timestamp import Test
+from tests.output_bananaproto.repeated_duration_timestamp import Test
 
 
 def test_roundtrip():

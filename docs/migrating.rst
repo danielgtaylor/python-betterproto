@@ -4,19 +4,19 @@ Migrating Guide
 Google's protocolbuffers
 ------------------------
 
-betterproto has a mostly 1 to 1 drop in replacement for Google's protocolbuffers (after
+bananaproto has a mostly 1 to 1 drop in replacement for Google's protocolbuffers (after
 regenerating your protobufs of course) although there are some minor differences.
 
 .. note::
 
-    betterproto implements the same basic methods including:
+    bananaproto implements the same basic methods including:
 
-        - :meth:`betterproto.Message.FromString`
-        - :meth:`betterproto.Message.SerializeToString`
+        - :meth:`bananaproto.Message.FromString`
+        - :meth:`bananaproto.Message.SerializeToString`
 
     for compatibility purposes, however it is important to note that these are
-    effectively aliases for :meth:`betterproto.Message.parse` and
-    :meth:`betterproto.Message.__bytes__` respectively.
+    effectively aliases for :meth:`bananaproto.Message.parse` and
+    :meth:`bananaproto.Message.__bytes__` respectively.
 
 
 Determining if a message was sent
@@ -26,7 +26,7 @@ Sometimes it is useful to be able to determine whether a message has been sent o
 the wire. This is how the Google wrapper types work to let you know whether a value is
 unset (set as the default/zero value), or set as something else, for example.
 
-Use ``betterproto.serialized_on_wire(message)`` to determine if it was sent. This is
+Use ``bananaproto.serialized_on_wire(message)`` to determine if it was sent. This is
 a little bit different from the official Google generated Python code, and it lives
 outside the generated ``Message`` class to prevent name clashes. Note that it only
 supports Proto 3 and thus can only be used to check if ``Message`` fields are set.
@@ -39,7 +39,7 @@ You cannot check if a scalar was sent on the wire.
     True
 
     # New way (this project)
-    >>> betterproto.serialized_on_wire(mymessage.myfield)
+    >>> bananaproto.serialized_on_wire(mymessage.myfield)
     True
 
 
@@ -61,7 +61,7 @@ may be set at a given time. For example, given the proto:
       }
     }
 
-You can use ``betterproto.which_one_of(message, group_name)`` to determine which of the
+You can use ``bananaproto.which_one_of(message, group_name)`` to determine which of the
 fields was set. It returns a tuple of the field name and value, or a blank string and
 ``None`` if unset. Again this is a little different than the official Google code
 generator:
@@ -73,7 +73,7 @@ generator:
     "foo"
 
     # New way (this project)
-    >>> betterproto.which_one_of(message, "group")
+    >>> bananaproto.which_one_of(message, "group")
     ("foo", "foo's value")
 
 
@@ -94,7 +94,7 @@ mapping for these is as follows:
 +-------------------------------+-----------------------------------------------+--------------------------+
 | ``google.protobuf.*Value``    | ``Optional[...]``/``None``                    | ``None``                 |
 +-------------------------------+-----------------------------------------------+--------------------------+
-| ``google.protobuf.*``         | ``betterproto.lib.google.protobuf.*``         | ``None``                 |
+| ``google.protobuf.*``         | ``bananaproto.lib.google.protobuf.*``         | ``None``                 |
 +-------------------------------+-----------------------------------------------+--------------------------+
 
 
