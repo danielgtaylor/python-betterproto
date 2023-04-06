@@ -520,6 +520,17 @@ protoc \
 - [x] Automate running tests
 - [ ] Cleanup!
 
+### Banana TODO
+
+- [x] Fix input types imports
+- [x] Non-string type hint
+- [ ] Add *Reflections* chapter to README
+- [ ] Return original folder structure
+  - [ ] Automatically import *_pb2 for reflections
+- [ ] Pass metadata to Service methods
+- [ ] Fix comments in generated code
+- [ ] Omit Empty argument from Stub and Service
+
 ## License
 
 Copyright © 2019 Daniel G. Taylor
