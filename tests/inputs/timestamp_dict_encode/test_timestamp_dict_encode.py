@@ -1,8 +1,11 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 
 import pytest
 
 from tests.output_betterproto.timestamp_dict_encode import Test
+
 
 # Current World Timezone range (UTC-12 to UTC+14)
 MIN_UTC_OFFSET_MIN = -12 * 60
