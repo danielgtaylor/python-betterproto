@@ -374,10 +374,10 @@ when calling the protobuf compiler:
 
 
 ```
-protoc -I . --custom_opt=pydantic_dataclasses --python_betterproto_out=lib example.proto
+protoc -I . --python_betterproto_opt=pydantic_dataclasses --python_betterproto_out=lib example.proto
 ```
 
-With the important change being `--custom_opt=pydantic_dataclasses`. This will
+With the important change being `--python_betterproto_opt=pydantic_dataclasses`. This will
 swap the dataclass implementation from the builtin python dataclass to the
 pydantic dataclass. You must have pydantic as a dependency in your project for
 this to work.
