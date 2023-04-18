@@ -386,7 +386,6 @@ this to work.
 
 ## Development
 
-- _Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!_
 - _See how you can help &rarr; [Contributing](.github/CONTRIBUTING.md)_
 
 ### Requirements
