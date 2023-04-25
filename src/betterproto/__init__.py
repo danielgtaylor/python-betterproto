@@ -704,6 +704,10 @@ class Message(ABC):
             return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
+    
+        if hasattr(value, "_serialized_on_wire") and hasattr(value, "_betterproto") and len(value._betterproto.meta_by_field_name) == 0:
+            value._serialized_on_wire = True
+    
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
             self.__dict__["_serialized_on_wire"] = True
