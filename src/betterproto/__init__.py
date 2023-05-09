@@ -864,7 +864,6 @@ class Message(ABC):
     def __setstate__(self, pickled_bytes):
         return self.parse(pickled_bytes)
 
-
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
         return cls._type_hints()[field_name]
@@ -1483,7 +1482,6 @@ class Message(ABC):
         field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
 
         for group, field_set in group_to_one_ofs.items():
-
             if len(field_set) == 1:
                 (field,) = field_set
                 field_name = field.name

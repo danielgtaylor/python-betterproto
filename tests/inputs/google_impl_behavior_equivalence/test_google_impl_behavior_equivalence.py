@@ -13,7 +13,6 @@ from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavio
 
 
 def test_oneof_serializes_similar_to_google_oneof():
-
     tests = [
         (Test(string="abc"), ReferenceTest(string="abc")),
         (Test(integer=2), ReferenceTest(integer=2)),
@@ -30,7 +29,6 @@ def test_oneof_serializes_similar_to_google_oneof():
 
 
 def test_bytes_are_the_same_for_oneof():
-
     message = Test(string="")
     message_reference = ReferenceTest(string="")
 
