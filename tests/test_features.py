@@ -1,4 +1,5 @@
 import json
+import pickle
 from copy import (
     copy,
     deepcopy,
@@ -687,3 +688,16 @@ def test_is_set():
     assert not Spam().is_set("bar")
     assert Spam(foo=True).is_set("foo")
     assert Spam(foo=True, bar=0).is_set("bar")
+
+
+@dataclass
+class PickleMessage(betterproto.Message):
+    foo: bool = betterproto.bool_field(1)
+    bar: Optional[int] = betterproto.int32_field(2, optional=True)
+
+
+def test_pickle():
+    deserialized = pickle.loads(pickle.dumps(PickleMessage()))
+
+    assert deserialized.foo is False
+    assert deserialized.bar is None
