@@ -1,4 +1,7 @@
-from pkg_resources import get_distribution
+try:
+    from importlib import metadata
+except ImportError:  # for Python<3.8
+    import importlib_metadata as metadata  # type: ignore
 
 
-__version__ = get_distribution("betterproto").version
+__version__ = metadata.version("betterproto")
