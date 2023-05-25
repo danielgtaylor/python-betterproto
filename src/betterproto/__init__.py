@@ -704,8 +704,7 @@ class Message(ABC):
             return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
-    
-        if hasattr(value, "_serialized_on_wire") and hasattr(value, "_betterproto") and len(value._betterproto.meta_by_field_name) == 0:
+        if isinstance(value, Message) and hasattr(value, "_betterproto") and not len(value._betterproto.meta_by_field_name):
             value._serialized_on_wire = True
     
         if attr != "_serialized_on_wire":
