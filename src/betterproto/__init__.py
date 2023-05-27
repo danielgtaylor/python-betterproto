@@ -1373,6 +1373,9 @@ class Message(ABC):
                     value = [i.to_pydict(casing, include_default_values) for i in value]
                     if value or include_default_values:
                         output[cased_name] = value
+                elif value is None:
+                    if include_default_values:
+                        output[cased_name] = None
                 elif (
                     value._serialized_on_wire
                     or include_default_values
