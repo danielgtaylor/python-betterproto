@@ -1344,8 +1344,7 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
-            if self.__raw_get(field_name) is PLACEHOLDER and \
-                not include_default_values:
+            if self.__raw_get(field_name) is PLACEHOLDER and not include_default_values:
                 continue
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
@@ -1473,7 +1472,6 @@ class Message(ABC):
         field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
 
         for group, field_set in group_to_one_ofs.items():
-
             if len(field_set) == 1:
                 (field,) = field_set
                 field_name = field.name
