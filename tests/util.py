@@ -18,6 +18,8 @@ from typing import (
     Union,
 )
 
+GetProtocArgs = Callable[[str], List[str]]
+
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -26,6 +28,7 @@ inputs_path = root_path.joinpath("inputs")
 output_path_reference = root_path.joinpath("output_reference")
 output_path_betterproto = root_path.joinpath("output_betterproto")
 output_path_betterproto_pydantic = root_path.joinpath("output_betterproto_pydantic")
+output_path_betterproto_twirp = root_path.joinpath("output_betterproto_twirp")
 
 
 def get_files(path, suffix: str) -> Generator[str, None, None]:
@@ -39,57 +42,49 @@ def get_directories(path):
         yield from directories
 
 
+def get_plugin_path():
+    plugin_path = Path("src/betterproto/plugin/main.py")
+
+    if "Win" in platform.system():
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="UTF-8", suffix=".bat", delete=False
+        ) as tf:
+            # See https://stackoverflow.com/a/42622705
+            tf.writelines(
+                [
+                    "@echo off",
+                    f"\nchdir {os.getcwd()}",
+                    f"\n{sys.executable} -u {plugin_path.as_posix()}",
+                ]
+            )
+
+            tf.flush()
+
+            plugin_path = Path(tf.name)
+            atexit.register(os.remove, plugin_path)
+
+    return plugin_path
+
+
 async def protoc(
     path: Union[str, Path],
     output_dir: Union[str, Path],
-    reference: bool = False,
-    pydantic_dataclasses: bool = False,
+    get_args: Optional[GetProtocArgs] = None,
 ):
     path: Path = Path(path).resolve()
     output_dir: Path = Path(output_dir).resolve()
-    python_out_option: str = "python_betterproto_out" if not reference else "python_out"
+    plugin_path = get_plugin_path()
 
-    if pydantic_dataclasses:
-        plugin_path = Path("src/betterproto/plugin/main.py")
+    command = [
+        sys.executable,
+        "-m",
+        "grpc.tools.protoc",
+        f"--proto_path={path.as_posix()}",
+        f"--plugin=protoc-gen-python_betterproto={plugin_path.as_posix()}",
+        *(get_args(output_dir.as_posix()) if get_args else []),
+        *[p.as_posix() for p in path.glob("*.proto")],
+    ]
 
-        if "Win" in platform.system():
-            with tempfile.NamedTemporaryFile(
-                "w", encoding="UTF-8", suffix=".bat", delete=False
-            ) as tf:
-                # See https://stackoverflow.com/a/42622705
-                tf.writelines(
-                    [
-                        "@echo off",
-                        f"\nchdir {os.getcwd()}",
-                        f"\n{sys.executable} -u {plugin_path.as_posix()}",
-                    ]
-                )
-
-                tf.flush()
-
-                plugin_path = Path(tf.name)
-                atexit.register(os.remove, plugin_path)
-
-        command = [
-            sys.executable,
-            "-m",
-            "grpc.tools.protoc",
-            f"--plugin=protoc-gen-custom={plugin_path.as_posix()}",
-            "--experimental_allow_proto3_optional",
-            "--custom_opt=pydantic_dataclasses",
-            f"--proto_path={path.as_posix()}",
-            f"--custom_out={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("*.proto")],
-        ]
-    else:
-        command = [
-            sys.executable,
-            "-m",
-            "grpc.tools.protoc",
-            f"--proto_path={path.as_posix()}",
-            f"--{python_out_option}={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("*.proto")],
-        ]
     proc = await asyncio.create_subprocess_exec(
         *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )

@@ -4,14 +4,17 @@ import os
 import platform
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Set
 
 from tests.util import (
+    GetProtocArgs,
     get_directories,
     inputs_path,
     output_path_betterproto,
     output_path_betterproto_pydantic,
+    output_path_betterproto_twirp,
     output_path_reference,
     protoc,
 )
@@ -20,6 +23,13 @@ from tests.util import (
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+
+
+@dataclass
+class OutputConfig:
+    label: str
+    output_path: str
+    protoc_args: GetProtocArgs
 
 
 def print_success(message: str):
@@ -87,78 +97,72 @@ async def generate_test_case_output(
     Returns the max of the subprocess return values
     """
 
-    test_case_output_path_reference = output_path_reference.joinpath(test_case_name)
-    test_case_output_path_betterproto = output_path_betterproto
-    test_case_output_path_betterproto_pyd = output_path_betterproto_pydantic
-
-    os.makedirs(test_case_output_path_reference, exist_ok=True)
-    os.makedirs(test_case_output_path_betterproto, exist_ok=True)
-    os.makedirs(test_case_output_path_betterproto_pyd, exist_ok=True)
-
-    clear_directory(test_case_output_path_reference)
-    clear_directory(test_case_output_path_betterproto)
-
-    (
-        (ref_out, ref_err, ref_code),
-        (plg_out, plg_err, plg_code),
-        (plg_out_pyd, plg_err_pyd, plg_code_pyd),
-    ) = await asyncio.gather(
-        protoc(test_case_input_path, test_case_output_path_reference, True),
-        protoc(test_case_input_path, test_case_output_path_betterproto, False),
-        protoc(
-            test_case_input_path, test_case_output_path_betterproto_pyd, False, True
+    output_configs = [
+        OutputConfig(
+            label='reference output',
+            output_path=output_path_reference.joinpath(test_case_name),
+            protoc_args=lambda output_dir: [
+                f"--python_out={output_dir}",
+            ],
         ),
-    )
+        OutputConfig(
+            label='plugin output',
+            output_path=output_path_betterproto,
+            protoc_args=lambda output_dir: [
+                f"--python_betterproto_out={output_dir}",
+            ],
+        ),
+        OutputConfig(
+            label='plugin (pydantic compatible)',
+            output_path=output_path_betterproto_pydantic,
+            protoc_args=lambda output_dir: [
+                "--experimental_allow_proto3_optional",
+                f"--python_betterproto_out={output_dir}",
+                "--python_betterproto_opt=pydantic_dataclasses",
+            ],
+        ),
+        OutputConfig(
+            label='plugin (twirp service impl)',
+            output_path=output_path_betterproto_twirp,
+            protoc_args=lambda output_dir: [
+                f"--python_betterproto_out={output_dir}",
+                "--python_betterproto_opt=service_impl=twirp",
+            ],
+        ),
+    ]
 
-    if ref_code == 0:
-        print_success(f"Generated reference output for {test_case_name!r}")
-    else:
-        print_error(f"Failed to generate reference output for {test_case_name!r}")
+    protoc_calls = []
+    for config in output_configs:
+        os.makedirs(config.output_path, exist_ok=True)
+        clear_directory(config.output_path)
+        protoc_calls.append(
+            protoc(test_case_input_path, config.output_path, config.protoc_args),
+        )
 
-    if verbose:
-        if ref_out:
-            print("Reference stdout:")
-            sys.stdout.buffer.write(ref_out)
-            sys.stdout.buffer.flush()
+    results = await asyncio.gather(*protoc_calls)
 
-        if ref_err:
-            print("Reference stderr:")
-            sys.stderr.buffer.write(ref_err)
-            sys.stderr.buffer.flush()
+    max_status = 0
+    for result, config in zip(results, output_configs):
+        protoc_stdout, protoc_stderr, protoc_status = result
+        max_status = max(max_status, protoc_status)
 
-    if plg_code == 0:
-        print_success(f"Generated plugin output for {test_case_name!r}")
-    else:
-        print_error(f"Failed to generate plugin output for {test_case_name!r}")
+        if protoc_status == 0:
+            print_success(f"Generated {config.label} output for {test_case_name!r}")
+        else:
+            print_error(f"Failed to generate {config.label} output for {test_case_name!r}")
 
-    if verbose:
-        if plg_out:
-            print("Plugin stdout:")
-            sys.stdout.buffer.write(plg_out)
-            sys.stdout.buffer.flush()
+        if verbose:
+            if protoc_stdout:
+                print(f"{config.label} stdout:")
+                sys.stdout.buffer.write(protoc_stdout)
+                sys.stdout.buffer.flush()
 
-        if plg_err:
-            print("Plugin stderr:")
-            sys.stderr.buffer.write(plg_err)
-            sys.stderr.buffer.flush()
+            if protoc_stderr:
+                print(f"{config.label} stderr:")
+                sys.stderr.buffer.write(protoc_stderr)
+                sys.stderr.buffer.flush()
 
-    if plg_code_pyd == 0:
-        print_success(f"Generated plugin (pydantic compatible) output for {test_case_name!r}")
-    else:
-        print_error(f"Failed to generate plugin (pydantic compatible) output for {test_case_name!r}")
-
-    if verbose:
-        if plg_out_pyd:
-            print("Plugin stdout:")
-            sys.stdout.buffer.write(plg_out_pyd)
-            sys.stdout.buffer.flush()
-
-        if plg_err_pyd:
-            print("Plugin stderr:")
-            sys.stderr.buffer.write(plg_err_pyd)
-            sys.stderr.buffer.flush()
-
-    return max(ref_code, plg_code, plg_code_pyd)
+    return max_status
 
 
 HELP = "\n".join(

@@ -61,10 +61,12 @@ class {{ service.py_name }}Server(TwirpServer):
 class {{ service.py_name }}Client(TwirpClient):
     {% if service.comment %}
 {{ service.comment }}
+    {% elif not service.methods %}
+    pass
     {% endif %}
 
     {% for method in service.methods %}
-    def {{ method.proto_name }}(self, *args, ctx, request, server_path_prefix="/twirp", **kwargs):
+    def {{ method.py_name }}(self, *args, ctx, request, server_path_prefix="/twirp", **kwargs):
         return self._make_request(
         url=f"{server_path_prefix}/{{ output_file.package }}.{{ service.proto_name }}/{{ method.proto_name }}",
             ctx=ctx,
