@@ -251,7 +251,7 @@ class OutputTemplate:
     messages: List["MessageCompiler"] = field(default_factory=list)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
-    imports_type_checking_only: Set[str] = field(default_factory=set)
+    service_impl: str = "grpc"
     pydantic_dataclasses: bool = False
     output: bool = True
 
@@ -722,10 +722,6 @@ class ServiceMethodCompiler(ProtoContentBase):
         # Add method to service
         self.parent.methods.append(self)
 
-        # Check for imports
-        if "Optional" in self.py_output_message_type:
-            self.output_file.typing_imports.add("Optional")
-
         # Check for Async imports
         if self.client_streaming:
             self.output_file.typing_imports.add("AsyncIterable")
@@ -736,15 +732,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         if self.client_streaming or self.server_streaming:
             self.output_file.typing_imports.add("AsyncIterator")
 
-        # add imports required for request arguments timeout, deadline and metadata
         self.output_file.typing_imports.add("Optional")
-        self.output_file.imports_type_checking_only.add("import grpclib.server")
-        self.output_file.imports_type_checking_only.add(
-            "from betterproto.grpc.grpclib_client import MetadataLike"
-        )
-        self.output_file.imports_type_checking_only.add(
-            "from grpclib.metadata import Deadline"
-        )
 
         super().__post_init__()  # check for unset fields
 

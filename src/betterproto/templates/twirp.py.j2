@@ -1,0 +1,71 @@
+{% macro render_imports(output_file) %}
+import twirp.errors
+import twirp.exceptions
+import twirp.context
+
+from twirp.base import Endpoint
+from twirp.client import TwirpClient
+from twirp.server import TwirpServer
+{% endmacro %}
+
+
+{% macro render_services(output_file) %}
+{% for service in output_file.services %}
+class {{ service.py_name }}Base:
+    {% if service.comment %}
+    {{ service.comment }}
+    {% elif not service.methods %}
+    pass
+    {% endif %}
+
+    {% for method in service.methods %}
+    def {{ method.py_name }}(
+        self,
+        context: twirp.context.Context,
+        request: "{{ method.py_input_message_type }}",
+        ) -> "{{ method.py_output_message_type }}":
+            raise twirp.exceptions.TwirpServerException(
+                code=twirp.errors.Errors.Unimplemented,
+                message=f"Not implemented"
+            )
+
+    {% endfor %}
+
+class {{ service.py_name }}Server(TwirpServer):
+    def __init__(self, *args, service, server_path_prefix="/twirp"):
+        super().__init__(service=service)
+        self._prefix = f"{server_path_prefix}/{{ output_file.package }}.{{ service.proto_name }}"
+        self._endpoints = {
+            {% for method in service.methods %}
+            "{{ method.proto_name }}": Endpoint(
+                service_name="{{ service.proto_name }}",
+                name="{{ method.proto_name }}",
+                function=getattr(service, "{{ method.py_name }}"),
+                input={{ method.py_input_message_type }},
+                output={{ method.py_output_message_type }},
+            ),
+            {% endfor %}
+        }
+{% endfor %}
+{% endmacro %}
+
+
+{% macro render_clients(output_file) %}
+{% for service in output_file.services %}
+class {{ service.py_name }}Client(TwirpClient):
+    {% if service.comment %}
+{{ service.comment }}
+    {% endif %}
+
+    {% for method in service.methods %}
+    def {{ method.proto_name }}(self, *args, ctx, request, server_path_prefix="/twirp", **kwargs):
+        return self._make_request(
+        url=f"{server_path_prefix}/{{ output_file.package }}.{{ service.proto_name }}/{{ method.proto_name }}",
+            ctx=ctx,
+            request=request,
+            response_obj={{ method.py_output_message_type }},
+            **kwargs,
+        )
+    {% endfor %}
+{% endfor %}
+{% endmacro %}

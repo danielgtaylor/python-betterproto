@@ -1,0 +1,162 @@
+{% macro render_imports(output_file) %}
+from betterproto.grpc.grpclib_server import ServiceBase
+import grpclib
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
+{% endmacro %}
+
+
+{% macro render_services(output_file) %}
+{% for service in output_file.services %}
+class {{ service.py_name }}Stub(betterproto.ServiceStub):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% elif not service.methods %}
+    pass
+    {% endif %}
+    {% for method in service.methods %}
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
+        {%- endif -%}
+            ,
+            *
+            , timeout: Optional[float] = None
+            , deadline: Optional["Deadline"] = None
+            , metadata: Optional["MetadataLike"] = None
+            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        {% if method.server_streaming %}
+            {% if method.client_streaming %}
+        async for response in self._stream_stream(
+            "{{ method.route }}",
+            {{ method.py_input_message_param }}_iterator,
+            {{ method.py_input_message_type }},
+            {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        ):
+            yield response
+            {% else %}{# i.e. not client streaming #}
+        async for response in self._unary_stream(
+            "{{ method.route }}",
+            {{ method.py_input_message_param }},
+            {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        ):
+            yield response
+
+            {% endif %}{# if client streaming #}
+        {% else %}{# i.e. not server streaming #}
+            {% if method.client_streaming %}
+        return await self._stream_unary(
+            "{{ method.route }}",
+            {{ method.py_input_message_param }}_iterator,
+            {{ method.py_input_message_type }},
+            {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+            {% else %}{# i.e. not client streaming #}
+        return await self._unary_unary(
+            "{{ method.route }}",
+            {{ method.py_input_message_param }},
+            {{ method.py_output_message_type.strip('"') }},
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+            {% endif %}{# client streaming #}
+        {% endif %}
+
+    {% endfor %}
+{% endfor %}
+{% endmacro %}
+
+
+{% macro render_clients(output_file) %}
+{% for service in output_file.services %}
+class {{ service.py_name }}Base(ServiceBase):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% endif %}
+
+    {% for method in service.methods %}
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , {{ method.py_input_message_param }}_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
+        {%- endif -%}
+            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+        {% if method.server_streaming %}
+        yield {{ method.py_output_message_type }}()
+        {% endif %}
+
+    {% endfor %}
+
+    {% for method in service.methods %}
+    async def __rpc_{{ method.py_name }}(self, stream: "grpclib.server.Stream[{{ method.py_input_message_type }}, {{ method.py_output_message_type }}]") -> None:
+        {% if not method.client_streaming %}
+        request = await stream.recv_message()
+        {% else %}
+        request = stream.__aiter__()
+        {% endif %}
+        {% if not method.server_streaming %}
+        response = await self.{{ method.py_name }}(request)
+        await stream.send_message(response)
+        {% else %}
+        await self._call_rpc_handler_server_stream(
+            self.{{ method.py_name }},
+            stream,
+            request,
+        )
+        {% endif %}
+
+    {% endfor %}
+
+    def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
+        return {
+        {% for method in service.methods %}
+        "{{ method.route }}": grpclib.const.Handler(
+            self.__rpc_{{ method.py_name }},
+            {% if not method.client_streaming and not method.server_streaming %}
+            grpclib.const.Cardinality.UNARY_UNARY,
+            {% elif not method.client_streaming and method.server_streaming %}
+            grpclib.const.Cardinality.UNARY_STREAM,
+            {% elif method.client_streaming and not method.server_streaming %}
+            grpclib.const.Cardinality.STREAM_UNARY,
+            {% else %}
+            grpclib.const.Cardinality.STREAM_STREAM,
+            {% endif %}
+            {{ method.py_input_message_type }},
+            {{ method.py_output_message_type }},
+        ),
+        {% endfor %}
+        }
+
+{% endfor %}
+{% endmacro %}

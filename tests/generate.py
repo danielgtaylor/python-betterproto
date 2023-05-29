@@ -22,6 +22,14 @@ from tests.util import (
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
 
+def print_success(message: str):
+    print(f"\033[32;1;4m{message}\033[0m")
+
+
+def print_error(message: str):
+    print(f"\033[31;1;4m{message}\033[0m")
+
+
 def clear_directory(dir_path: Path):
     for file_or_directory in dir_path.glob("*"):
         if file_or_directory.is_dir():
@@ -103,11 +111,9 @@ async def generate_test_case_output(
     )
 
     if ref_code == 0:
-        print(f"\033[31;1;4mGenerated reference output for {test_case_name!r}\033[0m")
+        print_success(f"Generated reference output for {test_case_name!r}")
     else:
-        print(
-            f"\033[31;1;4mFailed to generate reference output for {test_case_name!r}\033[0m"
-        )
+        print_error(f"Failed to generate reference output for {test_case_name!r}")
 
     if verbose:
         if ref_out:
@@ -121,11 +127,9 @@ async def generate_test_case_output(
             sys.stderr.buffer.flush()
 
     if plg_code == 0:
-        print(f"\033[31;1;4mGenerated plugin output for {test_case_name!r}\033[0m")
+        print_success(f"Generated plugin output for {test_case_name!r}")
     else:
-        print(
-            f"\033[31;1;4mFailed to generate plugin output for {test_case_name!r}\033[0m"
-        )
+        print_error(f"Failed to generate plugin output for {test_case_name!r}")
 
     if verbose:
         if plg_out:
@@ -139,13 +143,9 @@ async def generate_test_case_output(
             sys.stderr.buffer.flush()
 
     if plg_code_pyd == 0:
-        print(
-            f"\033[31;1;4mGenerated plugin (pydantic compatible) output for {test_case_name!r}\033[0m"
-        )
+        print_success(f"Generated plugin (pydantic compatible) output for {test_case_name!r}")
     else:
-        print(
-            f"\033[31;1;4mFailed to generate plugin (pydantic compatible) output for {test_case_name!r}\033[0m"
-        )
+        print_error(f"Failed to generate plugin (pydantic compatible) output for {test_case_name!r}")
 
     if verbose:
         if plg_out_pyd:

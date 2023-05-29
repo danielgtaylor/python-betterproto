@@ -66,13 +66,28 @@ The following tests are automatically executed for all cases:
 - [x] Is the generated code compatible with the Google's `grpc_tools.protoc` implementation?
   - _when `.json` is present_ 
 
+## Environment setup
+
+Before running the tests, you will need to do the following:
+
+```sh
+# Shortcut for running poe
+alias poe="poetry run poe"
+
+# Install protoc-gen-python_betterproto to your path
+poetry install --extras=compiler
+
+# (opational) Increase the file limit for generating code
+ulimit -n 4096
+```
+
 ## Running the tests
 
-- `pipenv run generate`  
+- `poe generate`  
   This generates:
   - `betterproto/tests/output_betterproto` &mdash; *the plugin generated python classes*
   - `betterproto/tests/output_reference` &mdash; *reference implementation classes*
-- `pipenv run test`
+- `poe test`
 
 ## Intentionally Failing tests
 
