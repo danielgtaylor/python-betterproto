@@ -6,6 +6,10 @@ import grpclib
 from betterproto.grpc.grpclib_server import ServiceBase
 {% endif %}
 
+{% if output_file.gen_client %}
+from betterproto.grpc.grpclib_client import ServiceStub
+{% endif %}
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -94,7 +98,7 @@ class {{ service.py_name }}Base(ServiceBase):
 
 {% macro render_clients(output_file) %}
 {% for service in output_file.services %}
-class {{ service.py_name }}Stub(betterproto.ServiceStub):
+class {{ service.py_name }}Stub(ServiceStub):
     {% if service.comment %}
 {{ service.comment }}
 

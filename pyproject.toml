@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "betterproto"
 version = "2.0.0b5"
-description = "A better Protobuf / gRPC generator & library"
+description = "A better Protobuf / gRPC / Twirp generator & library"
 authors = ["Daniel G. Taylor <danielgtaylor@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/danielgtaylor/python-betterproto"
-keywords = ["protobuf", "gRPC"]
+keywords = ["protobuf", "gRPC", "Twirp"]
 license = "MIT"
 packages = [
     { include = "betterproto", from = "src" }
@@ -13,15 +13,17 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-black = { version = ">=19.3b0", optional = true }
-grpclib = "^0.4.1"
-jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
+grpclib = { version = "^0.4.1", optional = true }
+twirp = { version = "^0.0.7", optional = true }
+jinja2 = { version = ">=3.0.3", optional = true }
+black = { version = ">=19.3b0", optional = true }
 isort = {version = "^5.11.5", optional = true}
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"
 bpython = "^0.19"
+grpclib = "^0.4.1"
 grpcio-tools = "^1.40.0"
 jinja2 = ">=3.0.3"
 mypy = "^0.930"
@@ -35,6 +37,7 @@ sphinx = "3.1.2"
 sphinx-rtd-theme = "0.5.0"
 tomlkit = "^0.7.0"
 tox = "^3.15.1"
+twirp = "^0.0.7"
 pre-commit = "^2.17.0"
 pydantic = ">=1.8.0"
 
@@ -44,6 +47,8 @@ protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
 compiler = ["black", "isort", "jinja2"]
+grpc = ["grpclib"]
+twirp = ["twirp"]
 
 
 # Dev workflow tasks

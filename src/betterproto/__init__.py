@@ -43,7 +43,6 @@ from .casing import (
     safe_snake_case,
     snake_case,
 )
-from .grpc.grpclib_client import ServiceStub
 
 
 # Proto 3 data types
