@@ -743,6 +743,12 @@ class ServiceMethodCompiler(ProtoContentBase):
         # Add method to service
         self.parent.methods.append(self)
 
+        # Check for imports. Note that the access of .py_output_message_type
+        # has a sneaky, but necessary, side effect of adding in the type imports
+        # before rendering the template (see `get_type_reference`)
+        if "Optional" in self.py_output_message_type:
+            self.output_file.typing_imports.add("Optional")
+
         # Check for Async imports
         if self.client_streaming:
             self.output_file.typing_imports.add("AsyncIterable")
@@ -753,6 +759,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         if self.client_streaming or self.server_streaming:
             self.output_file.typing_imports.add("AsyncIterator")
 
+        # add imports required for request arguments timeout, deadline and metadata
         self.output_file.typing_imports.add("Optional")
 
         super().__post_init__()  # check for unset fields
