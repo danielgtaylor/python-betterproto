@@ -1,6 +1,7 @@
 import pathlib
 import sys
 from typing import (
+    Dict,
     Generator,
     List,
     Set,
@@ -69,34 +70,34 @@ def traverse(
 
 def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     response = CodeGeneratorResponse()
-
-    plugin_options = request.parameter.split(",") if request.parameter else []
     response.supported_features = CodeGeneratorResponseFeature.FEATURE_PROTO3_OPTIONAL
 
-    request_data = PluginRequestCompiler(plugin_request_obj=request)
+    plugin_options = _parse_options(request)
+    request_data = PluginRequestCompiler(
+        plugin_request_obj=request,
+        service_impl=plugin_options.get('service_impl', 'grpc'),
+        service_gen=plugin_options.get('service_gen', 'both'),
+    )
+
     # Gather output packages
     for proto_file in request.proto_file:
         output_package_name = proto_file.package
-        if output_package_name not in request_data.output_packages:
+        output_template = request_data.output_packages.setdefault(
+            output_package_name,
             # Create a new output if there is no output for this package
-            request_data.output_packages[output_package_name] = OutputTemplate(
-                parent_request=request_data, package_proto_obj=proto_file
-            )
+            OutputTemplate(parent_request=request_data, package_proto_obj=proto_file),
+        )
+
         # Add this input file to the output corresponding to this package
-        request_data.output_packages[output_package_name].input_files.append(proto_file)
+        output_template.input_files.append(proto_file)
 
-        if (
-            proto_file.package == "google.protobuf"
-            and "INCLUDE_GOOGLE" not in plugin_options
-        ):
-            # If not INCLUDE_GOOGLE,
-            # skip outputting Google's well-known types
-            request_data.output_packages[output_package_name].output = False
+        include_google = plugin_options.get("INCLUDE_GOOGLE")
+        if proto_file.package == "google.protobuf" and not include_google:
+            # If not INCLUDE_GOOGLE, skip outputting Google's well-known types
+            output_template.output = False
 
-        if "pydantic_dataclasses" in plugin_options:
-            request_data.output_packages[
-                output_package_name
-            ].pydantic_dataclasses = True
+        if plugin_options.get("pydantic_dataclasses"):
+            output_template.pydantic_dataclasses = True
 
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
@@ -150,6 +151,16 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         print(f"Writing {output_package_name}", file=sys.stderr)
 
     return response
+
+
+def _parse_options(request: CodeGeneratorRequest) -> Dict[str, Union[str, bool]]:
+    options: Dict[str, Union[str, bool]] = {}
+    raw_options = request.parameter.split(",") if request.parameter else []
+    for raw_option in raw_options:
+        parts = raw_option.split('=', maxsplit=1)
+        options[parts[0]] = parts[1] if len(parts) > 1 else True
+
+    return options
 
 
 def _make_one_of_field_compiler(

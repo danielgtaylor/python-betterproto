@@ -1,15 +1,21 @@
 {% macro render_imports(output_file) %}
+
+{% if output_file.gen_client %}
+from twirp.client import TwirpClient
+{% endif %}
+
+{% if output_file.gen_server %}
 import twirp.errors
 import twirp.exceptions
 import twirp.context
-
 from twirp.base import Endpoint
-from twirp.client import TwirpClient
 from twirp.server import TwirpServer
+{% endif %}
+
 {% endmacro %}
 
 
-{% macro render_services(output_file) %}
+{% macro render_servers(output_file) %}
 {% for service in output_file.services %}
 class {{ service.py_name }}Base:
     {% if service.comment %}

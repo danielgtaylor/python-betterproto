@@ -215,6 +215,8 @@ class ProtoContentBase:
 @dataclass
 class PluginRequestCompiler:
     plugin_request_obj: CodeGeneratorRequest
+    service_impl: str
+    service_gen: str
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
     @property
@@ -251,9 +253,28 @@ class OutputTemplate:
     messages: List["MessageCompiler"] = field(default_factory=list)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
-    service_impl: str = "grpc"
     pydantic_dataclasses: bool = False
     output: bool = True
+
+    @property
+    def gen_services(self) -> bool:
+        return self.gen_client or self.gen_server
+
+    @property
+    def gen_service_imports(self) -> bool:
+        return self.gen_services and bool(self.services)
+
+    @property
+    def gen_client(self) -> bool:
+        return self.parent_request.service_gen in ('both', 'client_only')
+
+    @property
+    def gen_server(self) -> bool:
+        return self.parent_request.service_gen in ('both', 'server_only')
+
+    @property
+    def service_impl(self) -> Optional[str]:
+        return self.parent_request.service_impl
 
     @property
     def package(self) -> str:
