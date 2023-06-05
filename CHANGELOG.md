@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [2.0.0b6] - 2023-06-05
+
+- Added support for @generated marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
+- Pull down the include_default_values argument to to_json [#405](https://github.com/danielgtaylor/python-betterproto/pull/405)
+- Fix typechecker compatiblity checks in server streaming methods [#413](https://github.com/danielgtaylor/python-betterproto/pull/413)
+- Enforce serialize_empty for repeated fields [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
+- Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
+- Drop support for python3.6 [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
+- Fix CI [#456](https://github.com/danielgtaylor/python-betterproto/pull/456)
+- Add support for pydantic dataclasses [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
+- Fix for [#459](https://github.com/danielgtaylor/python-betterproto/issues/459) (pydantic code gen only) [#460](https://github.com/danielgtaylor/python-betterproto/pull/460)
+- Widen from_dict methods to accept any Mapping [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
+- Fix pydantic_dataclasses reference in README [#474](https://github.com/danielgtaylor/python-betterproto/pull/474)
+- Fix dict encoding for timezone aware datetimes [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
+- Replace pkg_resources with importlib [#462](https://github.com/danielgtaylor/python-betterproto/pull/462)
+- Fix pydict serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
+
 ## [2.0.0b5] - 2022-08-01
 
 - **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters [#331](https://github.com/danielgtaylor/python-betterproto/pull/311)
