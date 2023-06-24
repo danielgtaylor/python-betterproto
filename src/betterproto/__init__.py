@@ -707,7 +707,7 @@ class Message(ABC):
         if (
             isinstance(value, Message)
             and hasattr(value, "_betterproto")
-            and not len(value._betterproto.meta_by_field_name)
+            and not value._betterproto.meta_by_field_name
         ):
             value._serialized_on_wire = True
 
@@ -1483,6 +1483,7 @@ class Message(ABC):
         field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
 
         for group, field_set in group_to_one_ofs.items():
+
             if len(field_set) == 1:
                 (field,) = field_set
                 field_name = field.name
