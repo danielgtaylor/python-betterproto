@@ -3,17 +3,20 @@ from google.protobuf import json_format
 
 import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
+    Empty,
     Foo,
+    Request,
     Test,
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
+    Empty as ReferenceEmpty,
     Foo as ReferenceFoo,
+    Request as ReferenceRequest,
     Test as ReferenceTest,
 )
 
 
 def test_oneof_serializes_similar_to_google_oneof():
-
     tests = [
         (Test(string="abc"), ReferenceTest(string="abc")),
         (Test(integer=2), ReferenceTest(integer=2)),
@@ -30,7 +33,6 @@ def test_oneof_serializes_similar_to_google_oneof():
 
 
 def test_bytes_are_the_same_for_oneof():
-
     message = Test(string="")
     message_reference = ReferenceTest(string="")
 
@@ -53,3 +55,16 @@ def test_bytes_are_the_same_for_oneof():
 
     assert isinstance(message_reference.foo, ReferenceFoo)
     assert isinstance(message_reference2.foo, ReferenceFoo)
+
+
+def test_empty_message_field():
+    message = Request()
+    reference_message = ReferenceRequest()
+
+    message.foo = Empty()
+    reference_message.foo.CopyFrom(ReferenceEmpty())
+
+    assert betterproto.serialized_on_wire(message.foo)
+    assert reference_message.HasField("foo")
+
+    assert bytes(message) == reference_message.SerializeToString()
