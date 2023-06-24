@@ -5,10 +5,14 @@ import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
     Foo,
     Test,
+    Request,
+    Empty
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
     Foo as ReferenceFoo,
     Test as ReferenceTest,
+    Request as ReferenceRequest,
+    Empty as ReferenceEmpty,
 )
 
 
@@ -53,3 +57,16 @@ def test_bytes_are_the_same_for_oneof():
 
     assert isinstance(message_reference.foo, ReferenceFoo)
     assert isinstance(message_reference2.foo, ReferenceFoo)
+
+
+def test_empty_message_field():
+    message = Request()
+    reference_message = ReferenceFoo()
+
+    message.foo = Empty()
+    reference_message.foo.CopyFrom(ReferenceEmpty())
+
+    assert betterproto.serialized_on_wire(message.foo)
+    assert reference_message.HasField("foo")
+
+    assert bytes(message) == reference_message.SerializeToString()

@@ -2,14 +2,16 @@ syntax = "proto3";
 
 package google_impl_behavior_equivalence;
 
-message Foo{
-  int64 bar = 1;
-}
+message Foo { int64 bar = 1; }
 
-message Test{
-  oneof group{
+message Test {
+  oneof group {
     string string = 1;
     int64 integer = 2;
     Foo foo = 3;
   }
 }
+
+message Request { Empty foo = 1; }
+
+message Empty {}
