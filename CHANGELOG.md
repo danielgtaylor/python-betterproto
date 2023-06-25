@@ -9,13 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0b6] - 2023-06-25
 
+- **Breaking**: the minimum Python version has been bumped to `3.7` [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
+
 - Support generating [Pydantic dataclasses](https://docs.pydantic.dev/latest/usage/dataclasses). 
   Pydantic dataclasses are are drop-in replacement for dataclasses in the standard library that additionally supports validation.
   Pass `--python_betterproto_opt=pydantic_dataclasses` to enable this feature.
   Refer to [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
   and [README.md](https://github.com/danielgtaylor/python-betterproto#generating-pydantic-models) for more information.
-
-- **Breaking**: the minimum Python version has been bumped to `3.7` [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
   
 - Added support for `@generated` marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
 - Pull down the `include_default_values` argument to `to_json()` [#405](https://github.com/danielgtaylor/python-betterproto/pull/405)
