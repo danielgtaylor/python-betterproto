@@ -9,18 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0b6] - 2023-06-05
 
+- Pass `--python_betterproto_opt=pydantic_dataclasses` to enable code generation of [Pydantic dataclasses](https://docs.pydantic.dev/latest/usage/dataclasses/).
+  Pydantic dataclasses are are drop-in replacement for dataclasses in the standard library that additionally supports validation. For example, a `@validator`
+  is generated for oneof fields that validates that exactly one of the fields is set. Refer to [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
+  and [README.md](https://github.com/danielgtaylor/python-betterproto#generating-pydantic-models) for more information.
+
+- **Breaking**: the minimum Python version has been bumped to `3.7` [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
+  
 - Added support for @generated marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
 - Pull down the `include_default_values` argument to `to_json()` [#405](https://github.com/danielgtaylor/python-betterproto/pull/405)
+- Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
+- Widen `from_dict()` to accept any `Mapping` [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
+- Replace `pkg_resources` with `importlib` [#462](https://github.com/danielgtaylor/python-betterproto/pull/462)
+  
 - Fix typechecker compatiblity checks in server streaming methods [#413](https://github.com/danielgtaylor/python-betterproto/pull/413)
 - Fix "empty-valued" repeated fields not being serialised [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
-- Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
-- Drop support for python3.6 [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
-- Add support for pydantic dataclasses [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
-- Fix for [#459](https://github.com/danielgtaylor/python-betterproto/issues/459) (pydantic code gen only) [#460](https://github.com/danielgtaylor/python-betterproto/pull/460)
-- Widen `from_dict()` to accept any `Mapping` [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
 - Fix pydantic_dataclasses reference in README [#474](https://github.com/danielgtaylor/python-betterproto/pull/474)
 - Fix `dict` encoding for timezone-aware `datetimes` [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
-- Replace `pkg_resources` with `importlib` [#462](https://github.com/danielgtaylor/python-betterproto/pull/462)
 - Fix `to_pydict` serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
 
 ## [2.0.0b5] - 2022-08-01
