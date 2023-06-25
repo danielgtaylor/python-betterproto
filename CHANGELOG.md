@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enforce serialize_empty for repeated fields [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
 - Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
 - Drop support for python3.6 [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
-- Fix CI [#456](https://github.com/danielgtaylor/python-betterproto/pull/456)
 - Add support for pydantic dataclasses [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
 - Fix for [#459](https://github.com/danielgtaylor/python-betterproto/issues/459) (pydantic code gen only) [#460](https://github.com/danielgtaylor/python-betterproto/pull/460)
 - Widen `from_dict()` to accept any `Mapping` [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
