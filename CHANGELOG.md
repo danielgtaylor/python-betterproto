@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for @generated marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
 - Pull down the include_default_values argument to to_json [#405](https://github.com/danielgtaylor/python-betterproto/pull/405)
 - Fix typechecker compatiblity checks in server streaming methods [#413](https://github.com/danielgtaylor/python-betterproto/pull/413)
-- Enforce serialize_empty for repeated fields [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
+- Fix "empty-valued" repeated fields not being serialised [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
 - Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
 - Drop support for python3.6 [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
 - Add support for pydantic dataclasses [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
