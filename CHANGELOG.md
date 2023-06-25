@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix typechecker compatiblity checks in server streaming methods [#413](https://github.com/danielgtaylor/python-betterproto/pull/413)
 - Fix "empty-valued" repeated fields not being serialised [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
 - Fix `dict` encoding for timezone-aware `datetimes` [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
-- Fix `to_pydict` serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
+- Fix `to_pydict()` serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
 - Handle empty value objects properly [#481](https://github.com/danielgtaylor/python-betterproto/pull/481)
   
 ## [2.0.0b5] - 2022-08-01
