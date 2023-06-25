@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
-## [2.0.0b6] - 2023-06-05
+## [2.0.0b6] - 2023-06-25
 
 - Pass `--python_betterproto_opt=pydantic_dataclasses` to enable code generation of [Pydantic dataclasses](https://docs.pydantic.dev/latest/usage/dataclasses/).
   Pydantic dataclasses are are drop-in replacement for dataclasses in the standard library that additionally supports validation. For example, a `@validator`
