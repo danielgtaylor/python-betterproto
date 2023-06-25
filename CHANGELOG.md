@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [2.0.0b6] - 2023-06-25
+
+- **Breaking**: the minimum Python version has been bumped to `3.7` [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
+
+- Support generating [Pydantic dataclasses](https://docs.pydantic.dev/latest/usage/dataclasses). 
+  Pydantic dataclasses are are drop-in replacement for dataclasses in the standard library that additionally supports validation.
+  Pass `--python_betterproto_opt=pydantic_dataclasses` to enable this feature.
+  Refer to [#406](https://github.com/danielgtaylor/python-betterproto/pull/406)
+  and [README.md](https://github.com/danielgtaylor/python-betterproto#generating-pydantic-models) for more information.
+  
+- Added support for `@generated` marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
+- Pull down the `include_default_values` argument to `to_json()` [#405](https://github.com/danielgtaylor/python-betterproto/pull/405)
+- Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
+- Widen `from_dict()` to accept any `Mapping` [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
+- Replace `pkg_resources` with `importlib` [#462](https://github.com/danielgtaylor/python-betterproto/pull/462)
+  
+- Fix typechecker compatiblity checks in server streaming methods [#413](https://github.com/danielgtaylor/python-betterproto/pull/413)
+- Fix "empty-valued" repeated fields not being serialised [#417](https://github.com/danielgtaylor/python-betterproto/pull/417)
+- Fix `dict` encoding for timezone-aware `datetimes` [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
+- Fix `to_pydict()` serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
+- Handle empty value objects properly [#481](https://github.com/danielgtaylor/python-betterproto/pull/481)
+  
 ## [2.0.0b5] - 2022-08-01
 
 - **Breaking**: Client and Service Stubs no longer pack and unpack the input message fields as parameters [#331](https://github.com/danielgtaylor/python-betterproto/pull/311)
