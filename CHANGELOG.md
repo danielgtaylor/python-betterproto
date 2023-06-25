@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Breaking**: the minimum Python version has been bumped to `3.7` [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
   
-- Added support for @generated marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
+- Added support for `@generated` marker [#382](https://github.com/danielgtaylor/python-betterproto/pull/382)
 - Pull down the `include_default_values` argument to `to_json()` [#405](https://github.com/danielgtaylor/python-betterproto/pull/405)
 - Pythonize input_type name in py_input_message [#436](https://github.com/danielgtaylor/python-betterproto/pull/436)
 - Widen `from_dict()` to accept any `Mapping` [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
