@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix pydantic_dataclasses reference in README [#474](https://github.com/danielgtaylor/python-betterproto/pull/474)
 - Fix dict encoding for timezone aware datetimes [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
 - Replace pkg_resources with importlib [#462](https://github.com/danielgtaylor/python-betterproto/pull/462)
-- Fix pydict serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
+- Fix `to_pydict` serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
 
 ## [2.0.0b5] - 2022-08-01
 
