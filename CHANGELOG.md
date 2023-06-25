@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix for [#459](https://github.com/danielgtaylor/python-betterproto/issues/459) (pydantic code gen only) [#460](https://github.com/danielgtaylor/python-betterproto/pull/460)
 - Widen from_dict methods to accept any Mapping [#451](https://github.com/danielgtaylor/python-betterproto/pull/451)
 - Fix pydantic_dataclasses reference in README [#474](https://github.com/danielgtaylor/python-betterproto/pull/474)
-- Fix dict encoding for timezone aware datetimes [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
+- Fix `dict` encoding for timezone-aware `datetimes` [#468](https://github.com/danielgtaylor/python-betterproto/pull/468)
 - Replace `pkg_resources` with `importlib` [#462](https://github.com/danielgtaylor/python-betterproto/pull/462)
 - Fix `to_pydict` serialization for optional fields [#495](https://github.com/danielgtaylor/python-betterproto/pull/495)
 
