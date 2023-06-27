@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "messages.proto";
 
-package things.service;
+package service_separate_packages.things.service;
 
 service Test {
   rpc DoThing (things.messages.DoThingRequest) returns (things.messages.DoThingResponse);

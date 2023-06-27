@@ -1,11 +1,12 @@
-import pytest
 import datetime
+
+import pytest
 
 import betterproto
 from tests.output_betterproto.oneof_default_value_serialization import (
-    Test,
     Message,
     NestedMessage,
+    Test,
 )
 
 

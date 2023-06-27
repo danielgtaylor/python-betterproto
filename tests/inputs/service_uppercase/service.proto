@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package service_uppercase;
+
+message DoTHINGRequest {
+  string name = 1;
+  repeated string comments = 2;
+}
+
+message DoTHINGResponse {
+  repeated string names = 1;
+}
+
+service Test {
+  rpc DoThing (DoTHINGRequest) returns (DoTHINGResponse);
+}

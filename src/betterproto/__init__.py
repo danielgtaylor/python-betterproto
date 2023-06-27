@@ -1,22 +1,31 @@
 import dataclasses
 import enum
-import inspect
 import json
 import math
 import struct
 import sys
 import typing
+import warnings
 from abc import ABC
-from base64 import b64decode, b64encode
-from datetime import datetime, timedelta, timezone
-from dateutil.parser import isoparse
+from base64 import (
+    b64decode,
+    b64encode,
+)
+from copy import deepcopy
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
     Generator,
     Iterable,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -25,9 +34,15 @@ from typing import (
     get_type_hints,
 )
 
+from dateutil.parser import isoparse
+
 from ._types import T
 from ._version import __version__
-from .casing import camel_case, safe_snake_case, snake_case
+from .casing import (
+    camel_case,
+    safe_snake_case,
+    snake_case,
+)
 from .grpc.grpclib_client import ServiceStub
 
 
@@ -145,6 +160,8 @@ class FieldMetadata:
     group: Optional[str] = None
     # Describes the wrapped type (e.g. when using google.protobuf.BoolValue)
     wraps: Optional[str] = None
+    # Is the field optional
+    optional: Optional[bool] = False
 
     @staticmethod
     def get(field: dataclasses.Field) -> "FieldMetadata":
@@ -159,12 +176,15 @@ def dataclass_field(
     map_types: Optional[Tuple[str, str]] = None,
     group: Optional[str] = None,
     wraps: Optional[str] = None,
+    optional: bool = False,
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     return dataclasses.field(
-        default=PLACEHOLDER,
+        default=None if optional else PLACEHOLDER,
         metadata={
-            "betterproto": FieldMetadata(number, proto_type, map_types, group, wraps)
+            "betterproto": FieldMetadata(
+                number, proto_type, map_types, group, wraps, optional
+            )
         },
     )
 
@@ -174,74 +194,107 @@ def dataclass_field(
 # out at runtime. The generated dataclass variables are still typed correctly.
 
 
-def enum_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_ENUM, group=group)
+def enum_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+    return dataclass_field(number, TYPE_ENUM, group=group, optional=optional)
 
 
-def bool_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_BOOL, group=group)
+def bool_field(number: int, group: Optional[str] = None, optional: bool = False) -> Any:
+    return dataclass_field(number, TYPE_BOOL, group=group, optional=optional)
 
 
-def int32_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_INT32, group=group)
+def int32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_INT32, group=group, optional=optional)
 
 
-def int64_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_INT64, group=group)
+def int64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_INT64, group=group, optional=optional)
 
 
-def uint32_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_UINT32, group=group)
+def uint32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_UINT32, group=group, optional=optional)
 
 
-def uint64_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_UINT64, group=group)
+def uint64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_UINT64, group=group, optional=optional)
 
 
-def sint32_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_SINT32, group=group)
+def sint32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_SINT32, group=group, optional=optional)
 
 
-def sint64_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_SINT64, group=group)
+def sint64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_SINT64, group=group, optional=optional)
 
 
-def float_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_FLOAT, group=group)
+def float_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_FLOAT, group=group, optional=optional)
 
 
-def double_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_DOUBLE, group=group)
+def double_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_DOUBLE, group=group, optional=optional)
 
 
-def fixed32_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_FIXED32, group=group)
+def fixed32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_FIXED32, group=group, optional=optional)
 
 
-def fixed64_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_FIXED64, group=group)
+def fixed64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_FIXED64, group=group, optional=optional)
 
 
-def sfixed32_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_SFIXED32, group=group)
+def sfixed32_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_SFIXED32, group=group, optional=optional)
 
 
-def sfixed64_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_SFIXED64, group=group)
+def sfixed64_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_SFIXED64, group=group, optional=optional)
 
 
-def string_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_STRING, group=group)
+def string_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_STRING, group=group, optional=optional)
 
 
-def bytes_field(number: int, group: Optional[str] = None) -> Any:
-    return dataclass_field(number, TYPE_BYTES, group=group)
+def bytes_field(
+    number: int, group: Optional[str] = None, optional: bool = False
+) -> Any:
+    return dataclass_field(number, TYPE_BYTES, group=group, optional=optional)
 
 
 def message_field(
-    number: int, group: Optional[str] = None, wraps: Optional[str] = None
+    number: int,
+    group: Optional[str] = None,
+    wraps: Optional[str] = None,
+    optional: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_MESSAGE, group=group, wraps=wraps)
+    return dataclass_field(
+        number, TYPE_MESSAGE, group=group, wraps=wraps, optional=optional
+    )
 
 
 def map_field(
@@ -327,15 +380,10 @@ def _preprocess_single(proto_type: str, wraps: str, value: Any) -> bytes:
     elif proto_type == TYPE_MESSAGE:
         if isinstance(value, datetime):
             # Convert the `datetime` to a timestamp message.
-            seconds = int(value.timestamp())
-            nanos = int(value.microsecond * 1e3)
-            value = _Timestamp(seconds=seconds, nanos=nanos)
+            value = _Timestamp.from_datetime(value)
         elif isinstance(value, timedelta):
             # Convert the `timedelta` to a duration message.
-            total_ms = value // timedelta(microseconds=1)
-            seconds = int(total_ms / 1e6)
-            nanos = int((total_ms % 1e6) * 1e3)
-            value = _Duration(seconds=seconds, nanos=nanos)
+            value = _Duration.from_timedelta(value)
         elif wraps:
             if value is None:
                 return b""
@@ -382,7 +430,7 @@ def _parse_float(value: Any) -> float:
 
     Parameters
     ----------
-    value : Any
+    value: Any
         Value to parse
 
     Returns
@@ -404,20 +452,19 @@ def _dump_float(value: float) -> Union[float, str]:
 
     Parameters
     ----------
-    value : float
+    value: float
         Value to dump
 
     Returns
     -------
     Union[float, str]
-        Dumped valid, either a float or the strings
-        "Infinity" or "-Infinity"
+        Dumped value, either a float or the strings
     """
     if value == float("inf"):
         return INFINITY
     if value == -float("inf"):
         return NEG_INFINITY
-    if value == float("nan"):
+    if isinstance(value, float) and math.isnan(value):
         return NAN
     return value
 
@@ -582,11 +629,11 @@ class Message(ABC):
         # Set current field of each group after `__init__` has already been run.
         group_current: Dict[str, Optional[str]] = {}
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            if self.__raw_get(field_name) != PLACEHOLDER:
+            value = self.__raw_get(field_name)
+            if value != PLACEHOLDER and not (meta.optional and value is None):
                 # Found a non-sentinel value
                 all_sentinel = False
 
@@ -641,20 +688,29 @@ class Message(ABC):
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
-    def __getattribute__(self, name: str) -> Any:
-        """
-        Lazily initialize default values to avoid infinite recursion for recursive
-        message types
-        """
-        value = super().__getattribute__(name)
-        if value is not PLACEHOLDER:
+    if not TYPE_CHECKING:
+
+        def __getattribute__(self, name: str) -> Any:
+            """
+            Lazily initialize default values to avoid infinite recursion for recursive
+            message types
+            """
+            value = super().__getattribute__(name)
+            if value is not PLACEHOLDER:
+                return value
+
+            value = self._get_field_default(name)
+            super().__setattr__(name, value)
             return value
 
-        value = self._get_field_default(name)
-        super().__setattr__(name, value)
-        return value
-
     def __setattr__(self, attr: str, value: Any) -> None:
+        if (
+            isinstance(value, Message)
+            and hasattr(value, "_betterproto")
+            and not value._betterproto.meta_by_field_name
+        ):
+            value._serialized_on_wire = True
+
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
             self.__dict__["_serialized_on_wire"] = True
@@ -677,6 +733,14 @@ class Message(ABC):
             not in (PLACEHOLDER, self._get_field_default(field_name))
             for field_name in self._betterproto.meta_by_field_name
         )
+
+    def __deepcopy__(self: T, _: Any = {}) -> T:
+        kwargs = {}
+        for name in self._betterproto.sorted_field_names:
+            value = self.__raw_get(name)
+            if value is not PLACEHOLDER:
+                kwargs[name] = deepcopy(value)
+        return self.__class__(**kwargs)  # type: ignore
 
     @property
     def _betterproto(self) -> ProtoClassMetadata:
@@ -701,12 +765,16 @@ class Message(ABC):
 
             if value is None:
                 # Optional items should be skipped. This is used for the Google
-                # wrapper types.
+                # wrapper types and proto3 field presence/optional fields.
                 continue
 
             # Being selected in a a group means this field is the one that is
             # currently set in a `oneof` group, so it must be serialized even
             # if the value is the default zero value.
+            #
+            # Note that proto3 field presence/optional fields are put in a
+            # synthetic single-item oneof by protoc, which helps us ensure we
+            # send the value even if the value is the default zero value.
             selected_in_group = (
                 meta.group and self._group_current[meta.group] == field_name
             )
@@ -745,6 +813,7 @@ class Message(ABC):
                                 meta.proto_type,
                                 item,
                                 wraps=meta.wraps or "",
+                                serialize_empty=True,
                             )
                             # if it's an empty message it still needs to be represented
                             # as an item in the repeated list
@@ -803,7 +872,7 @@ class Message(ABC):
     @classmethod
     def _type_hints(cls) -> Dict[str, Type]:
         module = sys.modules[cls.__module__]
-        return get_type_hints(cls, vars(module))
+        return get_type_hints(cls, module.__dict__, {})
 
     @classmethod
     def _cls_for(cls, field: dataclasses.Field, index: int = 0) -> Type:
@@ -815,22 +884,26 @@ class Message(ABC):
         return field_cls
 
     def _get_field_default(self, field_name: str) -> Any:
-        return self._betterproto.default_gen[field_name]()
+        with warnings.catch_warnings():
+            # ignore warnings when initialising deprecated field defaults
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            return self._betterproto.default_gen[field_name]()
 
     @classmethod
     def _get_field_default_gen(cls, field: dataclasses.Field) -> Any:
         t = cls._type_hint(field.name)
 
         if hasattr(t, "__origin__"):
-            if t.__origin__ in (dict, Dict):
+            if t.__origin__ is dict:
                 # This is some kind of map (dict in Python).
                 return dict
-            elif t.__origin__ in (list, List):
+            elif t.__origin__ is list:
                 # This is some kind of list (repeated) field.
                 return list
             elif t.__origin__ is Union and t.__args__[1] is type(None):
-                # This is an optional (wrapped) field. For setting the default we
-                # really don't care what kind of field it is.
+                # This is an optional field (either wrapped, or using proto3
+                # field presence). For setting the default we really don't care
+                # what kind of field it is.
                 return type(None)
             else:
                 return t
@@ -1041,6 +1114,9 @@ class Message(ABC):
                         ]
                     if value or include_default_values:
                         output[cased_name] = value
+                elif value is None:
+                    if include_default_values:
+                        output[cased_name] = value
                 elif (
                     value._serialized_on_wire
                     or include_default_values
@@ -1050,12 +1126,13 @@ class Message(ABC):
                 ):
                     output[cased_name] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == TYPE_MAP:
+                output_map = {**value}
                 for k in value:
                     if hasattr(value[k], "to_dict"):
-                        value[k] = value[k].to_dict(casing, include_default_values)
+                        output_map[k] = value[k].to_dict(casing, include_default_values)
 
                 if value or include_default_values:
-                    output[cased_name] = value
+                    output[cased_name] = output_map
             elif (
                 value != self._get_field_default(field_name)
                 or include_default_values
@@ -1066,6 +1143,9 @@ class Message(ABC):
                 if meta.proto_type in INT_64_TYPES:
                     if field_is_repeated:
                         output[cased_name] = [str(n) for n in value]
+                    elif value is None:
+                        if include_default_values:
+                            output[cased_name] = value
                     else:
                         output[cased_name] = str(value)
                 elif meta.proto_type == TYPE_BYTES:
@@ -1073,6 +1153,8 @@ class Message(ABC):
                         output[cased_name] = [
                             b64encode(b).decode("utf8") for b in value
                         ]
+                    elif value is None and include_default_values:
+                        output[cased_name] = value
                     else:
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
@@ -1085,6 +1167,12 @@ class Message(ABC):
                         else:
                             # transparently upgrade single value to repeated
                             output[cased_name] = [enum_class(value).name]
+                    elif value is None:
+                        if include_default_values:
+                            output[cased_name] = value
+                    elif meta.optional:
+                        enum_class = field_types[field_name].__args__[0]
+                        output[cased_name] = enum_class(value).name
                     else:
                         enum_class = field_types[field_name]  # noqa
                         output[cased_name] = enum_class(value).name
@@ -1097,7 +1185,7 @@ class Message(ABC):
                     output[cased_name] = value
         return output
 
-    def from_dict(self: T, value: Dict[str, Any]) -> T:
+    def from_dict(self: T, value: Mapping[str, Any]) -> T:
         """
         Parse the key/value pairs into the current message instance. This returns the
         instance itself and is therefore assignable and chainable.
@@ -1122,8 +1210,8 @@ class Message(ABC):
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
+                    cls = self._betterproto.cls_by_field[field_name]
                     if isinstance(v, list):
-                        cls = self._betterproto.cls_by_field[field_name]
                         if cls == datetime:
                             v = [isoparse(item) for item in value[key]]
                         elif cls == timedelta:
@@ -1133,14 +1221,16 @@ class Message(ABC):
                             ]
                         else:
                             v = [cls().from_dict(item) for item in value[key]]
-                    elif isinstance(v, datetime):
+                    elif cls == datetime:
                         v = isoparse(value[key])
                         setattr(self, field_name, v)
-                    elif isinstance(v, timedelta):
+                    elif cls == timedelta:
                         v = timedelta(seconds=float(value[key][:-1]))
                         setattr(self, field_name, v)
                     elif meta.wraps:
                         setattr(self, field_name, value[key])
+                    elif v is None:
+                        setattr(self, field_name, cls().from_dict(value[key]))
                     else:
                         # NOTE: `from_dict` mutates the underlying message, so no
                         # assignment here is necessary.
@@ -1178,7 +1268,12 @@ class Message(ABC):
                     setattr(self, field_name, v)
         return self
 
-    def to_json(self, indent: Union[None, int, str] = None) -> str:
+    def to_json(
+        self,
+        indent: Union[None, int, str] = None,
+        include_default_values: bool = False,
+        casing: Casing = Casing.CAMEL,
+    ) -> str:
         """A helper function to parse the message instance into its JSON
         representation.
 
@@ -1191,12 +1286,24 @@ class Message(ABC):
         indent: Optional[Union[:class:`int`, :class:`str`]]
             The indent to pass to :func:`json.dumps`.
 
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+
         Returns
         --------
         :class:`str`
             The JSON representation of the message.
         """
-        return json.dumps(self.to_dict(), indent=indent)
+        return json.dumps(
+            self.to_dict(include_default_values=include_default_values, casing=casing),
+            indent=indent,
+        )
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
         """A helper function to return the message instance from its JSON
@@ -1218,6 +1325,190 @@ class Message(ABC):
             The initialized message.
         """
         return self.from_dict(json.loads(value))
+
+    def to_pydict(
+        self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Returns a python dict representation of this object.
+
+        Parameters
+        -----------
+        casing: :class:`Casing`
+            The casing to use for key values. Default is :attr:`Casing.CAMEL` for
+            compatibility purposes.
+        include_default_values: :class:`bool`
+            If ``True`` will include the default values of fields. Default is ``False``.
+            E.g. an ``int32`` field will be included with a value of ``0`` if this is
+            set to ``True``, otherwise this would be ignored.
+
+        Returns
+        --------
+        Dict[:class:`str`, Any]
+            The python dict representation of this object.
+        """
+        output: Dict[str, Any] = {}
+        defaults = self._betterproto.default_gen
+        for field_name, meta in self._betterproto.meta_by_field_name.items():
+            field_is_repeated = defaults[field_name] is list
+            value = getattr(self, field_name)
+            cased_name = casing(field_name).rstrip("_")  # type: ignore
+            if meta.proto_type == TYPE_MESSAGE:
+                if isinstance(value, datetime):
+                    if (
+                        value != DATETIME_ZERO
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
+                        output[cased_name] = value
+                elif isinstance(value, timedelta):
+                    if (
+                        value != timedelta(0)
+                        or include_default_values
+                        or self._include_default_value_for_oneof(
+                            field_name=field_name, meta=meta
+                        )
+                    ):
+                        output[cased_name] = value
+                elif meta.wraps:
+                    if value is not None or include_default_values:
+                        output[cased_name] = value
+                elif field_is_repeated:
+                    # Convert each item.
+                    value = [i.to_pydict(casing, include_default_values) for i in value]
+                    if value or include_default_values:
+                        output[cased_name] = value
+                elif value is None:
+                    if include_default_values:
+                        output[cased_name] = None
+                elif (
+                    value._serialized_on_wire
+                    or include_default_values
+                    or self._include_default_value_for_oneof(
+                        field_name=field_name, meta=meta
+                    )
+                ):
+                    output[cased_name] = value.to_pydict(casing, include_default_values)
+            elif meta.proto_type == TYPE_MAP:
+                for k in value:
+                    if hasattr(value[k], "to_pydict"):
+                        value[k] = value[k].to_pydict(casing, include_default_values)
+
+                if value or include_default_values:
+                    output[cased_name] = value
+            elif (
+                value != self._get_field_default(field_name)
+                or include_default_values
+                or self._include_default_value_for_oneof(
+                    field_name=field_name, meta=meta
+                )
+            ):
+                output[cased_name] = value
+        return output
+
+    def from_pydict(self: T, value: Mapping[str, Any]) -> T:
+        """
+        Parse the key/value pairs into the current message instance. This returns the
+        instance itself and is therefore assignable and chainable.
+
+        Parameters
+        -----------
+        value: Dict[:class:`str`, Any]
+            The dictionary to parse from.
+
+        Returns
+        --------
+        :class:`Message`
+            The initialized message.
+        """
+        self._serialized_on_wire = True
+        for key in value:
+            field_name = safe_snake_case(key)
+            meta = self._betterproto.meta_by_field_name.get(field_name)
+            if not meta:
+                continue
+
+            if value[key] is not None:
+                if meta.proto_type == TYPE_MESSAGE:
+                    v = getattr(self, field_name)
+                    if isinstance(v, list):
+                        cls = self._betterproto.cls_by_field[field_name]
+                        for item in value[key]:
+                            v.append(cls().from_pydict(item))
+                    elif isinstance(v, datetime):
+                        v = value[key]
+                    elif isinstance(v, timedelta):
+                        v = value[key]
+                    elif meta.wraps:
+                        v = value[key]
+                    else:
+                        # NOTE: `from_pydict` mutates the underlying message, so no
+                        # assignment here is necessary.
+                        v.from_pydict(value[key])
+                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                    v = getattr(self, field_name)
+                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
+                    for k in value[key]:
+                        v[k] = cls().from_pydict(value[key][k])
+                else:
+                    v = value[key]
+
+                if v is not None:
+                    setattr(self, field_name, v)
+        return self
+
+    def is_set(self, name: str) -> bool:
+        """
+        Check if field with the given name has been set.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the field to check for.
+
+        Returns
+        --------
+        :class:`bool`
+            `True` if field has been set, otherwise `False`.
+        """
+        default = (
+            PLACEHOLDER
+            if not self._betterproto.meta_by_field_name[name].optional
+            else None
+        )
+        return self.__raw_get(name) is not default
+
+    @classmethod
+    def _validate_field_groups(cls, values):
+        group_to_one_ofs = cls._betterproto_meta.oneof_field_by_group  # type: ignore
+        field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
+
+        for group, field_set in group_to_one_ofs.items():
+
+            if len(field_set) == 1:
+                (field,) = field_set
+                field_name = field.name
+                meta = field_name_to_meta[field_name]
+
+                # This is a synthetic oneof; we should ignore it's presence and not consider it as a oneof.
+                if meta.optional:
+                    continue
+
+            set_fields = [
+                field.name for field in field_set if values[field.name] is not None
+            ]
+
+            if not set_fields:
+                raise ValueError(f"Group {group} has no value; all fields are None")
+            elif len(set_fields) > 1:
+                set_fields_str = ", ".join(set_fields)
+                raise ValueError(
+                    f"Group {group} has more than one value; fields {set_fields_str} are not None"
+                )
+
+        return values
 
 
 def serialized_on_wire(message: Message) -> bool:
@@ -1267,6 +1558,15 @@ from .lib.google.protobuf import (  # noqa
 
 
 class _Duration(Duration):
+    @classmethod
+    def from_timedelta(
+        cls, delta: timedelta, *, _1_microsecond: timedelta = timedelta(microseconds=1)
+    ) -> "_Duration":
+        total_ms = delta // _1_microsecond
+        seconds = int(total_ms / 1e6)
+        nanos = int((total_ms % 1e6) * 1e3)
+        return cls(seconds, nanos)
+
     def to_timedelta(self) -> timedelta:
         return timedelta(seconds=self.seconds, microseconds=self.nanos / 1e3)
 
@@ -1280,6 +1580,12 @@ class _Duration(Duration):
 
 
 class _Timestamp(Timestamp):
+    @classmethod
+    def from_datetime(cls, dt: datetime) -> "_Timestamp":
+        seconds = int(dt.timestamp())
+        nanos = int(dt.microsecond * 1e3)
+        return cls(seconds, nanos)
+
     def to_datetime(self) -> datetime:
         ts = self.seconds + (self.nanos / 1e9)
         return datetime.fromtimestamp(ts, tz=timezone.utc)
@@ -1287,6 +1593,9 @@ class _Timestamp(Timestamp):
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
         nanos = dt.microsecond * 1e3
+        if dt.tzinfo is not None:
+            # change timezone aware datetime objects to utc
+            dt = dt.astimezone(timezone.utc)
         copy = dt.replace(microsecond=0, tzinfo=None)
         result = copy.isoformat()
         if (nanos % 1e9) == 0:

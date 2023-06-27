@@ -1,3 +1,13 @@
+import pathlib
+import sys
+from typing import (
+    Generator,
+    List,
+    Set,
+    Tuple,
+    Union,
+)
+
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
@@ -8,12 +18,10 @@ from betterproto.lib.google.protobuf import (
 from betterproto.lib.google.protobuf.compiler import (
     CodeGeneratorRequest,
     CodeGeneratorResponse,
+    CodeGeneratorResponseFeature,
     CodeGeneratorResponseFile,
 )
-import itertools
-import pathlib
-import sys
-from typing import Iterator, List, Set, Tuple, TYPE_CHECKING, Union
+
 from .compiler import outputfile_compiler
 from .models import (
     EnumDefinitionCompiler,
@@ -23,59 +31,51 @@ from .models import (
     OneOfFieldCompiler,
     OutputTemplate,
     PluginRequestCompiler,
+    PydanticOneOfFieldCompiler,
     ServiceCompiler,
     ServiceMethodCompiler,
     is_map,
     is_oneof,
 )
 
-if TYPE_CHECKING:
-    from google.protobuf.descriptor import Descriptor
-
 
 def traverse(
-    proto_file: FieldDescriptorProto,
-) -> "itertools.chain[Tuple[Union[str, EnumDescriptorProto], List[int]]]":
+    proto_file: FileDescriptorProto,
+) -> Generator[
+    Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
+]:
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int], items: List["EnumDescriptorProto"], prefix=""
-    ) -> Iterator[Tuple[Union[str, EnumDescriptorProto], List[int]]]:
+        path: List[int],
+        items: Union[List[EnumDescriptorProto], List[DescriptorProto]],
+        prefix: str = "",
+    ) -> Generator[
+        Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
+    ]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
-            item.name = next_prefix = prefix + item.name
-            yield item, path + [i]
+            item.name = next_prefix = f"{prefix}_{item.name}"
+            yield item, [*path, i]
 
             if isinstance(item, DescriptorProto):
-                for enum in item.enum_type:
-                    enum.name = next_prefix + enum.name
-                    yield enum, path + [i, 4]
+                # Get nested types.
+                yield from _traverse([*path, i, 4], item.enum_type, next_prefix)
+                yield from _traverse([*path, i, 3], item.nested_type, next_prefix)
 
-                if item.nested_type:
-                    for n, p in _traverse(path + [i, 3], item.nested_type, next_prefix):
-                        yield n, p
-
-    return itertools.chain(
-        _traverse([5], proto_file.enum_type), _traverse([4], proto_file.message_type)
-    )
+    yield from _traverse([5], proto_file.enum_type)
+    yield from _traverse([4], proto_file.message_type)
 
 
-def generate_code(
-    request: CodeGeneratorRequest, response: CodeGeneratorResponse
-) -> None:
+def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
+    response = CodeGeneratorResponse()
+
     plugin_options = request.parameter.split(",") if request.parameter else []
+    response.supported_features = CodeGeneratorResponseFeature.FEATURE_PROTO3_OPTIONAL
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
     for proto_file in request.proto_file:
-        if (
-            proto_file.package == "google.protobuf"
-            and "INCLUDE_GOOGLE" not in plugin_options
-        ):
-            # If not INCLUDE_GOOGLE,
-            # skip re-compiling Google's well-known types
-            continue
-
         output_package_name = proto_file.package
         if output_package_name not in request_data.output_packages:
             # Create a new output if there is no output for this package
@@ -84,6 +84,19 @@ def generate_code(
             )
         # Add this input file to the output corresponding to this package
         request_data.output_packages[output_package_name].input_files.append(proto_file)
+
+        if (
+            proto_file.package == "google.protobuf"
+            and "INCLUDE_GOOGLE" not in plugin_options
+        ):
+            # If not INCLUDE_GOOGLE,
+            # skip outputting Google's well-known types
+            request_data.output_packages[output_package_name].output = False
+
+        if "pydantic_dataclasses" in plugin_options:
+            request_data.output_packages[
+                output_package_name
+            ].pydantic_dataclasses = True
 
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
@@ -107,6 +120,8 @@ def generate_code(
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
     for output_package_name, output_package in request_data.output_packages.items():
+        if not output_package.output:
+            continue
 
         # Add files to the response object
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
@@ -125,6 +140,7 @@ def generate_code(
         directory.joinpath("__init__.py")
         for path in output_paths
         for directory in path.parents
+        if not directory.joinpath("__init__.py").exists()
     } - output_paths
 
     for init_file in init_files:
@@ -132,6 +148,26 @@ def generate_code(
 
     for output_package_name in sorted(output_paths.union(init_files)):
         print(f"Writing {output_package_name}", file=sys.stderr)
+
+    return response
+
+
+def _make_one_of_field_compiler(
+    output_package: OutputTemplate,
+    source_file: "FileDescriptorProto",
+    parent: MessageCompiler,
+    proto_obj: "FieldDescriptorProto",
+    path: List[int],
+) -> FieldCompiler:
+
+    pydantic = output_package.pydantic_dataclasses
+    Cls = PydanticOneOfFieldCompiler if pydantic else OneOfFieldCompiler
+    return Cls(
+        source_file=source_file,
+        parent=parent,
+        proto_obj=proto_obj,
+        path=path,
+    )
 
 
 def read_protobuf_type(
@@ -157,11 +193,8 @@ def read_protobuf_type(
                     path=path + [2, index],
                 )
             elif is_oneof(field):
-                OneOfFieldCompiler(
-                    source_file=source_file,
-                    parent=message_data,
-                    proto_obj=field,
-                    path=path + [2, index],
+                _make_one_of_field_compiler(
+                    output_package, source_file, message_data, field, path + [2, index]
                 )
             else:
                 FieldCompiler(

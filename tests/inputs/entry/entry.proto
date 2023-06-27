@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package entry;
+
+// This is a minimal example of a repeated message field that caused issues when
+// checking whether a message is a map.
+//
+// During the check wheter a field is a "map", the string "entry" is added to
+// the field name, checked against the type name and then further checks are
+// made against the nested type of a parent message. In this edge-case, the
+// first check would pass even though it shouldn't and that would cause an
+// error because the parent type does not have a "nested_type" attribute.
+
+message Test {
+    repeated ExportEntry export = 1;
+}
+
+message ExportEntry {
+    string name = 1;
+}

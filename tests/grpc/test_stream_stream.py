@@ -1,9 +1,11 @@
 import asyncio
+from dataclasses import dataclass
+from typing import AsyncIterator
+
+import pytest
+
 import betterproto
 from betterproto.grpc.util.async_channel import AsyncChannel
-from dataclasses import dataclass
-import pytest
-from typing import AsyncIterator
 
 
 @dataclass

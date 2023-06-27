@@ -1,10 +1,17 @@
 import os
 import re
-from typing import Dict, List, Set, Tuple, Type
+from typing import (
+    Dict,
+    List,
+    Set,
+    Tuple,
+    Type,
+)
 
 from ..casing import safe_snake_case
 from ..lib.google import protobuf as google_protobuf
 from .naming import pythonize_class_name
+
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,
@@ -36,7 +43,7 @@ def parse_source_type_name(field_type_name: str) -> Tuple[str, str]:
 
 
 def get_type_reference(
-    package: str, imports: set, source_type: str, unwrap: bool = True
+    *, package: str, imports: set, source_type: str, unwrap: bool = True
 ) -> str:
     """
     Return a Python type name for a proto type reference. Adds the import if
