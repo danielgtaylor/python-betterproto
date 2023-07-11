@@ -151,17 +151,18 @@ def test_oneof_support():
     foo.baz = "test"
 
     # Other oneof fields should now be unset
-    assert foo.bar == 0
+    assert not hasattr(foo, "bar")
+    assert object.__getattribute__(foo, "bar") == betterproto.PLACEHOLDER
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
-    foo.sub.val = 1
+    foo.sub = Sub(val=1)
     assert betterproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
-    assert foo.sub.val == 0
-    assert betterproto.serialized_on_wire(foo.sub) is False
+    assert not hasattr(foo, "sub")
+    assert object.__getattribute__(foo, "sub") == betterproto.PLACEHOLDER
     assert betterproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
