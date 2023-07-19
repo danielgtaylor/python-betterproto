@@ -11,6 +11,7 @@ repos:
     rev: 23.1.0
     hooks:
       - id: black
+        args: ["--target-version", "py310"]
 
   - repo: https://github.com/PyCQA/doc8
     rev: 0.10.1
