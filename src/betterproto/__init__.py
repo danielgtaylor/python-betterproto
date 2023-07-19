@@ -706,11 +706,11 @@ class Message(ABC):
                     if group is not None and group_current[group] != name:
                         if sys.version_info < (3, 10):
                             raise AttributeError(
-                                f"{group!r} is set to {group_current[group]}, not {name!r}"
+                                f"{group!r} is set to {group_current[group]!r}, not {name!r}"
                             )
                         else:
                             raise AttributeError(
-                                f"{group!r} is set to {group_current[group]}, not {name!r}",
+                                f"{group!r} is set to {group_current[group]!r}, not {name!r}",
                                 name=name,
                                 obj=self,
                             )
