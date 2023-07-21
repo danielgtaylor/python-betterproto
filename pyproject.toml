@@ -13,7 +13,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-black = { version = ">=19.3b0", optional = true }
+black = { version = ">=23.1.0", optional = true }
 grpclib = "^0.4.1"
 importlib-metadata = { version = ">=1.6.0", python = "<3.8" }
 jinja2 = { version = ">=3.0.3", optional = true }
@@ -62,7 +62,7 @@ cmd  = "mypy src --ignore-missing-imports"
 help = "Check types with mypy"
 
 [tool.poe.tasks.format]
-cmd  = "black . --exclude tests/output_"
+cmd  = "black . --exclude tests/output_ --target-version py310"
 help = "Apply black formatting to source code"
 
 [tool.poe.tasks.docs]

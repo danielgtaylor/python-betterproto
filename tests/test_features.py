@@ -1,4 +1,5 @@
 import json
+import sys
 from copy import (
     copy,
     deepcopy,
@@ -17,6 +18,8 @@ from typing import (
     List,
     Optional,
 )
+
+import pytest
 
 import betterproto
 
@@ -151,17 +154,18 @@ def test_oneof_support():
     foo.baz = "test"
 
     # Other oneof fields should now be unset
-    assert foo.bar == 0
+    assert not hasattr(foo, "bar")
+    assert object.__getattribute__(foo, "bar") == betterproto.PLACEHOLDER
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
-    foo.sub.val = 1
+    foo.sub = Sub(val=1)
     assert betterproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
-    assert foo.sub.val == 0
-    assert betterproto.serialized_on_wire(foo.sub) is False
+    assert not hasattr(foo, "sub")
+    assert object.__getattribute__(foo, "sub") == betterproto.PLACEHOLDER
     assert betterproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
@@ -174,6 +178,16 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo2, "group1")[0] == "bar"
     assert foo.bar == 0
     assert betterproto.which_one_of(foo2, "group2")[0] == ""
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 10),
+    reason="pattern matching is only supported in python3.10+",
+)
+def test_oneof_pattern_matching():
+    from .oneof_pattern_matching import test_oneof_pattern_matching
+
+    test_oneof_pattern_matching()
 
 
 def test_json_casing():

@@ -21,7 +21,6 @@ class ServiceBase(ABC):
         stream: grpclib.server.Stream,
         request: Any,
     ) -> None:
-
         response_iter = handler(request)
         # check if response is actually an AsyncIterator
         # this might be false if the method just returns without
