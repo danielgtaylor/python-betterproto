@@ -18,6 +18,7 @@ from typing import (
     List,
     Optional,
 )
+from unittest.mock import ANY
 
 import pytest
 
@@ -727,3 +728,15 @@ def test_is_set():
     assert not Spam().is_set("bar")
     assert Spam(foo=True).is_set("foo")
     assert Spam(foo=True, bar=0).is_set("bar")
+
+
+def test_equality_comparison():
+    from tests.output_betterproto.bool import Test as TestMessage
+
+    msg = TestMessage(value=True)
+
+    assert msg == msg
+    assert msg == ANY
+    assert msg == TestMessage(value=True)
+    assert msg != 1
+    assert msg != TestMessage(value=False)
