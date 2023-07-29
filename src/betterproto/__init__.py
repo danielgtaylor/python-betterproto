@@ -651,7 +651,7 @@ class Message(ABC):
 
     def __eq__(self, other) -> bool:
         if type(self) is not type(other):
-            return False
+            return NotImplemented
 
         for field_name in self._betterproto.meta_by_field_name:
             self_val = self.__raw_get(field_name)
