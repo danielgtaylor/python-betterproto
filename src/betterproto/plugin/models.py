@@ -322,7 +322,7 @@ class MessageCompiler(ProtoContentBase):
     @property
     def annotation(self) -> str:
         if self.repeated:
-            return f"List[{self.py_name}]"
+            return f"Sequence[{self.py_name}]"
         return self.py_name
 
     @property
@@ -440,8 +440,8 @@ class FieldCompiler(MessageCompiler):
         annotation = self.annotation
         if "Optional[" in annotation:
             imports.add("Optional")
-        if "List[" in annotation:
-            imports.add("List")
+        if "Sequence[" in annotation:
+            imports.add("Sequence")
         if "Dict[" in annotation:
             imports.add("Dict")
         return imports
@@ -572,7 +572,7 @@ class FieldCompiler(MessageCompiler):
         if self.use_builtins:
             py_type = f"builtins.{py_type}"
         if self.repeated:
-            return f"List[{py_type}]"
+            return f"Sequence[{py_type}]"
         if self.optional:
             return f"Optional[{py_type}]"
         return py_type

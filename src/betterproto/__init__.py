@@ -304,6 +304,17 @@ def map_field(
         number, TYPE_MAP, map_types=(key_type, value_type), group=group
     )
 
+def _is_sequence(x: Any) -> bool:
+    return not isinstance(x, str) and not isinstance(x, bytes) and isinstance(x, typing.Sequence)
+
+def _is_empty_sequence(x: Any) -> bool:
+    return _is_sequence(x) and len(x) == 0
+
+def _is_nonempty_sequence(x: Any) -> bool:
+    return _is_sequence(x) and len(x) != 0
+
+def _is_sequence_type(t: Any) -> bool:
+    return getattr(t, '_name', None) in ['List', 'Sequence']
 
 class Enum(enum.IntEnum):
     """
@@ -808,7 +819,7 @@ class Message(ABC):
                 field_name=field_name, meta=meta
             )
 
-            if value == self._get_field_default(field_name) and not (
+            if (_is_empty_sequence(value) or value == self._get_field_default(field_name)) and not (
                 selected_in_group or serialize_empty or include_default_value_for_oneof
             ):
                 # Default (zero) values are not serialized. Two exceptions are
@@ -816,8 +827,12 @@ class Message(ABC):
                 # serialize an empty message (i.e. zero value was explicitly
                 # set by the user).
                 continue
-
-            if isinstance(value, list):
+            
+            if isinstance(value, ScalarArray) and meta.proto_type in FIXED_TYPES:
+                if value._ScalarArray__proto_type != meta.proto_type:
+                    raise ValueError("Scalar array has incompatible type")
+                output += _serialize_single(meta.number, TYPE_BYTES, bytes(value))
+            elif _is_sequence(value):
                 if meta.proto_type in PACKED_TYPES:
                     # Packed lists look like a length-delimited field. First,
                     # preprocess/encode each value into a buffer and then
@@ -908,6 +923,8 @@ class Message(ABC):
         with warnings.catch_warnings():
             # ignore warnings when initialising deprecated field defaults
             warnings.filterwarnings("ignore", category=DeprecationWarning)
+            if _is_sequence_type(self._betterproto.default_gen[field_name]):
+                return []
             return self._betterproto.default_gen[field_name]()
 
     @classmethod
@@ -918,7 +935,7 @@ class Message(ABC):
             if t.__origin__ is dict:
                 # This is some kind of map (dict in Python).
                 return dict
-            elif t.__origin__ is list:
+            elif _is_sequence_type(t.__origin__):
                 # This is some kind of list (repeated) field.
                 return list
             elif t.__origin__ is Union and t.__args__[1] is type(None):
@@ -1016,22 +1033,25 @@ class Message(ABC):
             value: Any
             if parsed.wire_type == WIRE_LEN_DELIM and meta.proto_type in PACKED_TYPES:
                 # This is a packed repeated field.
-                pos = 0
-                value = []
-                while pos < len(parsed.value):
-                    if meta.proto_type in (TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32):
-                        decoded, pos = parsed.value[pos : pos + 4], pos + 4
-                        wire_type = WIRE_FIXED_32
-                    elif meta.proto_type in (TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64):
-                        decoded, pos = parsed.value[pos : pos + 8], pos + 8
-                        wire_type = WIRE_FIXED_64
-                    else:
-                        decoded, pos = decode_varint(parsed.value, pos)
-                        wire_type = WIRE_VARINT
-                    decoded = self._postprocess_single(
-                        wire_type, meta, field_name, decoded
-                    )
-                    value.append(decoded)
+                if meta.proto_type in FIXED_TYPES:
+                    value = ScalarArray(parsed.value, meta.proto_type)
+                else:
+                    pos = 0
+                    value = []
+                    while pos < len(parsed.value):
+                        if meta.proto_type in (TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32):
+                            decoded, pos = parsed.value[pos : pos + 4], pos + 4
+                            wire_type = WIRE_FIXED_32
+                        elif meta.proto_type in (TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64):
+                            decoded, pos = parsed.value[pos : pos + 8], pos + 8
+                            wire_type = WIRE_FIXED_64
+                        else:
+                            decoded, pos = decode_varint(parsed.value, pos)
+                            wire_type = WIRE_VARINT
+                        decoded = self._postprocess_single(
+                            wire_type, meta, field_name, decoded
+                        )
+                        value.append(decoded)
             else:
                 value = self._postprocess_single(
                     parsed.wire_type, meta, field_name, parsed.value
@@ -1046,7 +1066,7 @@ class Message(ABC):
             if meta.proto_type == TYPE_MAP:
                 # Value represents a single key/value pair entry in the map.
                 current[value.key] = value.value
-            elif isinstance(current, list) and not isinstance(value, list):
+            elif _is_sequence(current) and not _is_sequence(value):
                 current.append(value)
             else:
                 setattr(self, field_name, value)
@@ -1102,7 +1122,7 @@ class Message(ABC):
         field_types = self._type_hints()
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            field_is_repeated = defaults[field_name] is list
+            field_is_repeated = _is_sequence_type(defaults[field_name])
             try:
                 value = getattr(self, field_name)
             except AttributeError:
@@ -1163,7 +1183,7 @@ class Message(ABC):
                 if value or include_default_values:
                     output[cased_name] = output_map
             elif (
-                value != self._get_field_default(field_name)
+                (_is_nonempty_sequence(value) or value != self._get_field_default(field_name))
                 or include_default_values
                 or self._include_default_value_for_oneof(
                     field_name=field_name, meta=meta
@@ -1332,6 +1352,7 @@ class Message(ABC):
         return json.dumps(
             self.to_dict(include_default_values=include_default_values, casing=casing),
             indent=indent,
+            default=lambda x: x.__json__()
         )
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
@@ -1379,7 +1400,7 @@ class Message(ABC):
         output: Dict[str, Any] = {}
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            field_is_repeated = defaults[field_name] is list
+            field_is_repeated = _is_sequence_type(defaults[field_name])
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
@@ -1428,7 +1449,7 @@ class Message(ABC):
                 if value or include_default_values:
                     output[cased_name] = value
             elif (
-                value != self._get_field_default(field_name)
+                (_is_nonempty_sequence(value) or value != self._get_field_default(field_name))
                 or include_default_values
                 or self._include_default_value_for_oneof(
                     field_name=field_name, meta=meta
@@ -1583,6 +1604,8 @@ from .lib.google.protobuf import (  # noqa
     UInt32Value,
     UInt64Value,
 )
+
+from .scalar_array import ScalarArray
 
 
 class _Duration(Duration):
