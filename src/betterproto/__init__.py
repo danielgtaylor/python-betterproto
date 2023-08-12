@@ -304,17 +304,26 @@ def map_field(
         number, TYPE_MAP, map_types=(key_type, value_type), group=group
     )
 
+
 def _is_sequence(x: Any) -> bool:
-    return not isinstance(x, str) and not isinstance(x, bytes) and isinstance(x, typing.Sequence)
+    return (
+        not isinstance(x, str)
+        and not isinstance(x, bytes)
+        and isinstance(x, typing.Sequence)
+    )
+
 
 def _is_empty_sequence(x: Any) -> bool:
     return _is_sequence(x) and len(x) == 0
 
+
 def _is_nonempty_sequence(x: Any) -> bool:
     return _is_sequence(x) and len(x) != 0
 
+
 def _is_sequence_type(t: Any) -> bool:
-    return getattr(t, '_name', None) in ['List', 'Sequence']
+    return getattr(t, "_name", None) in ["List", "Sequence"]
+
 
 class Enum(enum.IntEnum):
     """
@@ -819,7 +828,10 @@ class Message(ABC):
                 field_name=field_name, meta=meta
             )
 
-            if (_is_empty_sequence(value) or value == self._get_field_default(field_name)) and not (
+            if (
+                _is_empty_sequence(value)
+                or value == self._get_field_default(field_name)
+            ) and not (
                 selected_in_group or serialize_empty or include_default_value_for_oneof
             ):
                 # Default (zero) values are not serialized. Two exceptions are
@@ -827,7 +839,7 @@ class Message(ABC):
                 # serialize an empty message (i.e. zero value was explicitly
                 # set by the user).
                 continue
-            
+
             if isinstance(value, ScalarArray) and meta.proto_type in FIXED_TYPES:
                 if value._ScalarArray__proto_type != meta.proto_type:
                     raise ValueError("Scalar array has incompatible type")
@@ -1039,15 +1051,8 @@ class Message(ABC):
                     pos = 0
                     value = []
                     while pos < len(parsed.value):
-                        if meta.proto_type in (TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32):
-                            decoded, pos = parsed.value[pos : pos + 4], pos + 4
-                            wire_type = WIRE_FIXED_32
-                        elif meta.proto_type in (TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64):
-                            decoded, pos = parsed.value[pos : pos + 8], pos + 8
-                            wire_type = WIRE_FIXED_64
-                        else:
-                            decoded, pos = decode_varint(parsed.value, pos)
-                            wire_type = WIRE_VARINT
+                        decoded, pos = decode_varint(parsed.value, pos)
+                        wire_type = WIRE_VARINT
                         decoded = self._postprocess_single(
                             wire_type, meta, field_name, decoded
                         )
@@ -1183,7 +1188,10 @@ class Message(ABC):
                 if value or include_default_values:
                     output[cased_name] = output_map
             elif (
-                (_is_nonempty_sequence(value) or value != self._get_field_default(field_name))
+                (
+                    _is_nonempty_sequence(value)
+                    or value != self._get_field_default(field_name)
+                )
                 or include_default_values
                 or self._include_default_value_for_oneof(
                     field_name=field_name, meta=meta
@@ -1352,7 +1360,7 @@ class Message(ABC):
         return json.dumps(
             self.to_dict(include_default_values=include_default_values, casing=casing),
             indent=indent,
-            default=lambda x: x.__json__()
+            default=lambda x: x.__json__(),
         )
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
@@ -1449,7 +1457,10 @@ class Message(ABC):
                 if value or include_default_values:
                     output[cased_name] = value
             elif (
-                (_is_nonempty_sequence(value) or value != self._get_field_default(field_name))
+                (
+                    _is_nonempty_sequence(value)
+                    or value != self._get_field_default(field_name)
+                )
                 or include_default_values
                 or self._include_default_value_for_oneof(
                     field_name=field_name, meta=meta
