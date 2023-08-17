@@ -8,9 +8,10 @@ repos:
       - id: isort
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 23.1.0
     hooks:
       - id: black
+        args: ["--target-version", "py310"]
 
   - repo: https://github.com/PyCQA/doc8
     rev: 0.10.1
