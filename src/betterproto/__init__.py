@@ -50,7 +50,10 @@ from .grpc.grpclib_client import ServiceStub as ServiceStub
 
 
 if TYPE_CHECKING:
-    from _typeshed import ReadableBuffer
+    from _typeshed import (
+        ReadableBuffer,
+        WriteableBuffer,
+    )
 
 
 # Proto 3 data types
@@ -126,6 +129,9 @@ WIRE_VARINT_TYPES = [
 WIRE_FIXED_32_TYPES = [TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32]
 WIRE_FIXED_64_TYPES = [TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64]
 WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
+
+# Indicator of message delimitation in streams
+SIZE_DELIMITED = -1
 
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
@@ -322,7 +328,7 @@ def _pack_fmt(proto_type: str) -> str:
     }[proto_type]
 
 
-def dump_varint(value: int, stream: BinaryIO) -> None:
+def dump_varint(value: int, stream: "WriteableBuffer") -> None:
     """Encodes a single varint and dumps it into the provided stream."""
     if value < -(1 << 63):
         raise ValueError(
@@ -531,7 +537,7 @@ def _dump_float(value: float) -> Union[float, str]:
     return value
 
 
-def load_varint(stream: BinaryIO) -> Tuple[int, bytes]:
+def load_varint(stream: "ReadableBuffer") -> Tuple[int, bytes]:
     """
     Load a single varint value from a stream. Returns the value and the raw bytes read.
     """
@@ -569,7 +575,7 @@ class ParsedField:
     raw: bytes
 
 
-def load_fields(stream: BinaryIO) -> Generator[ParsedField, None, None]:
+def load_fields(stream: "ReadableBuffer") -> Generator[ParsedField, None, None]:
     while True:
         try:
             num_wire, raw = load_varint(stream)
@@ -881,7 +887,7 @@ class Message(ABC):
             self.__class__._betterproto_meta = meta  # type: ignore
         return meta
 
-    def dump(self, stream: BinaryIO) -> None:
+    def dump(self, stream: "WriteableBuffer", delimit: bool = False) -> None:
         """
         Dumps the binary encoded Protobuf message to the stream.
 
@@ -889,7 +895,11 @@ class Message(ABC):
         -----------
         stream: :class:`BinaryIO`
             The stream to dump the message to.
+        delimit:
+            Whether to prefix the message with a varint declaring its size.
         """
+        if delimit == SIZE_DELIMITED:
+            dump_varint(len(self), stream)
 
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             try:
@@ -1207,7 +1217,11 @@ class Message(ABC):
             meta.group is not None and self._group_current.get(meta.group) == field_name
         )
 
-    def load(self: T, stream: BinaryIO, size: Optional[int] = None) -> T:
+    def load(
+        self: T,
+        stream: "ReadableBuffer",
+        size: Optional[int] = None,
+    ) -> T:
         """
         Load the binary encoded Protobuf from a stream into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
@@ -1219,12 +1233,17 @@ class Message(ABC):
         size: :class:`Optional[int]`
             The size of the message in the stream.
             Reads stream until EOF if ``None`` is given.
+            Reads based on a size delimiter prefix varint if SIZE_DELIMITED is given.
 
         Returns
         --------
         :class:`Message`
             The initialized message.
         """
+        # If the message is delimited, parse the message delimiter
+        if size == SIZE_DELIMITED:
+            size, _ = load_varint(stream)
+
         # Got some data over the wire
         self._serialized_on_wire = True
         proto_meta = self._betterproto
@@ -1297,7 +1316,7 @@ class Message(ABC):
 
         return self
 
-    def parse(self: T, data: "ReadableBuffer") -> T:
+    def parse(self: T, data: bytes) -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.

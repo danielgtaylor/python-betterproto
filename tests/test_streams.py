@@ -127,6 +127,18 @@ def test_message_dump_file_multiple(tmp_path):
         assert test_stream.read() == exp_stream.read()
 
 
+def test_message_dump_delimited(tmp_path):
+    with open(tmp_path / "message_dump_delimited.out", "wb") as stream:
+        oneof_example.dump(stream, betterproto.SIZE_DELIMITED)
+        oneof_example.dump(stream, betterproto.SIZE_DELIMITED)
+        nested_example.dump(stream, betterproto.SIZE_DELIMITED)
+
+    with open(tmp_path / "message_dump_delimited.out", "rb") as test_stream, open(
+        streams_path / "delimited_messages.in", "rb"
+    ) as exp_stream:
+        assert test_stream.read() == exp_stream.read()
+
+
 def test_message_len():
     assert len_oneof == len(bytes(oneof_example))
     assert len(nested_example) == len(bytes(nested_example))
@@ -155,7 +167,15 @@ def test_message_load_too_small():
         oneof.Test().load(stream, len_oneof - 1)
 
 
-def test_message_too_large():
+def test_message_load_delimited():
+    with open(streams_path / "delimited_messages.in", "rb") as stream:
+        assert oneof.Test().load(stream, betterproto.SIZE_DELIMITED) == oneof_example
+        assert oneof.Test().load(stream, betterproto.SIZE_DELIMITED) == oneof_example
+        assert nested.Test().load(stream, betterproto.SIZE_DELIMITED) == nested_example
+        assert stream.read(1) == b""
+
+
+def test_message_load_too_large():
     with open(
         streams_path / "message_dump_file_single.expected", "rb"
     ) as stream, pytest.raises(ValueError):
