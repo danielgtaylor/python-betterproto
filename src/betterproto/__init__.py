@@ -898,7 +898,16 @@ class Message(ABC):
             self.__class__._betterproto_meta = meta  # type: ignore
         return meta
 
-    def dump(self, stream: BinaryIO):
+    def dump(self, stream: BinaryIO) -> None:
+        """
+        Dumps the binary encoded Protobuf message to the stream.
+
+        Parameters
+        -----------
+        stream: :class:`BinaryIO`
+            The stream to dump the message to.
+        """
+
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             try:
                 value = getattr(self, field_name)
