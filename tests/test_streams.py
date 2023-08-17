@@ -19,6 +19,8 @@ oneof_example = oneof.Test().from_dict(
     {"pitied": 1, "just_a_regular_field": 123456789, "bar_name": "Testing"}
 )
 
+len_oneof = len(oneof_example)
+
 nested_example = nested.Test().from_dict(
     {
         "nested": {"count": 1},
@@ -116,7 +118,7 @@ def test_message_dump_file_multiple(tmp_path):
 
 
 def test_message_len():
-    assert len(oneof_example) == len(bytes(oneof_example))
+    assert len_oneof == len(bytes(oneof_example))
     assert len(nested_example) == len(bytes(nested_example))
 
 
@@ -124,12 +126,12 @@ def test_message_load_file_single():
     with open(streams_path / "message_dump_file_single.expected", "rb") as stream:
         assert oneof.Test().load(stream) == oneof_example
         stream.seek(0)
-        assert oneof.Test().load(stream, len(oneof_example)) == oneof_example
+        assert oneof.Test().load(stream, len_oneof) == oneof_example
 
 
 def test_message_load_file_multiple():
     with open(streams_path / "message_dump_file_multiple.expected", "rb") as stream:
-        oneof_size = len(oneof_example)
+        oneof_size = len_oneof
         assert oneof.Test().load(stream, oneof_size) == oneof_example
         assert oneof.Test().load(stream, oneof_size) == oneof_example
         assert nested.Test().load(stream) == nested_example
@@ -140,14 +142,14 @@ def test_message_load_too_small():
     with open(
         streams_path / "message_dump_file_single.expected", "rb"
     ) as stream, pytest.raises(ValueError):
-        oneof.Test().load(stream, len(oneof_example) - 1)
+        oneof.Test().load(stream, len_oneof - 1)
 
 
 def test_message_too_large():
     with open(
         streams_path / "message_dump_file_single.expected", "rb"
     ) as stream, pytest.raises(ValueError):
-        oneof.Test().load(stream, len(oneof_example) + 1)
+        oneof.Test().load(stream, len_oneof + 1)
 
 
 def test_message_len_optional_field():
