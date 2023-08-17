@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "betterproto"
-version = "2.0.0b6"
+version = "2.0.0b5"
 description = "A better Protobuf / gRPC generator & library"
 authors = ["Daniel G. Taylor <danielgtaylor@gmail.com>"]
 readme = "README.md"
@@ -63,7 +63,7 @@ cmd  = "mypy src --ignore-missing-imports"
 help = "Check types with mypy"
 
 [tool.poe.tasks.format]
-cmd  = "black . --exclude tests/output_ --target-version py310"
+cmd  = "black . --exclude tests/output_"
 help = "Apply black formatting to source code"
 
 [tool.poe.tasks.docs]
