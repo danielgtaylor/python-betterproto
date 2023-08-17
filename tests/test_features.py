@@ -265,6 +265,32 @@ def test_optional_flag():
     assert Request().parse(b"\n\x00").flag is False
 
 
+def test_optional_datetime_to_dict():
+    @dataclass
+    class Request(betterproto.Message):
+        date: Optional[datetime] = betterproto.message_field(1, optional=True)
+
+    # Check dict serialization
+    assert Request().to_dict() == {}
+    assert Request().to_dict(include_default_values=True) == {"date": None}
+    assert Request(date=datetime(2020, 1, 1)).to_dict() == {
+        "date": "2020-01-01T00:00:00Z"
+    }
+    assert Request(date=datetime(2020, 1, 1)).to_dict(include_default_values=True) == {
+        "date": "2020-01-01T00:00:00Z"
+    }
+
+    # Check pydict serialization
+    assert Request().to_pydict() == {}
+    assert Request().to_pydict(include_default_values=True) == {"date": None}
+    assert Request(date=datetime(2020, 1, 1)).to_pydict() == {
+        "date": datetime(2020, 1, 1)
+    }
+    assert Request(date=datetime(2020, 1, 1)).to_pydict(
+        include_default_values=True
+    ) == {"date": datetime(2020, 1, 1)}
+
+
 def test_to_json_default_values():
     @dataclass
     class TestMessage(betterproto.Message):

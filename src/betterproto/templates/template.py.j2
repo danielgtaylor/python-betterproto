@@ -5,13 +5,28 @@
 {% for i in output_file.python_module_imports|sort %}
 import {{ i }}
 {% endfor %}
+
+{% if output_file.pydantic_dataclasses %}
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from dataclasses import dataclass
+else:
+    from pydantic.dataclasses import dataclass
+{%- else -%}
 from dataclasses import dataclass
+{% endif %}
+
 {% if output_file.datetime_imports %}
 from datetime import {% for i in output_file.datetime_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif%}
 {% if output_file.typing_imports %}
 from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+
+{% if output_file.pydantic_imports %}
+from pydantic import {% for i in output_file.pydantic_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 
 {% endif %}
 
@@ -80,6 +95,11 @@ class {{ message.py_name }}(betterproto.Message):
         {% endfor %}
     {%  endif %}
 
+    {% if output_file.pydantic_dataclasses and message.has_oneof_fields %}
+    @root_validator()
+    def check_oneof(cls, values):
+        return cls._validate_field_groups(values)
+    {%  endif %}
 
 {% endfor %}
 {% for service in output_file.services %}
@@ -226,3 +246,11 @@ class {{ service.py_name }}Base(ServiceBase):
         }
 
 {% endfor %}
+
+{% if output_file.pydantic_dataclasses %}
+{% for message in output_file.messages %}
+{% if message.has_message_field %}
+{{ message.py_name }}.__pydantic_model__.update_forward_refs()  # type: ignore
+{% endif %}
+{% endfor %}
+{% endif %}

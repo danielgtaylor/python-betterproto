@@ -19,6 +19,7 @@ services = {
     "googletypes_service_returns_googletype",
     "example_service",
     "empty_service",
+    "service_uppercase",
 }
 
 

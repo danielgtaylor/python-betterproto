@@ -25,6 +25,7 @@ from typing import (
     Generator,
     Iterable,
     List,
+    Mapping,
     Optional,
     Set,
     Tuple,
@@ -603,7 +604,6 @@ class Message(ABC):
         # Set current field of each group after `__init__` has already been run.
         group_current: Dict[str, Optional[str]] = {}
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-
             if meta.group:
                 group_current.setdefault(meta.group)
 
@@ -679,6 +679,13 @@ class Message(ABC):
             return value
 
     def __setattr__(self, attr: str, value: Any) -> None:
+        if (
+            isinstance(value, Message)
+            and hasattr(value, "_betterproto")
+            and not value._betterproto.meta_by_field_name
+        ):
+            value._serialized_on_wire = True
+
         if attr != "_serialized_on_wire":
             # Track when a field has been set.
             self.__dict__["_serialized_on_wire"] = True
@@ -862,10 +869,10 @@ class Message(ABC):
         t = cls._type_hint(field.name)
 
         if hasattr(t, "__origin__"):
-            if t.__origin__ in (dict, Dict):
+            if t.__origin__ is dict:
                 # This is some kind of map (dict in Python).
                 return dict
-            elif t.__origin__ in (list, List):
+            elif t.__origin__ is list:
                 # This is some kind of list (repeated) field.
                 return list
             elif t.__origin__ is Union and t.__args__[1] is type(None):
@@ -1156,7 +1163,7 @@ class Message(ABC):
                     output[cased_name] = value
         return output
 
-    def from_dict(self: T, value: Dict[str, Any]) -> T:
+    def from_dict(self: T, value: Mapping[str, Any]) -> T:
         """
         Parse the key/value pairs into the current message instance. This returns the
         instance itself and is therefore assignable and chainable.
@@ -1351,6 +1358,9 @@ class Message(ABC):
                     value = [i.to_pydict(casing, include_default_values) for i in value]
                     if value or include_default_values:
                         output[cased_name] = value
+                elif value is None:
+                    if include_default_values:
+                        output[cased_name] = None
                 elif (
                     value._serialized_on_wire
                     or include_default_values
@@ -1376,7 +1386,7 @@ class Message(ABC):
                 output[cased_name] = value
         return output
 
-    def from_pydict(self: T, value: Dict[str, Any]) -> T:
+    def from_pydict(self: T, value: Mapping[str, Any]) -> T:
         """
         Parse the key/value pairs into the current message instance. This returns the
         instance itself and is therefore assignable and chainable.
@@ -1447,6 +1457,36 @@ class Message(ABC):
             else None
         )
         return self.__raw_get(name) is not default
+
+    @classmethod
+    def _validate_field_groups(cls, values):
+        group_to_one_ofs = cls._betterproto_meta.oneof_field_by_group  # type: ignore
+        field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
+
+        for group, field_set in group_to_one_ofs.items():
+
+            if len(field_set) == 1:
+                (field,) = field_set
+                field_name = field.name
+                meta = field_name_to_meta[field_name]
+
+                # This is a synthetic oneof; we should ignore it's presence and not consider it as a oneof.
+                if meta.optional:
+                    continue
+
+            set_fields = [
+                field.name for field in field_set if values[field.name] is not None
+            ]
+
+            if not set_fields:
+                raise ValueError(f"Group {group} has no value; all fields are None")
+            elif len(set_fields) > 1:
+                set_fields_str = ", ".join(set_fields)
+                raise ValueError(
+                    f"Group {group} has more than one value; fields {set_fields_str} are not None"
+                )
+
+        return values
 
 
 def serialized_on_wire(message: Message) -> bool:
@@ -1531,6 +1571,9 @@ class _Timestamp(Timestamp):
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
         nanos = dt.microsecond * 1e3
+        if dt.tzinfo is not None:
+            # change timezone aware datetime objects to utc
+            dt = dt.astimezone(timezone.utc)
         copy = dt.replace(microsecond=0, tzinfo=None)
         result = copy.isoformat()
         if (nanos % 1e9) == 0:

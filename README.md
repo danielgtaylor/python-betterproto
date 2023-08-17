@@ -7,13 +7,14 @@ This project aims to provide an improved experience when using Protobuf / gRPC i
 
 - Protobuf 3 & gRPC code generation
   - Both binary & JSON serialization is built-in
-- Python 3.6+ making use of:
+- Python 3.7+ making use of:
   - Enums
   - Dataclasses
   - `async`/`await`
   - Timezone-aware `datetime` and `timedelta` objects
   - Relative imports
   - Mypy type checking
+- [Pydantic Models](https://docs.pydantic.dev/) generation (see #generating-pydantic-models)
 
 This project is heavily inspired by, and borrows functionality from:
 
@@ -364,6 +365,25 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 {'ts': '2019-01-01T12:00:00Z', 'duration': '1.200s'}
 ```
 
+## Generating Pydantic Models
+
+You can use python-betterproto to generate pydantic based models, using
+pydantic dataclasses. This means the results of the protobuf unmarshalling will
+be typed checked. The usage is the same, but you need to add a custom option
+when calling the protobuf compiler:
+
+
+```
+protoc -I . --python_betterproto_opt=pydantic_dataclasses --python_betterproto_out=lib example.proto
+```
+
+With the important change being `--python_betterproto_opt=pydantic_dataclasses`. This will
+swap the dataclass implementation from the builtin python dataclass to the
+pydantic dataclass. You must have pydantic as a dependency in your project for
+this to work.
+
+
+
 ## Development
 
 - _Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!_
@@ -371,7 +391,7 @@ datetime.datetime(2019, 1, 1, 11, 59, 58, 800000, tzinfo=datetime.timezone.utc)
 
 ### Requirements
 
-- Python (3.6 or higher)
+- Python (3.7 or higher)
 
 - [poetry](https://python-poetry.org/docs/#installation)
   *Needed to install dependencies in a virtual environment*
@@ -447,7 +467,7 @@ poe full-test
 Betterproto includes compiled versions for Google's well-known types at [src/betterproto/lib/google](src/betterproto/lib/google).
 Be sure to regenerate these files when modifying the plugin output format, and validate by running the tests.
 
-Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`. 
+Normally, the plugin does not compile any references to `google.protobuf`, since they are pre-compiled. To force compilation of `google.protobuf`, use the option `--custom_opt=INCLUDE_GOOGLE`.
 
 Assuming your `google.protobuf` source files (included with all releases of `protoc`) are located in `/usr/local/include`, you can regenerate them as follows:
 
