@@ -62,6 +62,16 @@ def test_load_varint_file():
         )  # Multi-byte varint
 
 
+def test_load_varint_cutoff():
+    with open(streams_path / "load_varint_cutoff.in", "rb") as stream:
+        with pytest.raises(EOFError):
+            betterproto.load_varint(stream)
+
+        stream.seek(1)
+        with pytest.raises(EOFError):
+            betterproto.load_varint(stream)
+
+
 def test_dump_varint_file(tmp_path):
     # Dump test varints to file
     with open(tmp_path / "dump_varint_file.out", "wb") as stream:
