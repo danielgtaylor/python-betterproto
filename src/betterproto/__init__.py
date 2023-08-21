@@ -355,10 +355,10 @@ def dump_varint(value: int, stream: BinaryIO) -> None:
     bits = value & 0x7F
     value >>= 7
     while value:
-        stream.write((0x80 | bits).to_bytes(length=1, byteorder="little"))
+        stream.write((0x80 | bits).to_bytes(1, "little"))
         bits = value & 0x7F
         value >>= 7
-    stream.write(bits.to_bytes(length=1, byteorder="little"))
+    stream.write(bits.to_bytes(1, "little"))
 
 
 def encode_varint(value: int) -> bytes:
