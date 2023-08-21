@@ -562,7 +562,7 @@ def load_varint(stream: BinaryIO) -> Tuple[int, bytes]:
         if shift >= 64:
             raise ValueError("Too many bytes when decoding varint.")
         b = stream.read(1)
-        if b == b"":
+        if not b:
             raise EOFError("Stream ended unexpectedly while attempting to load varint.")
         raw += b
         b_int = int.from_bytes(b, byteorder="little")
