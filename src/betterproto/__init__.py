@@ -48,6 +48,10 @@ from .casing import (
 from .grpc.grpclib_client import ServiceStub
 
 
+if TYPE_CHECKING:
+    from _typeshed import ReadableBuffer
+
+
 # Proto 3 data types
 TYPE_ENUM = "enum"
 TYPE_BOOL = "bool"
@@ -1311,7 +1315,7 @@ class Message(ABC):
 
         return self
 
-    def parse(self: T, data: bytes) -> T:
+    def parse(self: T, data: "ReadableBuffer") -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
