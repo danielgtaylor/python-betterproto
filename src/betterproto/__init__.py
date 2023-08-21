@@ -1327,9 +1327,7 @@ class Message(ABC):
             The initialized message.
         """
         with BytesIO(data) as stream:
-            self.load(stream)
-
-        return self
+            return self.load(stream)
 
     # For compatibility with other libraries.
     @classmethod
