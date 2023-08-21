@@ -25,8 +25,8 @@ from typing import (
     BinaryIO,
     Callable,
     Dict,
+    Generator,
     Iterable,
-    Iterator,
     Mapping,
     Optional,
     Set,
@@ -590,7 +590,7 @@ class ParsedField:
     raw: bytes
 
 
-def load_fields(stream: BinaryIO) -> Iterator[ParsedField]:
+def load_fields(stream: BinaryIO) -> Generator[ParsedField, None, None]:
     while True:
         try:
             num_wire, raw = load_varint(stream)
@@ -618,7 +618,7 @@ def load_fields(stream: BinaryIO) -> Iterator[ParsedField]:
         yield ParsedField(number=number, wire_type=wire_type, value=decoded, raw=raw)
 
 
-def parse_fields(value: bytes) -> Iterator[ParsedField]:
+def parse_fields(value: bytes) -> Generator[ParsedField, None, None]:
     i = 0
     while i < len(value):
         start = i
