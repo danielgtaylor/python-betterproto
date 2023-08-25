@@ -1009,6 +1009,13 @@ class Message(ABC):
         """
         Get the binary encoded Protobuf representation of this message instance.
         """
+
+        if True:
+            # TODO: Make native serialization optional
+
+            import betterproto_extras
+            return betterproto_extras.serialize(self)
+
         with BytesIO() as stream:
             self.dump(stream)
             return stream.getvalue()
@@ -1330,6 +1337,13 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
+        if True:
+            # TODO: Make native deserialization optional
+
+            import betterproto_extras
+            betterproto_extras.deserialize(self, data)
+            return self
+    
         with BytesIO(data) as stream:
             return self.load(stream)
 

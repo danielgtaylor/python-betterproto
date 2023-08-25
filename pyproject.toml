@@ -19,6 +19,7 @@ importlib-metadata = { version = ">=1.6.0", python = "<3.8" }
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
 isort = {version = "^5.11.5", optional = true}
+betterproto-extras = { path = "betterproto-extras" }
 
 [tool.poetry.dev-dependencies]
 asv = "^0.4.2"

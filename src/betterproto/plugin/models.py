@@ -142,12 +142,12 @@ def monkey_patch_oneof_index():
             "betterproto"
         ],
         "group",
-        "oneof_index",
+        "_oneof_index",
     )
     object.__setattr__(
         Field.__dataclass_fields__["oneof_index"].metadata["betterproto"],
         "group",
-        "oneof_index",
+        "_oneof_index",
     )
 
 
@@ -385,7 +385,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
         us to tell whether it was set, via the which_one_of interface.
     """
 
-    return which_one_of(proto_field_obj, "oneof_index")[0] == "oneof_index"
+    return which_one_of(proto_field_obj, "_oneof_index")[0] == "oneof_index"
 
 
 @dataclass
