@@ -199,9 +199,6 @@ class {{ service.py_name }}Base(ServiceBase):
 
         {% endif %}
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
-        {% if method.server_streaming %}
-        yield {{ method.py_output_message_type }}()
-        {% endif %}
 
     {% endfor %}
 
