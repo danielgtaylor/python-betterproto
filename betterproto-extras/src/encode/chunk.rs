@@ -1,8 +1,7 @@
-use std::ops::Deref;
-
 use super::{message::MessageEncoder, EncodeResult};
 use prost::{bytes::BufMut, encoding as enc, Message};
 use pyo3::{types::PyList, FromPyObject, PyAny, PyResult};
+use std::ops::Deref;
 
 pub struct Chunk(ChunkVariant);
 
@@ -31,8 +30,8 @@ impl Chunk {
             tag,
             value,
             |x| Ok(x.extract::<Vec<T>>()?),
-            |tag, ls| len_fn(tag, &ls),
-            |tag, ls, buf| encoder(tag, &ls, buf),
+            |tag, ls| len_fn(tag, ls),
+            |tag, ls, buf| encoder(tag, ls, buf),
         )
     }
 
@@ -47,8 +46,8 @@ impl Chunk {
                     .map(|x| x.getattr("value").unwrap_or(x).extract::<i32>())
                     .collect::<PyResult<Vec<i32>>>()?)
             },
-            |tag, ls| enc::int32::encoded_len_packed(tag, &ls),
-            |tag, ls, buf| enc::int32::encode_packed(tag, &ls, buf),
+            |tag, ls| enc::int32::encoded_len_packed(tag, ls),
+            |tag, ls, buf| enc::int32::encode_packed(tag, ls, buf),
         )
     }
 
