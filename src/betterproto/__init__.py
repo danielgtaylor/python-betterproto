@@ -930,7 +930,7 @@ class Message(ABC):
             # Note that proto3 field presence/optional fields are put in a
             # synthetic single-item oneof by protoc, which helps us ensure we
             # send the value even if the value is the default zero value.
-            selected_in_group = bool(meta.group)
+            selected_in_group = bool(meta.group) or meta.optional
 
             # Empty messages can still be sent on the wire if they were
             # set (or received empty).
