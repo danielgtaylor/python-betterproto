@@ -9,8 +9,6 @@ pub enum DecodeError {
     #[error("The given binary data does not match the protobuf schema.")]
     ProstDecode(#[from] prost::DecodeError),
     #[error("The given binary data does not match the protobuf schema.")]
-    MapEntryHasNoKey,
-    #[error("The given binary data does not match the protobuf schema.")]
     InvalidMapEntryTag,
     #[error("The given binary data is not a valid protobuf message.")]
     InvalidData,

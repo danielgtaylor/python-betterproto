@@ -5,7 +5,7 @@ use super::{
     BetterprotoEnumClass,
 };
 use crate::{
-    descriptors::{Cardinality, FieldDescriptor, ProtoType},
+    descriptors::{FieldAttribute, FieldDescriptor, ProtoType},
     Str,
 };
 use pyo3::{FromPyObject, IntoPy, Python};
@@ -16,6 +16,7 @@ pub struct BetterprotoFieldMeta {
     pub map_types: Option<(String, String)>,
     pub proto_type: String,
     pub wraps: Option<String>,
+    pub optional: bool,
 }
 
 impl BetterprotoFieldMeta {
@@ -25,31 +26,36 @@ impl BetterprotoFieldMeta {
         field_name: Str,
         msg_meta: &BetterprotoMessageMeta,
     ) -> InteropResult<FieldDescriptor> {
-        let (value_type, cardinality) = if let Some((key_type, value_type)) = self.map_types {
+        if let Some((key_type, value_type)) = self.map_types {
             let key_type = convert_key_type(&key_type)?;
             let value_type =
                 convert_value_type(py, &value_type, &format!("{field_name}.value"), msg_meta)?;
-            (value_type, Cardinality::Map(key_type))
-        } else {
-            let value_type = match self.wraps {
-                Some(wrapped_type) => convert_wrapped_type(&wrapped_type)?,
-                None => convert_value_type(py, &self.proto_type, &field_name, msg_meta)?,
-            };
-            let cardinality = if msg_meta.is_list_field(&field_name)? {
-                Cardinality::Repeated
-            } else {
-                Cardinality::Single
-            };
-            (value_type, cardinality)
+            return Ok(FieldDescriptor {
+                name: field_name,
+                attribute: FieldAttribute::Map(key_type),
+                value_type,
+            });
+        }
+
+        let value_type = match self.wraps {
+            Some(wrapped_type) => convert_wrapped_type(&wrapped_type)?,
+            None => convert_value_type(py, &self.proto_type, &field_name, msg_meta)?,
         };
 
-        let oneof_group = msg_meta.oneof_group_by_field.get(field_name.as_ref());
+        let attribute = if self.optional {
+            FieldAttribute::Optional
+        } else if let Some(group) = msg_meta.oneof_group_by_field.get(field_name.as_ref()) {
+            FieldAttribute::Group(Str::from(group.as_ref()))
+        } else if msg_meta.is_list_field(&field_name)? {
+            FieldAttribute::Repeated
+        } else {
+            FieldAttribute::None
+        };
 
         Ok(FieldDescriptor {
             name: field_name,
-            group: oneof_group.map(|name| Str::from(name.as_ref())),
             value_type,
-            cardinality,
+            attribute,
         })
     }
 }

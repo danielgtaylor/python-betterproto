@@ -11,7 +11,7 @@ pub enum EncodeError {
     #[error(transparent)]
     Interop(#[from] InteropError),
     #[error("Given object is not a valid betterproto message.")]
-    ProstDecode(#[from] prost::EncodeError),
+    ProstEncode(#[from] prost::EncodeError),
 }
 
 pub type EncodeResult<T> = Result<T, EncodeError>;

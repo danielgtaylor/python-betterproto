@@ -43,7 +43,7 @@ impl<'a, 'py> CustomMessageBuilder<'a, 'py> {
             msg.set_field(name, value)?;
         }
         msg.append_unknown_fields(self.unknown_fields)?;
-        msg.set_serialized()?;
+        msg.set_deserialized()?;
         Ok(())
     }
 

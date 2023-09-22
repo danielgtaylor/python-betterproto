@@ -54,6 +54,14 @@ impl<'a, 'py> ValueBuilder<'a, 'py> {
         }
     }
 
+    pub fn into_object_or_default(self) -> DecodeResult<PyObject> {
+        let py = self.py;
+        let proto_type = self.proto_type;
+        self.into_object()
+            .map(Ok)
+            .unwrap_or_else(|| Ok(proto_type.default_value(py)?))
+    }
+
     pub fn parse_next_single(
         &mut self,
         wire_type: WireType,

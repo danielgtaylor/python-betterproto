@@ -1,6 +1,6 @@
 use super::{error::DecodeResult, value::ValueBuilder};
 use crate::{
-    descriptors::{Cardinality, FieldDescriptor},
+    descriptors::{FieldAttribute, FieldDescriptor},
     Str,
 };
 use prost::{bytes::Buf, encoding::WireType};
@@ -26,7 +26,10 @@ impl<'a, 'py> FieldBuilder<'a, 'py> {
     }
 
     pub fn group(&self) -> Option<Str> {
-        self.descriptor.group.clone()
+        match &self.descriptor.attribute {
+            FieldAttribute::Group(name) => Some(name.clone()),
+            _ => None,
+        }
     }
 
     pub fn reset(&mut self) {
@@ -34,12 +37,12 @@ impl<'a, 'py> FieldBuilder<'a, 'py> {
     }
 
     pub fn parse_next(&mut self, wire_type: WireType, buf: &mut impl Buf) -> DecodeResult<()> {
-        match &self.descriptor.cardinality {
-            Cardinality::Single => self.value.parse_next_single(wire_type, buf)?,
-            Cardinality::Repeated => self.value.parse_next_list_entry(wire_type, buf)?,
-            Cardinality::Map(key_type) => {
+        match &self.descriptor.attribute {
+            FieldAttribute::Repeated => self.value.parse_next_list_entry(wire_type, buf)?,
+            FieldAttribute::Map(key_type) => {
                 self.value.parse_next_map_entry(wire_type, key_type, buf)?
             }
+            _ => self.value.parse_next_single(wire_type, buf)?,
         }
         Ok(())
     }

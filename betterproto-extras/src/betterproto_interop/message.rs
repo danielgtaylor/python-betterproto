@@ -1,6 +1,7 @@
 use super::{error::InteropResult, BetterprotoMessageClass};
 use indoc::indoc;
 use pyo3::{
+    intern,
     sync::GILOnceCell,
     types::{PyBytes, PyModule},
     FromPyObject, IntoPy, PyAny, PyObject, Python, ToPyObject,
@@ -23,26 +24,7 @@ impl<'py> BetterprotoMessage<'py> {
         Ok(())
     }
 
-    pub fn append_unknown_fields(&self, mut data: Vec<u8>) -> InteropResult<()> {
-        if !data.is_empty() {
-            let mut unknown_fields = self.0.getattr("_unknown_fields")?.extract::<Vec<u8>>()?;
-            unknown_fields.append(&mut data);
-            self.0
-                .setattr("_unknown_fields", PyBytes::new(self.py(), &unknown_fields))?;
-        }
-        Ok(())
-    }
-
-    pub fn get_unknown_fields(&self) -> InteropResult<Vec<u8>> {
-        Ok(self.0.getattr("_unknown_fields")?.extract()?)
-    }
-
-    pub fn set_serialized(&self) -> InteropResult<()> {
-        self.0.setattr("_serialized_on_wire", true)?;
-        Ok(())
-    }
-
-    pub fn get_relevant_field(&'py self, field_name: &str) -> InteropResult<Option<&'py PyAny>> {
+    pub fn get_field(&'py self, field_name: &str) -> InteropResult<Option<&'py PyAny>> {
         let py = self.py();
         static GETTER_CACHE: GILOnceCell<PyObject> = GILOnceCell::new();
         let getter = GETTER_CACHE
@@ -50,29 +32,12 @@ impl<'py> BetterprotoMessage<'py> {
                 PyModule::from_code(
                     py,
                     indoc! {"
-                        from betterproto import Message
+                        from betterproto import PLACEHOLDER
 
                         def getter(msg, field_name):
-                            try:
-                                value = getattr(msg, field_name)
-                            except AttributeError:
+                            value = msg._Message__raw_get(field_name)
+                            if value is PLACEHOLDER:
                                 return
-
-                            if value is None:
-                                return
-
-                            meta = msg._betterproto.meta_by_field_name[field_name]
-                            selected_in_group = bool(meta.group)
-                            serialize_empty = isinstance(value, Message) and value._serialized_on_wire
-                            include_default_value_for_oneof = msg._include_default_value_for_oneof(
-                                field_name=field_name, meta=meta
-                            )
-                
-                            if value == msg._get_field_default(field_name) and not (
-                                selected_in_group or serialize_empty or include_default_value_for_oneof
-                            ):
-                                return
-                            
                             return value
                     "},
                     "",
@@ -86,6 +51,38 @@ impl<'py> BetterprotoMessage<'py> {
             .as_ref(py);
 
         let res = getter.call1((self.0, field_name))?.extract()?;
+        Ok(res)
+    }
+
+    pub fn append_unknown_fields(&self, mut data: Vec<u8>) -> InteropResult<()> {
+        let attr_name = intern!(self.py(), "_unknown_fields");
+        if !data.is_empty() {
+            let mut unknown_fields = self.0.getattr(attr_name)?.extract::<Vec<u8>>()?;
+            unknown_fields.append(&mut data);
+            self.0
+                .setattr(attr_name, PyBytes::new(self.py(), &unknown_fields))?;
+        }
+        Ok(())
+    }
+
+    pub fn get_unknown_fields(&self) -> InteropResult<Vec<u8>> {
+        Ok(self
+            .0
+            .getattr(intern!(self.py(), "_unknown_fields"))?
+            .extract()?)
+    }
+
+    pub fn set_deserialized(&self) -> InteropResult<()> {
+        self.0
+            .setattr(intern!(self.py(), "_serialized_on_wire"), true)?;
+        Ok(())
+    }
+
+    pub fn should_be_serialized(&self) -> InteropResult<bool> {
+        let res = self
+            .0
+            .getattr(intern!(self.py(), "_serialized_on_wire"))?
+            .extract()?;
         Ok(res)
     }
 }
