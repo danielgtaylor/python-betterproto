@@ -51,8 +51,8 @@ from .grpc.grpclib_client import ServiceStub as ServiceStub
 
 if TYPE_CHECKING:
     from _typeshed import (
-        ReadableBuffer,
-        WriteableBuffer,
+        SupportsRead,
+        SupportsWrite,
     )
 
 
@@ -328,7 +328,7 @@ def _pack_fmt(proto_type: str) -> str:
     }[proto_type]
 
 
-def dump_varint(value: int, stream: "WriteableBuffer") -> None:
+def dump_varint(value: int, stream: "SupportsWrite[bytes]") -> None:
     """Encodes a single varint and dumps it into the provided stream."""
     if value < -(1 << 63):
         raise ValueError(
@@ -537,7 +537,7 @@ def _dump_float(value: float) -> Union[float, str]:
     return value
 
 
-def load_varint(stream: "ReadableBuffer") -> Tuple[int, bytes]:
+def load_varint(stream: "SupportsRead[bytes]") -> Tuple[int, bytes]:
     """
     Load a single varint value from a stream. Returns the value and the raw bytes read.
     """
@@ -575,7 +575,7 @@ class ParsedField:
     raw: bytes
 
 
-def load_fields(stream: "ReadableBuffer") -> Generator[ParsedField, None, None]:
+def load_fields(stream: "SupportsRead[bytes]") -> Generator[ParsedField, None, None]:
     while True:
         try:
             num_wire, raw = load_varint(stream)
@@ -887,7 +887,7 @@ class Message(ABC):
             self.__class__._betterproto_meta = meta  # type: ignore
         return meta
 
-    def dump(self, stream: "WriteableBuffer", delimit: bool = False) -> None:
+    def dump(self, stream: "SupportsWrite[bytes]", delimit: bool = False) -> None:
         """
         Dumps the binary encoded Protobuf message to the stream.
 
@@ -1219,7 +1219,7 @@ class Message(ABC):
 
     def load(
         self: T,
-        stream: "ReadableBuffer",
+        stream: "SupportsRead[bytes]",
         size: Optional[int] = None,
     ) -> T:
         """
