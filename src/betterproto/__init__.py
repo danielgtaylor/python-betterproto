@@ -1889,6 +1889,7 @@ class _Duration(Duration):
 
 _EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
+
 class _Timestamp(Timestamp):
     @classmethod
     def from_datetime(cls, dt: datetime) -> "_Timestamp":
@@ -1897,7 +1898,9 @@ class _Timestamp(Timestamp):
         offset = dt - _EPOCH
         # below is the same as timedelta.total_seconds() but without dividing by 1e6
         # so we end up with microseconds as integers instead of seconds as float
-        offset_us = (offset.days * 86400 + offset.seconds) * 10**6 + offset.microseconds
+        offset_us = (
+            offset.days * 86400 + offset.seconds
+        ) * 10**6 + offset.microseconds
         seconds, us = divmod(offset_us, 10**6)
         return cls(seconds, us * 1000)
 
