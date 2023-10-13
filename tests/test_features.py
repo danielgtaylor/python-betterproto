@@ -1,4 +1,5 @@
 import json
+import pickle
 import sys
 from copy import (
     copy,
@@ -740,3 +741,40 @@ def test_equality_comparison():
     assert msg == TestMessage(value=True)
     assert msg != 1
     assert msg != TestMessage(value=False)
+
+
+
+@dataclass
+class PickleMessage(betterproto.Message):
+    foo: bool = betterproto.bool_field(1)
+    bar: Optional[int] = betterproto.int32_field(2, optional=True)
+
+
+def test_default_pickle():
+    deserialized = pickle.loads(pickle.dumps(PickleMessage()))
+
+    assert deserialized.foo is False
+    assert deserialized.bar is None
+
+
+def test_pickle_with_set_values():
+    msg = PickleMessage(foo=True, bar=42)
+    deserialized = pickle.loads(pickle.dumps(msg))
+
+    assert deserialized.foo is True
+    assert deserialized.bar == 42
+
+
+def test_pickling_recursive_message():
+    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
+
+    msg = RecursiveMessage()
+    deserialized = pickle.loads(pickle.dumps(msg))
+
+    assert deserialized.child == RecursiveMessage()
+
+    # Lazily-created zero-value children must not affect equality.
+    assert deserialized == RecursiveMessage()
+
+    # Lazily-created zero-value children must not affect serialization.
+    assert bytes(deserialized) == b""

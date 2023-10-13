@@ -1113,6 +1113,12 @@ class Message(ABC):
         """
         return bytes(self)
 
+    def __getstate__(self) -> bytes:
+        return bytes(self)
+
+    def __setstate__(self: T, pickled_bytes: bytes) -> T:
+        return self.parse(pickled_bytes)
+
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
         return cls._type_hints()[field_name]
