@@ -11,7 +11,7 @@ from base64 import (
     b64decode,
     b64encode,
 )
-from copy import deepcopy
+from copy import deepcopy, copy
 from datetime import (
     datetime,
     timedelta,
@@ -874,6 +874,14 @@ class Message(ABC):
                 kwargs[name] = deepcopy(value)
         return self.__class__(**kwargs)  # type: ignore
 
+    def __copy__(self: T, _: Any = {}) -> T:
+        kwargs = {}
+        for name in self._betterproto.sorted_field_names:
+            value = self.__raw_get(name)
+            if value is not PLACEHOLDER:
+                kwargs[name] = copy(value)
+        return self.__class__(**kwargs)  # type: ignore
+
     @property
     def _betterproto(self) -> ProtoClassMetadata:
         """
@@ -1117,7 +1125,12 @@ class Message(ABC):
         return bytes(self)
 
     def __setstate__(self: T, pickled_bytes: bytes) -> T:
-        return self.parse(pickled_bytes)
+        new = self.parse(pickled_bytes)
+        new.__post_init__()
+        return new
+
+    def __reduce__(self) -> str | tuple[Any, ...]:
+        return (self.__class__, (self.to_dict(),))
 
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
