@@ -1129,7 +1129,7 @@ class Message(ABC):
         new.__post_init__()
         return new
 
-    def __reduce__(self) -> str | tuple[Any, ...]:
+    def __reduce__(self) -> Union[str, Tuple[Any, ...]]:
         return (self.__class__, (self.to_dict(),))
 
     @classmethod
