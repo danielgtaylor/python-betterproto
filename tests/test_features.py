@@ -743,7 +743,6 @@ def test_equality_comparison():
     assert msg != TestMessage(value=False)
 
 
-
 @dataclass
 class PickleMessage(betterproto.Message):
     foo: bool = betterproto.bool_field(1)
