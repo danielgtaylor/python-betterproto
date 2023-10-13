@@ -1127,7 +1127,7 @@ class Message(ABC):
     def __setstate__(self: T, pickled_bytes: bytes) -> T:
         return self.parse(pickled_bytes)
 
-    def __reduce__(self) -> Union[str, Tuple[Any, ...]]:
+    def __reduce__(self) -> Tuple[Any, ...]:
         return (self.__class__.FromString, (bytes(self),))
 
     @classmethod
