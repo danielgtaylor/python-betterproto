@@ -520,6 +520,16 @@ protoc \
 - [x] Automate running tests
 - [ ] Cleanup!
 
+
+## Release
+
+New versions are versioned and released using [Semantic Release](https://github.com/semantic-release/semantic-release). When new commits
+using the Angular Conventional Commits syntax land on `master`  or `rc`, those commits are used to determine what new version to release.
+
+All Pull Requests must target the `rc` branch; when merged into `rc` they will publish new release candidate (`rc`) versions to PyPI
+automatically. When maintainers want to publish a new full release, they simply merge `rc` into `master`. This flow ensures that features
+and fixes are published quickly and continuously rather than awaiting a manual release process.
+
 ## Community
 
 Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
