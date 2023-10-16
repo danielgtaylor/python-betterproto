@@ -70,9 +70,6 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         # members become proper class variables
 
         for name, value in members.items():
-            if _is_descriptor(value) or name[0] == "_":
-                continue
-
             member = value_map.get(value)
             if member is None:
                 member = cls.__new__(cls, name=name, value=value)  # type: ignore
