@@ -1868,13 +1868,15 @@ class _Duration(Duration):
 class _Timestamp(Timestamp):
     @classmethod
     def from_datetime(cls, dt: datetime) -> "_Timestamp":
-        seconds = int(dt.timestamp())
+        # apparently 0 isn't a year in [0, 9999]??
+        seconds = int((dt - DATETIME_ZERO).total_seconds())
         nanos = int(dt.microsecond * 1e3)
         return cls(seconds, nanos)
 
     def to_datetime(self) -> datetime:
         ts = self.seconds + (self.nanos / 1e9)
-        return datetime.fromtimestamp(ts, tz=timezone.utc)
+        # if datetime.fromtimestamp ever supports -62135596800 use that instead see #407
+        return DATETIME_ZERO + timedelta(seconds=ts)
 
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
