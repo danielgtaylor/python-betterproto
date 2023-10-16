@@ -79,7 +79,7 @@ def test_datetime_clamping(dt):  # see #407
         == ReferenceSpam.FromString(message_bytes).ts.seconds
     )
 
-    
+
 def test_empty_message_field():
     message = Request()
     reference_message = ReferenceRequest()
@@ -91,4 +91,3 @@ def test_empty_message_field():
     assert reference_message.HasField("foo")
 
     assert bytes(message) == reference_message.SerializeToString()
-    
