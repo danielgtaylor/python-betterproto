@@ -790,6 +790,10 @@ class Message(ABC):
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
+    def __rich_repr__(self) -> Iterable[Tuple[str, Any, Any]]:
+        for field_name in self._betterproto.sorted_field_names:
+            yield field_name, self.__raw_get(field_name), PLACEHOLDER
+
     if not TYPE_CHECKING:
 
         def __getattribute__(self, name: str) -> Any:
