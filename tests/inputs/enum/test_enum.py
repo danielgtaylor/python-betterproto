@@ -106,8 +106,6 @@ def test_enum_mapped_on_parse():
 
 
 def test_renamed_enum_members():
-    import inspect
-    assert not inspect.getsource(ArithmeticOperator)
     assert set(ArithmeticOperator.__members__) == {
         "NONE",
         "PLUS",
