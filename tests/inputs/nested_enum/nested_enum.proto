@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package nested_enum;
+
+message Test {
+    enum Inner {
+        NONE = 0;
+        THIS = 1;
+    }
+    Inner status = 1;
+
+    message Doubly {
+        enum Inner {
+            NONE = 0;
+            THIS = 1;
+        }
+        Inner status = 1;
+    }
+}
+
+
+message TestInner {
+  int32 foo = 1;
+}
+
+message TestDoublyInner {
+  int32 foo = 1;
+  string bar = 2;
+}
+
+enum Outer {
+    foo = 0;
+    bar = 1;
+}
+
+message Content {
+    message Status {
+        string code = 1;
+    }
+    Status status = 1;
+}
+
+message ContentStatus {
+    int32 id = 1;
+}

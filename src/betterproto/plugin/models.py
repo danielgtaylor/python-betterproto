@@ -248,12 +248,54 @@ class OutputTemplate:
     typing_imports: Set[str] = field(default_factory=set)
     pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
-    messages: List["MessageCompiler"] = field(default_factory=list)
-    enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
+    messages: Dict[str, "MessageCompiler"] = field(default_factory=dict)
+    enums: Dict[str, "EnumDefinitionCompiler"] = field(default_factory=dict)
     services: List["ServiceCompiler"] = field(default_factory=list)
     imports_type_checking_only: Set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
     output: bool = True
+
+    def structure(self):
+        def recursive_structure(descriptor_proto):
+            branch = {}
+            for msg in descriptor_proto.nested_type:
+                branch[msg.name] = {"children": recursive_structure(msg), "kind": "msg"}
+            for enum_ in descriptor_proto.enum_type:
+                branch[enum_.name] = {"kind": "enum"}
+            return branch
+
+        tree = {}
+        for msg in self.package_proto_obj.message_type:
+            tree[msg.name] = {"children": recursive_structure(msg), "kind": "msg"}
+        for enum_ in self.package_proto_obj.enum_type:
+            tree[enum_.name] = {"kind": "enum"}
+
+        return {"root": tree}
+
+    def structure_with_obj(self):
+        def recursive_structure(descriptor_proto):
+            branch = {}
+            for msg in descriptor_proto.nested_type:
+                branch[msg.name] = {
+                    "children": recursive_structure(msg),
+                    "kind": "msg",
+                    "obj": self.messages[msg.name],
+                }
+            for enum_ in descriptor_proto.enum_type:
+                branch[enum_.name] = {"kind": "enum", "obj": self.enums[enum_.name]}
+            return branch
+
+        tree = {}
+        for msg in self.package_proto_obj.message_type:
+            tree[msg.name] = {
+                "children": recursive_structure(msg),
+                "kind": "msg",
+                "obj": self.messages[msg.name],
+            }
+        for enum_ in self.package_proto_obj.enum_type:
+            tree[enum_.name] = {"kind": "enum", "obj": self.enums[enum_.name]}
+
+        return {"root": tree}
 
     @property
     def package(self) -> str:
@@ -305,9 +347,9 @@ class MessageCompiler(ProtoContentBase):
         # Add message to output file
         if isinstance(self.parent, OutputTemplate):
             if isinstance(self, EnumDefinitionCompiler):
-                self.output_file.enums.append(self)
+                self.output_file.enums[self.proto_name] = self
             else:
-                self.output_file.messages.append(self)
+                self.output_file.messages[self.proto_name] = self
         self.deprecated = self.proto_obj.options.deprecated
         super().__post_init__()
 

@@ -48,7 +48,23 @@ if TYPE_CHECKING:
 {% endfor %}
 {% endif %}
 
-{% if output_file.enums %}{% for enum in output_file.enums %}
+{#
+
+
+original markdown is missing until I finish debugging this 
+
+
+#}
+
+{% set tree = output_file.structure() %}
+"""
+{{ tree|tojson(indent=4) }}
+"""
+
+{% macro render_class(tree_) %}
+{% for k, v in tree_.items() %}
+{% if v.kind == "enum" %}
+{% set enum = v.obj %}
 class {{ enum.py_name }}(betterproto.Enum):
     {% if enum.comment %}
 {{ enum.comment }}
@@ -61,17 +77,17 @@ class {{ enum.py_name }}(betterproto.Enum):
 
         {% endif %}
     {% endfor %}
-
-
-{% endfor %}
-{% endif %}
-{% for message in output_file.messages %}
+{% else %}
+{% set message = v.obj %}
 @dataclass(eq=False, repr=False)
 class {{ message.py_name }}(betterproto.Message):
     {% if message.comment %}
 {{ message.comment }}
 
     {% endif %}
+
+    {{ render_class(v.children)|indent }}
+
     {% for field in message.fields %}
     {{ field.get_field_string() }}
         {% if field.comment %}
@@ -83,25 +99,21 @@ class {{ message.py_name }}(betterproto.Message):
     pass
     {% endif %}
 
-    {% if message.deprecated or message.has_deprecated_fields %}
-    def __post_init__(self) -> None:
-        {% if message.deprecated %}
-        warnings.warn("{{ message.py_name }} is deprecated", DeprecationWarning)
-        {% endif %}
-        super().__post_init__()
-        {% for field in message.deprecated_fields %}
-        if self.is_set("{{ field }}"):
-            warnings.warn("{{ message.py_name }}.{{ field }} is deprecated", DeprecationWarning)
-        {% endfor %}
-    {%  endif %}
-
-    {% if output_file.pydantic_dataclasses and message.has_oneof_fields %}
-    @root_validator()
-    def check_oneof(cls, values):
-        return cls._validate_field_groups(values)
-    {%  endif %}
-
+{% endif %}
 {% endfor %}
+{% endmacro %}
+
+{% set tree_with_objs = output_file.structure_with_obj() %}
+{{ render_class(tree_with_objs["root"]) }}
+
+{#
+
+
+original markdown is missing until I finish debugging this 
+
+
+#}
+
 {% for service in output_file.services %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
