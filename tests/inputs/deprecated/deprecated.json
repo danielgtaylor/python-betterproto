@@ -1,4 +1,6 @@
 {
-  "v": 10,
+  "message": {
+    "value": "hello"
+  },
   "value": 10
 }

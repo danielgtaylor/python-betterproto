@@ -1,9 +1,14 @@
 syntax = "proto3";
 
+package deprecated;
+
 // Some documentation about the Test message.
 message Test {
-    // Some documentation about the value.
-    option deprecated = true;
-    int32 v = 1 [deprecated=true];
+    Message message = 1 [deprecated=true];
     int32 value = 2;
+}
+
+message Message {
+    option deprecated = true;
+    string value = 1;
 }

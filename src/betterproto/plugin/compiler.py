@@ -1,8 +1,10 @@
 import os.path
 
+
 try:
     # betterproto[compiler] specific dependencies
     import black
+    import isort.api
     import jinja2
 except ImportError as err:
     print(
@@ -19,7 +21,6 @@ from .models import OutputTemplate
 
 
 def outputfile_compiler(output_file: OutputTemplate) -> str:
-
     templates_folder = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "templates")
     )
@@ -31,7 +32,19 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
     )
     template = env.get_template("template.py.j2")
 
+    code = template.render(output_file=output_file)
+    code = isort.api.sort_code_string(
+        code=code,
+        show_diff=False,
+        py_version=37,
+        profile="black",
+        combine_as_imports=True,
+        lines_after_imports=2,
+        quiet=True,
+        force_grid_wrap=2,
+        known_third_party=["grpclib", "betterproto"],
+    )
     return black.format_str(
-        template.render(output_file=output_file),
+        src_contents=code,
         mode=black.Mode(),
     )

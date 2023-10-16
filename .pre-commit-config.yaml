@@ -1,0 +1,21 @@
+ci:
+  autofix_prs: false
+
+repos:
+  - repo: https://github.com/pycqa/isort
+    rev: 5.11.5
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
+        args: ["--target-version", "py310"]
+
+  - repo: https://github.com/PyCQA/doc8
+    rev: 0.10.1
+    hooks:
+    -   id: doc8
+        additional_dependencies:
+          - toml

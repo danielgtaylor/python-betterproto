@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package recursivemessage;
+
 message Test {
     string name = 1;
     Test child = 2;

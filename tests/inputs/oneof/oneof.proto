@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package oneof;
+
 message MixedDrink {
   int32 shots = 1;
 }

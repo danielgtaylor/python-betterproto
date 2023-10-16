@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package oneof_enum;
+
 message Test {
   oneof action {
     Signal signal = 1;

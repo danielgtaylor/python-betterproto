@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 import asyncio
 import os
-from pathlib import Path
 import platform
 import shutil
 import sys
+from pathlib import Path
 from typing import Set
 
 from tests.util import (
     get_directories,
     inputs_path,
     output_path_betterproto,
+    output_path_betterproto_pydantic,
     output_path_reference,
     protoc,
 )
+
 
 # Force pure-python implementation instead of C++, otherwise imports
 # break things because we can't properly reset the symbol database.
@@ -78,10 +80,12 @@ async def generate_test_case_output(
     """
 
     test_case_output_path_reference = output_path_reference.joinpath(test_case_name)
-    test_case_output_path_betterproto = output_path_betterproto.joinpath(test_case_name)
+    test_case_output_path_betterproto = output_path_betterproto
+    test_case_output_path_betterproto_pyd = output_path_betterproto_pydantic
 
     os.makedirs(test_case_output_path_reference, exist_ok=True)
     os.makedirs(test_case_output_path_betterproto, exist_ok=True)
+    os.makedirs(test_case_output_path_betterproto_pyd, exist_ok=True)
 
     clear_directory(test_case_output_path_reference)
     clear_directory(test_case_output_path_betterproto)
@@ -89,9 +93,13 @@ async def generate_test_case_output(
     (
         (ref_out, ref_err, ref_code),
         (plg_out, plg_err, plg_code),
+        (plg_out_pyd, plg_err_pyd, plg_code_pyd),
     ) = await asyncio.gather(
         protoc(test_case_input_path, test_case_output_path_reference, True),
         protoc(test_case_input_path, test_case_output_path_betterproto, False),
+        protoc(
+            test_case_input_path, test_case_output_path_betterproto_pyd, False, True
+        ),
     )
 
     if ref_code == 0:
@@ -130,7 +138,27 @@ async def generate_test_case_output(
             sys.stderr.buffer.write(plg_err)
             sys.stderr.buffer.flush()
 
-    return max(ref_code, plg_code)
+    if plg_code_pyd == 0:
+        print(
+            f"\033[31;1;4mGenerated plugin (pydantic compatible) output for {test_case_name!r}\033[0m"
+        )
+    else:
+        print(
+            f"\033[31;1;4mFailed to generate plugin (pydantic compatible) output for {test_case_name!r}\033[0m"
+        )
+
+    if verbose:
+        if plg_out_pyd:
+            print("Plugin stdout:")
+            sys.stdout.buffer.write(plg_out_pyd)
+            sys.stdout.buffer.flush()
+
+        if plg_err_pyd:
+            print("Plugin stderr:")
+            sys.stderr.buffer.write(plg_err_pyd)
+            sys.stderr.buffer.flush()
+
+    return max(ref_code, plg_code, plg_code_pyd)
 
 
 HELP = "\n".join(
@@ -159,9 +187,19 @@ def main():
         whitelist = set(sys.argv[1:])
 
     if platform.system() == "Windows":
-        asyncio.set_event_loop(asyncio.ProactorEventLoop())
+        # for python version prior to 3.8, loop policy needs to be set explicitly
+        # https://docs.python.org/3/library/asyncio-policy.html#asyncio.DefaultEventLoopPolicy
+        try:
+            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+        except AttributeError:
+            # python < 3.7 does not have asyncio.WindowsProactorEventLoopPolicy
+            asyncio.get_event_loop_policy().set_event_loop(asyncio.ProactorEventLoop())
 
-    asyncio.get_event_loop().run_until_complete(generate(whitelist, verbose))
+    try:
+        asyncio.run(generate(whitelist, verbose))
+    except AttributeError:
+        # compatibility code for python < 3.7
+        asyncio.get_event_loop().run_until_complete(generate(whitelist, verbose))
 
 
 if __name__ == "__main__":

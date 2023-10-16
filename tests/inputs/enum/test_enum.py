@@ -1,6 +1,6 @@
 from tests.output_betterproto.enum import (
-    Test,
     Choice,
+    Test,
 )
 
 
@@ -82,3 +82,23 @@ def test_repeated_enum_with_non_list_iterables_to_dict():
         yield Choice.THREE
 
     assert Test(choices=enum_generator()).to_dict()["choices"] == ["ONE", "THREE"]
+
+
+def test_enum_mapped_on_parse():
+    # test default value
+    b = Test().parse(bytes(Test()))
+    assert b.choice.name == Choice.ZERO.name
+    assert b.choices == []
+
+    # test non default value
+    a = Test().parse(bytes(Test(choice=Choice.ONE)))
+    assert a.choice.name == Choice.ONE.name
+    assert b.choices == []
+
+    # test repeated
+    c = Test().parse(bytes(Test(choices=[Choice.THREE, Choice.FOUR])))
+    assert c.choices[0].name == Choice.THREE.name
+    assert c.choices[1].name == Choice.FOUR.name
+
+    # bonus: defaults after empty init are also mapped
+    assert Test().choice.name == Choice.ZERO.name

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package cousin.cousin_subpackage;
+package import_cousin_package.cousin.cousin_subpackage;
 
 message CousinMessage {
 }

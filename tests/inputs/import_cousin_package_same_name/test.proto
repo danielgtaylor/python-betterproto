@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package test.subpackage;
+package import_cousin_package_same_name.test.subpackage;
 
 import "cousin.proto";
 

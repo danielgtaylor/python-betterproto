@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package proto3_field_presence;
+
+import "google/protobuf/timestamp.proto";
+
+message InnerTest {
+    string test = 1;
+}
+
+message Test {
+    optional uint32 test1 = 1;
+    optional bool test2 = 2;
+    optional string test3 = 3;
+    optional bytes test4 = 4;
+    optional InnerTest test5 = 5;
+    optional TestEnum test6 = 6;
+    optional uint64 test7 = 7;
+    optional float test8 = 8;
+    optional google.protobuf.Timestamp test9 = 9;
+}
+
+enum TestEnum {
+    A = 0;
+    B = 1;
+}

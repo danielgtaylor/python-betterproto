@@ -31,6 +31,23 @@ reference to `A` to `B`'s `fields` attribute.
 
 
 import builtins
+import re
+import textwrap
+from dataclasses import (
+    dataclass,
+    field,
+)
+from typing import (
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Type,
+    Union,
+)
+
 import betterproto
 from betterproto import which_one_of
 from betterproto.casing import sanitize_name
@@ -46,23 +63,20 @@ from betterproto.compile.naming import (
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
-    FileDescriptorProto,
-    MethodDescriptorProto,
     Field,
     FieldDescriptorProto,
-    FieldDescriptorProtoType,
     FieldDescriptorProtoLabel,
+    FieldDescriptorProtoType,
+    FileDescriptorProto,
+    MethodDescriptorProto,
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
-
-import re
-import textwrap
-from dataclasses import dataclass, field
-from typing import Dict, Iterable, Iterator, List, Optional, Set, Type, Union
-
 from ..casing import sanitize_name
-from ..compile.importing import get_type_reference, parse_source_type_name
+from ..compile.importing import (
+    get_type_reference,
+    parse_source_type_name,
+)
 from ..compile.naming import (
     pythonize_class_name,
     pythonize_field_name,
@@ -147,17 +161,13 @@ def get_comment(
                 sci_loc.leading_comments.strip().replace("\n", ""), width=79 - indent
             )
 
-            if path[-2] == 2 and path[-4] != 6:
-                # This is a field
-                return f"{pad}# " + f"\n{pad}# ".join(lines)
+            # This is a field, message, enum, service, or method
+            if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
+                lines[0] = lines[0].strip('"')
+                return f'{pad}"""{lines[0]}"""'
             else:
-                # This is a message, enum, service, or method
-                if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
-                    lines[0] = lines[0].strip('"')
-                    return f'{pad}"""{lines[0]}"""'
-                else:
-                    joined = f"\n{pad}".join(lines)
-                    return f'{pad}"""\n{pad}{joined}\n{pad}"""'
+                joined = f"\n{pad}".join(lines)
+                return f'{pad}"""\n{pad}{joined}\n{pad}"""'
 
     return ""
 
@@ -204,7 +214,6 @@ class ProtoContentBase:
 
 @dataclass
 class PluginRequestCompiler:
-
     plugin_request_obj: CodeGeneratorRequest
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
 
@@ -237,10 +246,14 @@ class OutputTemplate:
     imports: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     typing_imports: Set[str] = field(default_factory=set)
+    pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
     messages: List["MessageCompiler"] = field(default_factory=list)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
+    imports_type_checking_only: Set[str] = field(default_factory=set)
+    pydantic_dataclasses: bool = False
+    output: bool = True
 
     @property
     def package(self) -> str:
@@ -322,12 +335,29 @@ class MessageCompiler(ProtoContentBase):
     def has_deprecated_fields(self) -> bool:
         return any(self.deprecated_fields)
 
+    @property
+    def has_oneof_fields(self) -> bool:
+        return any(isinstance(field, OneOfFieldCompiler) for field in self.fields)
+
+    @property
+    def has_message_field(self) -> bool:
+        return any(
+            (
+                field.proto_obj.type in PROTO_MESSAGE_TYPES
+                for field in self.fields
+                if isinstance(field.proto_obj, FieldDescriptorProto)
+            )
+        )
+
 
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
 ) -> bool:
     """True if proto_field_obj is a map, otherwise False."""
     if proto_field_obj.type == FieldDescriptorProtoType.TYPE_MESSAGE:
+        if not hasattr(parent_message, "nested_type"):
+            return False
+
         # This might be a map...
         message_type = proto_field_obj.type_name.split(".").pop().lower()
         map_entry = f"{proto_field_obj.name.replace('_', '').lower()}entry"
@@ -355,7 +385,10 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
         us to tell whether it was set, via the which_one_of interface.
     """
 
-    return which_one_of(proto_field_obj, "oneof_index")[0] == "oneof_index"
+    return (
+        not proto_field_obj.proto3_optional
+        and which_one_of(proto_field_obj, "oneof_index")[0] == "oneof_index"
+    )
 
 
 @dataclass
@@ -389,6 +422,8 @@ class FieldCompiler(MessageCompiler):
         args = []
         if self.field_wraps:
             args.append(f"wraps={self.field_wraps}")
+        if self.optional:
+            args.append(f"optional=True")
         return args
 
     @property
@@ -415,6 +450,10 @@ class FieldCompiler(MessageCompiler):
         return imports
 
     @property
+    def pydantic_imports(self) -> Set[str]:
+        return set()
+
+    @property
     def use_builtins(self) -> bool:
         return self.py_type in self.parent.builtins_types or (
             self.py_type == self.py_name and self.py_name in dir(builtins)
@@ -423,6 +462,7 @@ class FieldCompiler(MessageCompiler):
     def add_imports_to(self, output_file: OutputTemplate) -> None:
         output_file.datetime_imports.update(self.datetime_imports)
         output_file.typing_imports.update(self.typing_imports)
+        output_file.pydantic_imports.update(self.pydantic_imports)
         output_file.builtins_import = output_file.builtins_import or self.use_builtins
 
     @property
@@ -445,6 +485,10 @@ class FieldCompiler(MessageCompiler):
         )
 
     @property
+    def optional(self) -> bool:
+        return self.proto_obj.proto3_optional
+
+    @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
         return self.annotation.startswith(("List[", "Dict["))
@@ -463,6 +507,8 @@ class FieldCompiler(MessageCompiler):
         """Python representation of the default proto value."""
         if self.repeated:
             return "[]"
+        if self.optional:
+            return "None"
         if self.py_type == "int":
             return "0"
         if self.py_type == "float":
@@ -521,7 +567,7 @@ class FieldCompiler(MessageCompiler):
                 source_type=self.proto_obj.type_name,
             )
         else:
-            raise NotImplementedError(f"Unknown type {field.type}")
+            raise NotImplementedError(f"Unknown type {self.proto_obj.type}")
 
     @property
     def annotation(self) -> str:
@@ -530,6 +576,8 @@ class FieldCompiler(MessageCompiler):
             py_type = f"builtins.{py_type}"
         if self.repeated:
             return f"List[{py_type}]"
+        if self.optional:
+            return f"Optional[{py_type}]"
         return py_type
 
 
@@ -541,6 +589,20 @@ class OneOfFieldCompiler(FieldCompiler):
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
         args.append(f'group="{group}"')
         return args
+
+
+@dataclass
+class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
+    @property
+    def optional(self) -> bool:
+        # Force the optional to be True. This will allow the pydantic dataclass
+        # to validate the object correctly by allowing the field to be let empty.
+        # We add a pydantic validator later to ensure exactly one field is defined.
+        return True
+
+    @property
+    def pydantic_imports(self) -> Set[str]:
+        return {"root_validator"}
 
 
 @dataclass
@@ -654,7 +716,6 @@ class ServiceCompiler(ProtoContentBase):
 
 @dataclass
 class ServiceMethodCompiler(ProtoContentBase):
-
     parent: ServiceCompiler
     proto_obj: MethodDescriptorProto
     path: List[int] = PLACEHOLDER
@@ -665,12 +726,8 @@ class ServiceMethodCompiler(ProtoContentBase):
         self.parent.methods.append(self)
 
         # Check for imports
-        if self.py_input_message:
-            for f in self.py_input_message.fields:
-                f.add_imports_to(self.output_file)
         if "Optional" in self.py_output_message_type:
             self.output_file.typing_imports.add("Optional")
-        self.mutable_default_args  # ensure this is called before rendering
 
         # Check for Async imports
         if self.client_streaming:
@@ -682,38 +739,17 @@ class ServiceMethodCompiler(ProtoContentBase):
         if self.client_streaming or self.server_streaming:
             self.output_file.typing_imports.add("AsyncIterator")
 
+        # add imports required for request arguments timeout, deadline and metadata
+        self.output_file.typing_imports.add("Optional")
+        self.output_file.imports_type_checking_only.add("import grpclib.server")
+        self.output_file.imports_type_checking_only.add(
+            "from betterproto.grpc.grpclib_client import MetadataLike"
+        )
+        self.output_file.imports_type_checking_only.add(
+            "from grpclib.metadata import Deadline"
+        )
+
         super().__post_init__()  # check for unset fields
-
-    @property
-    def mutable_default_args(self) -> Dict[str, str]:
-        """Handle mutable default arguments.
-
-        Returns a list of tuples containing the name and default value
-        for arguments to this message who's default value is mutable.
-        The defaults are swapped out for None and replaced back inside
-        the method's body.
-        Reference:
-        https://docs.python-guide.org/writing/gotchas/#mutable-default-arguments
-
-        Returns
-        -------
-        Dict[str, str]
-            Name and actual default value (as a string)
-            for each argument with mutable default values.
-        """
-        mutable_default_args = {}
-
-        if self.py_input_message:
-            for f in self.py_input_message.fields:
-                if (
-                    not self.client_streaming
-                    and f.default_value_string != "None"
-                    and f.mutable
-                ):
-                    mutable_default_args[f.py_name] = f.default_value_string
-                    self.output_file.typing_imports.add("Optional")
-
-        return mutable_default_args
 
     @property
     def py_name(self) -> str:
@@ -750,7 +786,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         # comparable with method.input_type
         for msg in self.request.all_messages:
             if (
-                msg.py_name == name.replace(".", "")
+                msg.py_name == pythonize_class_name(name.replace(".", ""))
                 and msg.output_file.package == package
             ):
                 return msg
@@ -770,7 +806,19 @@ class ServiceMethodCompiler(ProtoContentBase):
             package=self.output_file.package,
             imports=self.output_file.imports,
             source_type=self.proto_obj.input_type,
+            unwrap=False,
         ).strip('"')
+
+    @property
+    def py_input_message_param(self) -> str:
+        """Param name corresponding to py_input_message_type.
+
+        Returns
+        -------
+        str
+            Param name corresponding to py_input_message_type.
+        """
+        return pythonize_field_name(self.py_input_message_type)
 
     @property
     def py_output_message_type(self) -> str:

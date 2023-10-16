@@ -1,19 +1,30 @@
-import pytest
+from datetime import (
+    datetime,
+    timezone,
+)
 
+import pytest
 from google.protobuf import json_format
+from google.protobuf.timestamp_pb2 import Timestamp
+
 import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
-    Test,
+    Empty,
     Foo,
+    Request,
+    Spam,
+    Test,
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
-    Test as ReferenceTest,
+    Empty as ReferenceEmpty,
     Foo as ReferenceFoo,
+    Request as ReferenceRequest,
+    Spam as ReferenceSpam,
+    Test as ReferenceTest,
 )
 
 
 def test_oneof_serializes_similar_to_google_oneof():
-
     tests = [
         (Test(string="abc"), ReferenceTest(string="abc")),
         (Test(integer=2), ReferenceTest(integer=2)),
@@ -30,7 +41,6 @@ def test_oneof_serializes_similar_to_google_oneof():
 
 
 def test_bytes_are_the_same_for_oneof():
-
     message = Test(string="")
     message_reference = ReferenceTest(string="")
 
@@ -48,8 +58,36 @@ def test_bytes_are_the_same_for_oneof():
 
     # None of these fields were explicitly set BUT they should not actually be null
     # themselves
-    assert isinstance(message.foo, Foo)
-    assert isinstance(message2.foo, Foo)
+    assert not hasattr(message, "foo")
+    assert object.__getattribute__(message, "foo") == betterproto.PLACEHOLDER
+    assert not hasattr(message2, "foo")
+    assert object.__getattribute__(message2, "foo") == betterproto.PLACEHOLDER
 
     assert isinstance(message_reference.foo, ReferenceFoo)
     assert isinstance(message_reference2.foo, ReferenceFoo)
+
+
+@pytest.mark.parametrize("dt", (datetime.min.replace(tzinfo=timezone.utc),))
+def test_datetime_clamping(dt):  # see #407
+    ts = Timestamp()
+    ts.FromDatetime(dt)
+    assert bytes(Spam(dt)) == ReferenceSpam(ts=ts).SerializeToString()
+    message_bytes = bytes(Spam(dt))
+
+    assert (
+        Spam().parse(message_bytes).ts.timestamp()
+        == ReferenceSpam.FromString(message_bytes).ts.seconds
+    )
+
+
+def test_empty_message_field():
+    message = Request()
+    reference_message = ReferenceRequest()
+
+    message.foo = Empty()
+    reference_message.foo.CopyFrom(ReferenceEmpty())
+
+    assert betterproto.serialized_on_wire(message.foo)
+    assert reference_message.HasField("foo")
+
+    assert bytes(message) == reference_message.SerializeToString()

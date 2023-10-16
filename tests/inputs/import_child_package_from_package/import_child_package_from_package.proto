@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package import_child_package_from_package;
+
 import "package_message.proto";
 
 // Tests generated imports when a message in a package refers to a message in a nested child package.

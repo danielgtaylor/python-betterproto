@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package field_name_identical_to_type;
+
 // Tests that messages may contain fields with names that are identical to their python types (PR #294)
 
 message Test {

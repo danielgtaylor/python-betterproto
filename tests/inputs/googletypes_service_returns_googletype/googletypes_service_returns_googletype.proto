@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package googletypes_service_returns_googletype;
+
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 

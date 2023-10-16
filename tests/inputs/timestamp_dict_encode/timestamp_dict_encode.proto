@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package timestamp_dict_encode;
+
+import "google/protobuf/timestamp.proto";
+
+message Test {
+  google.protobuf.Timestamp ts = 1;
+}
