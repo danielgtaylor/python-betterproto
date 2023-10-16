@@ -85,15 +85,6 @@ def test_repeated_enum_with_non_list_iterables_to_dict():
     assert Test(choices=enum_generator()).to_dict()["choices"] == ["ONE", "THREE"]
 
 
-def test_renamed_enum_members():
-    assert set(ArithmeticOperator.__members__) == {
-        "NONE",
-        "PLUS",
-        "MINUS",
-        "_0_PREFIXED",
-    }
-
-
 def test_enum_mapped_on_parse():
     # test default value
     b = Test().parse(bytes(Test()))
@@ -112,3 +103,12 @@ def test_enum_mapped_on_parse():
 
     # bonus: defaults after empty init are also mapped
     assert Test().choice.name == Choice.ZERO.name
+
+
+def test_renamed_enum_members():
+    assert set(ArithmeticOperator.__members__) == {
+        "NONE",
+        "PLUS",
+        "MINUS",
+        "_0_PREFIXED",
+    }
