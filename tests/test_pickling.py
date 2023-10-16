@@ -10,6 +10,8 @@ from typing import (
 )
 from unittest.mock import ANY
 
+import cachelib
+
 import betterproto
 from betterproto.lib.google import protobuf as google
 
@@ -55,8 +57,8 @@ class Complex(betterproto.Message):
     )
 
 
-def test_pickling_complex_message():
-    msg = Complex(
+def complex_msg():
+    return Complex(
         foo_str="yep",
         fe=Fe(abc="1"),
         nested_data=NestedData(
@@ -80,6 +82,10 @@ def test_pickling_complex_message():
             "string": google.Any(value=b"howdy"),
         },
     )
+
+
+def test_pickling_complex_message():
+    msg = complex_msg()
     deser = unpickled(msg)
     assert msg == deser
     assert msg.fe.abc == "1"
@@ -139,14 +145,14 @@ def test_recursive_message_defaults():
 
 
 @dataclass
-class Spam(betterproto.Message):
+class PickledMessage(betterproto.Message):
     foo: bool = betterproto.bool_field(1)
     bar: int = betterproto.int32_field(2)
     baz: List[str] = betterproto.string_field(3)
 
 
 def test_copyability():
-    msg = Spam(bar=12, baz=["hello"])
+    msg = PickledMessage(bar=12, baz=["hello"])
     msg = unpickled(msg)
 
     copied = copy(msg)
@@ -160,13 +166,38 @@ def test_copyability():
     assert msg.baz is not deepcopied.baz
 
 
-def test_equality_comparison():
-    from tests.output_betterproto.bool import Test as TestMessage
+def test_message_can_be_cached():
+    """Cachelib uses pickling to cache values"""
 
-    msg = TestMessage(value=True)
-    msg = unpickled(msg)
-    assert msg == msg
-    assert msg == ANY
-    assert msg == TestMessage(value=True)
-    assert msg != 1
-    assert msg != TestMessage(value=False)
+    cache = cachelib.SimpleCache()
+
+    def use_cache():
+        calls = getattr(use_cache, "calls", 0)
+        result = cache.get("message")
+        if result is not None:
+            return result
+        else:
+            setattr(use_cache, "calls", calls + 1)
+            result = complex_msg()
+            cache.set("message", result)
+            return result
+
+    for n in range(10):
+        if n == 0:
+            assert not cache.has("message")
+        else:
+            assert cache.has("message")
+
+        msg = use_cache()
+        assert use_cache.calls == 1  # The message is only ever built once
+        assert msg.fe.abc == "1"
+        assert msg.is_set("fi") is not True
+        assert msg.mapping["message"] == google.Any(value=bytes(Fi(abc="hi")))
+        assert msg.mapping["string"].value.decode() == "howdy"
+        assert (
+            msg.nested_data.struct_foo["foo"]
+            .fields["hello"]
+            .list_value.values[0]
+            .string_value
+            == "world"
+        )
