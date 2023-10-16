@@ -11,6 +11,7 @@ from typing import (
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
     EnumDescriptorProto,
+    FieldDescriptorProto,
     FileDescriptorProto,
     ServiceDescriptorProto,
 )
@@ -30,6 +31,7 @@ from .models import (
     OneOfFieldCompiler,
     OutputTemplate,
     PluginRequestCompiler,
+    PydanticOneOfFieldCompiler,
     ServiceCompiler,
     ServiceMethodCompiler,
     is_map,
@@ -74,14 +76,6 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     request_data = PluginRequestCompiler(plugin_request_obj=request)
     # Gather output packages
     for proto_file in request.proto_file:
-        if (
-            proto_file.package == "google.protobuf"
-            and "INCLUDE_GOOGLE" not in plugin_options
-        ):
-            # If not INCLUDE_GOOGLE,
-            # skip re-compiling Google's well-known types
-            continue
-
         output_package_name = proto_file.package
         if output_package_name not in request_data.output_packages:
             # Create a new output if there is no output for this package
@@ -90,6 +84,19 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
             )
         # Add this input file to the output corresponding to this package
         request_data.output_packages[output_package_name].input_files.append(proto_file)
+
+        if (
+            proto_file.package == "google.protobuf"
+            and "INCLUDE_GOOGLE" not in plugin_options
+        ):
+            # If not INCLUDE_GOOGLE,
+            # skip outputting Google's well-known types
+            request_data.output_packages[output_package_name].output = False
+
+        if "pydantic_dataclasses" in plugin_options:
+            request_data.output_packages[
+                output_package_name
+            ].pydantic_dataclasses = True
 
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
@@ -113,6 +120,8 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
     for output_package_name, output_package in request_data.output_packages.items():
+        if not output_package.output:
+            continue
 
         # Add files to the response object
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
@@ -131,6 +140,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         directory.joinpath("__init__.py")
         for path in output_paths
         for directory in path.parents
+        if not directory.joinpath("__init__.py").exists()
     } - output_paths
 
     for init_file in init_files:
@@ -140,6 +150,23 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         print(f"Writing {output_package_name}", file=sys.stderr)
 
     return response
+
+
+def _make_one_of_field_compiler(
+    output_package: OutputTemplate,
+    source_file: "FileDescriptorProto",
+    parent: MessageCompiler,
+    proto_obj: "FieldDescriptorProto",
+    path: List[int],
+) -> FieldCompiler:
+    pydantic = output_package.pydantic_dataclasses
+    Cls = PydanticOneOfFieldCompiler if pydantic else OneOfFieldCompiler
+    return Cls(
+        source_file=source_file,
+        parent=parent,
+        proto_obj=proto_obj,
+        path=path,
+    )
 
 
 def read_protobuf_type(
@@ -165,11 +192,8 @@ def read_protobuf_type(
                     path=path + [2, index],
                 )
             elif is_oneof(field):
-                OneOfFieldCompiler(
-                    source_file=source_file,
-                    parent=message_data,
-                    proto_obj=field,
-                    path=path + [2, index],
+                _make_one_of_field_compiler(
+                    output_package, source_file, message_data, field, path + [2, index]
                 )
             else:
                 FieldCompiler(

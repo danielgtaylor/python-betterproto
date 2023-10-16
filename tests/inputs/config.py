@@ -9,6 +9,7 @@ xfail = {
 }
 
 services = {
+    "googletypes_request",
     "googletypes_response",
     "googletypes_response_embedded",
     "service",
@@ -18,6 +19,7 @@ services = {
     "googletypes_service_returns_googletype",
     "example_service",
     "empty_service",
+    "service_uppercase",
 }
 
 

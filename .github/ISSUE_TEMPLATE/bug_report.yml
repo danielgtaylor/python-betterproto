@@ -1,0 +1,63 @@
+name: Bug Report
+description: Report broken or incorrect behaviour
+labels: ["bug", "investigation needed"]
+
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for taking the time to fill out a bug report!
+        
+        If you're not sure it's a bug and you just have a question, the [community Slack channel](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ) is a better place for general questions than a GitHub issue.
+
+  - type: input
+    attributes:
+      label: Summary
+      description: A simple summary of your bug report
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Reproduction Steps
+      description: >
+        What you did to make it happen.
+        Ideally there should be a short code snippet in this section to help reproduce the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Expected Results
+      description: >
+        What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual Results
+      description: >
+        What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: System Information
+      description: >
+        Paste the result of `protoc --version; python --version; pip show betterproto` below.
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched the issues for duplicates.
+          required: true
+        - label: I have shown the entire traceback, if possible.
+          required: true
+        - label: I have verified this issue occurs on the latest prelease of betterproto which can be installed using `pip install -U --pre betterproto`, if possible.
+          required: true
+

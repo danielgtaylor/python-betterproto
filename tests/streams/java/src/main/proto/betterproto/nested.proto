@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package nested;
+option java_package = "betterproto.nested";
+
+// A test message with a nested message inside of it.
+message Test {
+    // This is the nested type.
+    message Nested {
+        // Stores a simple counter.
+        int32 count = 1;
+    }
+    // This is the nested enum.
+    enum Msg {
+        NONE = 0;
+        THIS = 1;
+    }
+
+    Nested nested = 1;
+    Sibling sibling = 2;
+    Sibling sibling2 = 3;
+    Msg msg = 4;
+}
+
+message Sibling {
+  int32 foo = 1;
+}
