@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
 package google_impl_behavior_equivalence;
 
 message Foo { int64 bar = 1; }
@@ -10,6 +11,10 @@ message Test {
     int64 integer = 2;
     Foo foo = 3;
   }
+}
+
+message Spam {
+  google.protobuf.Timestamp ts = 1;
 }
 
 message Request { Empty foo = 1; }
