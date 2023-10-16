@@ -11,15 +11,15 @@ import betterproto
 from tests.output_betterproto.google_impl_behavior_equivalence import (
     Empty,
     Foo,
-    Spam,
     Request,
+    Spam,
     Test,
 )
 from tests.output_reference.google_impl_behavior_equivalence.google_impl_behavior_equivalence_pb2 import (
     Empty as ReferenceEmpty,
     Foo as ReferenceFoo,
-    Spam as ReferenceSpam,
     Request as ReferenceRequest,
+    Spam as ReferenceSpam,
     Test as ReferenceTest,
 )
 
@@ -91,3 +91,4 @@ def test_empty_message_field():
     assert reference_message.HasField("foo")
 
     assert bytes(message) == reference_message.SerializeToString()
+    
