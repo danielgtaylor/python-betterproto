@@ -874,6 +874,14 @@ class Message(ABC):
                 kwargs[name] = deepcopy(value)
         return self.__class__(**kwargs)  # type: ignore
 
+    def __copy__(self: T, _: Any = {}) -> T:
+        kwargs = {}
+        for name in self._betterproto.sorted_field_names:
+            value = self.__raw_get(name)
+            if value is not PLACEHOLDER:
+                kwargs[name] = value
+        return self.__class__(**kwargs)  # type: ignore
+
     @property
     def _betterproto(self) -> ProtoClassMetadata:
         """
@@ -1112,6 +1120,15 @@ class Message(ABC):
             The binary encoded Protobuf representation of this message instance
         """
         return bytes(self)
+
+    def __getstate__(self) -> bytes:
+        return bytes(self)
+
+    def __setstate__(self: T, pickled_bytes: bytes) -> T:
+        return self.parse(pickled_bytes)
+
+    def __reduce__(self) -> Tuple[Any, ...]:
+        return (self.__class__.FromString, (bytes(self),))
 
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
