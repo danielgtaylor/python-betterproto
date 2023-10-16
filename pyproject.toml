@@ -67,9 +67,13 @@ help = "Run tests"
 cmd  = "mypy src --ignore-missing-imports"
 help = "Check types with mypy"
 
+[tool.poe.tasks]
+_black = "black . --exclude tests/output_ --target-version py310"
+_isort = "isort . --extend-skip-glob 'tests/output_*/**/*'"
+
 [tool.poe.tasks.format]
-cmd  = "black . --exclude tests/output_ --target-version py310"
-help = "Apply black formatting to source code"
+sequence  = ["_black", "_isort"]
+help = "Apply black and isort formatting to source code"
 
 [tool.poe.tasks.docs]
 cmd  = "sphinx-build docs docs/build"
