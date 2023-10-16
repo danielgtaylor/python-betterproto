@@ -1,5 +1,5 @@
-
 import pytest
+
 import betterproto
 from tests.output_betterproto.oneof import (
     MixedDrink,
