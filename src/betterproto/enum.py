@@ -57,7 +57,7 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         members = {
             name: value
             for name, value in namespace.items()
-            if not _is_descriptor(value) and name[0] != "_"
+            if not _is_descriptor(value) and not name.startswith("__")
         }
 
         cls = type.__new__(
