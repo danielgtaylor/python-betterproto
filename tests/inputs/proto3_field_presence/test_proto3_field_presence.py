@@ -41,3 +41,9 @@ def test_null_fields_json():
         "test8": None,
         "test9": None,
     }
+
+def test_unset_access():  # see #523
+    with pytest.raises(AttributeError):
+        Test().test1
+    with pytest.raises(AttributeError):
+        Test(test1=None).test1
