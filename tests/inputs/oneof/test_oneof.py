@@ -1,6 +1,10 @@
-import betterproto
+
 import pytest
-from tests.output_betterproto.oneof import MixedDrink, Test
+import betterproto
+from tests.output_betterproto.oneof import (
+    MixedDrink,
+    Test,
+)
 from tests.output_betterproto_pydantic.oneof import Test as TestPyd
 from tests.util import get_test_case_json_data
 
