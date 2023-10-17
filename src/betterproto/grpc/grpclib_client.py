@@ -127,6 +127,7 @@ class ServiceStub(ABC):
             response_type,
             **self.__resolve_request_kwargs(timeout, deadline, metadata),
         ) as stream:
+            await stream.send_request()
             await self._send_messages(stream, request_iterator)
             response = await stream.recv_message()
         assert response is not None
