@@ -24,22 +24,24 @@ typing-extensions = "^4.7.1"
 [tool.poetry.group.dev.dependencies]
 asv = "^0.4.2"
 bpython = "^0.19"
-grpcio-tools = "^1.54.2"
 jinja2 = ">=3.0.3"
 mypy = "^0.930"
+sphinx = "3.1.2"
+sphinx-rtd-theme = "0.5.0"
+pre-commit = "^2.17.0"
+grpcio-tools = "^1.54.2"
+tox = "^4.0.0"
+
+[tool.poetry.group.test.dependencies]
 poethepoet = ">=0.9.0"
-protobuf = "^4.21.6"
 pytest = "^6.2.5"
 pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
-sphinx = "3.1.2"
-sphinx-rtd-theme = "0.5.0"
-tomlkit = "^0.7.0"
-tox = "^3.15.1"
-pre-commit = "^2.17.0"
 pydantic = ">=1.8.0,<2"
+protobuf = "^4"
 cachelib = "^0.10.2"
+tomlkit = ">=0.7.0"
 
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
@@ -135,14 +137,21 @@ omit = ["betterproto/tests/*"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-isolated_build = true
-envlist = py37, py38, py310
+requires =
+    tox>=4.2
+    tox-poetry-installer[poetry]==1.0.0b1
+env_list =
+    py311
+    py38
+    py37
 
 [testenv]
-whitelist_externals = poetry
 commands =
-    poetry install -v --extras compiler
-    poetry run pytest --cov betterproto
+    pytest {posargs: --cov betterproto}
+poetry_dep_groups =
+    test
+require_locked_deps = true
+require_poetry = true
 """
 
 [build-system]
