@@ -1908,15 +1908,24 @@ class _Duration(Duration):
 class _Timestamp(Timestamp):
     @classmethod
     def from_datetime(cls, dt: datetime) -> "_Timestamp":
-        # apparently 0 isn't a year in [0, 9999]??
-        seconds = int((dt - DATETIME_ZERO).total_seconds())
-        nanos = int(dt.microsecond * 1e3)
-        return cls(seconds, nanos)
+        # manual epoch offset calulation to avoid rounding errors,
+        # to support negative timestamps (before 1970) and skirt
+        # around datetime bugs (apparently 0 isn't a year in [0, 9999]??)
+        offset = dt - DATETIME_ZERO
+        # below is the same as timedelta.total_seconds() but without dividing by 1e6
+        # so we end up with microseconds as integers instead of seconds as float
+        offset_us = (
+            offset.days * 24 * 60 * 60 + offset.seconds
+        ) * 10**6 + offset.microseconds
+        seconds, us = divmod(offset_us, 10**6)
+        return cls(seconds, us * 1000)
 
     def to_datetime(self) -> datetime:
-        ts = self.seconds + (self.nanos / 1e9)
-        # if datetime.fromtimestamp ever supports -62135596800 use that instead see #407
-        return DATETIME_ZERO + timedelta(seconds=ts)
+        # datetime.fromtimestamp() expects a timestamp in seconds, not microseconds
+        # if we pass it as a floating point number, we will run into rounding errors
+        # see also #407
+        offset = timedelta(seconds=self.seconds, microseconds=self.nanos // 1000)
+        return DATETIME_ZERO + offset
 
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
