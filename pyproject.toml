@@ -134,6 +134,26 @@ max_line_length = 88
 [tool.coverage.run]
 omit = ["betterproto/tests/*"]
 
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+requires =
+    tox>=4.2
+    tox-poetry-installer[poetry]==1.0.0b1
+env_list =
+    py311
+    py38
+    py37
+
+[testenv]
+commands =
+    pytest {posargs: --cov betterproto}
+poetry_dep_groups =
+    test
+require_locked_deps = true
+require_poetry = true
+"""
+
 [build-system]
 requires = ["poetry-core>=1.0.0,<2"]
 build-backend = "poetry.core.masonry.api"
