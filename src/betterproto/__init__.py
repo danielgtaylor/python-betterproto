@@ -889,11 +889,13 @@ class Message(ABC):
         It may be initialized multiple times in a multi-threaded environment,
         but that won't affect the correctness.
         """
-        meta = getattr(self.__class__, "_betterproto_meta", None)
-        if not meta:
+        cls = self.__class__
+        try:
+            return cls._betterproto_meta
+        except AttributeError:
             meta = ProtoClassMetadata(self.__class__)
-            self.__class__._betterproto_meta = meta  # type: ignore
-        return meta
+            cls._betterproto_meta = meta  # type: ignore
+            return meta
 
     def dump(self, stream: "SupportsWrite[bytes]", delimit: bool = False) -> None:
         """
