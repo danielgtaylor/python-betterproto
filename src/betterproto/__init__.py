@@ -1,5 +1,5 @@
 import dataclasses
-import enum
+import enum as builtin_enum
 import json
 import math
 import struct
@@ -45,11 +45,15 @@ from .casing import (
     safe_snake_case,
     snake_case,
 )
-from .grpc.grpclib_client import ServiceStub
+from .enum import Enum as Enum
+from .grpc.grpclib_client import ServiceStub as ServiceStub
 
 
 if TYPE_CHECKING:
-    from _typeshed import ReadableBuffer
+    from _typeshed import (
+        SupportsRead,
+        SupportsWrite,
+    )
 
 
 # Proto 3 data types
@@ -126,6 +130,9 @@ WIRE_FIXED_32_TYPES = [TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32]
 WIRE_FIXED_64_TYPES = [TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64]
 WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
 
+# Indicator of message delimitation in streams
+SIZE_DELIMITED = -1
+
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
 def datetime_default_gen() -> datetime:
@@ -140,7 +147,7 @@ NEG_INFINITY = "-Infinity"
 NAN = "NaN"
 
 
-class Casing(enum.Enum):
+class Casing(builtin_enum.Enum):
     """Casing constants for serialization."""
 
     CAMEL = camel_case  #: A camelCase sterilization function.
@@ -309,32 +316,6 @@ def map_field(
     )
 
 
-class Enum(enum.IntEnum):
-    """
-    The base class for protobuf enumerations, all generated enumerations will inherit
-    from this. Bases :class:`enum.IntEnum`.
-    """
-
-    @classmethod
-    def from_string(cls, name: str) -> "Enum":
-        """Return the value which corresponds to the string name.
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the enum member to get
-
-        Raises
-        -------
-        :exc:`ValueError`
-            The member was not found in the Enum.
-        """
-        try:
-            return cls._member_map_[name]  # type: ignore
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
-
-
 def _pack_fmt(proto_type: str) -> str:
     """Returns a little-endian format string for reading/writing binary."""
     return {
@@ -347,7 +328,7 @@ def _pack_fmt(proto_type: str) -> str:
     }[proto_type]
 
 
-def dump_varint(value: int, stream: BinaryIO) -> None:
+def dump_varint(value: int, stream: "SupportsWrite[bytes]") -> None:
     """Encodes a single varint and dumps it into the provided stream."""
     if value < -(1 << 63):
         raise ValueError(
@@ -556,7 +537,7 @@ def _dump_float(value: float) -> Union[float, str]:
     return value
 
 
-def load_varint(stream: BinaryIO) -> Tuple[int, bytes]:
+def load_varint(stream: "SupportsRead[bytes]") -> Tuple[int, bytes]:
     """
     Load a single varint value from a stream. Returns the value and the raw bytes read.
     """
@@ -594,7 +575,7 @@ class ParsedField:
     raw: bytes
 
 
-def load_fields(stream: BinaryIO) -> Generator[ParsedField, None, None]:
+def load_fields(stream: "SupportsRead[bytes]") -> Generator[ParsedField, None, None]:
     while True:
         try:
             num_wire, raw = load_varint(stream)
@@ -815,6 +796,10 @@ class Message(ABC):
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
+    def __rich_repr__(self) -> Iterable[Tuple[str, Any, Any]]:
+        for field_name in self._betterproto.sorted_field_names:
+            yield field_name, self.__raw_get(field_name), PLACEHOLDER
+
     if not TYPE_CHECKING:
 
         def __getattribute__(self, name: str) -> Any:
@@ -889,6 +874,14 @@ class Message(ABC):
                 kwargs[name] = deepcopy(value)
         return self.__class__(**kwargs)  # type: ignore
 
+    def __copy__(self: T, _: Any = {}) -> T:
+        kwargs = {}
+        for name in self._betterproto.sorted_field_names:
+            value = self.__raw_get(name)
+            if value is not PLACEHOLDER:
+                kwargs[name] = value
+        return self.__class__(**kwargs)  # type: ignore
+
     @property
     def _betterproto(self) -> ProtoClassMetadata:
         """
@@ -902,7 +895,7 @@ class Message(ABC):
             self.__class__._betterproto_meta = meta  # type: ignore
         return meta
 
-    def dump(self, stream: BinaryIO) -> None:
+    def dump(self, stream: "SupportsWrite[bytes]", delimit: bool = False) -> None:
         """
         Dumps the binary encoded Protobuf message to the stream.
 
@@ -910,7 +903,11 @@ class Message(ABC):
         -----------
         stream: :class:`BinaryIO`
             The stream to dump the message to.
+        delimit:
+            Whether to prefix the message with a varint declaring its size.
         """
+        if delimit == SIZE_DELIMITED:
+            dump_varint(len(self), stream)
 
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             try:
@@ -930,7 +927,7 @@ class Message(ABC):
             # Note that proto3 field presence/optional fields are put in a
             # synthetic single-item oneof by protoc, which helps us ensure we
             # send the value even if the value is the default zero value.
-            selected_in_group = bool(meta.group)
+            selected_in_group = bool(meta.group) or meta.optional
 
             # Empty messages can still be sent on the wire if they were
             # set (or received empty).
@@ -1124,6 +1121,15 @@ class Message(ABC):
         """
         return bytes(self)
 
+    def __getstate__(self) -> bytes:
+        return bytes(self)
+
+    def __setstate__(self: T, pickled_bytes: bytes) -> T:
+        return self.parse(pickled_bytes)
+
+    def __reduce__(self) -> Tuple[Any, ...]:
+        return (self.__class__.FromString, (bytes(self),))
+
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
         return cls._type_hints()[field_name]
@@ -1168,7 +1174,7 @@ class Message(ABC):
                 return t
         elif issubclass(t, Enum):
             # Enums always default to zero.
-            return int
+            return t.try_value
         elif t is datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
             return datetime_default_gen
@@ -1193,6 +1199,9 @@ class Message(ABC):
             elif meta.proto_type == TYPE_BOOL:
                 # Booleans use a varint encoding, so convert it to true/false.
                 value = value > 0
+            elif meta.proto_type == TYPE_ENUM:
+                # Convert enum ints to python enum instances
+                value = self._betterproto.cls_by_field[field_name].try_value(value)
         elif wire_type in (WIRE_FIXED_32, WIRE_FIXED_64):
             fmt = _pack_fmt(meta.proto_type)
             value = struct.unpack(fmt, value)[0]
@@ -1225,7 +1234,11 @@ class Message(ABC):
             meta.group is not None and self._group_current.get(meta.group) == field_name
         )
 
-    def load(self: T, stream: BinaryIO, size: Optional[int] = None) -> T:
+    def load(
+        self: T,
+        stream: "SupportsRead[bytes]",
+        size: Optional[int] = None,
+    ) -> T:
         """
         Load the binary encoded Protobuf from a stream into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
@@ -1237,12 +1250,17 @@ class Message(ABC):
         size: :class:`Optional[int]`
             The size of the message in the stream.
             Reads stream until EOF if ``None`` is given.
+            Reads based on a size delimiter prefix varint if SIZE_DELIMITED is given.
 
         Returns
         --------
         :class:`Message`
             The initialized message.
         """
+        # If the message is delimited, parse the message delimiter
+        if size == SIZE_DELIMITED:
+            size, _ = load_varint(stream)
+
         # Got some data over the wire
         self._serialized_on_wire = True
         proto_meta = self._betterproto
@@ -1315,7 +1333,7 @@ class Message(ABC):
 
         return self
 
-    def parse(self: T, data: "ReadableBuffer") -> T:
+    def parse(self: T, data: bytes) -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
@@ -1887,19 +1905,17 @@ class _Duration(Duration):
         return f"{'.'.join(parts)}s"
 
 
-_EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
-
-
 class _Timestamp(Timestamp):
     @classmethod
     def from_datetime(cls, dt: datetime) -> "_Timestamp":
-        # manual epoch offset calulation to avoid rounding errors and
-        # to support negative timestamps (before 1970)
-        offset = dt - _EPOCH
+        # manual epoch offset calulation to avoid rounding errors,
+        # to support negative timestamps (before 1970) and skirt
+        # around datetime bugs (apparently 0 isn't a year in [0, 9999]??)
+        offset = dt - DATETIME_ZERO
         # below is the same as timedelta.total_seconds() but without dividing by 1e6
         # so we end up with microseconds as integers instead of seconds as float
         offset_us = (
-            offset.days * 86400 + offset.seconds
+            offset.days * 24 * 60 * 60 + offset.seconds
         ) * 10**6 + offset.microseconds
         seconds, us = divmod(offset_us, 10**6)
         return cls(seconds, us * 1000)
@@ -1907,8 +1923,9 @@ class _Timestamp(Timestamp):
     def to_datetime(self) -> datetime:
         # datetime.fromtimestamp() expects a timestamp in seconds, not microseconds
         # if we pass it as a floating point number, we will run into rounding errors
+        # see also #407
         offset = timedelta(seconds=self.seconds, microseconds=self.nanos // 1000)
-        return _EPOCH + offset
+        return DATETIME_ZERO + offset
 
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
