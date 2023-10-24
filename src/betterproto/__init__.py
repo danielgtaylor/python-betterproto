@@ -55,7 +55,6 @@ from .utils import (
     hybridmethod,
 )
 
-
 if TYPE_CHECKING:
     from _typeshed import (
         SupportsRead,
@@ -1522,62 +1521,70 @@ class Message(ABC):
 
     @classmethod
     def _from_dict_init(cls, mapping: Mapping[str, Any]) -> Mapping[str, Any]:
-        init_dict: Dict[str, Any] = {}
+        init_kwargs: Dict[str, Any] = {}
         for key, value in mapping.items():
             field_name = safe_snake_case(key)
             try:
                 meta = cls._betterproto.meta_by_field_name[field_name]
             except KeyError:
                 continue
-
             if value is None:
                 continue
+
             if meta.proto_type == TYPE_MESSAGE:
                 sub_cls = cls._betterproto.cls_by_field[field_name]
-                if isinstance(value, list):
-                    if sub_cls is datetime:
-                        value = [isoparse(item) for item in value]
-                    elif sub_cls is timedelta:
-                        value = [timedelta(seconds=float(item[:-1])) for item in value]
-                    else:
-                        value = [sub_cls.from_dict(item) for item in value]
-                elif sub_cls == datetime:
-                    value = isoparse(value)
+                if sub_cls == datetime:
+                    value = (
+                        [isoparse(item) for item in value]
+                        if isinstance(value, list)
+                        else isoparse(value)
+                    )
                 elif sub_cls == timedelta:
-                    value = timedelta(seconds=float(value[:-1]))
+                    value = (
+                        [timedelta(seconds=float(item[:-1])) for item in value]
+                        if isinstance(value, list)
+                        else timedelta(seconds=float(value[:-1]))
+                    )
                 elif not meta.wraps:
-                    value = sub_cls.from_dict(value)
+                    value = (
+                        [sub_cls.from_dict(item) for item in value]
+                        if isinstance(value, list)
+                        else sub_cls.from_dict(value)
+                    )
             elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                 sub_cls = cls._betterproto.cls_by_field[f"{field_name}.value"]
                 value = {k: sub_cls.from_dict(v) for k, v in value.items()}
             else:
                 if meta.proto_type in INT_64_TYPES:
-                    if isinstance(value, list):
-                        value = [int(n) for n in value]
-                    else:
-                        value = int(value)
+                    value = (
+                        [int(n) for n in value]
+                        if isinstance(value, list)
+                        else int(value)
+                    )
                 elif meta.proto_type == TYPE_BYTES:
-                    if isinstance(value, list):
-                        value = [b64decode(n) for n in value]
-                    else:
-                        value = b64decode(value)
+                    value = (
+                        [b64decode(n) for n in value]
+                        if isinstance(value, list)
+                        else b64decode(value)
+                    )
                 elif meta.proto_type == TYPE_ENUM:
-                    enum_cls = metadata.cls_by_field[field_name]
+                    enum_cls = cls._betterproto.cls_by_field[field_name]
                     if isinstance(value, list):
                         value = [enum_cls.from_string(e) for e in value]
                     elif isinstance(value, str):
                         value = enum_cls.from_string(value)
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
-                    if isinstance(value, list):
-                        value = [_parse_float(n) for n in value]
-                    else:
-                        value = _parse_float(value)
+                    value = (
+                        [_parse_float(n) for n in value]
+                        if isinstance(value, list)
+                        else _parse_float(value)
+                    )
 
-            init_dict[field_name] = value
-        return init_dict
+            init_kwargs[field_name] = value
+        return init_kwargs
 
     @hybridmethod
-    def from_dict(cls, value: Mapping[str, Any]) -> Self:
+    def from_dict(cls: type[Self], value: Mapping[str, Any]) -> Self:  # type: ignore
         """
         Parse the key/value pairs into the a new message instance.
 
