@@ -27,7 +27,7 @@ class ThingService:
     async def do_many_things(
         self, stream: "grpclib.server.Stream[DoThingRequest, DoThingResponse]"
     ):
-        thing_names = [request.name for request in stream]
+        thing_names = [request.name async for request in stream]
         if self.test_hook is not None:
             self.test_hook(stream)
         await stream.send_message(DoThingResponse(thing_names))

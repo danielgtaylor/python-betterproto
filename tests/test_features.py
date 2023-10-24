@@ -1,4 +1,5 @@
 import json
+import sys
 from copy import (
     copy,
     deepcopy,
@@ -17,6 +18,9 @@ from typing import (
     List,
     Optional,
 )
+from unittest.mock import ANY
+
+import pytest
 
 import betterproto
 
@@ -151,17 +155,18 @@ def test_oneof_support():
     foo.baz = "test"
 
     # Other oneof fields should now be unset
-    assert foo.bar == 0
+    assert not hasattr(foo, "bar")
+    assert object.__getattribute__(foo, "bar") == betterproto.PLACEHOLDER
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
-    foo.sub.val = 1
+    foo.sub = Sub(val=1)
     assert betterproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
-    assert foo.sub.val == 0
-    assert betterproto.serialized_on_wire(foo.sub) is False
+    assert not hasattr(foo, "sub")
+    assert object.__getattribute__(foo, "sub") == betterproto.PLACEHOLDER
     assert betterproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
@@ -174,6 +179,16 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo2, "group1")[0] == "bar"
     assert foo.bar == 0
     assert betterproto.which_one_of(foo2, "group2")[0] == ""
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 10),
+    reason="pattern matching is only supported in python3.10+",
+)
+def test_oneof_pattern_matching():
+    from .oneof_pattern_matching import test_oneof_pattern_matching
+
+    test_oneof_pattern_matching()
 
 
 def test_json_casing():
@@ -530,47 +545,6 @@ def test_oneof_default_value_set_causes_writes_wire():
     )
 
 
-def test_recursive_message():
-    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
-
-    msg = RecursiveMessage()
-
-    assert msg.child == RecursiveMessage()
-
-    # Lazily-created zero-value children must not affect equality.
-    assert msg == RecursiveMessage()
-
-    # Lazily-created zero-value children must not affect serialization.
-    assert bytes(msg) == b""
-
-
-def test_recursive_message_defaults():
-    from tests.output_betterproto.recursivemessage import (
-        Intermediate,
-        Test as RecursiveMessage,
-    )
-
-    msg = RecursiveMessage(name="bob", intermediate=Intermediate(42))
-
-    # set values are as expected
-    assert msg == RecursiveMessage(name="bob", intermediate=Intermediate(42))
-
-    # lazy initialized works modifies the message
-    assert msg != RecursiveMessage(
-        name="bob", intermediate=Intermediate(42), child=RecursiveMessage(name="jude")
-    )
-    msg.child.child.name = "jude"
-    assert msg == RecursiveMessage(
-        name="bob",
-        intermediate=Intermediate(42),
-        child=RecursiveMessage(child=RecursiveMessage(name="jude")),
-    )
-
-    # lazily initialization recurses as needed
-    assert msg.child.child.child.child.child.child.child == RecursiveMessage()
-    assert msg.intermediate.child.intermediate == Intermediate()
-
-
 def test_message_repr():
     from tests.output_betterproto.recursivemessage import Test
 
@@ -684,25 +658,6 @@ def test_service_argument__expected_parameter():
     assert do_thing_request_parameter.annotation == "DoThingRequest"
 
 
-def test_copyability():
-    @dataclass
-    class Spam(betterproto.Message):
-        foo: bool = betterproto.bool_field(1)
-        bar: int = betterproto.int32_field(2)
-        baz: List[str] = betterproto.string_field(3)
-
-    spam = Spam(bar=12, baz=["hello"])
-    copied = copy(spam)
-    assert spam == copied
-    assert spam is not copied
-    assert spam.baz is copied.baz
-
-    deepcopied = deepcopy(spam)
-    assert spam == deepcopied
-    assert spam is not deepcopied
-    assert spam.baz is not deepcopied.baz
-
-
 def test_is_set():
     @dataclass
     class Spam(betterproto.Message):
@@ -713,3 +668,15 @@ def test_is_set():
     assert not Spam().is_set("bar")
     assert Spam(foo=True).is_set("foo")
     assert Spam(foo=True, bar=0).is_set("bar")
+
+
+def test_equality_comparison():
+    from tests.output_betterproto.bool import Test as TestMessage
+
+    msg = TestMessage(value=True)
+
+    assert msg == msg
+    assert msg == ANY
+    assert msg == TestMessage(value=True)
+    assert msg != 1
+    assert msg != TestMessage(value=False)

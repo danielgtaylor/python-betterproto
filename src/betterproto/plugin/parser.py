@@ -159,7 +159,6 @@ def _make_one_of_field_compiler(
     proto_obj: "FieldDescriptorProto",
     path: List[int],
 ) -> FieldCompiler:
-
     pydantic = output_package.pydantic_dataclasses
     Cls = PydanticOneOfFieldCompiler if pydantic else OneOfFieldCompiler
     return Cls(

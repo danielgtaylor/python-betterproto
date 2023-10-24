@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "betterproto"
-version = "2.0.0b5"
+version = "2.0.0b6"
 description = "A better Protobuf / gRPC generator & library"
 authors = ["Daniel G. Taylor <danielgtaylor@gmail.com>"]
 readme = "README.md"
@@ -13,32 +13,35 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-black = { version = ">=19.3b0", optional = true }
+black = { version = ">=23.1.0", optional = true }
 grpclib = "^0.4.1"
 importlib-metadata = { version = ">=1.6.0", python = "<3.8" }
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
 isort = {version = "^5.11.5", optional = true}
+typing-extensions = "^4.7.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 asv = "^0.4.2"
 bpython = "^0.19"
-grpcio-tools = "^1.40.0"
 jinja2 = ">=3.0.3"
 mypy = "^0.930"
+sphinx = "3.1.2"
+sphinx-rtd-theme = "0.5.0"
+pre-commit = "^2.17.0"
+grpcio-tools = "^1.54.2"
+tox = "^4.0.0"
+
+[tool.poetry.group.test.dependencies]
 poethepoet = ">=0.9.0"
-protobuf = "^3.12.2"
 pytest = "^6.2.5"
 pytest-asyncio = "^0.12.0"
 pytest-cov = "^2.9.0"
 pytest-mock = "^3.1.1"
-sphinx = "3.1.2"
-sphinx-rtd-theme = "0.5.0"
-tomlkit = "^0.7.0"
-tox = "^3.15.1"
-pre-commit = "^2.17.0"
-pydantic = ">=1.8.0"
-
+pydantic = ">=1.8.0,<2"
+protobuf = "^4"
+cachelib = "^0.10.2"
+tomlkit = ">=0.7.0"
 
 [tool.poetry.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
@@ -61,9 +64,13 @@ help = "Run tests"
 cmd  = "mypy src --ignore-missing-imports"
 help = "Check types with mypy"
 
+[tool.poe.tasks]
+_black = "black . --exclude tests/output_ --target-version py310"
+_isort = "isort . --extend-skip-glob 'tests/output_*/**/*'"
+
 [tool.poe.tasks.format]
-cmd  = "black . --exclude tests/output_"
-help = "Apply black formatting to source code"
+sequence  = ["_black", "_isort"]
+help = "Apply black and isort formatting to source code"
 
 [tool.poe.tasks.docs]
 cmd  = "sphinx-build docs docs/build"
@@ -130,14 +137,21 @@ omit = ["betterproto/tests/*"]
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-isolated_build = true
-envlist = py37, py38, py310
+requires =
+    tox>=4.2
+    tox-poetry-installer[poetry]==1.0.0b1
+env_list =
+    py311
+    py38
+    py37
 
 [testenv]
-whitelist_externals = poetry
 commands =
-    poetry install -v --extras compiler
-    poetry run pytest --cov betterproto
+    pytest {posargs: --cov betterproto}
+poetry_dep_groups =
+    test
+require_locked_deps = true
+require_poetry = true
 """
 
 [build-system]

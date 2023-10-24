@@ -1,10 +1,7 @@
 syntax = "proto3";
 
 package oneof;
-
-message MixedDrink {
-  int32 shots = 1;
-}
+option java_package = "betterproto.oneof";
 
 message Test {
   oneof foo {
@@ -17,7 +14,6 @@ message Test {
   oneof bar {
     int32 drinks = 11;
     string bar_name = 12;
-    MixedDrink mixed_drink = 13;
   }
 }
 
