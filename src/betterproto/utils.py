@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing_extensions import ParamSpec, Concatenate, Self
 from typing import (
     Any,
