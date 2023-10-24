@@ -7,7 +7,6 @@ import math
 import struct
 import sys
 import typing
-from typing_extensions import Self
 import warnings
 from abc import ABC
 from base64 import (
@@ -25,23 +24,22 @@ from itertools import count
 from typing import (
     TYPE_CHECKING,
     Any,
-    BinaryIO,
     Callable,
+    ClassVar,
     Dict,
     Generator,
-    Generic,
     Iterable,
     Mapping,
     Optional,
     Set,
     Tuple,
     Type,
-    TypeVar,
     Union,
     get_type_hints,
 )
 
 from dateutil.parser import isoparse
+from typing_extensions import Self
 
 from ._types import T
 from ._version import __version__
@@ -52,7 +50,10 @@ from .casing import (
 )
 from .enum import Enum as Enum
 from .grpc.grpclib_client import ServiceStub as ServiceStub
-from .utils import classproperty, hybridmethod
+from .utils import (
+    classproperty,
+    hybridmethod,
+)
 
 
 if TYPE_CHECKING:
@@ -715,7 +716,6 @@ class ProtoClassMetadata:
         return field_cls
 
 
-
 class Message(ABC):
     """
     The base class for protobuf messages, all generated messages will inherit from
@@ -736,6 +736,7 @@ class Message(ABC):
     _serialized_on_wire: bool
     _unknown_fields: bytes
     _group_current: Dict[str, str]
+    _betterproto_meta: ClassVar[ProtoClassMetadata]
 
     def __post_init__(self) -> None:
         # Keep track of whether every field was default
@@ -890,7 +891,7 @@ class Message(ABC):
         return self.__class__(**kwargs)  # type: ignore
 
     @classproperty
-    def _betterproto(cls) -> ProtoClassMetadata:
+    def _betterproto(cls: type[Self]) -> ProtoClassMetadata:  # type: ignore
         """
         Lazy initialize metadata for each protobuf class.
         It may be initialized multiple times in a multi-threaded environment,
@@ -901,7 +902,6 @@ class Message(ABC):
         except AttributeError:
             cls._betterproto_meta = meta = ProtoClassMetadata(cls)
             return meta
-
 
     def dump(self, stream: "SupportsWrite[bytes]", delimit: bool = False) -> None:
         """
@@ -1538,10 +1538,7 @@ class Message(ABC):
                     if sub_cls is datetime:
                         value = [isoparse(item) for item in value]
                     elif sub_cls is timedelta:
-                        value = [
-                            timedelta(seconds=float(item[:-1]))
-                            for item in value
-                        ]
+                        value = [timedelta(seconds=float(item[:-1])) for item in value]
                     else:
                         value = [sub_cls.from_dict(item) for item in value]
                 elif sub_cls == datetime:
@@ -1859,6 +1856,9 @@ class Message(ABC):
                 )
 
         return values
+
+
+Message.__annotations__ = {}  # HACK to avoid typing.get_type_hints breaking :)
 
 
 def serialized_on_wire(message: Message) -> bool:
