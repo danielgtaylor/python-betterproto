@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing_extensions import ParamSpec, Concatenate, Self
 from typing import (
     Any,
     Callable,
@@ -8,6 +7,12 @@ from typing import (
     Optional,
     Type,
     TypeVar,
+)
+
+from typing_extensions import (
+    Concatenate,
+    ParamSpec,
+    Self,
 )
 
 
@@ -19,7 +24,9 @@ HybridT = TypeVar("HybridT", covariant=True)
 class hybridmethod(Generic[SelfT, P, HybridT]):
     def __init__(
         self,
-        func: Callable[Concatenate[type[SelfT], P], HybridT]  # Must be the classmethod version
+        func: Callable[
+            Concatenate[type[SelfT], P], HybridT
+        ],  # Must be the classmethod version
     ):
         self.cls_func = func
         self.__doc__ = func.__doc__
@@ -28,11 +35,14 @@ class hybridmethod(Generic[SelfT, P, HybridT]):
         self.instance_func = func
         return self
 
-    def __get__(self, instance: Optional[SelfT], owner: Type[SelfT]) -> Callable[P, HybridT]:
+    def __get__(
+        self, instance: Optional[SelfT], owner: Type[SelfT]
+    ) -> Callable[P, HybridT]:
         if instance is None or self.instance_func is None:
             # either bound to the class, or no instance method available
             return self.cls_func.__get__(owner, None)
         return self.instance_func.__get__(instance, owner)
+
 
 T_co = TypeVar("T_co")
 TT_co = TypeVar("TT_co", bound="type[Any]")
