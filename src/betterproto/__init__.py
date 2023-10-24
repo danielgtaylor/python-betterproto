@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 import enum as builtin_enum
 import json
