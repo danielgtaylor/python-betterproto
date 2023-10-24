@@ -890,7 +890,7 @@ class Message(ABC):
         return self.__class__(**kwargs)  # type: ignore
 
     @classproperty
-    def _betterproto(self) -> ProtoClassMetadata:
+    def _betterproto(cls) -> ProtoClassMetadata:
         """
         Lazy initialize metadata for each protobuf class.
         It may be initialized multiple times in a multi-threaded environment,
