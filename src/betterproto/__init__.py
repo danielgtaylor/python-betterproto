@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import dataclasses
-import enum
+import enum as builtin_enum
 import json
 import math
 import struct
@@ -22,8 +24,8 @@ from itertools import count
 from typing import (
     TYPE_CHECKING,
     Any,
-    BinaryIO,
     Callable,
+    ClassVar,
     Dict,
     Generator,
     Iterable,
@@ -37,6 +39,7 @@ from typing import (
 )
 
 from dateutil.parser import isoparse
+from typing_extensions import Self
 
 from ._types import T
 from ._version import __version__
@@ -45,11 +48,19 @@ from .casing import (
     safe_snake_case,
     snake_case,
 )
-from .grpc.grpclib_client import ServiceStub
+from .enum import Enum as Enum
+from .grpc.grpclib_client import ServiceStub as ServiceStub
+from .utils import (
+    classproperty,
+    hybridmethod,
+)
 
 
 if TYPE_CHECKING:
-    from _typeshed import ReadableBuffer
+    from _typeshed import (
+        SupportsRead,
+        SupportsWrite,
+    )
 
 
 # Proto 3 data types
@@ -126,6 +137,9 @@ WIRE_FIXED_32_TYPES = [TYPE_FLOAT, TYPE_FIXED32, TYPE_SFIXED32]
 WIRE_FIXED_64_TYPES = [TYPE_DOUBLE, TYPE_FIXED64, TYPE_SFIXED64]
 WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
 
+# Indicator of message delimitation in streams
+SIZE_DELIMITED = -1
+
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
 def datetime_default_gen() -> datetime:
@@ -140,7 +154,7 @@ NEG_INFINITY = "-Infinity"
 NAN = "NaN"
 
 
-class Casing(enum.Enum):
+class Casing(builtin_enum.Enum):
     """Casing constants for serialization."""
 
     CAMEL = camel_case  #: A camelCase sterilization function.
@@ -309,32 +323,6 @@ def map_field(
     )
 
 
-class Enum(enum.IntEnum):
-    """
-    The base class for protobuf enumerations, all generated enumerations will inherit
-    from this. Bases :class:`enum.IntEnum`.
-    """
-
-    @classmethod
-    def from_string(cls, name: str) -> "Enum":
-        """Return the value which corresponds to the string name.
-
-        Parameters
-        -----------
-        name: :class:`str`
-            The name of the enum member to get
-
-        Raises
-        -------
-        :exc:`ValueError`
-            The member was not found in the Enum.
-        """
-        try:
-            return cls._member_map_[name]  # type: ignore
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
-
-
 def _pack_fmt(proto_type: str) -> str:
     """Returns a little-endian format string for reading/writing binary."""
     return {
@@ -347,7 +335,7 @@ def _pack_fmt(proto_type: str) -> str:
     }[proto_type]
 
 
-def dump_varint(value: int, stream: BinaryIO) -> None:
+def dump_varint(value: int, stream: "SupportsWrite[bytes]") -> None:
     """Encodes a single varint and dumps it into the provided stream."""
     if value < -(1 << 63):
         raise ValueError(
@@ -556,7 +544,7 @@ def _dump_float(value: float) -> Union[float, str]:
     return value
 
 
-def load_varint(stream: BinaryIO) -> Tuple[int, bytes]:
+def load_varint(stream: "SupportsRead[bytes]") -> Tuple[int, bytes]:
     """
     Load a single varint value from a stream. Returns the value and the raw bytes read.
     """
@@ -594,7 +582,7 @@ class ParsedField:
     raw: bytes
 
 
-def load_fields(stream: BinaryIO) -> Generator[ParsedField, None, None]:
+def load_fields(stream: "SupportsRead[bytes]") -> Generator[ParsedField, None, None]:
     while True:
         try:
             num_wire, raw = load_varint(stream)
@@ -748,6 +736,7 @@ class Message(ABC):
     _serialized_on_wire: bool
     _unknown_fields: bytes
     _group_current: Dict[str, str]
+    _betterproto_meta: ClassVar[ProtoClassMetadata]
 
     def __post_init__(self) -> None:
         # Keep track of whether every field was default
@@ -814,6 +803,10 @@ class Message(ABC):
             if value is not PLACEHOLDER
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
+
+    def __rich_repr__(self) -> Iterable[Tuple[str, Any, Any]]:
+        for field_name in self._betterproto.sorted_field_names:
+            yield field_name, self.__raw_get(field_name), PLACEHOLDER
 
     if not TYPE_CHECKING:
 
@@ -889,20 +882,28 @@ class Message(ABC):
                 kwargs[name] = deepcopy(value)
         return self.__class__(**kwargs)  # type: ignore
 
-    @property
-    def _betterproto(self) -> ProtoClassMetadata:
+    def __copy__(self: T, _: Any = {}) -> T:
+        kwargs = {}
+        for name in self._betterproto.sorted_field_names:
+            value = self.__raw_get(name)
+            if value is not PLACEHOLDER:
+                kwargs[name] = value
+        return self.__class__(**kwargs)  # type: ignore
+
+    @classproperty
+    def _betterproto(cls: type[Self]) -> ProtoClassMetadata:  # type: ignore
         """
         Lazy initialize metadata for each protobuf class.
         It may be initialized multiple times in a multi-threaded environment,
         but that won't affect the correctness.
         """
-        meta = getattr(self.__class__, "_betterproto_meta", None)
-        if not meta:
-            meta = ProtoClassMetadata(self.__class__)
-            self.__class__._betterproto_meta = meta  # type: ignore
-        return meta
+        try:
+            return cls._betterproto_meta
+        except AttributeError:
+            cls._betterproto_meta = meta = ProtoClassMetadata(cls)
+            return meta
 
-    def dump(self, stream: BinaryIO) -> None:
+    def dump(self, stream: "SupportsWrite[bytes]", delimit: bool = False) -> None:
         """
         Dumps the binary encoded Protobuf message to the stream.
 
@@ -910,7 +911,11 @@ class Message(ABC):
         -----------
         stream: :class:`BinaryIO`
             The stream to dump the message to.
+        delimit:
+            Whether to prefix the message with a varint declaring its size.
         """
+        if delimit == SIZE_DELIMITED:
+            dump_varint(len(self), stream)
 
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             try:
@@ -930,7 +935,7 @@ class Message(ABC):
             # Note that proto3 field presence/optional fields are put in a
             # synthetic single-item oneof by protoc, which helps us ensure we
             # send the value even if the value is the default zero value.
-            selected_in_group = bool(meta.group)
+            selected_in_group = bool(meta.group) or meta.optional
 
             # Empty messages can still be sent on the wire if they were
             # set (or received empty).
@@ -1124,6 +1129,15 @@ class Message(ABC):
         """
         return bytes(self)
 
+    def __getstate__(self) -> bytes:
+        return bytes(self)
+
+    def __setstate__(self: T, pickled_bytes: bytes) -> T:
+        return self.parse(pickled_bytes)
+
+    def __reduce__(self) -> Tuple[Any, ...]:
+        return (self.__class__.FromString, (bytes(self),))
+
     @classmethod
     def _type_hint(cls, field_name: str) -> Type:
         return cls._type_hints()[field_name]
@@ -1168,7 +1182,7 @@ class Message(ABC):
                 return t
         elif issubclass(t, Enum):
             # Enums always default to zero.
-            return int
+            return t.try_value
         elif t is datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
             return datetime_default_gen
@@ -1193,6 +1207,9 @@ class Message(ABC):
             elif meta.proto_type == TYPE_BOOL:
                 # Booleans use a varint encoding, so convert it to true/false.
                 value = value > 0
+            elif meta.proto_type == TYPE_ENUM:
+                # Convert enum ints to python enum instances
+                value = self._betterproto.cls_by_field[field_name].try_value(value)
         elif wire_type in (WIRE_FIXED_32, WIRE_FIXED_64):
             fmt = _pack_fmt(meta.proto_type)
             value = struct.unpack(fmt, value)[0]
@@ -1225,7 +1242,11 @@ class Message(ABC):
             meta.group is not None and self._group_current.get(meta.group) == field_name
         )
 
-    def load(self: T, stream: BinaryIO, size: Optional[int] = None) -> T:
+    def load(
+        self: T,
+        stream: "SupportsRead[bytes]",
+        size: Optional[int] = None,
+    ) -> T:
         """
         Load the binary encoded Protobuf from a stream into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
@@ -1237,12 +1258,17 @@ class Message(ABC):
         size: :class:`Optional[int]`
             The size of the message in the stream.
             Reads stream until EOF if ``None`` is given.
+            Reads based on a size delimiter prefix varint if SIZE_DELIMITED is given.
 
         Returns
         --------
         :class:`Message`
             The initialized message.
         """
+        # If the message is delimited, parse the message delimiter
+        if size == SIZE_DELIMITED:
+            size, _ = load_varint(stream)
+
         # Got some data over the wire
         self._serialized_on_wire = True
         proto_meta = self._betterproto
@@ -1315,7 +1341,7 @@ class Message(ABC):
 
         return self
 
-    def parse(self: T, data: "ReadableBuffer") -> T:
+    def parse(self: T, data: bytes) -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
@@ -1494,7 +1520,91 @@ class Message(ABC):
                     output[cased_name] = value
         return output
 
-    def from_dict(self: T, value: Mapping[str, Any]) -> T:
+    @classmethod
+    def _from_dict_init(cls, mapping: Mapping[str, Any]) -> Mapping[str, Any]:
+        init_kwargs: Dict[str, Any] = {}
+        for key, value in mapping.items():
+            field_name = safe_snake_case(key)
+            try:
+                meta = cls._betterproto.meta_by_field_name[field_name]
+            except KeyError:
+                continue
+            if value is None:
+                continue
+
+            if meta.proto_type == TYPE_MESSAGE:
+                sub_cls = cls._betterproto.cls_by_field[field_name]
+                if sub_cls == datetime:
+                    value = (
+                        [isoparse(item) for item in value]
+                        if isinstance(value, list)
+                        else isoparse(value)
+                    )
+                elif sub_cls == timedelta:
+                    value = (
+                        [timedelta(seconds=float(item[:-1])) for item in value]
+                        if isinstance(value, list)
+                        else timedelta(seconds=float(value[:-1]))
+                    )
+                elif not meta.wraps:
+                    value = (
+                        [sub_cls.from_dict(item) for item in value]
+                        if isinstance(value, list)
+                        else sub_cls.from_dict(value)
+                    )
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+                sub_cls = cls._betterproto.cls_by_field[f"{field_name}.value"]
+                value = {k: sub_cls.from_dict(v) for k, v in value.items()}
+            else:
+                if meta.proto_type in INT_64_TYPES:
+                    value = (
+                        [int(n) for n in value]
+                        if isinstance(value, list)
+                        else int(value)
+                    )
+                elif meta.proto_type == TYPE_BYTES:
+                    value = (
+                        [b64decode(n) for n in value]
+                        if isinstance(value, list)
+                        else b64decode(value)
+                    )
+                elif meta.proto_type == TYPE_ENUM:
+                    enum_cls = cls._betterproto.cls_by_field[field_name]
+                    if isinstance(value, list):
+                        value = [enum_cls.from_string(e) for e in value]
+                    elif isinstance(value, str):
+                        value = enum_cls.from_string(value)
+                elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
+                    value = (
+                        [_parse_float(n) for n in value]
+                        if isinstance(value, list)
+                        else _parse_float(value)
+                    )
+
+            init_kwargs[field_name] = value
+        return init_kwargs
+
+    @hybridmethod
+    def from_dict(cls: type[Self], value: Mapping[str, Any]) -> Self:  # type: ignore
+        """
+        Parse the key/value pairs into the a new message instance.
+
+        Parameters
+        -----------
+        value: Dict[:class:`str`, Any]
+            The dictionary to parse from.
+
+        Returns
+        --------
+        :class:`Message`
+            The initialized message.
+        """
+        self = cls(**cls._from_dict_init(value))
+        self._serialized_on_wire = True
+        return self
+
+    @from_dict.instancemethod
+    def from_dict(self, value: Mapping[str, Any]) -> Self:
         """
         Parse the key/value pairs into the current message instance. This returns the
         instance itself and is therefore assignable and chainable.
@@ -1510,71 +1620,8 @@ class Message(ABC):
             The initialized message.
         """
         self._serialized_on_wire = True
-        for key in value:
-            field_name = safe_snake_case(key)
-            meta = self._betterproto.meta_by_field_name.get(field_name)
-            if not meta:
-                continue
-
-            if value[key] is not None:
-                if meta.proto_type == TYPE_MESSAGE:
-                    v = self._get_field_default(field_name)
-                    cls = self._betterproto.cls_by_field[field_name]
-                    if isinstance(v, list):
-                        if cls == datetime:
-                            v = [isoparse(item) for item in value[key]]
-                        elif cls == timedelta:
-                            v = [
-                                timedelta(seconds=float(item[:-1]))
-                                for item in value[key]
-                            ]
-                        else:
-                            v = [cls().from_dict(item) for item in value[key]]
-                    elif cls == datetime:
-                        v = isoparse(value[key])
-                        setattr(self, field_name, v)
-                    elif cls == timedelta:
-                        v = timedelta(seconds=float(value[key][:-1]))
-                        setattr(self, field_name, v)
-                    elif meta.wraps:
-                        setattr(self, field_name, value[key])
-                    elif v is None:
-                        setattr(self, field_name, cls().from_dict(value[key]))
-                    else:
-                        # NOTE: `from_dict` mutates the underlying message, so no
-                        # assignment here is necessary.
-                        v.from_dict(value[key])
-                elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
-                    cls = self._betterproto.cls_by_field[f"{field_name}.value"]
-                    for k in value[key]:
-                        v[k] = cls().from_dict(value[key][k])
-                else:
-                    v = value[key]
-                    if meta.proto_type in INT_64_TYPES:
-                        if isinstance(value[key], list):
-                            v = [int(n) for n in value[key]]
-                        else:
-                            v = int(value[key])
-                    elif meta.proto_type == TYPE_BYTES:
-                        if isinstance(value[key], list):
-                            v = [b64decode(n) for n in value[key]]
-                        else:
-                            v = b64decode(value[key])
-                    elif meta.proto_type == TYPE_ENUM:
-                        enum_cls = self._betterproto.cls_by_field[field_name]
-                        if isinstance(v, list):
-                            v = [enum_cls.from_string(e) for e in v]
-                        elif isinstance(v, str):
-                            v = enum_cls.from_string(v)
-                    elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
-                        if isinstance(value[key], list):
-                            v = [_parse_float(n) for n in value[key]]
-                        else:
-                            v = _parse_float(value[key])
-
-                if v is not None:
-                    setattr(self, field_name, v)
+        for field, value in self._from_dict_init(value).items():
+            setattr(self, field, value)
         return self
 
     def to_json(
@@ -1791,8 +1838,8 @@ class Message(ABC):
 
     @classmethod
     def _validate_field_groups(cls, values):
-        group_to_one_ofs = cls._betterproto_meta.oneof_field_by_group  # type: ignore
-        field_name_to_meta = cls._betterproto_meta.meta_by_field_name  # type: ignore
+        group_to_one_ofs = cls._betterproto.oneof_field_by_group
+        field_name_to_meta = cls._betterproto.meta_by_field_name
 
         for group, field_set in group_to_one_ofs.items():
             if len(field_set) == 1:
@@ -1817,6 +1864,9 @@ class Message(ABC):
                 )
 
         return values
+
+
+Message.__annotations__ = {}  # HACK to avoid typing.get_type_hints breaking :)
 
 
 def serialized_on_wire(message: Message) -> bool:
@@ -1890,13 +1940,24 @@ class _Duration(Duration):
 class _Timestamp(Timestamp):
     @classmethod
     def from_datetime(cls, dt: datetime) -> "_Timestamp":
-        seconds = int(dt.timestamp())
-        nanos = int(dt.microsecond * 1e3)
-        return cls(seconds, nanos)
+        # manual epoch offset calulation to avoid rounding errors,
+        # to support negative timestamps (before 1970) and skirt
+        # around datetime bugs (apparently 0 isn't a year in [0, 9999]??)
+        offset = dt - DATETIME_ZERO
+        # below is the same as timedelta.total_seconds() but without dividing by 1e6
+        # so we end up with microseconds as integers instead of seconds as float
+        offset_us = (
+            offset.days * 24 * 60 * 60 + offset.seconds
+        ) * 10**6 + offset.microseconds
+        seconds, us = divmod(offset_us, 10**6)
+        return cls(seconds, us * 1000)
 
     def to_datetime(self) -> datetime:
-        ts = self.seconds + (self.nanos / 1e9)
-        return datetime.fromtimestamp(ts, tz=timezone.utc)
+        # datetime.fromtimestamp() expects a timestamp in seconds, not microseconds
+        # if we pass it as a floating point number, we will run into rounding errors
+        # see also #407
+        offset = timedelta(seconds=self.seconds, microseconds=self.nanos // 1000)
+        return DATETIME_ZERO + offset
 
     @staticmethod
     def timestamp_to_json(dt: datetime) -> str:
