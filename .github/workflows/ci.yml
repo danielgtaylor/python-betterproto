@@ -54,7 +54,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: poetry install --with dev test
+        run: poetry install --with dev,test
 
       - name: Generate code from proto files
         shell: bash
