@@ -24,3 +24,5 @@ jobs:
       - run: poetry install --with dev,test
       - run: echo "$(poetry env info --path)/bin" >> $GITHUB_PATH
       - uses: jakebailey/pyright-action@v1
+        with:
+          extra-args: "--exclude tests"
