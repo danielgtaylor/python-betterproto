@@ -39,7 +39,7 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         member_map = {}
 
         new_mcs = cast(
-            type[Self],
+            "type[Self]",
             type(
                 f"{name}Type",
                 tuple(
@@ -59,7 +59,7 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         }
 
         cls = cast(
-            type[Enum],
+            "type[Enum]",
             type.__new__(
                 new_mcs,
                 name,
