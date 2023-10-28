@@ -29,34 +29,30 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attribute.
 """
 
+from __future__ import annotations
 
 import builtins
 import re
 import textwrap
+from collections.abc import (
+    Iterable,
+    Iterator,
+)
 from dataclasses import (
     dataclass,
     field,
 )
-from typing import (
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Type,
-    Union,
-)
+from typing import Any
 
 import betterproto
 from betterproto import which_one_of
-from betterproto.casing import sanitize_name
 from betterproto.compile.importing import (
     get_type_reference,
     parse_source_type_name,
 )
 from betterproto.compile.naming import (
     pythonize_class_name,
+    pythonize_enum_member_name,
     pythonize_field_name,
     pythonize_method_name,
 )
@@ -69,24 +65,14 @@ from betterproto.lib.google.protobuf import (
     FieldDescriptorProtoType,
     FileDescriptorProto,
     MethodDescriptorProto,
+    ServiceDescriptorProto,
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
-
-from ..compile.importing import (
-    get_type_reference,
-    parse_source_type_name,
-)
-from ..compile.naming import (
-    pythonize_class_name,
-    pythonize_enum_member_name,
-    pythonize_field_name,
-    pythonize_method_name,
-)
 
 
 # Create a unique placeholder to deal with
 # https://stackoverflow.com/questions/51575931/class-inheritance-in-python-3-7-dataclasses
-PLACEHOLDER = object()
+PLACEHOLDER: Any = object()
 
 # Organize proto types into categories
 PROTO_FLOAT_TYPES = (
@@ -152,7 +138,7 @@ def monkey_patch_oneof_index():
 
 
 def get_comment(
-    proto_file: "FileDescriptorProto", path: List[int], indent: int = 4
+    proto_file: FileDescriptorProto, path: list[int], indent: int = 4
 ) -> str:
     pad = " " * indent
     for sci_loc in proto_file.source_code_info.location:
@@ -176,11 +162,11 @@ class ProtoContentBase:
     """Methods common to MessageCompiler, ServiceCompiler and ServiceMethodCompiler."""
 
     source_file: FileDescriptorProto
-    path: List[int]
+    path: list[int]
     comment_indent: int = 4
-    parent: Union["betterproto.Message", "OutputTemplate"]
+    parent: betterproto.Message | OutputTemplate
 
-    __dataclass_fields__: Dict[str, object]
+    __dataclass_fields__: dict[str, object]
 
     def __post_init__(self) -> None:
         """Checks that no fake default fields were left as placeholders."""
@@ -189,14 +175,14 @@ class ProtoContentBase:
                 raise ValueError(f"`{field_name}` is a required field.")
 
     @property
-    def output_file(self) -> "OutputTemplate":
+    def output_file(self) -> OutputTemplate:
         current = self
         while not isinstance(current, OutputTemplate):
             current = current.parent
         return current
 
     @property
-    def request(self) -> "PluginRequestCompiler":
+    def request(self) -> PluginRequestCompiler:
         current = self
         while not isinstance(current, OutputTemplate):
             current = current.parent
@@ -215,10 +201,10 @@ class ProtoContentBase:
 @dataclass
 class PluginRequestCompiler:
     plugin_request_obj: CodeGeneratorRequest
-    output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
+    output_packages: dict[str, OutputTemplate] = field(default_factory=dict)
 
     @property
-    def all_messages(self) -> List["MessageCompiler"]:
+    def all_messages(self) -> list[MessageCompiler]:
         """All of the messages in this request.
 
         Returns
@@ -242,16 +228,16 @@ class OutputTemplate:
 
     parent_request: PluginRequestCompiler
     package_proto_obj: FileDescriptorProto
-    input_files: List[str] = field(default_factory=list)
-    imports: Set[str] = field(default_factory=set)
-    datetime_imports: Set[str] = field(default_factory=set)
-    typing_imports: Set[str] = field(default_factory=set)
-    pydantic_imports: Set[str] = field(default_factory=set)
+    input_files: list[FileDescriptorProto] = field(default_factory=list)
+    imports: set[str] = field(default_factory=set)
+    datetime_imports: set[str] = field(default_factory=set)
+    typing_imports: set[str] = field(default_factory=set)
+    pydantic_imports: set[str] = field(default_factory=set)
     builtins_import: bool = False
-    messages: List["MessageCompiler"] = field(default_factory=list)
-    enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
-    services: List["ServiceCompiler"] = field(default_factory=list)
-    imports_type_checking_only: Set[str] = field(default_factory=set)
+    messages: list[MessageCompiler] = field(default_factory=list)
+    enums: list[EnumDefinitionCompiler] = field(default_factory=list)
+    services: list[ServiceCompiler] = field(default_factory=list)
+    imports_type_checking_only: set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
     output: bool = True
 
@@ -278,7 +264,7 @@ class OutputTemplate:
         return sorted(f.name for f in self.input_files)
 
     @property
-    def python_module_imports(self) -> Set[str]:
+    def python_module_imports(self) -> set[str]:
         imports = set()
         if any(x for x in self.messages if any(x.deprecated_fields)):
             imports.add("warnings")
@@ -292,14 +278,12 @@ class MessageCompiler(ProtoContentBase):
     """Representation of a protobuf message."""
 
     source_file: FileDescriptorProto
-    parent: Union["MessageCompiler", OutputTemplate] = PLACEHOLDER
+    parent: MessageCompiler | OutputTemplate = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
-    path: List[int] = PLACEHOLDER
-    fields: List[Union["FieldCompiler", "MessageCompiler"]] = field(
-        default_factory=list
-    )
+    path: list[int] = PLACEHOLDER
+    fields: list[FieldCompiler | MessageCompiler] = field(default_factory=list)
     deprecated: bool = field(default=False, init=False)
-    builtins_types: Set[str] = field(default_factory=set)
+    builtins_types: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         # Add message to output file
@@ -318,6 +302,10 @@ class MessageCompiler(ProtoContentBase):
     @property
     def py_name(self) -> str:
         return pythonize_class_name(self.proto_name)
+
+    @property
+    def repeated(self) -> bool:
+        raise NotImplementedError
 
     @property
     def annotation(self) -> str:
@@ -349,11 +337,12 @@ class MessageCompiler(ProtoContentBase):
 
 
 def is_map(
-    proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
+    proto_field_obj: FieldDescriptorProto,
+    parent_message: DescriptorProto | MessageCompiler,
 ) -> bool:
     """True if proto_field_obj is a map, otherwise False."""
     if proto_field_obj.type == FieldDescriptorProtoType.TYPE_MESSAGE:
-        if not hasattr(parent_message, "nested_type"):
+        if not isinstance(parent_message, DescriptorProto):
             return False
 
         # This might be a map...
@@ -416,16 +405,16 @@ class FieldCompiler(MessageCompiler):
         return f"{name}{annotations} = {betterproto_field_type}"
 
     @property
-    def betterproto_field_args(self) -> List[str]:
+    def betterproto_field_args(self) -> list[str]:
         args = []
         if self.field_wraps:
             args.append(f"wraps={self.field_wraps}")
         if self.optional:
-            args.append(f"optional=True")
+            args.append("optional=True")
         return args
 
     @property
-    def datetime_imports(self) -> Set[str]:
+    def datetime_imports(self) -> set[str]:
         imports = set()
         annotation = self.annotation
         # FIXME: false positives - e.g. `MyDatetimedelta`
@@ -436,7 +425,7 @@ class FieldCompiler(MessageCompiler):
         return imports
 
     @property
-    def typing_imports(self) -> Set[str]:
+    def typing_imports(self) -> set[str]:
         imports = set()
         annotation = self.annotation
         if "Optional[" in annotation:
@@ -448,7 +437,7 @@ class FieldCompiler(MessageCompiler):
         return imports
 
     @property
-    def pydantic_imports(self) -> Set[str]:
+    def pydantic_imports(self) -> set[str]:
         return set()
 
     @property
@@ -464,7 +453,7 @@ class FieldCompiler(MessageCompiler):
         output_file.builtins_import = output_file.builtins_import or self.use_builtins
 
     @property
-    def field_wraps(self) -> Optional[str]:
+    def field_wraps(self) -> str | None:
         """Returns betterproto wrapped field type or None."""
         match_wrapper = re.match(
             r"\.google\.protobuf\.(.+)Value$", self.proto_obj.type_name
@@ -582,7 +571,7 @@ class FieldCompiler(MessageCompiler):
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
     @property
-    def betterproto_field_args(self) -> List[str]:
+    def betterproto_field_args(self) -> list[str]:
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
         args.append(f'group="{group}"')
@@ -599,14 +588,14 @@ class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
         return True
 
     @property
-    def pydantic_imports(self) -> Set[str]:
+    def pydantic_imports(self) -> set[str]:
         return {"root_validator"}
 
 
 @dataclass
 class MapEntryCompiler(FieldCompiler):
-    py_k_type: Type = PLACEHOLDER
-    py_v_type: Type = PLACEHOLDER
+    py_k_type: str = PLACEHOLDER
+    py_v_type: str = PLACEHOLDER
     proto_k_type: str = PLACEHOLDER
     proto_v_type: str = PLACEHOLDER
 
@@ -636,7 +625,7 @@ class MapEntryCompiler(FieldCompiler):
         super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     @property
-    def betterproto_field_args(self) -> List[str]:
+    def betterproto_field_args(self) -> list[str]:
         return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
 
     @property
@@ -657,7 +646,7 @@ class EnumDefinitionCompiler(MessageCompiler):
     """Representation of a proto Enum definition."""
 
     proto_obj: EnumDescriptorProto = PLACEHOLDER
-    entries: List["EnumDefinitionCompiler.EnumEntry"] = PLACEHOLDER
+    entries: list[EnumDefinitionCompiler.EnumEntry] = PLACEHOLDER
 
     @dataclass(unsafe_hash=True)
     class EnumEntry:
@@ -695,9 +684,9 @@ class EnumDefinitionCompiler(MessageCompiler):
 @dataclass
 class ServiceCompiler(ProtoContentBase):
     parent: OutputTemplate = PLACEHOLDER
-    proto_obj: DescriptorProto = PLACEHOLDER
-    path: List[int] = PLACEHOLDER
-    methods: List["ServiceMethodCompiler"] = field(default_factory=list)
+    proto_obj: ServiceDescriptorProto = PLACEHOLDER
+    path: list[int] = PLACEHOLDER
+    methods: list[ServiceMethodCompiler] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         # Add service to output file
@@ -718,7 +707,7 @@ class ServiceCompiler(ProtoContentBase):
 class ServiceMethodCompiler(ProtoContentBase):
     parent: ServiceCompiler
     proto_obj: MethodDescriptorProto
-    path: List[int] = PLACEHOLDER
+    path: list[int] = PLACEHOLDER
     comment_indent: int = 8
 
     def __post_init__(self) -> None:
@@ -769,7 +758,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         return f"/{package_part}{self.parent.proto_name}/{self.proto_name}"
 
     @property
-    def py_input_message(self) -> Optional[MessageCompiler]:
+    def py_input_message(self) -> MessageCompiler | None:
         """Find the input message object.
 
         Returns
