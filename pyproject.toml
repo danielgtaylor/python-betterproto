@@ -21,6 +21,8 @@ python-dateutil = "^2.8"
 isort = {version = "^5.11.5", optional = true}
 typing-extensions = "^4.7.1"
 
+[tool.poetry.group.dev]
+optional = true
 [tool.poetry.group.dev.dependencies]
 asv = "^0.4.2"
 bpython = "^0.19"
@@ -32,6 +34,8 @@ pre-commit = "^2.17.0"
 grpcio-tools = "^1.54.2"
 tox = "^4.0.0"
 
+[tool.poetry.group.test]
+optional = true
 [tool.poetry.group.test.dependencies]
 poethepoet = ">=0.9.0"
 pytest = "^6.2.5"
@@ -61,27 +65,27 @@ cmd = "pytest"
 help = "Run tests"
 
 [tool.poe.tasks.types]
-cmd  = "mypy src --ignore-missing-imports"
-help = "Check types with mypy"
+cmd  = "pyright --exclude tests"
+help = "Check types with pyright"
 
 [tool.poe.tasks]
-_black = "black . --exclude tests/output_ --target-version py310"
+_black = "black . --extend-exclude tests/output_ --target-version py310"
 _isort = "isort . --extend-skip-glob 'tests/output_*/**/*'"
 
 [tool.poe.tasks.format]
-sequence  = ["_black", "_isort"]
+sequence = ["_black", "_isort"]
 help = "Apply black and isort formatting to source code"
 
 [tool.poe.tasks.docs]
-cmd  = "sphinx-build docs docs/build"
+cmd = "sphinx-build docs docs/build"
 help = "Build the sphinx docs"
 
 [tool.poe.tasks.bench]
 shell = "asv run master^! && asv run HEAD^! && asv compare master HEAD"
-help  = "Benchmark current commit vs. master branch"
+help = "Benchmark current commit vs. master branch"
 
 [tool.poe.tasks.clean]
-cmd  = """
+cmd = """
 rm -rf .asv .coverage .mypy_cache .pytest_cache
        dist betterproto.egg-info **/__pycache__
        testsoutput_*
@@ -109,6 +113,10 @@ help = "Run tests with multiple pythons"
 cmd = "black . --check --diff"
 help = "Check if code style is correct"
 
+[tool.pyright]
+typeCheckingMode = "basic"
+reportSelfClsParameterName = false
+
 [tool.isort]
 py_version = 37
 profile = "black"
@@ -128,7 +136,7 @@ max_line_length = 88
 
 [tool.doc8.ignore_path_errors]
 "docs/migrating.rst" = [
-    "D001",  # contains table which is longer than 88 characters long
+    "D001", # contains table which is longer than 88 characters long
 ]
 
 [tool.coverage.run]

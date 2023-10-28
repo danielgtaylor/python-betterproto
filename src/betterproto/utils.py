@@ -36,7 +36,7 @@ class hybridmethod(Generic[SelfT, P, HybridT]):
         return self
 
     def __get__(
-        self, instance: Optional[SelfT], owner: Type[SelfT]
+        self, instance: SelfT | None, owner: type[SelfT]
     ) -> Callable[P, HybridT]:
         if instance is None or self.instance_func is None:
             # either bound to the class, or no instance method available

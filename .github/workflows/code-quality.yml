@@ -6,13 +6,21 @@ on:
       - master
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   check-formatting:
     name: Check code/doc formatting
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-    - uses: pre-commit/action@v2.0.3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - uses: pre-commit/action@v2.0.3
+      - run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          cache: "poetry"
+
+      - run: poetry install --with dev,test
+      - run: echo "$(poetry env info --path)/bin" >> $GITHUB_PATH
+      - uses: jakebailey/pyright-action@v1
