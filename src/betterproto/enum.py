@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import (
+    Generator,
+    Mapping,
+)
 from enum import (
     EnumMeta,
     IntEnum,
@@ -12,17 +16,10 @@ from typing import (
     cast,
 )
 
-
-if TYPE_CHECKING:
-    from collections.abc import (
-        Generator,
-        Mapping,
-    )
-
-    from typing_extensions import (
-        Never,
-        Self,
-    )
+from typing_extensions import (
+    Never,
+    Self,
+)
 
 
 def _is_descriptor(obj: object) -> bool:
