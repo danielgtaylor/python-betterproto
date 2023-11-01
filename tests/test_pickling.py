@@ -45,6 +45,12 @@ class NestedData(betterproto.Message):
     )
 
 
+
+class Color(betterproto.Enum):
+    BLUE = 0
+    GREEN = 1
+
+
 @dataclass(eq=False, repr=False)
 class Complex(betterproto.Message):
     foo_str: str = betterproto.string_field(1)
@@ -55,6 +61,7 @@ class Complex(betterproto.Message):
     mapping: Dict[str, "google.Any"] = betterproto.map_field(
         7, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
     )
+    color: "Color" = betterproto.enum_field(8)
 
 
 def complex_msg():
@@ -81,6 +88,7 @@ def complex_msg():
             "message": google.Any(value=bytes(Fi(abc="hi"))),
             "string": google.Any(value=b"howdy"),
         },
+        color=Color.BLUE,
     )
 
 
@@ -89,6 +97,7 @@ def test_pickling_complex_message():
     deser = unpickled(msg)
     assert msg == deser
     assert msg.fe.abc == "1"
+    assert msg.color == Color.BLUE
     assert msg.is_set("fi") is not True
     assert msg.mapping["message"] == google.Any(value=bytes(Fi(abc="hi")))
     assert msg.mapping["string"].value.decode() == "howdy"

@@ -61,11 +61,17 @@ original markdown is missing until I finish debugging this
 {{ tree|tojson(indent=4) }}
 """
 
-{% macro render_class(tree_) %}
+{% macro render_class(tree_, parent=none) %}
 {% for k, v in tree_.items() %}
 {% if v.kind == "enum" %}
 {% set enum = v.obj %}
-class {{ enum.py_name }}(betterproto.Enum):
+
+{% set enum_name = enum.py_name %}
+{% if parent is not none and enum.py_name.startswith(parent) %}
+  {% set enum_name = enum.py_name[parent|length:] %}
+{% endif %}
+
+class {{ enum_name }}(betterproto.Enum):
     {% if enum.comment %}
 {{ enum.comment }}
 
@@ -79,14 +85,20 @@ class {{ enum.py_name }}(betterproto.Enum):
     {% endfor %}
 {% else %}
 {% set message = v.obj %}
+
+{% set msg_name = message.py_name %}
+{% if parent is not none and message.py_name.startswith(parent) %}
+  {% set msg_name = message.py_name[parent|length:] %}
+{% endif %}
+
 @dataclass(eq=False, repr=False)
-class {{ message.py_name }}(betterproto.Message):
+class {{ msg_name }}(betterproto.Message):
     {% if message.comment %}
 {{ message.comment }}
 
     {% endif %}
 
-    {{ render_class(v.children)|indent }}
+    {{ render_class(v.children, parent=message.py_name)|indent }}
 
     {% for field in message.fields %}
     {{ field.get_field_string() }}

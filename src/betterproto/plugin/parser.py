@@ -127,10 +127,10 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
         output_paths.add(output_path)
 
+        # Render and then format the output file
         response.file.append(
             CodeGeneratorResponseFile(
                 name=str(output_path),
-                # Render and then format the output file
                 content=outputfile_compiler(output_file=output_package),
             )
         )
