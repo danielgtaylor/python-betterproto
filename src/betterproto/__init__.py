@@ -1014,6 +1014,13 @@ class Message(ABC):
         """
         Get the binary encoded Protobuf representation of this message instance.
         """
+
+        try:
+            import betterproto_rust_codec
+            return betterproto_rust_codec.serialize(self)
+        except ModuleNotFoundError:
+            pass
+
         with BytesIO() as stream:
             self.dump(stream)
             return stream.getvalue()
@@ -1356,6 +1363,14 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
+        
+        try:
+            import betterproto_rust_codec
+            betterproto_rust_codec.deserialize(self, data)
+            return self
+        except ModuleNotFoundError:
+            pass
+    
         with BytesIO(data) as stream:
             return self.load(stream)
 
