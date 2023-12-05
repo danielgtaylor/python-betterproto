@@ -50,8 +50,8 @@ class BenchMessage:
         self.instance_filled_nested_bytes = bytes(self.instance_filled_nested)
         self.instance_filled_repeated = TestRepeatedMessage(
             [f"test{i}" for i in range(1_000)],
-            [(i-500)**3 for i in range(1_000)],
-            [i%2==0 for i in range(1_000)],
+            [(i - 500) ** 3 for i in range(1_000)],
+            [i % 2 == 0 for i in range(1_000)],
         )
         self.instance_filled_repeated_bytes = bytes(self.instance_filled_repeated)
 

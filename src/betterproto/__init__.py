@@ -1014,13 +1014,6 @@ class Message(ABC):
         """
         Get the binary encoded Protobuf representation of this message instance.
         """
-
-        try:
-            import betterproto_rust_codec
-            return betterproto_rust_codec.serialize(self)
-        except ModuleNotFoundError:
-            pass
-
         with BytesIO() as stream:
             self.dump(stream)
             return stream.getvalue()
@@ -1363,14 +1356,6 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
-        
-        try:
-            import betterproto_rust_codec
-            betterproto_rust_codec.deserialize(self, data)
-            return self
-        except ModuleNotFoundError:
-            pass
-    
         with BytesIO(data) as stream:
             return self.load(stream)
 
@@ -1882,6 +1867,23 @@ class Message(ABC):
 
 
 Message.__annotations__ = {}  # HACK to avoid typing.get_type_hints breaking :)
+
+# monkey patch (de-)serialization functions of class `Message`
+# with functions from `betterproto-rust-codec` if available
+try:
+    import betterproto_rust_codec
+
+    def __parse_patch(self: T, data: bytes) -> T:
+        betterproto_rust_codec.deserialize(self, data)
+        return self
+
+    def __bytes_patch(self) -> bytes:
+        return betterproto_rust_codec.serialize(self)
+
+    Message.parse = __parse_patch
+    Message.__bytes__ = __bytes_patch
+except ModuleNotFoundError:
+    pass
 
 
 def serialized_on_wire(message: Message) -> bool:
