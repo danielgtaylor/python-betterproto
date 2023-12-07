@@ -1868,6 +1868,23 @@ class Message(ABC):
 
 Message.__annotations__ = {}  # HACK to avoid typing.get_type_hints breaking :)
 
+# monkey patch (de-)serialization functions of class `Message`
+# with functions from `betterproto-rust-codec` if available
+try:
+    import betterproto_rust_codec
+
+    def __parse_patch(self: T, data: bytes) -> T:
+        betterproto_rust_codec.deserialize(self, data)
+        return self
+
+    def __bytes_patch(self) -> bytes:
+        return betterproto_rust_codec.serialize(self)
+
+    Message.parse = __parse_patch
+    Message.__bytes__ = __bytes_patch
+except ModuleNotFoundError:
+    pass
+
 
 def serialized_on_wire(message: Message) -> bool:
     """

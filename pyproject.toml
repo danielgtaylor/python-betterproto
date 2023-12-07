@@ -20,6 +20,7 @@ jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
 isort = {version = "^5.11.5", optional = true}
 typing-extensions = "^4.7.1"
+betterproto-rust-codec = { version = "0.1.0", optional = true }
 
 [tool.poetry.group.dev.dependencies]
 asv = "^0.4.2"
@@ -48,6 +49,7 @@ protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
 compiler = ["black", "isort", "jinja2"]
+rust-codec = ["betterproto-rust-codec"]
 
 
 # Dev workflow tasks
