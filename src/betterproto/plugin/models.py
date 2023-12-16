@@ -157,10 +157,7 @@ def get_comment(
     pad = " " * indent
     for sci_loc in proto_file.source_code_info.location:
         if list(sci_loc.path) == path and sci_loc.leading_comments:
-            lines = textwrap.wrap(
-                sci_loc.leading_comments.strip().replace("\n", ""), width=79 - indent
-            )
-
+            lines = sci_loc.leading_comments.strip().split("\n")
             # This is a field, message, enum, service, or method
             if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
                 lines[0] = lines[0].strip('"')
