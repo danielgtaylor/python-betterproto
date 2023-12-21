@@ -1947,8 +1947,9 @@ class _Duration(Duration):
 
     @staticmethod
     def delta_to_json(delta: timedelta) -> str:
-        parts = str(delta.total_seconds()).split(".")
+        parts = f"{delta.total_seconds():f}".split(".")
         if len(parts) > 1:
+            parts[1] = parts[1].rstrip('0')
             while len(parts[1]) not in (3, 6, 9):
                 parts[1] = f"{parts[1]}0"
         return f"{'.'.join(parts)}s"
