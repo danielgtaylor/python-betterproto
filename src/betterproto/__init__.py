@@ -1403,15 +1403,6 @@ class Message(ABC):
         Dict[:class:`str`, Any]
             The JSON serializable dict representation of this object.
         """
-        # Mirror of from_dict: Struct's `fields` member is transparently
-        # dispatched through instead.
-        if isinstance(self, Struct):
-            output = {**self.fields}
-            for k in self.fields:
-                if hasattr(self.fields[k], "to_dict"):
-                    output[k] = self.fields[k].to_dict(casing, include_default_values)
-            return output
-
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
         defaults = self._betterproto.default_gen
@@ -1530,12 +1521,6 @@ class Message(ABC):
 
     @classmethod
     def _from_dict_init(cls, mapping: Mapping[str, Any]) -> Mapping[str, Any]:
-        # Special case: google.protobuf.Struct has a single fields member but
-        # behaves like a transparent JSON object, so it needs to first be munged
-        # into `{fields: mapping}`.
-        if cls == Struct:
-            mapping = {"fields": mapping}
-
         init_kwargs: Dict[str, Any] = {}
         for key, value in mapping.items():
             field_name = safe_snake_case(key)
@@ -1566,7 +1551,7 @@ class Message(ABC):
                         if isinstance(value, list)
                         else sub_cls.from_dict(value)
                     )
-            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE and cls != Struct:
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                 sub_cls = cls._betterproto.cls_by_field[f"{field_name}.value"]
                 value = {k: sub_cls.from_dict(v) for k, v in value.items()}
             else:
@@ -1941,7 +1926,6 @@ from .lib.google.protobuf import (  # noqa
     Int32Value,
     Int64Value,
     StringValue,
-    Struct,
     Timestamp,
     UInt32Value,
     UInt64Value,

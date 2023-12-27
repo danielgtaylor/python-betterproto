@@ -2,14 +2,21 @@
 # sources: google/protobuf/any.proto, google/protobuf/api.proto, google/protobuf/descriptor.proto, google/protobuf/duration.proto, google/protobuf/empty.proto, google/protobuf/field_mask.proto, google/protobuf/source_context.proto, google/protobuf/struct.proto, google/protobuf/timestamp.proto, google/protobuf/type.proto, google/protobuf/wrappers.proto
 # plugin: python-betterproto
 # This file has been @generated
+
+from __future__ import annotations
+
 import warnings
 from dataclasses import dataclass
 from typing import (
     Dict,
     List,
+    Mapping,
 )
 
+from typing_extensions import Self
+
 import betterproto
+from betterproto.utils import hybridmethod
 
 
 class Syntax(betterproto.Enum):
@@ -1457,6 +1464,32 @@ class Struct(betterproto.Message):
         1, betterproto.TYPE_STRING, betterproto.TYPE_MESSAGE
     )
     """Unordered map of dynamically typed values."""
+
+    @hybridmethod
+    def from_dict(cls: type[Self], value: Mapping[str, Any]) -> Self:  # type: ignore
+        self = cls()
+        return self.from_dict(value)
+
+    @from_dict.instancemethod
+    def from_dict(self, value: Mapping[str, Any]) -> Self:
+        fields = {**value}
+        for k in fields:
+            if hasattr(fields[k], "from_dict"):
+                fields[k] = fields[k].from_dict()
+
+        self.fields = fields
+        return self
+
+    def to_dict(
+        self,
+        casing: betterproto.Casing = betterproto.Casing.CAMEL,
+        include_default_values: bool = False,
+    ) -> Dict[str, Any]:
+        output = {**self.fields}
+        for k in self.fields:
+            if hasattr(self.fields[k], "to_dict"):
+                output[k] = self.fields[k].to_dict(casing, include_default_values)
+        return output
 
 
 @dataclass(eq=False, repr=False)
