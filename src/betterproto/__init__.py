@@ -1403,6 +1403,15 @@ class Message(ABC):
         Dict[:class:`str`, Any]
             The JSON serializable dict representation of this object.
         """
+        # Mirror of from_dict: Struct's `fields` member is transparently
+        # dispatched through instead.
+        if isinstance(self, Struct):
+            output = {**self.fields}
+            for k in self.fields:
+                if hasattr(self.fields[k], "to_dict"):
+                    output[k] = self.fields[k].to_dict(casing, include_default_values)
+            return output
+
         output: Dict[str, Any] = {}
         field_types = self._type_hints()
         defaults = self._betterproto.default_gen
