@@ -55,7 +55,6 @@ from .utils import (
     hybridmethod,
 )
 
-
 if TYPE_CHECKING:
     from _typeshed import (
         SupportsRead,
@@ -1522,6 +1521,12 @@ class Message(ABC):
 
     @classmethod
     def _from_dict_init(cls, mapping: Mapping[str, Any]) -> Mapping[str, Any]:
+        # Special case: google.protobuf.Struct has a single fields member but
+        # behaves like a transparent JSON object, so it needs to first be munged
+        # into `{fields: mapping}`.
+        if cls == Struct:
+            mapping = {"fields": mapping}
+
         init_kwargs: Dict[str, Any] = {}
         for key, value in mapping.items():
             field_name = safe_snake_case(key)
@@ -1552,7 +1557,7 @@ class Message(ABC):
                         if isinstance(value, list)
                         else sub_cls.from_dict(value)
                     )
-            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
+            elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE and cls != Struct:
                 sub_cls = cls._betterproto.cls_by_field[f"{field_name}.value"]
                 value = {k: sub_cls.from_dict(v) for k, v in value.items()}
             else:
@@ -1582,6 +1587,7 @@ class Message(ABC):
                     )
 
             init_kwargs[field_name] = value
+
         return init_kwargs
 
     @hybridmethod
@@ -1926,6 +1932,7 @@ from .lib.google.protobuf import (  # noqa
     Int32Value,
     Int64Value,
     StringValue,
+    Struct,
     Timestamp,
     UInt32Value,
     UInt64Value,
