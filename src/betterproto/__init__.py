@@ -55,6 +55,7 @@ from .utils import (
     hybridmethod,
 )
 
+
 if TYPE_CHECKING:
     from _typeshed import (
         SupportsRead,
