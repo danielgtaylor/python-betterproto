@@ -10,6 +10,9 @@ from typing import (
     List,
     Mapping,
 )
+from typing import (
+    Type as T,
+)
 
 from typing_extensions import Self
 
@@ -1464,7 +1467,7 @@ class Struct(betterproto.Message):
     """Unordered map of dynamically typed values."""
 
     @hybridmethod
-    def from_dict(cls: type[Self], value: Mapping[str, Any]) -> Self:  # type: ignore
+    def from_dict(cls: T[Self], value: Mapping[str, Any]) -> Self:  # type: ignore
         self = cls()
         return self.from_dict(value)
 
