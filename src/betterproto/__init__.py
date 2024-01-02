@@ -1582,7 +1582,6 @@ class Message(ABC):
                     )
 
             init_kwargs[field_name] = value
-
         return init_kwargs
 
     @hybridmethod
