@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+package service_complex_structure.payloads;
+
+message Test {
+  string name = 1;
+  repeated string comments = 2;
+  google.protobuf.Timestamp when = 3;
+  google.protobuf.Duration duration = 4;
+}
