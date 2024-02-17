@@ -85,7 +85,7 @@ async def protoc(
             "--custom_opt=pydantic_dataclasses",
             f"--proto_path={path.as_posix()}",
             f"--custom_out={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("**/*.proto")]
+            *[p.as_posix() for p in path.glob("**/*.proto")],
         ]
     else:
         command = [
@@ -94,7 +94,7 @@ async def protoc(
             "grpc.tools.protoc",
             f"--proto_path={path.as_posix()}",
             f"--{python_out_option}={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("**/*.proto")]
+            *[p.as_posix() for p in path.glob("**/*.proto")],
         ]
     proc = await asyncio.create_subprocess_exec(
         *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
