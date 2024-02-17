@@ -34,9 +34,15 @@ def get_files(path, suffix: str) -> Generator[str, None, None]:
             yield os.path.join(r, filename)
 
 
-def get_directories(path):
-    for root, directories, files in os.walk(path):
-        yield from directories
+def get_directories(path: Path) -> List[str]:
+    """
+    Get a list of first-level nested directory names in the specified path
+
+    path: The PosixPath object representing the path to scan
+          for first-level nested directories
+    returns: A list of first-level nested directory names in the specified path
+    """
+    return [entry.name for entry in Path(path).iterdir() if entry.is_dir()]
 
 
 async def protoc(
@@ -79,7 +85,7 @@ async def protoc(
             "--custom_opt=pydantic_dataclasses",
             f"--proto_path={path.as_posix()}",
             f"--custom_out={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("*.proto")],
+            *[p.as_posix() for p in path.glob("**/*.proto")]
         ]
     else:
         command = [
@@ -88,7 +94,7 @@ async def protoc(
             "grpc.tools.protoc",
             f"--proto_path={path.as_posix()}",
             f"--{python_out_option}={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("*.proto")],
+            *[p.as_posix() for p in path.glob("**/*.proto")]
         ]
     proc = await asyncio.create_subprocess_exec(
         *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
