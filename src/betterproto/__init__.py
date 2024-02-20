@@ -803,6 +803,9 @@ class Message(ABC):
             if value is not PLACEHOLDER
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
+    
+    def __hash__(self) -> int:
+            return hash(self.__repr__())
 
     def __rich_repr__(self) -> Iterable[Tuple[str, Any, Any]]:
         for field_name in self._betterproto.sorted_field_names:
