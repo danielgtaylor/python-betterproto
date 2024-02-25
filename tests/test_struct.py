@@ -17,6 +17,11 @@ def test_struct_roundtrip():
     assert struct_from_dict.to_dict() == data
     assert struct_from_dict.to_json() == data_json
 
+    struct_from_proto = Struct().parse(bytes(struct_from_dict))
+    assert struct_from_proto.fields == data
+    assert struct_from_proto.to_dict() == data
+    assert struct_from_proto.to_json() == data_json
+
     struct_from_json = Struct().from_json(data_json)
     assert struct_from_json.fields == data
     assert struct_from_json.to_dict() == data
