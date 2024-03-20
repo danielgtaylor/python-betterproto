@@ -34,15 +34,8 @@ def get_files(path, suffix: str) -> Generator[str, None, None]:
             yield os.path.join(r, filename)
 
 
-def get_directories(path: Path) -> List[str]:
-    """
-    Get a list of first-level nested directory names in the specified path
-
-    path: The PosixPath object representing the path to scan
-          for first-level nested directories
-    returns: A list of first-level nested directory names in the specified path
-    """
-    return [entry.name for entry in Path(path).iterdir() if entry.is_dir()]
+def get_directories(path: Path) -> Generator[str, None, None]:
+    yield from (entry.name for entry in path.iterdir() if entry.is_dir())
 
 
 async def protoc(
