@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "payloads/messages.proto";
+
+package service_complex_structure.service;
+
+
+service Test {
+  rpc DoThing (service_complex_structure.payloads.Test) returns (google.protobuf.Empty);
+}
