@@ -732,7 +732,7 @@ class Message:
                 group_current.setdefault(meta.group)
 
             value = self.__raw_get(field_name)
-            if value != PLACEHOLDER and not (meta.optional and value is None):
+            if value is not PLACEHOLDER and not (meta.optional and value is None):
                 # Found a non-sentinel value
                 all_sentinel = False
 
@@ -1861,6 +1861,23 @@ class Message:
 Message.__annotations__ = (
     {}
 )  # HACK to avoid typing.get_type_hints breaking because we have to manually pass globals
+
+# monkey patch (de-)serialization functions of class `Message`
+# with functions from `betterproto-rust-codec` if available
+try:
+    import betterproto_rust_codec
+
+    def __parse_patch(self: T, data: bytes) -> T:
+        betterproto_rust_codec.deserialize(self, data)
+        return self
+
+    def __bytes_patch(self) -> bytes:
+        return betterproto_rust_codec.serialize(self)
+
+    Message.parse = __parse_patch
+    Message.__bytes__ = __bytes_patch
+except ModuleNotFoundError:
+    pass
 
 
 def serialized_on_wire(message: Message) -> bool:

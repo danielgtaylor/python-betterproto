@@ -277,7 +277,22 @@ message Test {
 }
 ```
 
-You can use `betterproto.which_one_of(message, group_name)` to determine which of the fields was set. It returns a tuple of the field name and value, or a blank string and `None` if unset.
+On Python 3.10 and later, you can use a `match` statement to access the provided one-of field, which supports type-checking:
+
+```py
+test = Test()
+match test:
+    case Test(on=value):
+        print(value)  # value: bool
+    case Test(count=value):
+        print(value)  # value: int
+    case Test(name=value):
+        print(value)  # value: str
+    case _:
+        print("No value provided")
+```
+
+You can also use `betterproto.which_one_of(message, group_name)` to determine which of the fields was set. It returns a tuple of the field name and value, or a blank string and `None` if unset.
 
 ```py
 >>> test = Test()
@@ -292,17 +307,11 @@ You can use `betterproto.which_one_of(message, group_name)` to determine which o
 >>> test.count = 57
 >>> betterproto.which_one_of(test, "foo")
 ["count", 57]
->>> test.on
-False
 
 # Default (zero) values also work.
 >>> test.name = ""
 >>> betterproto.which_one_of(test, "foo")
 ["name", ""]
->>> test.count
-0
->>> test.on
-False
 ```
 
 Again this is a little different than the official Google code generator:
