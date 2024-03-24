@@ -3,7 +3,6 @@ from collections.abc import AsyncIterable
 from typing import (
     Any,
     Callable,
-    Dict,
 )
 
 import grpclib
