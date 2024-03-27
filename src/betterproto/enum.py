@@ -159,7 +159,7 @@ class Enum(IntEnum if TYPE_CHECKING else int, metaclass=EnumType):
     def __copy__(self) -> Self:
         return self
 
-    def __deepcopy__(self, memo):
+    def __deepcopy__(self, memo: Any) -> Self:
         return self
 
     @classmethod
