@@ -562,6 +562,7 @@ class FieldCompiler(MessageCompiler):
                 package=self.output_file.package,
                 imports=self.output_file.imports,
                 source_type=self.proto_obj.type_name,
+                pydantic=self.output_file.pydantic_dataclasses,
             )
         else:
             raise NotImplementedError(f"Unknown type {self.proto_obj.type}")
@@ -806,6 +807,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports,
             source_type=self.proto_obj.input_type,
             unwrap=False,
+            pydantic=self.output_file.pydantic_dataclasses,
         ).strip('"')
 
     @property
@@ -834,6 +836,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports,
             source_type=self.proto_obj.output_type,
             unwrap=False,
+            pydantic=self.output_file.pydantic_dataclasses,
         ).strip('"')
 
     @property
