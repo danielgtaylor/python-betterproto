@@ -43,7 +43,12 @@ def parse_source_type_name(field_type_name: str) -> Tuple[str, str]:
 
 
 def get_type_reference(
-    *, package: str, imports: set, source_type: str, unwrap: bool = True
+    *,
+    package: str,
+    imports: set,
+    source_type: str,
+    unwrap: bool = True,
+    pydantic: bool = False,
 ) -> str:
     """
     Return a Python type name for a proto type reference. Adds the import if
@@ -69,7 +74,9 @@ def get_type_reference(
     compiling_google_protobuf = current_package == ["google", "protobuf"]
     importing_google_protobuf = py_package == ["google", "protobuf"]
     if importing_google_protobuf and not compiling_google_protobuf:
-        py_package = ["betterproto", "lib"] + py_package
+        py_package = (
+            ["betterproto", "lib"] + (["pydantic"] if pydantic else []) + py_package
+        )
 
     if py_package[:1] == ["betterproto"]:
         return reference_absolute(imports, py_package, py_type)
