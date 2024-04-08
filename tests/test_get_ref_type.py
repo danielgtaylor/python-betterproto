@@ -46,6 +46,45 @@ def test_reference_google_wellknown_types_non_wrappers(
 
 
 @pytest.mark.parametrize(
+    ["google_type", "expected_name", "expected_import"],
+    [
+        (
+            ".google.protobuf.Empty",
+            '"betterproto_lib_pydantic_google_protobuf.Empty"',
+            "import betterproto.lib.pydantic.google.protobuf as betterproto_lib_pydantic_google_protobuf",
+        ),
+        (
+            ".google.protobuf.Struct",
+            '"betterproto_lib_pydantic_google_protobuf.Struct"',
+            "import betterproto.lib.pydantic.google.protobuf as betterproto_lib_pydantic_google_protobuf",
+        ),
+        (
+            ".google.protobuf.ListValue",
+            '"betterproto_lib_pydantic_google_protobuf.ListValue"',
+            "import betterproto.lib.pydantic.google.protobuf as betterproto_lib_pydantic_google_protobuf",
+        ),
+        (
+            ".google.protobuf.Value",
+            '"betterproto_lib_pydantic_google_protobuf.Value"',
+            "import betterproto.lib.pydantic.google.protobuf as betterproto_lib_pydantic_google_protobuf",
+        ),
+    ],
+)
+def test_reference_google_wellknown_types_non_wrappers_pydantic(
+    google_type: str, expected_name: str, expected_import: str
+):
+    imports = set()
+    name = get_type_reference(
+        package="", imports=imports, source_type=google_type, pydantic=True
+    )
+
+    assert name == expected_name
+    assert imports.__contains__(
+        expected_import
+    ), f"{expected_import} not found in {imports}"
+
+
+@pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
         (".google.protobuf.DoubleValue", "Optional[float]"),
