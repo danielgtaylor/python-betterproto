@@ -35,7 +35,9 @@ def test_reference_google_wellknown_types_non_wrappers(
     google_type: str, expected_name: str, expected_import: str
 ):
     imports = set()
-    name = get_type_reference(package="", imports=imports, source_type=google_type, pydantic=False)
+    name = get_type_reference(
+        package="", imports=imports, source_type=google_type, pydantic=False
+    )
 
     assert name == expected_name
     assert imports.__contains__(
