@@ -98,6 +98,9 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
                 output_package_name
             ].pydantic_dataclasses = True
 
+        if "useOptionals=all" in plugin_options:
+            request_data.output_packages[output_package_name].use_optionals = "all"
+
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
     # get the references to input/output messages for each service

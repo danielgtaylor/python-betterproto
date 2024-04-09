@@ -1439,6 +1439,8 @@ class Message(ABC):
                 elif field_is_repeated:
                     # Convert each item.
                     cls = self._betterproto.cls_by_field[field_name]
+                    if not value:
+                        value = []
                     if cls == datetime:
                         value = [_Timestamp.timestamp_to_json(i) for i in value]
                     elif cls == timedelta:

@@ -29,7 +29,6 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attribute.
 """
 
-
 import builtins
 import re
 import textwrap
@@ -37,6 +36,13 @@ from dataclasses import (
     dataclass,
     field,
 )
+
+
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
+
 from typing import (
     Dict,
     Iterable,
@@ -250,6 +256,7 @@ class OutputTemplate:
     services: List["ServiceCompiler"] = field(default_factory=list)
     imports_type_checking_only: Set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
+    use_optionals: Optional[Literal["all"]] = None
     output: bool = True
 
     @property
@@ -483,7 +490,7 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def optional(self) -> bool:
-        return self.proto_obj.proto3_optional
+        return self.proto_obj.proto3_optional or self.output_file.use_optionals == "all"
 
     @property
     def mutable(self) -> bool:
