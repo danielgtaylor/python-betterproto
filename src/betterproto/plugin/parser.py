@@ -1,12 +1,8 @@
+from __future__ import annotations
+
 import pathlib
 import sys
-from typing import (
-    Generator,
-    List,
-    Set,
-    Tuple,
-    Union,
-)
+from collections.abc import Generator
 
 from betterproto.lib.google.protobuf import (
     DescriptorProto,
@@ -41,17 +37,13 @@ from .models import (
 
 def traverse(
     proto_file: FileDescriptorProto,
-) -> Generator[
-    Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
-]:
+) -> Generator[tuple[EnumDescriptorProto | DescriptorProto, list[int]], None, None]:
     # Todo: Keep information about nested hierarchy
     def _traverse(
-        path: List[int],
-        items: Union[List[EnumDescriptorProto], List[DescriptorProto]],
+        path: list[int],
+        items: list[EnumDescriptorProto] | list[DescriptorProto],
         prefix: str = "",
-    ) -> Generator[
-        Tuple[Union[EnumDescriptorProto, DescriptorProto], List[int]], None, None
-    ]:
+    ) -> Generator[tuple[EnumDescriptorProto | DescriptorProto, list[int]], None, None]:
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
@@ -118,7 +110,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
                 read_protobuf_service(service, index, output_package)
 
     # Generate output files
-    output_paths: Set[pathlib.Path] = set()
+    output_paths: set[pathlib.Path] = set()
     for output_package_name, output_package in request_data.output_packages.items():
         if not output_package.output:
             continue
@@ -154,10 +146,10 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
 
 def _make_one_of_field_compiler(
     output_package: OutputTemplate,
-    source_file: "FileDescriptorProto",
+    source_file: FileDescriptorProto,
     parent: MessageCompiler,
-    proto_obj: "FieldDescriptorProto",
-    path: List[int],
+    proto_obj: FieldDescriptorProto,
+    path: list[int],
 ) -> FieldCompiler:
     pydantic = output_package.pydantic_dataclasses
     Cls = PydanticOneOfFieldCompiler if pydantic else OneOfFieldCompiler
@@ -170,9 +162,9 @@ def _make_one_of_field_compiler(
 
 
 def read_protobuf_type(
-    item: DescriptorProto,
-    path: List[int],
-    source_file: "FileDescriptorProto",
+    item: DescriptorProto | EnumDescriptorProto,
+    path: list[int],
+    source_file: FileDescriptorProto,
     output_package: OutputTemplate,
 ) -> None:
     if isinstance(item, DescriptorProto):

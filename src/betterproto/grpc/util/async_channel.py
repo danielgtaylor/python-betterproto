@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import asyncio
 from typing import (
     AsyncIterable,
     AsyncIterator,
     Iterable,
-    Optional,
     TypeVar,
-    Union,
+    cast,
 )
 
 
@@ -32,6 +33,7 @@ class AsyncChannel(AsyncIterable[T]):
     This makes decoupled bidirectional steaming gRPC requests easy if used like:
 
     .. code-block:: python
+
         client = GeneratedStub(grpclib_chan)
         request_channel = await AsyncChannel()
         # We can start be sending all the requests we already have
@@ -119,8 +121,8 @@ class AsyncChannel(AsyncIterable[T]):
         return self._closed and self._queue.qsize() <= self._waiting_receivers
 
     async def send_from(
-        self, source: Union[Iterable[T], AsyncIterable[T]], close: bool = False
-    ) -> "AsyncChannel[T]":
+        self, source: Iterable[T] | AsyncIterable[T], close: bool = False
+    ) -> AsyncChannel[T]:
         """
         Iterates the given [Async]Iterable and sends all the resulting items.
         If close is set to True then subsequent send calls will be rejected with a
@@ -143,7 +145,7 @@ class AsyncChannel(AsyncIterable[T]):
             self.close()
         return self
 
-    async def send(self, item: T) -> "AsyncChannel[T]":
+    async def send(self, item: T) -> AsyncChannel[T]:
         """
         Send a single item over this channel.
         :param item: The item to send
@@ -153,7 +155,7 @@ class AsyncChannel(AsyncIterable[T]):
         await self._queue.put(item)
         return self
 
-    async def receive(self) -> Optional[T]:
+    async def receive(self) -> T | None:
         """
         Returns the next item from this channel when it becomes available,
         or None if the channel is closed before another item is sent.
@@ -171,14 +173,14 @@ class AsyncChannel(AsyncIterable[T]):
             self._waiting_receivers -= 1
             self._queue.task_done()
 
-    def close(self):
+    def close(self) -> None:
         """
         Close this channel to new items
         """
         self._closed = True
         asyncio.ensure_future(self._flush_queue())
 
-    async def _flush_queue(self):
+    async def _flush_queue(self) -> None:
         """
         To be called after the channel is closed. Pushes a number of self.__flush
         objects to the queue to ensure no waiting consumers get deadlocked.
@@ -190,4 +192,4 @@ class AsyncChannel(AsyncIterable[T]):
                 await self._queue.put(self.__flush)
 
     # A special signal object for flushing the queue when the channel is closed
-    __flush = object()
+    __flush = cast(T, object())

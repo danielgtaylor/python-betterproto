@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   tests:
@@ -54,7 +54,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: poetry install -E compiler
+        run: poetry install --with dev,test
 
       - name: Generate code from proto files
         shell: bash
