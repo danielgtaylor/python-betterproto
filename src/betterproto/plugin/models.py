@@ -324,10 +324,17 @@ class MessageCompiler(ProtoContentBase):
         return pythonize_class_name(self.proto_name)
 
     @property
+    def optional(self) -> bool:
+        return self.proto_obj.proto3_optional or self.output_file.use_optionals == "all"
+
+    @property
     def annotation(self) -> str:
+        py_name = self.py_name
         if self.repeated:
-            return f"List[{self.py_name}]"
-        return self.py_name
+            py_name = f"List[{py_name}]"
+        if self.optional:
+            py_name = f"Optional[{py_name}]"
+        return py_name
 
     @property
     def deprecated_fields(self) -> Iterator[str]:
@@ -495,7 +502,7 @@ class FieldCompiler(MessageCompiler):
     @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
-        return self.annotation.startswith(("List[", "Dict["))
+        return self.annotation.startswith(("List[", "Dict[", "Optional[List[", "Optional[Dict["))
 
     @property
     def field_type(self) -> str:
@@ -580,9 +587,9 @@ class FieldCompiler(MessageCompiler):
         if self.use_builtins:
             py_type = f"builtins.{py_type}"
         if self.repeated:
-            return f"List[{py_type}]"
+            py_type = f"List[{py_type}]"
         if self.optional:
-            return f"Optional[{py_type}]"
+            py_type = f"Optional[{py_type}]"
         return py_type
 
 
@@ -652,7 +659,10 @@ class MapEntryCompiler(FieldCompiler):
 
     @property
     def annotation(self) -> str:
-        return f"Dict[{self.py_k_type}, {self.py_v_type}]"
+        py_type = f"Dict[{self.py_k_type}, {self.py_v_type}]"
+        if self.optional:
+            py_type = f"Optional[{py_type}]"
+        return py_type
 
     @property
     def repeated(self) -> bool:
