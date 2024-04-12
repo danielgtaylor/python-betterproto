@@ -316,10 +316,10 @@ def message_field(
 
 
 def map_field(
-    number: int, key_type: str, value_type: str, group: Optional[str] = None
+    number: int, key_type: str, value_type: str, group: Optional[str] = None, optional: bool = False
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MAP, map_types=(key_type, value_type), group=group
+        number, TYPE_MAP, map_types=(key_type, value_type), group=group, optional=optional
     )
 
 
