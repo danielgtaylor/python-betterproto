@@ -651,7 +651,10 @@ class MapEntryCompiler(FieldCompiler):
 
     @property
     def betterproto_field_args(self) -> List[str]:
-        return [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+        result = [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+        if self.optional:
+            result.append("optional=True")
+        return result
 
     @property
     def field_type(self) -> str:

@@ -9,4 +9,4 @@ def test_mapmessage_optional():
     with pytest.raises(ValidationError):
         message = Fail()
     # TODO: Actually make this succeed
-    # message = Success()
+    message = Success()
