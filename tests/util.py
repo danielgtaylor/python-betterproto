@@ -26,6 +26,7 @@ inputs_path = root_path.joinpath("inputs")
 output_path_reference = root_path.joinpath("output_reference")
 output_path_betterproto = root_path.joinpath("output_betterproto")
 output_path_betterproto_pydantic = root_path.joinpath("output_betterproto_pydantic")
+output_path_betterproto_pydantic_optionals = root_path.joinpath("output_betterproto_pydantic_optionals")
 
 
 def get_files(path, suffix: str) -> Generator[str, None, None]:
@@ -44,6 +45,7 @@ async def protoc(
     output_dir: Union[str, Path],
     reference: bool = False,
     pydantic_dataclasses: bool = False,
+    optionals: bool = False,
 ):
     path: Path = Path(path).resolve()
     output_dir: Path = Path(output_dir).resolve()
@@ -90,6 +92,8 @@ async def protoc(
             f"--{python_out_option}={output_dir.as_posix()}",
             *[p.as_posix() for p in path.glob("*.proto")],
         ]
+    if optionals:
+        command.insert(max(0, len(command) - 2), "--custom_opt=useOptionals=all")
     proc = await asyncio.create_subprocess_exec(
         *command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
