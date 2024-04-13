@@ -257,6 +257,7 @@ class OutputTemplate:
     imports_type_checking_only: Set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
     use_optionals: Optional[Literal["all"]] = None
+    include_original_field_name: bool = True
     output: bool = True
 
     @property
@@ -435,6 +436,11 @@ class FieldCompiler(MessageCompiler):
             args.append(f"wraps={self.field_wraps}")
         if self.optional:
             args.append(f"optional=True")
+        if (
+            self.proto_name != self.py_name
+            and self.output_file.include_original_field_name
+        ):
+            args.append(f'name="{self.proto_name}"')
         return args
 
     @property
