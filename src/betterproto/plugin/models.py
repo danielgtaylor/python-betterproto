@@ -508,7 +508,9 @@ class FieldCompiler(MessageCompiler):
     @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
-        return self.annotation.startswith(("List[", "Dict[", "Optional[List[", "Optional[Dict["))
+        return self.annotation.startswith(
+            ("List[", "Dict[", "Optional[List[", "Optional[Dict[")
+        )
 
     @property
     def field_type(self) -> str:
@@ -657,7 +659,10 @@ class MapEntryCompiler(FieldCompiler):
 
     @property
     def betterproto_field_args(self) -> List[str]:
-        result = [f"betterproto.{self.proto_k_type}", f"betterproto.{self.proto_v_type}"]
+        result = [
+            f"betterproto.{self.proto_k_type}",
+            f"betterproto.{self.proto_v_type}",
+        ]
         if self.optional:
             result.append("optional=True")
         return result

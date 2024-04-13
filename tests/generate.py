@@ -12,8 +12,9 @@ from tests.util import (
     inputs_path,
     output_path_betterproto,
     output_path_betterproto_pydantic,
+    output_path_betterproto_pydantic_optionals,
     output_path_reference,
-    protoc, output_path_betterproto_pydantic_optionals,
+    protoc,
 )
 
 
@@ -82,7 +83,9 @@ async def generate_test_case_output(
     test_case_output_path_reference = output_path_reference.joinpath(test_case_name)
     test_case_output_path_betterproto = output_path_betterproto
     test_case_output_path_betterproto_pyd = output_path_betterproto_pydantic
-    test_case_output_path_betterproto_pyd_optionals = output_path_betterproto_pydantic_optionals
+    test_case_output_path_betterproto_pyd_optionals = (
+        output_path_betterproto_pydantic_optionals
+    )
 
     os.makedirs(test_case_output_path_reference, exist_ok=True)
     os.makedirs(test_case_output_path_betterproto, exist_ok=True)
@@ -101,10 +104,18 @@ async def generate_test_case_output(
         protoc(test_case_input_path, test_case_output_path_reference, True),
         protoc(test_case_input_path, test_case_output_path_betterproto, False),
         protoc(
-            test_case_input_path, test_case_output_path_betterproto_pyd, False, True, False
+            test_case_input_path,
+            test_case_output_path_betterproto_pyd,
+            False,
+            True,
+            False,
         ),
         protoc(
-            test_case_input_path, test_case_output_path_betterproto_pyd_optionals, False, True, True
+            test_case_input_path,
+            test_case_output_path_betterproto_pyd_optionals,
+            False,
+            True,
+            True,
         ),
     )
 
