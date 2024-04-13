@@ -433,6 +433,7 @@ def map_field(
     value_type: str,
     group: Optional[str] = None,
     name: Optional[str] = None,
+    optional: bool = False,
 ) -> Any:
     return dataclass_field(
         number,
@@ -440,6 +441,7 @@ def map_field(
         map_types=(key_type, value_type),
         group=group,
         name=name,
+        optional=optional,
     )
 
 
