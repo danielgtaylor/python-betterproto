@@ -182,7 +182,7 @@ class FieldMetadata:
     optional: Optional[bool] = False
 
     # Holding the original field name on proto file
-    name: Optional[string] = None
+    name: Optional[str] = None
 
     @staticmethod
     def get(field: dataclasses.Field) -> "FieldMetadata":
@@ -1270,9 +1270,19 @@ class Message(ABC):
         return get_type_hints(cls, module.__dict__, {})
 
     @classmethod
+    def _is_typing_optional(cls, typ):
+        # Check if the origin is Union
+        if getattr(typ, "__origin__", None) is Union:
+            # Check if one of the arguments in the Union is type(None)
+            return any(arg is type(None) for arg in getattr(typ, "__args__", ()))
+        return False
+
+    @classmethod
     def _cls_for(cls, field: dataclasses.Field, index: int = 0) -> Type:
         """Get the message class for a field from the type hints."""
         field_cls = cls._type_hint(field.name)
+        if cls._is_typing_optional(field_cls):
+            field_cls = field_cls.__args__[0]
         if hasattr(field_cls, "__args__") and index >= 0:
             if field_cls.__args__ is not None:
                 field_cls = field_cls.__args__[index]
@@ -1638,7 +1648,17 @@ class Message(ABC):
                             output[memb_key] = value
                     elif meta.optional:
                         enum_class = field_types[field_name].__args__[0]
-                        output[memb_key] = enum_class(value).name
+                        if getattr(enum_class, "__origin__", None) is list:
+                            enum_class = enum_class.__args__[0]
+                            if isinstance(value, typing.Iterable) and not isinstance(
+                                value, str
+                            ):
+                                output[memb_key] = [enum_class(el).name for el in value]
+                            else:
+                                # transparently upgrade single value to repeated
+                                output[memb_key] = [enum_class(value).name]
+                        else:
+                            output[memb_key] = enum_class(value).name
                     else:
                         enum_class = field_types[field_name]  # noqa
                         output[memb_key] = enum_class(value).name
@@ -1701,6 +1721,8 @@ class Message(ABC):
                     )
                 elif meta.proto_type == TYPE_ENUM:
                     enum_cls = cls._betterproto.cls_by_field[field_name]
+                    if getattr(enum_cls, "__origin__", None) is list:
+                        enum_cls = enum_cls.__args__[0]
                     if isinstance(value, list):
                         value = [enum_cls.from_string(e) for e in value]
                     elif isinstance(value, str):
