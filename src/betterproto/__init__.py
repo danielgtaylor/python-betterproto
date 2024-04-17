@@ -1604,13 +1604,16 @@ class Message(ABC):
                 ):
                     output[memb_key] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == TYPE_MAP:
-                output_map = {**value}
-                for k in value:
-                    if hasattr(value[k], "to_dict"):
-                        output_map[k] = value[k].to_dict(casing, include_default_values)
+                if value is not None:
+                    output_map = {**value}
+                    for k in value:
+                        if hasattr(value[k], "to_dict"):
+                            output_map[k] = value[k].to_dict(
+                                casing, include_default_values
+                            )
 
-                if value or include_default_values:
-                    output[memb_key] = output_map
+                    if value or include_default_values:
+                        output[memb_key] = output_map
             elif (
                 value != self._get_field_default(field_name)
                 or include_default_values
