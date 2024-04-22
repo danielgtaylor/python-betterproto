@@ -726,6 +726,9 @@ class ServiceMethodCompiler(ProtoContentBase):
         self.parent.methods.append(self)
 
         # Check for imports
+        if "Optional" in self.py_input_message_type:
+            self.output_file.typing_imports.add("Optional")
+
         if "Optional" in self.py_output_message_type:
             self.output_file.typing_imports.add("Optional")
 
