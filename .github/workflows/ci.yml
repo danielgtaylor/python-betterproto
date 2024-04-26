@@ -16,7 +16,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [Ubuntu, MacOS, Windows]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        # Dropped 3.7 due to missing release for macOS arm64
+        # > https://github.com/ii64/python-betterproto/actions/runs/8843430899/job/24283665101?pr=5
+        #
+        # > Error: The version '3.7' with architecture 'arm64' was not found for macOS 14.4.1.
+        # > The list of all available versions can be found here: https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
     steps:
       - uses: actions/checkout@v4
 

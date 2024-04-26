@@ -1545,7 +1545,21 @@ class Message(ABC):
         field_types = self._type_hints()
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            field_is_repeated = defaults[field_name] is list
+            field_is_optional = (
+                getattr(field_types[field_name], "_name", None) == "Optional"
+                and getattr(field_types[field_name], "__origin__", None)
+                == typing.Optional[lambda x: None].__origin__
+            ) or meta.optional
+
+            fn_unwrap_typ_option = lambda x: getattr(x, "__args__", [None])[0]
+            fn_unwrap_typ_option_origin_0 = lambda x: getattr(
+                fn_unwrap_typ_option(x), "__origin__", None
+            )
+
+            field_is_repeated = defaults[field_name] is list or (
+                field_is_optional
+                and fn_unwrap_typ_option_origin_0(field_types[field_name]) is list
+            )
             try:
                 value = getattr(self, field_name)
             except AttributeError:
@@ -1639,6 +1653,9 @@ class Message(ABC):
                 elif meta.proto_type == TYPE_ENUM:
                     if field_is_repeated:
                         enum_class = field_types[field_name].__args__[0]
+                        if field_is_optional:
+                            enum_class = fn_unwrap_typ_option(enum_class)
+
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
                         ):
