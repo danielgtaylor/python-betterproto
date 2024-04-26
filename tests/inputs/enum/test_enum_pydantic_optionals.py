@@ -1,4 +1,6 @@
-from tests.output_betterproto.enum import (
+import pydantic
+
+from tests.output_betterproto_pydantic_optionals.enum import (
     ArithmeticOperator,
     Choice,
     Test,
@@ -27,10 +29,11 @@ def test_enum_is_comparable_with_int():
 
 
 def test_enum_to_dict():
-    d = Test(choice=Choice.ZERO).to_dict()
-    assert "choice" not in d, "Default enum value is not serialized"
     assert (
-        Test(choice=Choice.ZERO).to_dict(include_default_values=True)["choices"] == []
+        "choice" in Test(choice=Choice.ZERO).to_dict()
+    ), "Default enum value SHOULD BE serialized, cuz Optional[T]"
+    assert (
+        Test(choice=Choice.ZERO).to_dict(include_default_values=True)["choices"] == None
     )
     assert (
         Test(choice=Choice.ZERO).to_dict(include_default_values=True)["choice"]
@@ -67,9 +70,19 @@ def test_repeated_enum_to_dict():
     assert (all_enums_dict["choices"]) == ["ZERO", "ONE", "THREE", "FOUR"]
 
 
-def test_repeated_enum_with_single_value_to_dict():
-    assert Test(choices=Choice.ONE).to_dict()["choices"] == ["ONE"]
-    assert Test(choices=1).to_dict()["choices"] == ["ONE"]
+def test_repeated_enum_with_single_value_to_dict_but_pydantic_validation():
+    is_failed = False
+    try:
+        assert Test(choices=Choice.ONE).to_dict()["choices"] == ["ONE"]
+    except pydantic.error_wrappers.ValidationError:
+        is_failed = True
+    assert is_failed, "Should fail due to pydantic validation"
+    is_failed = False
+    try:
+        assert Test(choices=1).to_dict()["choices"] == ["ONE"]
+    except pydantic.error_wrappers.ValidationError:
+        is_failed = True
+    assert is_failed, "Should fail due to pydantic validation"
 
 
 def test_repeated_enum_with_non_list_iterables_to_dict():
@@ -87,16 +100,16 @@ def test_repeated_enum_with_non_list_iterables_to_dict():
     assert Test(choices=enum_generator()).to_dict()["choices"] == ["ONE", "THREE"]
 
 
-def test_enum_mapped_on_parse():
+def test_enum_mapped_on_parse_optional():
     # test default value
     b = Test().parse(bytes(Test()))
-    assert b.choice.name == Choice.ZERO.name
-    assert b.choices == []
+    assert b.choice == None
+    assert b.choices == None
 
     # test non default value
     a = Test().parse(bytes(Test(choice=Choice.ONE)))
     assert a.choice.name == Choice.ONE.name
-    assert b.choices == []
+    assert b.choices == None
 
     # test repeated
     c = Test().parse(bytes(Test(choices=[Choice.THREE, Choice.FOUR])))
@@ -104,7 +117,7 @@ def test_enum_mapped_on_parse():
     assert c.choices[1].name == Choice.FOUR.name
 
     # bonus: defaults after empty init are also mapped
-    assert Test().choice.name == Choice.ZERO.name
+    assert Test().choice == None
 
 
 def test_renamed_enum_members():

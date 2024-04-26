@@ -1660,9 +1660,11 @@ class Message(ABC):
                             value, str
                         ):
                             output[memb_key] = [enum_class(el).name for el in value]
-                        else:
+                        elif value is not None:
                             # transparently upgrade single value to repeated
                             output[memb_key] = [enum_class(value).name]
+                        else:
+                            output[memb_key] = None
                     elif value is None:
                         if include_default_values:
                             output[memb_key] = value
