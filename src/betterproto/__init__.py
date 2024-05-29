@@ -1477,12 +1477,12 @@ class Message(ABC):
             ):
                 if meta.proto_type in INT_64_TYPES:
                     if field_is_repeated:
-                        output[cased_name] = [str(n) for n in value]
+                        output[cased_name] = [int(n) for n in value]
                     elif value is None:
                         if include_default_values:
                             output[cased_name] = value
                     else:
-                        output[cased_name] = str(value)
+                        output[cased_name] = int(value)
                 elif meta.proto_type == TYPE_BYTES:
                     if field_is_repeated:
                         output[cased_name] = [
