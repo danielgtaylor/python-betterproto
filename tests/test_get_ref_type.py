@@ -87,15 +87,15 @@ def test_reference_google_wellknown_types_non_wrappers_pydantic(
 @pytest.mark.parametrize(
     ["google_type", "expected_name"],
     [
-        (".google.protobuf.DoubleValue", "Optional[float]"),
-        (".google.protobuf.FloatValue", "Optional[float]"),
-        (".google.protobuf.Int32Value", "Optional[int]"),
-        (".google.protobuf.Int64Value", "Optional[int]"),
-        (".google.protobuf.UInt32Value", "Optional[int]"),
-        (".google.protobuf.UInt64Value", "Optional[int]"),
-        (".google.protobuf.BoolValue", "Optional[bool]"),
-        (".google.protobuf.StringValue", "Optional[str]"),
-        (".google.protobuf.BytesValue", "Optional[bytes]"),
+        (".google.protobuf.DoubleValue", "typing.Optional[float]"),
+        (".google.protobuf.FloatValue", "typing.Optional[float]"),
+        (".google.protobuf.Int32Value", "typing.Optional[int]"),
+        (".google.protobuf.Int64Value", "typing.Optional[int]"),
+        (".google.protobuf.UInt32Value", "typing.Optional[int]"),
+        (".google.protobuf.UInt64Value", "typing.Optional[int]"),
+        (".google.protobuf.BoolValue", "typing.Optional[bool]"),
+        (".google.protobuf.StringValue", "typing.Optional[str]"),
+        (".google.protobuf.BytesValue", "typing.Optional[bytes]"),
     ],
 )
 def test_referenceing_google_wrappers_unwraps_them(

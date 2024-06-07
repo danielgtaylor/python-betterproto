@@ -115,14 +115,14 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: Union[AsyncIterable["{{ method.py_input_message_type }}"], Iterable["{{ method.py_input_message_type }}"]]
+            , {{ method.py_input_message_param }}_iterator: typing.Union[typing.AsyncIterable["{{ method.py_input_message_type }}"], typing.Iterable["{{ method.py_input_message_type }}"]]
         {%- endif -%}
             ,
             *
             , timeout: typing.Optional[float] = None
             , deadline: typing.Optional["Deadline"] = None
             , metadata: typing.Optional["MetadataLike"] = None
-            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> {% if method.server_streaming %}typing.AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
@@ -190,9 +190,9 @@ class {{ service.py_name }}Base(ServiceBase):
             {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: AsyncIterator["{{ method.py_input_message_type }}"]
+            , {{ method.py_input_message_param }}_iterator: typing.AsyncIterator["{{ method.py_input_message_type }}"]
         {%- endif -%}
-            ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> {% if method.server_streaming %}typing.AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
 
