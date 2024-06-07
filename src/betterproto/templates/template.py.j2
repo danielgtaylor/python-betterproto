@@ -21,8 +21,7 @@ from datetime import {% for i in output_file.datetime_imports|sort %}{{ i }}{% i
 
 {% endif%}
 {% if output_file.typing_imports %}
-from typing import {% for i in output_file.typing_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
-
+import typing
 {% endif %}
 
 {% if output_file.pydantic_imports %}
@@ -120,9 +119,9 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
         {%- endif -%}
             ,
             *
-            , timeout: Optional[float] = None
-            , deadline: Optional["Deadline"] = None
-            , metadata: Optional["MetadataLike"] = None
+            , timeout: typing.Optional[float] = None
+            , deadline: typing.Optional["Deadline"] = None
+            , metadata: typing.Optional["MetadataLike"] = None
             ) -> {% if method.server_streaming %}AsyncIterator["{{ method.py_output_message_type }}"]{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
@@ -225,7 +224,7 @@ class {{ service.py_name }}Base(ServiceBase):
 
     {% endfor %}
 
-    def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
+    def __mapping__(self) -> typing.Dict[str, grpclib.const.Handler]:
         return {
         {% for method in service.methods %}
         "{{ method.route }}": grpclib.const.Handler(
