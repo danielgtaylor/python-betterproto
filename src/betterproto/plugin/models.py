@@ -29,7 +29,6 @@ instantiating field `A` with parent message `B` should add a
 reference to `A` to `B`'s `fields` attribute.
 """
 
-
 import builtins
 import re
 import textwrap
@@ -319,7 +318,7 @@ class MessageCompiler(ProtoContentBase):
     @property
     def annotation(self) -> str:
         if self.repeated:
-            return f"List[{self.py_name}]"
+            return f"typing.List[{self.py_name}]"
         return self.py_name
 
     @property
@@ -438,11 +437,11 @@ class FieldCompiler(MessageCompiler):
     def typing_imports(self) -> Set[str]:
         imports = set()
         annotation = self.annotation
-        if "Optional[" in annotation:
+        if "typing.Optional[" in annotation:
             imports.add("Optional")
-        if "List[" in annotation:
+        if "typing.List[" in annotation:
             imports.add("List")
-        if "Dict[" in annotation:
+        if "typing.Dict[" in annotation:
             imports.add("Dict")
         return imports
 
@@ -488,7 +487,7 @@ class FieldCompiler(MessageCompiler):
     @property
     def mutable(self) -> bool:
         """True if the field is a mutable type, otherwise False."""
-        return self.annotation.startswith(("List[", "Dict["))
+        return self.annotation.startswith(("typing.List[", "typing.Dict["))
 
     @property
     def field_type(self) -> str:
@@ -573,9 +572,9 @@ class FieldCompiler(MessageCompiler):
         if self.use_builtins:
             py_type = f"builtins.{py_type}"
         if self.repeated:
-            return f"List[{py_type}]"
+            return f"typing.List[{py_type}]"
         if self.optional:
-            return f"Optional[{py_type}]"
+            return f"typing.Optional[{py_type}]"
         return py_type
 
 
@@ -645,7 +644,7 @@ class MapEntryCompiler(FieldCompiler):
 
     @property
     def annotation(self) -> str:
-        return f"Dict[{self.py_k_type}, {self.py_v_type}]"
+        return f"typing.Dict[{self.py_k_type}, {self.py_v_type}]"
 
     @property
     def repeated(self) -> bool:
