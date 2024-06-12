@@ -391,7 +391,50 @@ swap the dataclass implementation from the builtin python dataclass to the
 pydantic dataclass. You must have pydantic as a dependency in your project for
 this to work.
 
+## Configuration typing imports
 
+By default typing types will be imported directly from typing.  This sometimes can lead to issues in generation if types that are being generated conflict with the name.  In this case you can configure the way types are imported from 3 different options:
+
+### Direct
+```
+protoc -I . --python_betterproto_opt=typing.direct --python_betterproto_out=lib example.proto
+```
+this configuration is the default, and will import types as follows:
+```
+from typing import (
+  List,
+  Optional,
+  Union
+)
+...
+value: List[str] = []
+value2: Optional[str] = None
+value3: Union[str, int] = 1
+```
+### Root
+```
+protoc -I . --python_betterproto_opt=typing.root --python_betterproto_out=lib example.proto
+```
+this configuration loads the root typing module, and then access the types off of it directly:
+```
+import typing
+...
+value: typing.List[str] = []
+value2: typing.Optional[str] = None
+value3: typing.Union[str, int] = 1
+```
+
+### 310
+```
+protoc -I . --python_betterproto_opt=typing.310 --python_betterproto_out=lib example.proto
+```
+this configuration avoid loading typing all together if possible and uses the python 3.10 pattern:
+```
+...
+value: list[str] = []
+value2: str | None = None
+value3: str | int = 1
+```
 
 ## Development
 
