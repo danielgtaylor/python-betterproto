@@ -1,5 +1,11 @@
-from typing import List, Optional, Set
+from typing import (
+    List,
+    Optional,
+    Set,
+)
+
 import pytest
+
 from betterproto.plugin.module_validation import ModuleValidator
 
 

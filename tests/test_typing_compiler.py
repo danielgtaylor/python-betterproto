@@ -1,8 +1,9 @@
 import pytest
+
 from betterproto.plugin.typing_compiler import (
-    TypingImportTypingCompiler,
     DirectImportTypingCompiler,
     NoTyping310TypingCompiler,
+    TypingImportTypingCompiler,
 )
 
 
