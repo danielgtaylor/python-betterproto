@@ -108,6 +108,7 @@ async def generate_test_case_output(
         print(
             f"\033[31;1;4mFailed to generate reference output for {test_case_name!r}\033[0m"
         )
+        print(ref_err.decode())
 
     if verbose:
         if ref_out:
@@ -126,6 +127,7 @@ async def generate_test_case_output(
         print(
             f"\033[31;1;4mFailed to generate plugin output for {test_case_name!r}\033[0m"
         )
+        print(plg_err.decode())
 
     if verbose:
         if plg_out:
@@ -146,6 +148,7 @@ async def generate_test_case_output(
         print(
             f"\033[31;1;4mFailed to generate plugin (pydantic compatible) output for {test_case_name!r}\033[0m"
         )
+        print(plg_err_pyd.decode())
 
     if verbose:
         if plg_out_pyd:

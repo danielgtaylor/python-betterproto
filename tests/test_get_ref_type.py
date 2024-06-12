@@ -4,6 +4,15 @@ from betterproto.compile.importing import (
     get_type_reference,
     parse_source_type_name,
 )
+from betterproto.plugin.typing_compiler import DirectImportTypingCompiler
+
+
+@pytest.fixture
+def typing_compiler() -> DirectImportTypingCompiler:
+    """
+    Generates a simple Direct Import Typing Compiler for testing.
+    """
+    return DirectImportTypingCompiler()
 
 
 @pytest.mark.parametrize(
@@ -32,11 +41,18 @@ from betterproto.compile.importing import (
     ],
 )
 def test_reference_google_wellknown_types_non_wrappers(
-    google_type: str, expected_name: str, expected_import: str
+    google_type: str,
+    expected_name: str,
+    expected_import: str,
+    typing_compiler: DirectImportTypingCompiler,
 ):
     imports = set()
     name = get_type_reference(
-        package="", imports=imports, source_type=google_type, pydantic=False
+        package="",
+        imports=imports,
+        source_type=google_type,
+        typing_compiler=typing_compiler,
+        pydantic=False,
     )
 
     assert name == expected_name
@@ -71,11 +87,18 @@ def test_reference_google_wellknown_types_non_wrappers(
     ],
 )
 def test_reference_google_wellknown_types_non_wrappers_pydantic(
-    google_type: str, expected_name: str, expected_import: str
+    google_type: str,
+    expected_name: str,
+    expected_import: str,
+    typing_compiler: DirectImportTypingCompiler,
 ):
     imports = set()
     name = get_type_reference(
-        package="", imports=imports, source_type=google_type, pydantic=True
+        package="",
+        imports=imports,
+        source_type=google_type,
+        typing_compiler=typing_compiler,
+        pydantic=True,
     )
 
     assert name == expected_name
@@ -99,10 +122,15 @@ def test_reference_google_wellknown_types_non_wrappers_pydantic(
     ],
 )
 def test_referenceing_google_wrappers_unwraps_them(
-    google_type: str, expected_name: str
+    google_type: str, expected_name: str, typing_compiler: DirectImportTypingCompiler
 ):
     imports = set()
-    name = get_type_reference(package="", imports=imports, source_type=google_type)
+    name = get_type_reference(
+        package="",
+        imports=imports,
+        source_type=google_type,
+        typing_compiler=typing_compiler,
+    )
 
     assert name == expected_name
     assert imports == set()
@@ -135,223 +163,321 @@ def test_referenceing_google_wrappers_unwraps_them(
     ],
 )
 def test_referenceing_google_wrappers_without_unwrapping(
-    google_type: str, expected_name: str
+    google_type: str, expected_name: str, typing_compiler: DirectImportTypingCompiler
 ):
     name = get_type_reference(
-        package="", imports=set(), source_type=google_type, unwrap=False
+        package="",
+        imports=set(),
+        source_type=google_type,
+        typing_compiler=typing_compiler,
+        unwrap=False,
     )
 
     assert name == expected_name
 
 
-def test_reference_child_package_from_package():
+def test_reference_child_package_from_package(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
-        package="package", imports=imports, source_type="package.child.Message"
+        package="package",
+        imports=imports,
+        source_type="package.child.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from . import child"}
     assert name == '"child.Message"'
 
 
-def test_reference_child_package_from_root():
+def test_reference_child_package_from_root(typing_compiler: DirectImportTypingCompiler):
     imports = set()
-    name = get_type_reference(package="", imports=imports, source_type="child.Message")
+    name = get_type_reference(
+        package="",
+        imports=imports,
+        source_type="child.Message",
+        typing_compiler=typing_compiler,
+    )
 
     assert imports == {"from . import child"}
     assert name == '"child.Message"'
 
 
-def test_reference_camel_cased():
+def test_reference_camel_cased(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="", imports=imports, source_type="child_package.example_message"
+        package="",
+        imports=imports,
+        source_type="child_package.example_message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from . import child_package"}
     assert name == '"child_package.ExampleMessage"'
 
 
-def test_reference_nested_child_from_root():
+def test_reference_nested_child_from_root(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="", imports=imports, source_type="nested.child.Message"
+        package="",
+        imports=imports,
+        source_type="nested.child.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from .nested import child as nested_child"}
     assert name == '"nested_child.Message"'
 
 
-def test_reference_deeply_nested_child_from_root():
+def test_reference_deeply_nested_child_from_root(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
-        package="", imports=imports, source_type="deeply.nested.child.Message"
+        package="",
+        imports=imports,
+        source_type="deeply.nested.child.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
     assert name == '"deeply_nested_child.Message"'
 
 
-def test_reference_deeply_nested_child_from_package():
+def test_reference_deeply_nested_child_from_package(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
         package="package",
         imports=imports,
         source_type="package.deeply.nested.child.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from .deeply.nested import child as deeply_nested_child"}
     assert name == '"deeply_nested_child.Message"'
 
 
-def test_reference_root_sibling():
-    imports = set()
-    name = get_type_reference(package="", imports=imports, source_type="Message")
-
-    assert imports == set()
-    assert name == '"Message"'
-
-
-def test_reference_nested_siblings():
-    imports = set()
-    name = get_type_reference(package="foo", imports=imports, source_type="foo.Message")
-
-    assert imports == set()
-    assert name == '"Message"'
-
-
-def test_reference_deeply_nested_siblings():
+def test_reference_root_sibling(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="foo.bar", imports=imports, source_type="foo.bar.Message"
+        package="",
+        imports=imports,
+        source_type="Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == set()
     assert name == '"Message"'
 
 
-def test_reference_parent_package_from_child():
+def test_reference_nested_siblings(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="package.child", imports=imports, source_type="package.Message"
+        package="foo",
+        imports=imports,
+        source_type="foo.Message",
+        typing_compiler=typing_compiler,
+    )
+
+    assert imports == set()
+    assert name == '"Message"'
+
+
+def test_reference_deeply_nested_siblings(typing_compiler: DirectImportTypingCompiler):
+    imports = set()
+    name = get_type_reference(
+        package="foo.bar",
+        imports=imports,
+        source_type="foo.bar.Message",
+        typing_compiler=typing_compiler,
+    )
+
+    assert imports == set()
+    assert name == '"Message"'
+
+
+def test_reference_parent_package_from_child(
+    typing_compiler: DirectImportTypingCompiler,
+):
+    imports = set()
+    name = get_type_reference(
+        package="package.child",
+        imports=imports,
+        source_type="package.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ... import package as __package__"}
     assert name == '"__package__.Message"'
 
 
-def test_reference_parent_package_from_deeply_nested_child():
+def test_reference_parent_package_from_deeply_nested_child(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
         package="package.deeply.nested.child",
         imports=imports,
         source_type="package.deeply.nested.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ... import nested as __nested__"}
     assert name == '"__nested__.Message"'
 
 
-def test_reference_ancestor_package_from_nested_child():
+def test_reference_ancestor_package_from_nested_child(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
         package="package.ancestor.nested.child",
         imports=imports,
         source_type="package.ancestor.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from .... import ancestor as ___ancestor__"}
     assert name == '"___ancestor__.Message"'
 
 
-def test_reference_root_package_from_child():
+def test_reference_root_package_from_child(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="package.child", imports=imports, source_type="Message"
+        package="package.child",
+        imports=imports,
+        source_type="Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ... import Message as __Message__"}
     assert name == '"__Message__"'
 
 
-def test_reference_root_package_from_deeply_nested_child():
+def test_reference_root_package_from_deeply_nested_child(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
-        package="package.deeply.nested.child", imports=imports, source_type="Message"
+        package="package.deeply.nested.child",
+        imports=imports,
+        source_type="Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ..... import Message as ____Message__"}
     assert name == '"____Message__"'
 
 
-def test_reference_unrelated_package():
+def test_reference_unrelated_package(typing_compiler: DirectImportTypingCompiler):
     imports = set()
-    name = get_type_reference(package="a", imports=imports, source_type="p.Message")
+    name = get_type_reference(
+        package="a",
+        imports=imports,
+        source_type="p.Message",
+        typing_compiler=typing_compiler,
+    )
 
     assert imports == {"from .. import p as _p__"}
     assert name == '"_p__.Message"'
 
 
-def test_reference_unrelated_nested_package():
+def test_reference_unrelated_nested_package(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
-    name = get_type_reference(package="a.b", imports=imports, source_type="p.q.Message")
+    name = get_type_reference(
+        package="a.b",
+        imports=imports,
+        source_type="p.q.Message",
+        typing_compiler=typing_compiler,
+    )
 
     assert imports == {"from ...p import q as __p_q__"}
     assert name == '"__p_q__.Message"'
 
 
-def test_reference_unrelated_deeply_nested_package():
+def test_reference_unrelated_deeply_nested_package(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
-        package="a.b.c.d", imports=imports, source_type="p.q.r.s.Message"
+        package="a.b.c.d",
+        imports=imports,
+        source_type="p.q.r.s.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from .....p.q.r import s as ____p_q_r_s__"}
     assert name == '"____p_q_r_s__.Message"'
 
 
-def test_reference_cousin_package():
+def test_reference_cousin_package(typing_compiler: DirectImportTypingCompiler):
     imports = set()
-    name = get_type_reference(package="a.x", imports=imports, source_type="a.y.Message")
+    name = get_type_reference(
+        package="a.x",
+        imports=imports,
+        source_type="a.y.Message",
+        typing_compiler=typing_compiler,
+    )
 
     assert imports == {"from .. import y as _y__"}
     assert name == '"_y__.Message"'
 
 
-def test_reference_cousin_package_different_name():
+def test_reference_cousin_package_different_name(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
-        package="test.package1", imports=imports, source_type="cousin.package2.Message"
+        package="test.package1",
+        imports=imports,
+        source_type="cousin.package2.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ...cousin import package2 as __cousin_package2__"}
     assert name == '"__cousin_package2__.Message"'
 
 
-def test_reference_cousin_package_same_name():
+def test_reference_cousin_package_same_name(
+    typing_compiler: DirectImportTypingCompiler,
+):
     imports = set()
     name = get_type_reference(
-        package="test.package", imports=imports, source_type="cousin.package.Message"
+        package="test.package",
+        imports=imports,
+        source_type="cousin.package.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ...cousin import package as __cousin_package__"}
     assert name == '"__cousin_package__.Message"'
 
 
-def test_reference_far_cousin_package():
+def test_reference_far_cousin_package(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="a.x.y", imports=imports, source_type="a.b.c.Message"
+        package="a.x.y",
+        imports=imports,
+        source_type="a.b.c.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ...b import c as __b_c__"}
     assert name == '"__b_c__.Message"'
 
 
-def test_reference_far_far_cousin_package():
+def test_reference_far_far_cousin_package(typing_compiler: DirectImportTypingCompiler):
     imports = set()
     name = get_type_reference(
-        package="a.x.y.z", imports=imports, source_type="a.b.c.d.Message"
+        package="a.x.y.z",
+        imports=imports,
+        source_type="a.b.c.d.Message",
+        typing_compiler=typing_compiler,
     )
 
     assert imports == {"from ....b.c import d as ___b_c_d__"}
