@@ -1,4 +1,5 @@
 import os.path
+import sys
 
 from .module_validation import ModuleValidator
 
@@ -57,15 +58,10 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
     # Validate the generated code.
     validator = ModuleValidator(iter(code.splitlines()))
     if not validator.validate():
-        message_builder = ["Generated code has collisions in the module:"]
+        message_builder = ["[WARNING]: Generated code has collisions in the module:"]
         for collision, lines in validator.collisions.items():
             message_builder.append(f'  "{collision}" on lines:')
             for num, line in lines:
                 message_builder.append(f"    {num}:{line}")
-        import sys
-
-        lines = code.splitlines()
-        for i, line in enumerate(lines):
-            print(f"{i}: {line}", file=sys.stderr)
-        raise ValueError("\n".join(message_builder))
+        print("\n".join(message_builder), file=sys.stderr)
     return code
