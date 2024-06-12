@@ -47,6 +47,7 @@ def get_type_reference(
     package: str,
     imports: set,
     source_type: str,
+    typing_compiler: "TypingCompiler",
     unwrap: bool = True,
     pydantic: bool = False,
 ) -> str:
@@ -57,7 +58,7 @@ def get_type_reference(
     if unwrap:
         if source_type in WRAPPER_TYPES:
             wrapped_type = type(WRAPPER_TYPES[source_type]().value)
-            return f"typing.Optional[{wrapped_type.__name__}]"
+            return typing_compiler.optional(wrapped_type.__name__)
 
         if source_type == ".google.protobuf.Duration":
             return "timedelta"
