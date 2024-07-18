@@ -48,7 +48,7 @@ from .casing import (
     safe_snake_case,
     snake_case,
 )
-from .enum import Enum as Enum
+from .enum import Enum as Enum, EnumPydanticSerializer as EnumPydanticSerializer
 from .grpc.grpclib_client import ServiceStub as ServiceStub
 from .utils import (
     classproperty,
@@ -1852,7 +1852,7 @@ class Message(ABC):
                     continue
 
             set_fields = [
-                field.name for field in field_set if values[field.name] is not None
+                field.name for field in field_set if getattr(values, field.name, None) is not None
             ]
 
             if not set_fields:

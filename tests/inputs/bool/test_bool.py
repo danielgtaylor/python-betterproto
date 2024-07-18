@@ -10,10 +10,16 @@ def test_value():
 
 
 def test_pydantic_no_value():
-    with pytest.raises(ValueError):
-        TestPyd()
+    message = TestPyd()
+    assert not message.value, "Boolean is False by default"
 
 
 def test_pydantic_value():
-    message = Test(value=False)
+    message = TestPyd(value=False)
     assert not message.value
+
+
+def test_pydantic_bad_value():
+    with pytest.raises(ValueError):
+        TestPyd(value=123)
+

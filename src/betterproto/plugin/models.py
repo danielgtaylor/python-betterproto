@@ -600,7 +600,7 @@ class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
 
     @property
     def pydantic_imports(self) -> Set[str]:
-        return {"root_validator"}
+        return {"model_validator"}
 
 
 @dataclass

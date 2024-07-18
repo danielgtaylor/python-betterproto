@@ -7,11 +7,12 @@ import {{ i }}
 {% endfor %}
 
 {% if output_file.pydantic_dataclasses %}
-from typing import TYPE_CHECKING
+from typing import Annotated, TYPE_CHECKING
 if TYPE_CHECKING:
     from dataclasses import dataclass
 else:
     from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import rebuild_dataclass
 {%- else -%}
 from dataclasses import dataclass
 {% endif %}
@@ -49,7 +50,7 @@ if TYPE_CHECKING:
 {% endif %}
 
 {% if output_file.enums %}{% for enum in output_file.enums %}
-class {{ enum.py_name }}(betterproto.Enum):
+class {% if output_file.pydantic_dataclasses %}_{% endif %}{{ enum.py_name }}(betterproto.Enum):
     {% if enum.comment %}
 {{ enum.comment }}
 
@@ -62,6 +63,9 @@ class {{ enum.py_name }}(betterproto.Enum):
         {% endif %}
     {% endfor %}
 
+{% if output_file.pydantic_dataclasses %}
+{{ enum.py_name }} = Annotated[_{{ enum.py_name }}, betterproto.EnumPydanticSerializer]
+{% endif %}
 
 {% endfor %}
 {% endif %}
@@ -96,7 +100,7 @@ class {{ message.py_name }}(betterproto.Message):
     {%  endif %}
 
     {% if output_file.pydantic_dataclasses and message.has_oneof_fields %}
-    @root_validator()
+    @model_validator(mode='after')
     def check_oneof(cls, values):
         return cls._validate_field_groups(values)
     {%  endif %}
@@ -250,7 +254,7 @@ class {{ service.py_name }}Base(ServiceBase):
 {% if output_file.pydantic_dataclasses %}
 {% for message in output_file.messages %}
 {% if message.has_message_field %}
-{{ message.py_name }}.__pydantic_model__.update_forward_refs()  # type: ignore
+rebuild_dataclass({{ message.py_name }})  # type: ignore
 {% endif %}
 {% endfor %}
 {% endif %}
