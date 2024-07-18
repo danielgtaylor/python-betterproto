@@ -7,7 +7,7 @@ import {{ i }}
 {% endfor %}
 
 {% if output_file.pydantic_dataclasses %}
-from typing import Type, TYPE_CHECKING
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from dataclasses import dataclass
 else:
@@ -64,7 +64,8 @@ class {{ enum.py_name }}(betterproto.Enum):
     {% endfor %}
 
     {% if output_file.pydantic_dataclasses %}
-    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
         return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
