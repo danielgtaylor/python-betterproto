@@ -3,11 +3,15 @@
 # plugin: python-betterproto
 # This file has been @generated
 import warnings
-from typing import TYPE_CHECKING, Mapping
+from typing import (
+    TYPE_CHECKING,
+    Mapping,
+)
 
 from typing_extensions import Self
 
 from betterproto import hybridmethod
+
 
 if TYPE_CHECKING:
     from dataclasses import dataclass
@@ -20,9 +24,10 @@ from typing import (
     Optional,
 )
 
-import betterproto
 from pydantic import model_validator
 from pydantic.dataclasses import rebuild_dataclass
+
+import betterproto
 
 
 class Syntax(betterproto.Enum):
