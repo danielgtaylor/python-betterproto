@@ -7,7 +7,7 @@ import {{ i }}
 {% endfor %}
 
 {% if output_file.pydantic_dataclasses %}
-from typing import Annotated, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 if TYPE_CHECKING:
     from dataclasses import dataclass
 else:
@@ -50,7 +50,7 @@ if TYPE_CHECKING:
 {% endif %}
 
 {% if output_file.enums %}{% for enum in output_file.enums %}
-class {% if output_file.pydantic_dataclasses %}_{% endif %}{{ enum.py_name }}(betterproto.Enum):
+class {{ enum.py_name }}(betterproto.Enum):
     {% if enum.comment %}
 {{ enum.comment }}
 
@@ -63,9 +63,12 @@ class {% if output_file.pydantic_dataclasses %}_{% endif %}{{ enum.py_name }}(be
         {% endif %}
     {% endfor %}
 
-{% if output_file.pydantic_dataclasses %}
-{{ enum.py_name }} = Annotated[_{{ enum.py_name }}, betterproto.EnumPydanticSerializer]
-{% endif %}
+    {% if output_file.pydantic_dataclasses %}
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
+
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+    {% endif %}
 
 {% endfor %}
 {% endif %}

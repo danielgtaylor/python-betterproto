@@ -201,12 +201,3 @@ class Enum(IntEnum if TYPE_CHECKING else int, metaclass=EnumType):
             return cls._member_map_[name]
         except KeyError as e:
             raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
-
-
-class EnumPydanticSerializer:
-    """Define a Pydantic serializer for the betterproto Enum type."""
-
-    def __get_pydantic_core_schema__(cls: Type[Enum], _handler):
-        from pydantic_core import core_schema
-
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))

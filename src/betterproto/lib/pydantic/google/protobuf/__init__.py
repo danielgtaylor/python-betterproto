@@ -5,7 +5,8 @@
 import warnings
 from typing import (
     TYPE_CHECKING,
-    Annotated, Mapping,
+    Type,
+    Mapping,
 )
 
 from typing_extensions import Self
@@ -28,7 +29,7 @@ from pydantic import model_validator
 from pydantic.dataclasses import rebuild_dataclass
 
 
-class _Syntax(betterproto.Enum):
+class Syntax(betterproto.Enum):
     """The syntax in which a protocol buffer element is defined."""
 
     PROTO2 = 0
@@ -40,11 +41,13 @@ class _Syntax(betterproto.Enum):
     EDITIONS = 2
     """Syntax `editions`."""
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-Syntax = Annotated[_Syntax, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldKind(betterproto.Enum):
+class FieldKind(betterproto.Enum):
     """Basic field types."""
 
     TYPE_UNKNOWN = 0
@@ -104,11 +107,13 @@ class _FieldKind(betterproto.Enum):
     TYPE_SINT64 = 18
     """Field type sint64."""
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldKind = Annotated[_FieldKind, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldCardinality(betterproto.Enum):
+class FieldCardinality(betterproto.Enum):
     """Whether a field is optional, required, or repeated."""
 
     CARDINALITY_UNKNOWN = 0
@@ -123,11 +128,13 @@ class _FieldCardinality(betterproto.Enum):
     CARDINALITY_REPEATED = 3
     """For repeated fields."""
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldCardinality = Annotated[_FieldCardinality, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _Edition(betterproto.Enum):
+class Edition(betterproto.Enum):
     """The full set of known editions."""
 
     UNKNOWN = 0
@@ -167,11 +174,13 @@ class _Edition(betterproto.Enum):
      support a new edition.
     """
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-Edition = Annotated[_Edition, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _ExtensionRangeOptionsVerificationState(betterproto.Enum):
+class ExtensionRangeOptionsVerificationState(betterproto.Enum):
     """The verification state of the extension range."""
 
     DECLARATION = 0
@@ -179,13 +188,13 @@ class _ExtensionRangeOptionsVerificationState(betterproto.Enum):
 
     UNVERIFIED = 1
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-ExtensionRangeOptionsVerificationState = Annotated[
-    _ExtensionRangeOptionsVerificationState, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldDescriptorProtoType(betterproto.Enum):
+class FieldDescriptorProtoType(betterproto.Enum):
     TYPE_DOUBLE = 1
     """
     0 is reserved for errors.
@@ -230,13 +239,13 @@ class _FieldDescriptorProtoType(betterproto.Enum):
     TYPE_SINT32 = 17
     TYPE_SINT64 = 18
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldDescriptorProtoType = Annotated[
-    _FieldDescriptorProtoType, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldDescriptorProtoLabel(betterproto.Enum):
+class FieldDescriptorProtoLabel(betterproto.Enum):
     LABEL_OPTIONAL = 1
     """0 is reserved for errors"""
 
@@ -248,13 +257,13 @@ class _FieldDescriptorProtoLabel(betterproto.Enum):
      can be used to get this behavior.
     """
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldDescriptorProtoLabel = Annotated[
-    _FieldDescriptorProtoLabel, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FileOptionsOptimizeMode(betterproto.Enum):
+class FileOptionsOptimizeMode(betterproto.Enum):
     """Generated classes can be optimized for speed or code size."""
 
     SPEED = 1
@@ -263,13 +272,13 @@ class _FileOptionsOptimizeMode(betterproto.Enum):
 
     LITE_RUNTIME = 3
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FileOptionsOptimizeMode = Annotated[
-    _FileOptionsOptimizeMode, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldOptionsCType(betterproto.Enum):
+class FieldOptionsCType(betterproto.Enum):
     STRING = 0
     """Default mode."""
 
@@ -285,11 +294,13 @@ class _FieldOptionsCType(betterproto.Enum):
 
     STRING_PIECE = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldOptionsCType = Annotated[_FieldOptionsCType, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldOptionsJsType(betterproto.Enum):
+class FieldOptionsJsType(betterproto.Enum):
     JS_NORMAL = 0
     """Use the default type."""
 
@@ -299,11 +310,13 @@ class _FieldOptionsJsType(betterproto.Enum):
     JS_NUMBER = 2
     """Use JavaScript numbers."""
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldOptionsJsType = Annotated[_FieldOptionsJsType, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldOptionsOptionRetention(betterproto.Enum):
+class FieldOptionsOptionRetention(betterproto.Enum):
     """
     If set to RETENTION_SOURCE, the option will be omitted from the binary.
      Note: as of January 2023, support for this is in progress and does not yet
@@ -314,13 +327,13 @@ class _FieldOptionsOptionRetention(betterproto.Enum):
     RETENTION_RUNTIME = 1
     RETENTION_SOURCE = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldOptionsOptionRetention = Annotated[
-    _FieldOptionsOptionRetention, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FieldOptionsOptionTargetType(betterproto.Enum):
+class FieldOptionsOptionTargetType(betterproto.Enum):
     """
     This indicates the types of entities that the field may apply to when used
      as an option. If it is unset, then the field may be freely used as an
@@ -339,13 +352,13 @@ class _FieldOptionsOptionTargetType(betterproto.Enum):
     TARGET_TYPE_SERVICE = 8
     TARGET_TYPE_METHOD = 9
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FieldOptionsOptionTargetType = Annotated[
-    _FieldOptionsOptionTargetType, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _MethodOptionsIdempotencyLevel(betterproto.Enum):
+class MethodOptionsIdempotencyLevel(betterproto.Enum):
     """
     Is this method side-effect-free (or safe in HTTP parlance), or idempotent,
      or neither? HTTP based RPC implementation may choose GET verb for safe
@@ -356,78 +369,80 @@ class _MethodOptionsIdempotencyLevel(betterproto.Enum):
     NO_SIDE_EFFECTS = 1
     IDEMPOTENT = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-MethodOptionsIdempotencyLevel = Annotated[
-    _MethodOptionsIdempotencyLevel, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FeatureSetFieldPresence(betterproto.Enum):
+class FeatureSetFieldPresence(betterproto.Enum):
     FIELD_PRESENCE_UNKNOWN = 0
     EXPLICIT = 1
     IMPLICIT = 2
     LEGACY_REQUIRED = 3
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FeatureSetFieldPresence = Annotated[
-    _FeatureSetFieldPresence, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FeatureSetEnumType(betterproto.Enum):
+class FeatureSetEnumType(betterproto.Enum):
     ENUM_TYPE_UNKNOWN = 0
     OPEN = 1
     CLOSED = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FeatureSetEnumType = Annotated[_FeatureSetEnumType, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FeatureSetRepeatedFieldEncoding(betterproto.Enum):
+class FeatureSetRepeatedFieldEncoding(betterproto.Enum):
     REPEATED_FIELD_ENCODING_UNKNOWN = 0
     PACKED = 1
     EXPANDED = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FeatureSetRepeatedFieldEncoding = Annotated[
-    _FeatureSetRepeatedFieldEncoding, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FeatureSetUtf8Validation(betterproto.Enum):
+class FeatureSetUtf8Validation(betterproto.Enum):
     UTF8_VALIDATION_UNKNOWN = 0
     VERIFY = 2
     NONE = 3
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FeatureSetUtf8Validation = Annotated[
-    _FeatureSetUtf8Validation, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FeatureSetMessageEncoding(betterproto.Enum):
+class FeatureSetMessageEncoding(betterproto.Enum):
     MESSAGE_ENCODING_UNKNOWN = 0
     LENGTH_PREFIXED = 1
     DELIMITED = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FeatureSetMessageEncoding = Annotated[
-    _FeatureSetMessageEncoding, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _FeatureSetJsonFormat(betterproto.Enum):
+class FeatureSetJsonFormat(betterproto.Enum):
     JSON_FORMAT_UNKNOWN = 0
     ALLOW = 1
     LEGACY_BEST_EFFORT = 2
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-FeatureSetJsonFormat = Annotated[
-    _FeatureSetJsonFormat, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _GeneratedCodeInfoAnnotationSemantic(betterproto.Enum):
+class GeneratedCodeInfoAnnotationSemantic(betterproto.Enum):
     """
     Represents the identified object's effect on the element in the original
      .proto file.
@@ -442,13 +457,13 @@ class _GeneratedCodeInfoAnnotationSemantic(betterproto.Enum):
     ALIAS = 2
     """An alias to the element is returned."""
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-GeneratedCodeInfoAnnotationSemantic = Annotated[
-    _GeneratedCodeInfoAnnotationSemantic, betterproto.EnumPydanticSerializer
-]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
-class _NullValue(betterproto.Enum):
+class NullValue(betterproto.Enum):
     """
     `NullValue` is a singleton enumeration to represent the null value for the
      `Value` type union.
@@ -459,8 +474,10 @@ class _NullValue(betterproto.Enum):
     _ = 0
     """Null value."""
 
+    def __get_pydantic_core_schema__(cls: Type[betterproto.Enum], _handler):
+        from pydantic_core import core_schema
 
-NullValue = Annotated[_NullValue, betterproto.EnumPydanticSerializer]
+        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
 
 
 @dataclass(eq=False, repr=False)
@@ -2310,9 +2327,9 @@ class Struct(betterproto.Message):
         return self
 
     def to_dict(
-            self,
-            casing: betterproto.Casing = betterproto.Casing.CAMEL,
-            include_default_values: bool = False,
+        self,
+        casing: betterproto.Casing = betterproto.Casing.CAMEL,
+        include_default_values: bool = False,
     ) -> Dict[str, Any]:
         output = {**self.fields}
         for k in self.fields:

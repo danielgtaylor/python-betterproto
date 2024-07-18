@@ -22,4 +22,3 @@ def test_pydantic_value():
 def test_pydantic_bad_value():
     with pytest.raises(ValueError):
         TestPyd(value=123)
-
