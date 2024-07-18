@@ -68,7 +68,7 @@ class {{ enum.py_name }}(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
     {% endif %}
 
 {% endfor %}

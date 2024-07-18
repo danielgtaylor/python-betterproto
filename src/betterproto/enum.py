@@ -12,7 +12,6 @@ from typing import (
     Dict,
     Optional,
     Tuple,
-    Type,
 )
 
 

@@ -41,7 +41,7 @@ class Syntax(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldKind(betterproto.Enum):
@@ -108,7 +108,7 @@ class FieldKind(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldCardinality(betterproto.Enum):
@@ -130,7 +130,7 @@ class FieldCardinality(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class Edition(betterproto.Enum):
@@ -177,7 +177,7 @@ class Edition(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class ExtensionRangeOptionsVerificationState(betterproto.Enum):
@@ -192,7 +192,7 @@ class ExtensionRangeOptionsVerificationState(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldDescriptorProtoType(betterproto.Enum):
@@ -244,7 +244,7 @@ class FieldDescriptorProtoType(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldDescriptorProtoLabel(betterproto.Enum):
@@ -263,7 +263,7 @@ class FieldDescriptorProtoLabel(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FileOptionsOptimizeMode(betterproto.Enum):
@@ -279,7 +279,7 @@ class FileOptionsOptimizeMode(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldOptionsCType(betterproto.Enum):
@@ -302,7 +302,7 @@ class FieldOptionsCType(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldOptionsJsType(betterproto.Enum):
@@ -319,7 +319,7 @@ class FieldOptionsJsType(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldOptionsOptionRetention(betterproto.Enum):
@@ -337,7 +337,7 @@ class FieldOptionsOptionRetention(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FieldOptionsOptionTargetType(betterproto.Enum):
@@ -363,7 +363,7 @@ class FieldOptionsOptionTargetType(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class MethodOptionsIdempotencyLevel(betterproto.Enum):
@@ -381,7 +381,7 @@ class MethodOptionsIdempotencyLevel(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FeatureSetFieldPresence(betterproto.Enum):
@@ -394,7 +394,7 @@ class FeatureSetFieldPresence(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FeatureSetEnumType(betterproto.Enum):
@@ -406,7 +406,7 @@ class FeatureSetEnumType(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FeatureSetRepeatedFieldEncoding(betterproto.Enum):
@@ -418,7 +418,7 @@ class FeatureSetRepeatedFieldEncoding(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FeatureSetUtf8Validation(betterproto.Enum):
@@ -430,7 +430,7 @@ class FeatureSetUtf8Validation(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FeatureSetMessageEncoding(betterproto.Enum):
@@ -442,7 +442,7 @@ class FeatureSetMessageEncoding(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class FeatureSetJsonFormat(betterproto.Enum):
@@ -454,7 +454,7 @@ class FeatureSetJsonFormat(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class GeneratedCodeInfoAnnotationSemantic(betterproto.Enum):
@@ -476,7 +476,7 @@ class GeneratedCodeInfoAnnotationSemantic(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 class NullValue(betterproto.Enum):
@@ -494,7 +494,7 @@ class NullValue(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0, lt=len(cls.__class__._value_map_))
+        return core_schema.int_schema(ge=0)
 
 
 @dataclass(eq=False, repr=False)
