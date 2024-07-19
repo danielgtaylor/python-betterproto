@@ -1,4 +1,7 @@
 import os.path
+import sys
+
+from .module_validation import ModuleValidator
 
 
 try:
@@ -30,9 +33,12 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
         lstrip_blocks=True,
         loader=jinja2.FileSystemLoader(templates_folder),
     )
-    template = env.get_template("template.py.j2")
+    # Load the body first so we have a compleate list of imports needed.
+    body_template = env.get_template("template.py.j2")
+    header_template = env.get_template("header.py.j2")
 
-    code = template.render(output_file=output_file)
+    code = body_template.render(output_file=output_file)
+    code = header_template.render(output_file=output_file) + code
     code = isort.api.sort_code_string(
         code=code,
         show_diff=False,
@@ -44,7 +50,18 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
         force_grid_wrap=2,
         known_third_party=["grpclib", "betterproto"],
     )
-    return black.format_str(
+    code = black.format_str(
         src_contents=code,
         mode=black.Mode(),
     )
+
+    # Validate the generated code.
+    validator = ModuleValidator(iter(code.splitlines()))
+    if not validator.validate():
+        message_builder = ["[WARNING]: Generated code has collisions in the module:"]
+        for collision, lines in validator.collisions.items():
+            message_builder.append(f'  "{collision}" on lines:')
+            for num, line in lines:
+                message_builder.append(f"    {num}:{line}")
+        print("\n".join(message_builder), file=sys.stderr)
+    return code
