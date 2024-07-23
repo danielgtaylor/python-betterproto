@@ -12,6 +12,13 @@ class {{ enum.py_name }}(betterproto.Enum):
         {% endif %}
     {% endfor %}
 
+    {% if output_file.pydantic_dataclasses %}
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type, _handler):
+        from pydantic_core import core_schema
+
+        return core_schema.int_schema(ge=0)
+    {% endif %}
 
 {% endfor %}
 {% endif %}
@@ -46,7 +53,7 @@ class {{ message.py_name }}(betterproto.Message):
     {%  endif %}
 
     {% if output_file.pydantic_dataclasses and message.has_oneof_fields %}
-    @root_validator()
+    @model_validator(mode='after')
     def check_oneof(cls, values):
         return cls._validate_field_groups(values)
     {%  endif %}
@@ -200,7 +207,7 @@ class {{ service.py_name }}Base(ServiceBase):
 {% if output_file.pydantic_dataclasses %}
 {% for message in output_file.messages %}
 {% if message.has_message_field %}
-{{ message.py_name }}.__pydantic_model__.update_forward_refs()  # type: ignore
+rebuild_dataclass({{ message.py_name }})  # type: ignore
 {% endif %}
 {% endfor %}
 {% endif %}

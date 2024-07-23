@@ -1852,7 +1852,9 @@ class Message(ABC):
                     continue
 
             set_fields = [
-                field.name for field in field_set if values[field.name] is not None
+                field.name
+                for field in field_set
+                if getattr(values, field.name, None) is not None
             ]
 
             if not set_fields:
