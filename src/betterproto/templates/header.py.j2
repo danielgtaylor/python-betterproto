@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING
 {% set type_checking_imported = True %}
 
 if TYPE_CHECKING:
-    import dataclasses
+    from dataclasses import dataclass
 else:
-    from pydantic import dataclasses
+    from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import rebuild_dataclass
 {%- else -%}
-import dataclasses
+from dataclasses import dataclass
 {% endif %}
 
 {% if output_file.datetime_imports %}

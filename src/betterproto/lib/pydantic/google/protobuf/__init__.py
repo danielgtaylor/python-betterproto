@@ -14,9 +14,10 @@ from betterproto import hybridmethod
 
 
 if TYPE_CHECKING:
-    import dataclasses
+    from dataclasses import dataclass
 else:
-    from pydantic import dataclasses
+    from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import rebuild_dataclass
 
 from typing import (
     Dict,
@@ -501,7 +502,7 @@ class NullValue(betterproto.Enum):
         return core_schema.int_schema(ge=0)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Any(betterproto.Message):
     """
     `Any` contains an arbitrary serialized protocol buffer message along with a
@@ -629,7 +630,7 @@ class Any(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class SourceContext(betterproto.Message):
     """
     `SourceContext` represents information about the source of a
@@ -643,7 +644,7 @@ class SourceContext(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Type(betterproto.Message):
     """A protocol buffer message type."""
 
@@ -671,7 +672,7 @@ class Type(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Field(betterproto.Message):
     """A single field of a message type."""
 
@@ -714,7 +715,7 @@ class Field(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Enum(betterproto.Message):
     """Enum type definition."""
 
@@ -741,7 +742,7 @@ class Enum(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class EnumValue(betterproto.Message):
     """Enum value definition."""
 
@@ -755,7 +756,7 @@ class EnumValue(betterproto.Message):
     """Protocol buffer options."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Option(betterproto.Message):
     """
     A protocol buffer option, which can be attached to a message, field,
@@ -779,7 +780,7 @@ class Option(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Api(betterproto.Message):
     """
     Api is a light-weight descriptor for an API Interface.
@@ -841,7 +842,7 @@ class Api(betterproto.Message):
     """The source syntax of the service."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Method(betterproto.Message):
     """Method represents a method of an API interface."""
 
@@ -867,7 +868,7 @@ class Method(betterproto.Message):
     """The source syntax of this method."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Mixin(betterproto.Message):
     """
     Declares an API Interface to be included in this interface. The including
@@ -960,7 +961,7 @@ class Mixin(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FileDescriptorSet(betterproto.Message):
     """
     The protocol compiler can output a FileDescriptorSet containing the .proto
@@ -970,7 +971,7 @@ class FileDescriptorSet(betterproto.Message):
     file: List["FileDescriptorProto"] = betterproto.message_field(1)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FileDescriptorProto(betterproto.Message):
     """Describes a complete .proto file."""
 
@@ -1015,7 +1016,7 @@ class FileDescriptorProto(betterproto.Message):
     """The edition of the proto file."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class DescriptorProto(betterproto.Message):
     """Describes a message type."""
 
@@ -1037,14 +1038,14 @@ class DescriptorProto(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class DescriptorProtoExtensionRange(betterproto.Message):
     start: int = betterproto.int32_field(1)
     end: int = betterproto.int32_field(2)
     options: "ExtensionRangeOptions" = betterproto.message_field(3)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class DescriptorProtoReservedRange(betterproto.Message):
     """
     Range of reserved tag numbers. Reserved tag numbers may not be used by
@@ -1056,7 +1057,7 @@ class DescriptorProtoReservedRange(betterproto.Message):
     end: int = betterproto.int32_field(2)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class ExtensionRangeOptions(betterproto.Message):
     uninterpreted_option: List["UninterpretedOption"] = betterproto.message_field(999)
     """The parser stores options it doesn't recognize here. See above."""
@@ -1079,7 +1080,7 @@ class ExtensionRangeOptions(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class ExtensionRangeOptionsDeclaration(betterproto.Message):
     number: int = betterproto.int32_field(1)
     """The extension number declared within the extension range."""
@@ -1111,7 +1112,7 @@ class ExtensionRangeOptionsDeclaration(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FieldDescriptorProto(betterproto.Message):
     """Describes a field within a message."""
 
@@ -1188,7 +1189,7 @@ class FieldDescriptorProto(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class OneofDescriptorProto(betterproto.Message):
     """Describes a oneof."""
 
@@ -1196,7 +1197,7 @@ class OneofDescriptorProto(betterproto.Message):
     options: "OneofOptions" = betterproto.message_field(2)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class EnumDescriptorProto(betterproto.Message):
     """Describes an enum type."""
 
@@ -1219,7 +1220,7 @@ class EnumDescriptorProto(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class EnumDescriptorProtoEnumReservedRange(betterproto.Message):
     """
     Range of reserved numeric values. Reserved values may not be used by
@@ -1234,7 +1235,7 @@ class EnumDescriptorProtoEnumReservedRange(betterproto.Message):
     end: int = betterproto.int32_field(2)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class EnumValueDescriptorProto(betterproto.Message):
     """Describes a value within an enum."""
 
@@ -1243,7 +1244,7 @@ class EnumValueDescriptorProto(betterproto.Message):
     options: "EnumValueOptions" = betterproto.message_field(3)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class ServiceDescriptorProto(betterproto.Message):
     """Describes a service."""
 
@@ -1252,7 +1253,7 @@ class ServiceDescriptorProto(betterproto.Message):
     options: "ServiceOptions" = betterproto.message_field(3)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class MethodDescriptorProto(betterproto.Message):
     """Describes a method of a service."""
 
@@ -1272,7 +1273,7 @@ class MethodDescriptorProto(betterproto.Message):
     """Identifies if server streams multiple server messages"""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FileOptions(betterproto.Message):
     java_package: str = betterproto.string_field(1)
     """
@@ -1416,7 +1417,7 @@ class FileOptions(betterproto.Message):
             )
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class MessageOptions(betterproto.Message):
     message_set_wire_format: bool = betterproto.bool_field(1)
     """
@@ -1509,7 +1510,7 @@ class MessageOptions(betterproto.Message):
             )
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FieldOptions(betterproto.Message):
     ctype: "FieldOptionsCType" = betterproto.enum_field(1)
     """
@@ -1607,13 +1608,13 @@ class FieldOptions(betterproto.Message):
     """The parser stores options it doesn't recognize here. See above."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FieldOptionsEditionDefault(betterproto.Message):
     edition: "Edition" = betterproto.enum_field(3)
     value: str = betterproto.string_field(2)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class OneofOptions(betterproto.Message):
     features: "FeatureSet" = betterproto.message_field(1)
     """Any features defined in the specific edition."""
@@ -1622,7 +1623,7 @@ class OneofOptions(betterproto.Message):
     """The parser stores options it doesn't recognize here. See above."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class EnumOptions(betterproto.Message):
     allow_alias: bool = betterproto.bool_field(2)
     """
@@ -1663,7 +1664,7 @@ class EnumOptions(betterproto.Message):
             )
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class EnumValueOptions(betterproto.Message):
     deprecated: bool = betterproto.bool_field(1)
     """
@@ -1687,7 +1688,7 @@ class EnumValueOptions(betterproto.Message):
     """The parser stores options it doesn't recognize here. See above."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class ServiceOptions(betterproto.Message):
     features: "FeatureSet" = betterproto.message_field(34)
     """Any features defined in the specific edition."""
@@ -1704,7 +1705,7 @@ class ServiceOptions(betterproto.Message):
     """The parser stores options it doesn't recognize here. See above."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class MethodOptions(betterproto.Message):
     deprecated: bool = betterproto.bool_field(33)
     """
@@ -1722,7 +1723,7 @@ class MethodOptions(betterproto.Message):
     """The parser stores options it doesn't recognize here. See above."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class UninterpretedOption(betterproto.Message):
     """
     A message representing a option the parser does not recognize. This only
@@ -1747,7 +1748,7 @@ class UninterpretedOption(betterproto.Message):
     aggregate_value: str = betterproto.string_field(8)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class UninterpretedOptionNamePart(betterproto.Message):
     """
     The name of the uninterpreted option.  Each string represents a segment in
@@ -1761,7 +1762,7 @@ class UninterpretedOptionNamePart(betterproto.Message):
     is_extension: bool = betterproto.bool_field(2)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FeatureSet(betterproto.Message):
     """
     TODO Enums in C++ gencode (and potentially other languages) are
@@ -1782,7 +1783,7 @@ class FeatureSet(betterproto.Message):
     json_format: "FeatureSetJsonFormat" = betterproto.enum_field(6)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FeatureSetDefaults(betterproto.Message):
     """
     A compiled specification for the defaults of a set of features.  These
@@ -1807,7 +1808,7 @@ class FeatureSetDefaults(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FeatureSetDefaultsFeatureSetEditionDefault(betterproto.Message):
     """
     A map from every known edition with a unique set of defaults to its
@@ -1820,7 +1821,7 @@ class FeatureSetDefaultsFeatureSetEditionDefault(betterproto.Message):
     features: "FeatureSet" = betterproto.message_field(2)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class SourceCodeInfo(betterproto.Message):
     """
     Encapsulates information about the original source file from which a
@@ -1875,7 +1876,7 @@ class SourceCodeInfo(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class SourceCodeInfoLocation(betterproto.Message):
     path: List[int] = betterproto.int32_field(1)
     """
@@ -1968,7 +1969,7 @@ class SourceCodeInfoLocation(betterproto.Message):
     leading_detached_comments: List[str] = betterproto.string_field(6)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class GeneratedCodeInfo(betterproto.Message):
     """
     Describes the relationship between generated code and its original source
@@ -1983,7 +1984,7 @@ class GeneratedCodeInfo(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class GeneratedCodeInfoAnnotation(betterproto.Message):
     path: List[int] = betterproto.int32_field(1)
     """
@@ -2010,7 +2011,7 @@ class GeneratedCodeInfoAnnotation(betterproto.Message):
     semantic: "GeneratedCodeInfoAnnotationSemantic" = betterproto.enum_field(5)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Duration(betterproto.Message):
     """
     A Duration represents a signed, fixed-length span of time represented
@@ -2091,7 +2092,7 @@ class Duration(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Empty(betterproto.Message):
     """
     A generic empty message that you can re-use to avoid defining duplicated
@@ -2106,7 +2107,7 @@ class Empty(betterproto.Message):
     pass
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FieldMask(betterproto.Message):
     """
     `FieldMask` represents a set of symbolic field paths, for example:
@@ -2314,7 +2315,7 @@ class FieldMask(betterproto.Message):
     """The set of field mask paths."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Struct(betterproto.Message):
     """
     `Struct` represents a structured data value, consisting of fields
@@ -2359,7 +2360,7 @@ class Struct(betterproto.Message):
         return output
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Value(betterproto.Message):
     """
     `Value` represents a dynamically typed value which can be either
@@ -2403,7 +2404,7 @@ class Value(betterproto.Message):
         return cls._validate_field_groups(values)
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class ListValue(betterproto.Message):
     """
     `ListValue` is a wrapper around a repeated field of values.
@@ -2415,7 +2416,7 @@ class ListValue(betterproto.Message):
     """Repeated field of dynamically typed values."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Timestamp(betterproto.Message):
     """
     A Timestamp represents a point in time independent of any time zone or local
@@ -2525,7 +2526,7 @@ class Timestamp(betterproto.Message):
     """
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class DoubleValue(betterproto.Message):
     """
     Wrapper message for `double`.
@@ -2537,7 +2538,7 @@ class DoubleValue(betterproto.Message):
     """The double value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FloatValue(betterproto.Message):
     """
     Wrapper message for `float`.
@@ -2549,7 +2550,7 @@ class FloatValue(betterproto.Message):
     """The float value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Int64Value(betterproto.Message):
     """
     Wrapper message for `int64`.
@@ -2561,7 +2562,7 @@ class Int64Value(betterproto.Message):
     """The int64 value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class UInt64Value(betterproto.Message):
     """
     Wrapper message for `uint64`.
@@ -2573,7 +2574,7 @@ class UInt64Value(betterproto.Message):
     """The uint64 value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class Int32Value(betterproto.Message):
     """
     Wrapper message for `int32`.
@@ -2585,7 +2586,7 @@ class Int32Value(betterproto.Message):
     """The int32 value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class UInt32Value(betterproto.Message):
     """
     Wrapper message for `uint32`.
@@ -2597,7 +2598,7 @@ class UInt32Value(betterproto.Message):
     """The uint32 value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class BoolValue(betterproto.Message):
     """
     Wrapper message for `bool`.
@@ -2609,7 +2610,7 @@ class BoolValue(betterproto.Message):
     """The bool value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class StringValue(betterproto.Message):
     """
     Wrapper message for `string`.
@@ -2621,7 +2622,7 @@ class StringValue(betterproto.Message):
     """The string value."""
 
 
-@dataclasses.dataclass(eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class BytesValue(betterproto.Message):
     """
     Wrapper message for `bytes`.
@@ -2633,40 +2634,40 @@ class BytesValue(betterproto.Message):
     """The bytes value."""
 
 
-dataclasses.rebuild_dataclass(Type)  # type: ignore
-dataclasses.rebuild_dataclass(Field)  # type: ignore
-dataclasses.rebuild_dataclass(Enum)  # type: ignore
-dataclasses.rebuild_dataclass(EnumValue)  # type: ignore
-dataclasses.rebuild_dataclass(Option)  # type: ignore
-dataclasses.rebuild_dataclass(Api)  # type: ignore
-dataclasses.rebuild_dataclass(Method)  # type: ignore
-dataclasses.rebuild_dataclass(FileDescriptorSet)  # type: ignore
-dataclasses.rebuild_dataclass(FileDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(DescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(DescriptorProtoExtensionRange)  # type: ignore
-dataclasses.rebuild_dataclass(ExtensionRangeOptions)  # type: ignore
-dataclasses.rebuild_dataclass(FieldDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(OneofDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(EnumDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(EnumValueDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(ServiceDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(MethodDescriptorProto)  # type: ignore
-dataclasses.rebuild_dataclass(FileOptions)  # type: ignore
-dataclasses.rebuild_dataclass(MessageOptions)  # type: ignore
-dataclasses.rebuild_dataclass(FieldOptions)  # type: ignore
-dataclasses.rebuild_dataclass(FieldOptionsEditionDefault)  # type: ignore
-dataclasses.rebuild_dataclass(OneofOptions)  # type: ignore
-dataclasses.rebuild_dataclass(EnumOptions)  # type: ignore
-dataclasses.rebuild_dataclass(EnumValueOptions)  # type: ignore
-dataclasses.rebuild_dataclass(ServiceOptions)  # type: ignore
-dataclasses.rebuild_dataclass(MethodOptions)  # type: ignore
-dataclasses.rebuild_dataclass(UninterpretedOption)  # type: ignore
-dataclasses.rebuild_dataclass(FeatureSet)  # type: ignore
-dataclasses.rebuild_dataclass(FeatureSetDefaults)  # type: ignore
-dataclasses.rebuild_dataclass(FeatureSetDefaultsFeatureSetEditionDefault)  # type: ignore
-dataclasses.rebuild_dataclass(SourceCodeInfo)  # type: ignore
-dataclasses.rebuild_dataclass(GeneratedCodeInfo)  # type: ignore
-dataclasses.rebuild_dataclass(GeneratedCodeInfoAnnotation)  # type: ignore
-dataclasses.rebuild_dataclass(Struct)  # type: ignore
-dataclasses.rebuild_dataclass(Value)  # type: ignore
-dataclasses.rebuild_dataclass(ListValue)  # type: ignore
+rebuild_dataclass(Type)  # type: ignore
+rebuild_dataclass(Field)  # type: ignore
+rebuild_dataclass(Enum)  # type: ignore
+rebuild_dataclass(EnumValue)  # type: ignore
+rebuild_dataclass(Option)  # type: ignore
+rebuild_dataclass(Api)  # type: ignore
+rebuild_dataclass(Method)  # type: ignore
+rebuild_dataclass(FileDescriptorSet)  # type: ignore
+rebuild_dataclass(FileDescriptorProto)  # type: ignore
+rebuild_dataclass(DescriptorProto)  # type: ignore
+rebuild_dataclass(DescriptorProtoExtensionRange)  # type: ignore
+rebuild_dataclass(ExtensionRangeOptions)  # type: ignore
+rebuild_dataclass(FieldDescriptorProto)  # type: ignore
+rebuild_dataclass(OneofDescriptorProto)  # type: ignore
+rebuild_dataclass(EnumDescriptorProto)  # type: ignore
+rebuild_dataclass(EnumValueDescriptorProto)  # type: ignore
+rebuild_dataclass(ServiceDescriptorProto)  # type: ignore
+rebuild_dataclass(MethodDescriptorProto)  # type: ignore
+rebuild_dataclass(FileOptions)  # type: ignore
+rebuild_dataclass(MessageOptions)  # type: ignore
+rebuild_dataclass(FieldOptions)  # type: ignore
+rebuild_dataclass(FieldOptionsEditionDefault)  # type: ignore
+rebuild_dataclass(OneofOptions)  # type: ignore
+rebuild_dataclass(EnumOptions)  # type: ignore
+rebuild_dataclass(EnumValueOptions)  # type: ignore
+rebuild_dataclass(ServiceOptions)  # type: ignore
+rebuild_dataclass(MethodOptions)  # type: ignore
+rebuild_dataclass(UninterpretedOption)  # type: ignore
+rebuild_dataclass(FeatureSet)  # type: ignore
+rebuild_dataclass(FeatureSetDefaults)  # type: ignore
+rebuild_dataclass(FeatureSetDefaultsFeatureSetEditionDefault)  # type: ignore
+rebuild_dataclass(SourceCodeInfo)  # type: ignore
+rebuild_dataclass(GeneratedCodeInfo)  # type: ignore
+rebuild_dataclass(GeneratedCodeInfoAnnotation)  # type: ignore
+rebuild_dataclass(Struct)  # type: ignore
+rebuild_dataclass(Value)  # type: ignore
+rebuild_dataclass(ListValue)  # type: ignore

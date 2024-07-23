@@ -207,7 +207,7 @@ class {{ service.py_name }}Base(ServiceBase):
 {% if output_file.pydantic_dataclasses %}
 {% for message in output_file.messages %}
 {% if message.has_message_field %}
-dataclasses.rebuild_dataclass({{ message.py_name }})  # type: ignore
+rebuild_dataclass({{ message.py_name }})  # type: ignore
 {% endif %}
 {% endfor %}
 {% endif %}
