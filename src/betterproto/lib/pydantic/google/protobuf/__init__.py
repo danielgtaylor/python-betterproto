@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     from dataclasses import dataclass
 else:
     from pydantic.dataclasses import dataclass
-from pydantic.dataclasses import rebuild_dataclass
 
 from typing import (
     Dict,
@@ -26,6 +25,7 @@ from typing import (
 )
 
 from pydantic import model_validator
+from pydantic.dataclasses import rebuild_dataclass
 
 import betterproto
 
