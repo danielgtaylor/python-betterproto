@@ -346,8 +346,6 @@ class MessageCompiler(ProtoContentBase):
         )
 
 
-
-
 def is_map(
     proto_field_obj: FieldDescriptorProto, parent_message: DescriptorProto
 ) -> bool:
