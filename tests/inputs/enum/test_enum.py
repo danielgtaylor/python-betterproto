@@ -111,4 +111,8 @@ def test_renamed_enum_members():
         "PLUS",
         "MINUS",
         "_0_PREFIXED",
+        "ARITHMETIC_OPERATOR_NONE",
+        "ARITHMETIC_OPERATOR_PLUS",
+        "ARITHMETIC_OPERATOR_MINUS",
+        "ARITHMETIC_OPERATOR_0_PREFIXED",
     }
