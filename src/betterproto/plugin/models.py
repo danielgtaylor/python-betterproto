@@ -662,27 +662,19 @@ class EnumDefinitionCompiler(MessageCompiler):
     def __post_init__(self) -> None:
         # Get entries/allowed values for this Enum
         self.entries: List[self.EnumEntry] = []
-        for entry_number, entry_proto_value in enumerate(self.proto_obj.value):
-            pythonized_name = pythonize_enum_member_name(
-                entry_proto_value.name, self.proto_obj.name
-            )
-            name = sanitize_name(entry_proto_value.name)
-            entry = self.EnumEntry(
-                name=pythonized_name,
-                value=entry_proto_value.number,
+        self.entries = [
+            self.EnumEntry(
+                name=pythonize_enum_member_name(
+                    entry.name, self.proto_obj.name),
+                full_name=sanitize_name(entry.name),
+                value=entry.number,
                 comment=get_comment(
-                    proto_file=self.source_file, path=self.path + [2, entry_number]
-                ),
-            )
-            self.entries.append(entry)
-            if name != pythonized_name:
-                self.entries.append(
-                    self.EnumEntry(
-                        name=name,
-                        value=entry_proto_value.number,
-                        comment=entry.comment,
-                    )
+                    proto_file=self.source_file,
+                    path=self.path + [2, i]
                 )
+            )
+            for i, entry in enumerate(self.proto_obj.value)
+        ]
         super().__post_init__()  # call MessageCompiler __post_init__
 
     @property
