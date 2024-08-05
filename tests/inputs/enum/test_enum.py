@@ -115,6 +115,6 @@ def test_renamed_enum_members():
 
 
 def test_enum_full_name():
-    assert ArithmeticOperator.NONE.full_name() == "ARITHMETIC_OPERATOR_NONE"
-    assert ArithmeticOperator.PLUS.full_name() == "ARITHMETIC_OPERATOR_PLUS"
-    assert ArithmeticOperator._0_PREFIXED.full_name() == "ARITHMETIC_OPERATOR_0_PREFIXED"
+    assert ArithmeticOperator.NONE.full_name == "ARITHMETIC_OPERATOR_NONE"
+    assert ArithmeticOperator.PLUS.full_name == "ARITHMETIC_OPERATOR_PLUS"
+    assert ArithmeticOperator._0_PREFIXED.full_name == "ARITHMETIC_OPERATOR_0_PREFIXED"

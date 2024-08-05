@@ -20,6 +20,7 @@ class {{ enum.py_name }}(betterproto.Enum):
         return core_schema.int_schema(ge=0)
     {% endif %}
 
+    @property
     def full_name(self):
         return {{ enum.py_name }}_full_name_map[self.value]
 
