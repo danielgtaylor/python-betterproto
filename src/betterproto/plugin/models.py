@@ -65,6 +65,7 @@ from betterproto.lib.google.protobuf import (
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
 from .. import which_one_of
+from ..casing import sanitize_name
 from ..compile.importing import (
     get_type_reference,
     parse_source_type_name,
@@ -655,6 +656,7 @@ class EnumDefinitionCompiler(MessageCompiler):
         """Representation of an Enum entry."""
 
         name: str
+        full_name: str
         value: int
         comment: str
 
@@ -665,6 +667,7 @@ class EnumDefinitionCompiler(MessageCompiler):
                 name=pythonize_enum_member_name(
                     entry_proto_value.name, self.proto_obj.name
                 ),
+                full_name=sanitize_name(entry_proto_value.name),
                 value=entry_proto_value.number,
                 comment=get_comment(
                     proto_file=self.source_file, path=self.path + [2, entry_number]
