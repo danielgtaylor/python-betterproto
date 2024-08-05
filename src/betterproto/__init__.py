@@ -1576,10 +1576,13 @@ class Message(ABC):
                     )
                 elif meta.proto_type == TYPE_ENUM:
                     enum_cls = cls._betterproto.cls_by_field[field_name]
+
+                    def obj(enum_class, value):
+                        return enum_class.from_full_name(value) if hasattr(enum_class, 'from_full_name') else enum_class.from_string(value)
                     if isinstance(value, list):
-                        value = [enum_cls.from_string(e) for e in value]
+                        value = [obj(enum_cls, e) for e in value]
                     elif isinstance(value, str):
-                        value = enum_cls.from_string(value)
+                        value = obj(enum_cls, value)
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
                     value = (
                         [_parse_float(n) for n in value]
