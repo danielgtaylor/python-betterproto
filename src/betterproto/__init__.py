@@ -1493,24 +1493,30 @@ class Message(ABC):
                     else:
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
+                    def name(enum_class, value):
+                        obj = enum_class(value)
+                        if hasattr(obj.__class__, 'full_name') and isinstance(obj.__class__.full_name, property):
+                            return obj.full_name
+                        return obj.name
                     if field_is_repeated:
                         enum_class = field_types[field_name].__args__[0]
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
                         ):
-                            output[cased_name] = [enum_class(el).name for el in value]
+                            output[cased_name] = [
+                                name(enum_class, el) for el in value]
                         else:
                             # transparently upgrade single value to repeated
-                            output[cased_name] = [enum_class(value).name]
+                            output[cased_name] = [name(enum_class, value)]
                     elif value is None:
                         if include_default_values:
                             output[cased_name] = value
                     elif meta.optional:
                         enum_class = field_types[field_name].__args__[0]
-                        output[cased_name] = enum_class(value).name
+                        output[cased_name] = name(enum_class, value)
                     else:
                         enum_class = field_types[field_name]  # noqa
-                        output[cased_name] = enum_class(value).name
+                        output[cased_name] = name(enum_class, value)
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
                     if field_is_repeated:
                         output[cased_name] = [_dump_float(n) for n in value]

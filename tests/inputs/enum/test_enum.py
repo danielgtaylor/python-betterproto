@@ -118,3 +118,11 @@ def test_enum_full_name():
     assert ArithmeticOperator.NONE.full_name == "ARITHMETIC_OPERATOR_NONE"
     assert ArithmeticOperator.PLUS.full_name == "ARITHMETIC_OPERATOR_PLUS"
     assert ArithmeticOperator._0_PREFIXED.full_name == "ARITHMETIC_OPERATOR_0_PREFIXED"
+
+
+def test_enum_to_json():
+    assert Test(op=ArithmeticOperator.NONE).to_json() == '{}'
+    assert Test(op=ArithmeticOperator.PLUS).to_json(
+    ) == '{"op": "ARITHMETIC_OPERATOR_PLUS"}'
+    assert Test(op=ArithmeticOperator._0_PREFIXED).to_json(
+    ) == '{"op": "ARITHMETIC_OPERATOR_0_PREFIXED"}'
