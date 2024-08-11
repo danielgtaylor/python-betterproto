@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Versions suffixed with `b*` are in `beta` and can be installed with `pip install --pre betterproto`.
 
+## [2.0.0b7] - 2024-08-11
+
+- **Breaking**: Support `Pydantic` v2 and dropping support for v1 [#588](https://github.com/danielgtaylor/python-betterproto/pull/588)
+- **Breaking**: The `Message.__getattribute__` method now raises an `AttributeError` when attempting to access an unset `oneof`
+  field. 
+  The previous behavior is accessible via `Message.__unsafe_get` [#510](https://github.com/danielgtaylor/python-betterproto/pull/510).
+  To see how to use the new behavior, refer to [#558](https://github.com/danielgtaylor/python-betterproto/pull/558) 
+  and [README.md](https://github.com/danielgtaylor/python-betterproto#one-of-support).
+
+- Add support for `pickle` methods [#535](https://github.com/danielgtaylor/python-betterproto/pull/535)
+- Add support for `Struct` and `Value` types [#551](https://github.com/danielgtaylor/python-betterproto/pull/551)
+- Add support for `Enum`'s `copy` and `deepcopy` methods [#566](https://github.com/danielgtaylor/python-betterproto/pull/566)
+- Add support for [`Rich` package](https://rich.readthedocs.io/en/latest/index.html) for pretty printing [#508](https://github.com/danielgtaylor/python-betterproto/pull/508)
+- Improve support for streaming messages [#518](https://github.com/danielgtaylor/python-betterproto/pull/518) [#529](https://github.com/danielgtaylor/python-betterproto/pull/529)
+- Improve performance of serializing / de-serializing messages [#545](https://github.com/danielgtaylor/python-betterproto/pull/545)
+- Improve handling of typing collisions. 
+  Refer to [#582](https://github.com/danielgtaylor/python-betterproto/pull/582) 
+  and [README.md](https://github.com/danielgtaylor/python-betterproto#configuration-typing-imports).
+- Fix bugs when converting to / from Python due to `_Timestamp` [#534](https://github.com/danielgtaylor/python-betterproto/pull/534)
+- Fix accessing unset optional fields [#523](https://github.com/danielgtaylor/python-betterproto/pull/523)
+- Fix `Message` equality comparison [#513](https://github.com/danielgtaylor/python-betterproto/pull/513)
+- Fix behavior with long comment messages [#532](https://github.com/danielgtaylor/python-betterproto/pull/532)
+
 ## [2.0.0b6] - 2023-06-25
 
 - **Breaking**: the minimum Python version has been bumped to `3.7` [#444](https://github.com/danielgtaylor/python-betterproto/pull/444)
