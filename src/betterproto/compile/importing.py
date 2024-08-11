@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import os
 import re
 from typing import (
+    TYPE_CHECKING,
     Dict,
     List,
     Set,
@@ -12,6 +15,9 @@ from ..casing import safe_snake_case
 from ..lib.google import protobuf as google_protobuf
 from .naming import pythonize_class_name
 
+
+if TYPE_CHECKING:
+    from ..plugin.typing_compiler import TypingCompiler
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,
@@ -47,7 +53,7 @@ def get_type_reference(
     package: str,
     imports: set,
     source_type: str,
-    typing_compiler: "TypingCompiler",
+    typing_compiler: TypingCompiler,
     unwrap: bool = True,
     pydantic: bool = False,
 ) -> str:
