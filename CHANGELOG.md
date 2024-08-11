@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking**: The `Message.__getattribute__` method now raises an `AttributeError` when attempting to access an unset `oneof` 
   field. To see how to access `oneof` fields now, refer to [#558](https://github.com/danielgtaylor/python-betterproto/pull/558) 
   and [README.md](https://github.com/danielgtaylor/python-betterproto#one-of-support).
-- **Breaking**: A custom Enum has been implemented to match the behaviour of being an open set. This has the side effect
-  prevents any passthrough of Enum members (i.e. Foo.RED.GREEN doesn't work any more)
+- **Breaking**: A custom Enum has been implemented to match the behaviour of being an open set. This has the side effect of
+  preventing any passthrough of Enum members (i.e. Foo.RED.GREEN doesn't work any more)
 
 - Add support for `pickle` methods [#535](https://github.com/danielgtaylor/python-betterproto/pull/535)
 - Add support for `Struct` and `Value` types [#551](https://github.com/danielgtaylor/python-betterproto/pull/551)
