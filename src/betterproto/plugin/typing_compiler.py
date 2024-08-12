@@ -157,7 +157,7 @@ class NoTyping310TypingCompiler(TypingCompiler):
 
     def iterable(self, type: str) -> str:
         self._imports["collections.abc"].add("Iterable")
-        return f"Iterable[{type}]"
+        return f'"Iterable[{type}]"'
 
     def async_iterable(self, type: str) -> str:
         self._imports["collections.abc"].add("AsyncIterable")
