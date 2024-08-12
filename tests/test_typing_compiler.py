@@ -62,19 +62,15 @@ def test_typing_import_typing_compiler():
 def test_no_typing_311_typing_compiler():
     compiler = NoTyping310TypingCompiler()
     assert compiler.imports() == {}
-    assert compiler.optional("str") == "str | None"
+    assert compiler.optional("str") == '"str | None"'
     assert compiler.imports() == {}
-    assert compiler.list("str") == "list[str]"
+    assert compiler.list("str") == '"list[str]"'
     assert compiler.imports() == {}
-    assert compiler.dict("str", "int") == "dict[str, int]"
+    assert compiler.dict("str", "int") == '"dict[str, int]"'
     assert compiler.imports() == {}
-    assert compiler.union("str", "int") == "str | int"
+    assert compiler.union("str", "int") == '"str | int"'
     assert compiler.imports() == {}
-    assert compiler.iterable("str") == "Iterable[str]"
-    assert compiler.imports() == {"typing": {"Iterable"}}
-    assert compiler.async_iterable("str") == "AsyncIterable[str]"
-    assert compiler.imports() == {"typing": {"Iterable", "AsyncIterable"}}
-    assert compiler.async_iterator("str") == "AsyncIterator[str]"
-    assert compiler.imports() == {
-        "typing": {"Iterable", "AsyncIterable", "AsyncIterator"}
-    }
+    assert compiler.iterable("str") == '"Iterable[str]"'
+    assert compiler.async_iterable("str") == '"AsyncIterable[str]"'
+    assert compiler.async_iterator("str") == '"AsyncIterator[str]"'
+    assert compiler.imports() == {"collections.abc": {"Iterable"}}

@@ -161,11 +161,11 @@ class NoTyping310TypingCompiler(TypingCompiler):
 
     def async_iterable(self, type: str) -> str:
         self._imports["collections.abc"].add("AsyncIterable")
-        return f"AsyncIterable[{type}]"
+        return f'"AsyncIterable[{type}]"'
 
     def async_iterator(self, type: str) -> str:
         self._imports["collections.abc"].add("AsyncIterator")
-        return f"AsyncIterator[{type}]"
+        return f'"AsyncIterator[{type}]"'
 
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         return {k: v if v else None for k, v in self._imports.items()}
