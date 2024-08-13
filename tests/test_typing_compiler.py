@@ -73,4 +73,6 @@ def test_no_typing_311_typing_compiler():
     assert compiler.iterable("str") == '"Iterable[str]"'
     assert compiler.async_iterable("str") == '"AsyncIterable[str]"'
     assert compiler.async_iterator("str") == '"AsyncIterator[str]"'
-    assert compiler.imports() == {"collections.abc": {"Iterable", "AsyncIterable", "AsyncIterator"}}
+    assert compiler.imports() == {
+        "collections.abc": {"Iterable", "AsyncIterable", "AsyncIterator"}
+    }
