@@ -141,6 +141,8 @@ class NoTyping310TypingCompiler(TypingCompiler):
 
     @staticmethod
     def _fmt(type: str) -> str:  # for now this is necessary till 3.14
+        if type.startswith('"'):
+            return type[1:-1]
         return type.removeprefix('"').removesuffix('"')
 
     def optional(self, type: str) -> str:
