@@ -2,9 +2,12 @@ import warnings
 
 import pytest
 
+from tests.mocks import MockChannel
 from tests.output_betterproto.deprecated import (
+    Empty,
     Message,
     Test,
+    TestServiceStub,
 )
 
 
@@ -41,5 +44,21 @@ def test_message_with_deprecated_field_not_set(message):
 def test_message_with_deprecated_field_not_set_default(message):
     with pytest.warns(None) as record:
         _ = Test(value=10).message
+
+    assert not record
+
+
+@pytest.mark.asyncio
+async def test_service_with_deprecated_method():
+    stub = TestServiceStub(MockChannel([Empty(), Empty()]))
+
+    with pytest.warns(DeprecationWarning) as record:
+        await stub.deprecated_func(Empty())
+
+    assert len(record) == 1
+    assert str(record[0].message) == f"TestService.deprecated_func is deprecated"
+
+    with pytest.warns(None) as record:
+        await stub.func(Empty())
 
     assert not record
