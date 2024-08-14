@@ -16,5 +16,6 @@ message Message {
 message Empty {}
 
 service TestService {
+    rpc func(Empty) returns (Empty);
     rpc deprecated_func(Empty) returns (Empty) { option deprecated = true; };
 }
