@@ -275,8 +275,21 @@ class OutputTemplate:
     @property
     def python_module_imports(self) -> Set[str]:
         imports = set()
+
+        has_deprecated = False
+        if any(m.deprecated for m in self.messages):
+            has_deprecated = True
         if any(x for x in self.messages if any(x.deprecated_fields)):
+            has_deprecated = True
+        if any(
+            any(m.proto_obj.options.deprecated for m in s.methods)
+            for s in self.services
+        ):
+            has_deprecated = True
+
+        if has_deprecated:
             imports.add("warnings")
+
         if self.builtins_import:
             imports.add("builtins")
         return imports
