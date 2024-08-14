@@ -139,29 +139,35 @@ class TypingImportTypingCompiler(TypingCompiler):
 class NoTyping310TypingCompiler(TypingCompiler):
     _imports: Dict[str, Set[str]] = field(default_factory=lambda: defaultdict(set))
 
+    @staticmethod
+    def _fmt(type: str) -> str:  # for now this is necessary till 3.14
+        if type.startswith('"'):
+            return type[1:-1]
+        return type
+
     def optional(self, type: str) -> str:
-        return f"{type} | None"
+        return f'"{self._fmt(type)} | None"'
 
     def list(self, type: str) -> str:
-        return f"list[{type}]"
+        return f'"list[{self._fmt(type)}]"'
 
     def dict(self, key: str, value: str) -> str:
-        return f"dict[{key}, {value}]"
+        return f'"dict[{key}, {self._fmt(value)}]"'
 
     def union(self, *types: str) -> str:
-        return " | ".join(types)
+        return f'"{" | ".join(map(self._fmt, types))}"'
 
     def iterable(self, type: str) -> str:
-        self._imports["typing"].add("Iterable")
-        return f"Iterable[{type}]"
+        self._imports["collections.abc"].add("Iterable")
+        return f'"Iterable[{type}]"'
 
     def async_iterable(self, type: str) -> str:
-        self._imports["typing"].add("AsyncIterable")
-        return f"AsyncIterable[{type}]"
+        self._imports["collections.abc"].add("AsyncIterable")
+        return f'"AsyncIterable[{type}]"'
 
     def async_iterator(self, type: str) -> str:
-        self._imports["typing"].add("AsyncIterator")
-        return f"AsyncIterator[{type}]"
+        self._imports["collections.abc"].add("AsyncIterator")
+        return f'"AsyncIterator[{type}]"'
 
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         return {k: v if v else None for k, v in self._imports.items()}

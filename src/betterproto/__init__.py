@@ -62,6 +62,13 @@ if TYPE_CHECKING:
         SupportsWrite,
     )
 
+if sys.version_info >= (3, 10):
+    from types import UnionType as _types_UnionType
+else:
+
+    class _types_UnionType:
+        ...
+
 
 # Proto 3 data types
 TYPE_ENUM = "enum"
@@ -147,6 +154,7 @@ def datetime_default_gen() -> datetime:
 
 
 DATETIME_ZERO = datetime_default_gen()
+
 
 # Special protobuf json doubles
 INFINITY = "Infinity"
@@ -1166,30 +1174,29 @@ class Message(ABC):
     def _get_field_default_gen(cls, field: dataclasses.Field) -> Any:
         t = cls._type_hint(field.name)
 
-        if hasattr(t, "__origin__"):
-            if t.__origin__ is dict:
-                # This is some kind of map (dict in Python).
-                return dict
-            elif t.__origin__ is list:
-                # This is some kind of list (repeated) field.
-                return list
-            elif t.__origin__ is Union and t.__args__[1] is type(None):
+        is_310_union = isinstance(t, _types_UnionType)
+        if hasattr(t, "__origin__") or is_310_union:
+            if is_310_union or t.__origin__ is Union:
                 # This is an optional field (either wrapped, or using proto3
                 # field presence). For setting the default we really don't care
                 # what kind of field it is.
                 return type(None)
-            else:
-                return t
-        elif issubclass(t, Enum):
+            if t.__origin__ is list:
+                # This is some kind of list (repeated) field.
+                return list
+            if t.__origin__ is dict:
+                # This is some kind of map (dict in Python).
+                return dict
+            return t
+        if issubclass(t, Enum):
             # Enums always default to zero.
             return t.try_value
-        elif t is datetime:
+        if t is datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
             return datetime_default_gen
-        else:
-            # This is either a primitive scalar or another message type. Calling
-            # it should result in its zero value.
-            return t
+        # This is either a primitive scalar or another message type. Calling
+        # it should result in its zero value.
+        return t
 
     def _postprocess_single(
         self, wire_type: int, meta: FieldMetadata, field_name: str, value: Any
