@@ -10,21 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.0b7] - 2024-08-11
 
 - **Breaking**: Support `Pydantic` v2 and dropping support for v1 [#588](https://github.com/danielgtaylor/python-betterproto/pull/588)
-- **Breaking**: The `Message.__getattribute__` method now raises an `AttributeError` when attempting to access an unset `oneof` 
+- **Breaking**: The attempting to access an unset `oneof` now raises an `AttributeError` 
   field. To see how to access `oneof` fields now, refer to [#558](https://github.com/danielgtaylor/python-betterproto/pull/558) 
   and [README.md](https://github.com/danielgtaylor/python-betterproto#one-of-support).
-- **Breaking**: A custom Enum has been implemented to match the behaviour of being an open set. This has the side effect of
-  preventing any passthrough of Enum members (i.e. Foo.RED.GREEN doesn't work any more)
+- **Breaking**: A custom `Enum` has been implemented to match the behaviour of being an open set. Any checks for `isinstance(enum_member, enum.Enum)` and `issubclass(EnumSubclass, enum.Enum)` will now return `False`. This change also has the side effect of
+  preventing any passthrough of `Enum` members (i.e. `Foo.RED.GREEN` doesn't work any more). See [#293](https://github.com/danielgtaylor/python-betterproto/pull/293) for more info, this fixed many bugs related to `Enum` handling.
 
 - Add support for `pickle` methods [#535](https://github.com/danielgtaylor/python-betterproto/pull/535)
 - Add support for `Struct` and `Value` types [#551](https://github.com/danielgtaylor/python-betterproto/pull/551)
 - Add support for [`Rich` package](https://rich.readthedocs.io/en/latest/index.html) for pretty printing [#508](https://github.com/danielgtaylor/python-betterproto/pull/508)
 - Improve support for streaming messages [#518](https://github.com/danielgtaylor/python-betterproto/pull/518) [#529](https://github.com/danielgtaylor/python-betterproto/pull/529)
 - Improve performance of serializing / de-serializing messages [#545](https://github.com/danielgtaylor/python-betterproto/pull/545)
-- Improve handling of typing collisions. 
+- Improve the handling of message name collisions with typing by allowing the method / type of imports to be configured.
   Refer to [#582](https://github.com/danielgtaylor/python-betterproto/pull/582) 
   and [README.md](https://github.com/danielgtaylor/python-betterproto#configuration-typing-imports).
-- Fix bugs when converting to / from Python due to `_Timestamp` [#534](https://github.com/danielgtaylor/python-betterproto/pull/534)
+- Fix roundtrip parsing of `datetime`s [#534](https://github.com/danielgtaylor/python-betterproto/pull/534)
 - Fix accessing unset optional fields [#523](https://github.com/danielgtaylor/python-betterproto/pull/523)
 - Fix `Message` equality comparison [#513](https://github.com/danielgtaylor/python-betterproto/pull/513)
 - Fix behaviour with long comment messages [#532](https://github.com/danielgtaylor/python-betterproto/pull/532)
