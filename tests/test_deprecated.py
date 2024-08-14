@@ -1,12 +1,14 @@
 import warnings
+
 import pytest
+
 from tests.mocks import MockChannel
 
 from tests.output_betterproto.deprecated import (
+    Empty,
     Message,
     Test,
     TestServiceStub,
-    Empty,
 )
 
 
