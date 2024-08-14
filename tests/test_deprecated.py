@@ -1,7 +1,5 @@
 import warnings
-
 import pytest
-
 from mocks import MockChannel
 
 from tests.output_betterproto.deprecated import (
