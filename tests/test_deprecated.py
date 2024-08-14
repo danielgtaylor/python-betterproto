@@ -48,11 +48,13 @@ def test_message_with_deprecated_field_not_set_default(message):
     assert not record
 
 
-def test_service_with_deprecated_method():
-    stub = TestServiceStub(MockChannel())
+@pytest.mark.asyncio
+async def test_service_with_deprecated_method():
+    
+    stub = TestServiceStub(MockChannel([Empty()]))
 
     with pytest.warns(DeprecationWarning) as record:
-        stub.deprecated_func(Empty())
+        await stub.deprecated_func(Empty())
 
     assert len(record) == 1
     assert str(record[0].message) == f"TestService.deprecated_func is deprecated"
