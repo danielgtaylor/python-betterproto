@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix accessing unset optional fields [#523](https://github.com/danielgtaylor/python-betterproto/pull/523)
 - Fix `Message` equality comparison [#513](https://github.com/danielgtaylor/python-betterproto/pull/513)
 - Fix behaviour with long comment messages [#532](https://github.com/danielgtaylor/python-betterproto/pull/532)
+- Add a warning when calling a deprecated message [#596](https://github.com/danielgtaylor/python-betterproto/pull/596)
 
 ## [2.0.0b6] - 2023-06-25
 
