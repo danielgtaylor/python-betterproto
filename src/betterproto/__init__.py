@@ -1440,13 +1440,20 @@ class Message(ABC):
             try:
                 current = getattr(self, field_name)
             except AttributeError:
-                current = self._get_field_default(field_name)
+                # Optional defaults are None, late-reassign if there's any of them found.
+                current = self._get_field_default(field_name)    
                 setattr(self, field_name, current)
 
             if meta.proto_type == TYPE_MAP:
+                if current is None:
+                    current = {}
+                    setattr(self, field_name, current)
                 # Value represents a single key/value pair entry in the map.
                 current[value.key] = value.value
             elif isinstance(current, list) and not isinstance(value, list):
+                if current is None:
+                    current = []
+                    setattr(self, field_name, current)
                 current.append(value)
             else:
                 setattr(self, field_name, value)
