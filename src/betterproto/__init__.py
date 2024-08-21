@@ -1441,7 +1441,7 @@ class Message(ABC):
                 current = getattr(self, field_name)
             except AttributeError:
                 # Optional defaults are None, late-reassign if there's any of them found.
-                current = self._get_field_default(field_name)    
+                current = self._get_field_default(field_name)
                 setattr(self, field_name, current)
 
             if meta.proto_type == TYPE_MAP:
