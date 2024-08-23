@@ -2037,9 +2037,18 @@ class Message(ABC):
                 field.name for field in field_set if values[field.name] is not None
             ]
 
-            if not set_fields:
+            # TODO: This is breaking the semantic of oneof but there is no other way of doing a construction
+            # TODO: Without disabling the validation for oneof fields group.
+            is_oneof_fields_has_optional_field = False
+            for field in field_set:
+                bp_meta: "FieldMetadata" = field.metadata.get("betterproto")
+                if bp_meta and bp_meta.optional:
+                    is_oneof_fields_has_optional_field = True
+                    break
+            if not set_fields and not is_oneof_fields_has_optional_field:
                 raise ValueError(f"Group {group} has no value; all fields are None")
-            elif len(set_fields) > 1:
+
+            if len(set_fields) > 1:
                 set_fields_str = ", ".join(set_fields)
                 raise ValueError(
                     f"Group {group} has more than one value; fields {set_fields_str} are not None"

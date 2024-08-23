@@ -21,3 +21,12 @@ message Test {
   }
 }
 
+message Operation {
+  message Ping {}
+  message Pong {}
+  int64 sequence_id = 1;
+  oneof message {
+    Ping ping = 10000;
+    Pong pong = 10001;
+  }
+}
