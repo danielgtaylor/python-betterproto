@@ -437,9 +437,8 @@ class FieldCompiler(MessageCompiler):
         if self.optional:
             args.append(f"optional=True")
         if (
-            self.proto_name != self.py_name
-            and self.output_file.include_original_field_name
-        ):
+            self.proto_name != self.py_name or isinstance(self, OneOfFieldCompiler)
+        ) and self.output_file.include_original_field_name:
             args.append(f'name="{self.proto_name}"')
         return args
 
@@ -659,13 +658,18 @@ class MapEntryCompiler(FieldCompiler):
 
     @property
     def betterproto_field_args(self) -> List[str]:
-        result = [
+        args = [
             f"betterproto.{self.proto_k_type}",
             f"betterproto.{self.proto_v_type}",
         ]
         if self.optional:
-            result.append("optional=True")
-        return result
+            args.append("optional=True")
+        if (
+            self.proto_name != self.py_name
+            and self.output_file.include_original_field_name
+        ):
+            args.append(f'name="{self.proto_name}"')
+        return args
 
     @property
     def field_type(self) -> str:

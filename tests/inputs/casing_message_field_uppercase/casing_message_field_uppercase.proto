@@ -2,8 +2,22 @@ syntax = "proto3";
 
 package casing_message_field_uppercase;
 
+message Nested {
+  int32 UPPER_CASE_V3 = 1;
+}
+
 message Test {
   int32 UPPERCASE = 1;
   int32 UPPERCASE_V2 = 2;
   int32 UPPER_CAMEL_CASE = 3;
+  Nested UPPER_CASE_V4 = 4;
+  Nested nestedMap = 5;
+  map<string, string> nestedDictMap = 6;
+
+  oneof envelope {
+    int32  envelope_a = 1000;
+    int64  envelope_b = 1001;
+    Nested envelope_CamelCase = 1010;
+    Nested envelope_c = 1002;
+  }
 }

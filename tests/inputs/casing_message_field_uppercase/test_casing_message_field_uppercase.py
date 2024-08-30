@@ -21,16 +21,52 @@ def test_message_casing_roundtrip():
         "uppercase": 1,
         "uppercase_v2": 2,
         "upper_camel_case": 3,
+        "upper_case_v4": {
+            "upper_case_v3": 4,
+        },
+        "nested_map": {
+            "upper_case_v3": 5,
+        },
+        "nested_dict_map": {
+            "foo_key": "bar_value",
+        },
+        "envelope_camel_case": {
+            "upper_case_v3": 6,
+        },
     }
     original_case_dict = {
         "UPPERCASE": 1,
         "UPPERCASE_V2": 2,
         "UPPER_CAMEL_CASE": 3,
+        "UPPER_CASE_V4": {
+            "UPPER_CASE_V3": 4,
+        },
+        "nestedMap": {
+            "UPPER_CASE_V3": 5,
+        },
+        "nestedDictMap": {
+            "foo_key": "bar_value",
+        },
+        "envelope_CamelCase": {
+            "UPPER_CASE_V3": 6,
+        },
     }
     camel_case_dict = {
         "uppercase": 1,
         "uppercaseV2": 2,
         "upperCamelCase": 3,
+        "upperCaseV4": {
+            "upperCaseV3": 4,
+        },
+        "nestedMap": {
+            "upperCaseV3": 5,
+        },
+        "nestedDictMap": {
+            "foo_key": "bar_value",
+        },
+        "envelopeCamelCase": {
+            "upperCaseV3": 6,
+        },
     }
 
     def compare_expected(message: Test):
