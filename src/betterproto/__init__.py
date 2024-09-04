@@ -147,6 +147,11 @@ WIRE_LEN_DELIM_TYPES = [TYPE_STRING, TYPE_BYTES, TYPE_MESSAGE, TYPE_MAP]
 # Indicator of message delimitation in streams
 SIZE_DELIMITED = -1
 
+# Enum that contains the possible decoding methods when decoding a str (https://docs.python.org/3/library/stdtypes.html#str)
+class ON_STR_DECODE_ERROR(builtin_enum.Enum):
+    STRICT = 'strict'
+    IGNORE = 'ignore'
+    REPLACE = 'replace'
 
 # Protobuf datetimes start at the Unix Epoch in 1970 in UTC.
 def datetime_default_gen() -> datetime:
@@ -1199,7 +1204,7 @@ class Message(ABC):
         return t
 
     def _postprocess_single(
-        self, wire_type: int, meta: FieldMetadata, field_name: str, value: Any
+        self, wire_type: int, meta: FieldMetadata, field_name: str, value: Any, on_decode_error: ON_STR_DECODE_ERROR
     ) -> Any:
         """Adjusts values after parsing."""
         if wire_type == WIRE_VARINT:
@@ -1222,7 +1227,7 @@ class Message(ABC):
             value = struct.unpack(fmt, value)[0]
         elif wire_type == WIRE_LEN_DELIM:
             if meta.proto_type == TYPE_STRING:
-                value = str(value, "utf-8")
+                value = str(value, "utf-8", errors=on_decode_error.value)
             elif meta.proto_type == TYPE_MESSAGE:
                 cls = self._betterproto.cls_by_field[field_name]
 
@@ -1235,7 +1240,7 @@ class Message(ABC):
                     # scalar type.
                     value = _get_wrapper(meta.wraps)().parse(value).value
                 else:
-                    value = cls().parse(value)
+                    value = cls().parse(value, on_decode_error=on_decode_error)
                     value._serialized_on_wire = True
             elif meta.proto_type == TYPE_MAP:
                 value = self._betterproto.cls_by_field[field_name]().parse(value)
@@ -1253,6 +1258,7 @@ class Message(ABC):
         self: T,
         stream: "SupportsRead[bytes]",
         size: Optional[int] = None,
+        on_decode_error: ON_STR_DECODE_ERROR = ON_STR_DECODE_ERROR.STRICT
     ) -> T:
         """
         Load the binary encoded Protobuf from a stream into this message instance. This
@@ -1304,12 +1310,12 @@ class Message(ABC):
                         decoded, pos = decode_varint(parsed.value, pos)
                         wire_type = WIRE_VARINT
                     decoded = self._postprocess_single(
-                        wire_type, meta, field_name, decoded
+                        wire_type, meta, field_name, decoded, on_decode_error
                     )
                     value.append(decoded)
             else:
                 value = self._postprocess_single(
-                    parsed.wire_type, meta, field_name, parsed.value
+                    parsed.wire_type, meta, field_name, parsed.value, on_decode_error
                 )
 
             try:
@@ -1348,7 +1354,7 @@ class Message(ABC):
 
         return self
 
-    def parse(self: T, data: bytes) -> T:
+    def parse(self: T, data: bytes, on_decode_error: ON_STR_DECODE_ERROR = ON_STR_DECODE_ERROR.STRICT) -> T:
         """
         Parse the binary encoded Protobuf into this message instance. This
         returns the instance itself and is therefore assignable and chainable.
@@ -1356,15 +1362,14 @@ class Message(ABC):
         Parameters
         -----------
         data: :class:`bytes`
-            The data to parse the message from.
-
+            The data to parse the message from.        
         Returns
         --------
         :class:`Message`
             The initialized message.
         """
         with BytesIO(data) as stream:
-            return self.load(stream)
+            return self.load(stream, on_decode_error=on_decode_error)
 
     # For compatibility with other libraries.
     @classmethod
