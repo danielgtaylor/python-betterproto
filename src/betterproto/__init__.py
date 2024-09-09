@@ -1864,9 +1864,7 @@ class Message(ABC):
                 if getattr(values, field.name, None) is not None
             ]
 
-            if not set_fields:
-                raise ValueError(f"Group {group} has no value; all fields are None")
-            elif len(set_fields) > 1:
+            if len(set_fields) > 1:
                 set_fields_str = ", ".join(set_fields)
                 raise ValueError(
                     f"Group {group} has more than one value; fields {set_fields_str} are not None"
