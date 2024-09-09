@@ -169,7 +169,17 @@ class Casing(builtin_enum.Enum):
     SNAKE = snake_case  #: A snake_case sterilization function.
 
 
-PLACEHOLDER: Any = object()
+class Placeholder:
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, _):
+        return self
+
+
+# We can't simply use object() here because pydantic automatically performs deep-copy of mutable default values
+# See https://github.com/danielgtaylor/python-betterproto/issues/606
+PLACEHOLDER: Any = Placeholder()
 
 
 @dataclasses.dataclass(frozen=True)
