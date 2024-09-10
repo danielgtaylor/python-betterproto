@@ -184,7 +184,7 @@ class Placeholder:
 
 # We can't simply use object() here because pydantic automatically performs deep-copy of mutable default values
 # See #606
-PLACEHOLDER: Any = Placeholder()
+PLACEHOLDER: Placeholder = Placeholder()
 
 
 @dataclasses.dataclass(frozen=True)
