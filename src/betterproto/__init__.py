@@ -170,15 +170,20 @@ class Casing(builtin_enum.Enum):
 
 
 class Placeholder:
-    def __copy__(self):
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "<PLACEHOLDER>"
+
+    def __copy__(self) -> Self:
         return self
 
-    def __deepcopy__(self, _):
+    def __deepcopy__(self, _) -> Self:
         return self
 
 
 # We can't simply use object() here because pydantic automatically performs deep-copy of mutable default values
-# See https://github.com/danielgtaylor/python-betterproto/issues/606
+# See #606
 PLACEHOLDER: Any = Placeholder()
 
 
