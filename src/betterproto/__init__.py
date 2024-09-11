@@ -1401,6 +1401,8 @@ class Message(ABC):
         if size == SIZE_DELIMITED:
             size, _ = load_varint(stream)
 
+        fields_type_hint = self._type_hints()
+
         # Got some data over the wire
         self._serialized_on_wire = True
         proto_meta = self._betterproto
@@ -1437,6 +1439,18 @@ class Message(ABC):
                     parsed.wire_type, meta, field_name, parsed.value
                 )
 
+            # Check type hints
+            fn_unwrap_typ_option = lambda x: getattr(x, "__args__", [None])[0]
+            fn_unwrap_typ_option_origin_0 = lambda x: getattr(
+                fn_unwrap_typ_option(x), "__origin__", None
+            )
+            field_type_hint = fields_type_hint.get(field_name)
+            field_is_repeated = (
+                fn_unwrap_typ_option_origin_0(field_type_hint) is list
+                if fields_type_hint
+                else False
+            )
+
             try:
                 current = getattr(self, field_name)
             except AttributeError:
@@ -1450,11 +1464,16 @@ class Message(ABC):
                     setattr(self, field_name, current)
                 # Value represents a single key/value pair entry in the map.
                 current[value.key] = value.value
-            elif isinstance(current, list) and not isinstance(value, list):
+            elif field_is_repeated or (
+                isinstance(current, list) and not isinstance(value, list)
+            ):
                 if current is None:
                     current = []
                     setattr(self, field_name, current)
-                current.append(value)
+                if isinstance(value, list):
+                    current.extend(value)
+                else:
+                    current.append(value)
             else:
                 setattr(self, field_name, value)
 

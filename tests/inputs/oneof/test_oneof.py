@@ -19,6 +19,8 @@ from tests.output_betterproto_pydantic_optionals.oneof import (
     Operation as OperationPyd,
     OperationPing as OperationPingPyd,
     OperationPong as OperationPongPyd,
+    OperationStatus as OperationStatusPyd,
+    OperationStatusModule as OperationStatusModulePyd,
 )
 from tests.util import get_test_case_json_data
 
@@ -48,6 +50,43 @@ def test_oneof_constructor_assign():
 
 
 def test_oneof_constructor_pydantic_optionals():
+    msg_ctrstr_arr = OperationStatusPyd(
+        strings=["asdf", "asdasdasd", "asdasdasd", "sd"],
+    )
+    msg_ctrstr_arr3 = OperationStatusPyd().FromString(bytes(msg_ctrstr_arr))
+    assert msg_ctrstr_arr == msg_ctrstr_arr3
+
+    _histo_sample = {
+        1: 100,
+        2: 500,
+        3: 600,
+        4: 700,
+        8: 999999999,
+    }
+    msg_ctr_arr = OperationPyd(
+        sequence_id=1,
+        status=OperationStatusPyd(
+            fractions=[1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
+            histo=_histo_sample,
+            strings=["asdf", "asdasdasd", "asdasdasd", "sd"],
+            modules=[
+                OperationStatusModulePyd(
+                    name="http_client_generic_response_time",
+                    histo=_histo_sample,
+                ),
+                OperationStatusModulePyd(
+                    name="http_server_generic_response_time",
+                    histo=_histo_sample,
+                ),
+            ],
+        ),
+    )
+    msg_ctr_arr2 = Operation().FromString(bytes(msg_ctr_arr))
+    msg_ctr_arr3 = OperationPyd().FromString(bytes(msg_ctr_arr))
+    assert msg_ctr_arr == msg_ctr_arr3
+    assert bytes(msg_ctr_arr) == bytes(msg_ctr_arr3)
+    assert msg_ctr_arr.to_dict() == msg_ctr_arr3.to_dict()
+
     message = OperationPyd(
         sequence_id=-1,
         ping=OperationPingPyd(),
@@ -62,6 +101,7 @@ def test_oneof_constructor_pydantic_optionals():
             sequence_id=-1,
             ping=OperationPingPyd(),
             pong=OperationPongPyd(),
+            status=OperationStatusPyd(),
         ).FromString(bytes(message))
 
     # Raises an error unless we define pong, which also will trigger another error
