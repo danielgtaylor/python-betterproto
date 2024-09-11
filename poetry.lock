@@ -1929,4 +1929,4 @@ rust-codec = ["betterproto-rust-codec"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "459e96050122ad61e9de8e6ef3d91bc4c36364da3af10350e2984e359f9c9196"
+content-hash = "9d409f19a1283f2133b8cc8d3190b5816d93c05d8199f8c10f97f621cfcf7c35"
