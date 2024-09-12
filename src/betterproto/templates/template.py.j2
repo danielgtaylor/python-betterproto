@@ -23,7 +23,11 @@ class {{ enum.py_name }}(betterproto.Enum):
 {% endfor %}
 {% endif %}
 {% for message in output_file.messages %}
+{% if output_file.pydantic_dataclasses %}
+@dataclass(eq=False, repr=False, config={"extra": "forbid"})
+{% else %}
 @dataclass(eq=False, repr=False)
+{% endif %}
 class {{ message.py_name }}(betterproto.Message):
     {% if message.comment %}
 {{ message.comment }}
