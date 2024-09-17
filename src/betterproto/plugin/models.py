@@ -403,6 +403,10 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
     )
 
 
+_SHADOWED_FIELD_NAMES_ = {
+    "validate": 0
+}
+
 @dataclass
 class FieldCompiler(MessageCompiler):
     parent: MessageCompiler = PLACEHOLDER
@@ -557,7 +561,10 @@ class FieldCompiler(MessageCompiler):
     @property
     def py_name(self) -> str:
         """Pythonized name."""
-        return pythonize_field_name(self.proto_name)
+        name = self.proto_name
+        if name in _SHADOWED_FIELD_NAMES:
+            name+= "_"
+        return pythonize_field_name(name)
 
     @property
     def proto_name(self) -> str:
