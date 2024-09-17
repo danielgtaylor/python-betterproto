@@ -403,7 +403,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
     )
 
 
-_SHADOWED_FIELD_NAMES_ = {
+_SHADOWED_FIELD_NAMES = {
     "validate",
 }
 
