@@ -6,7 +6,13 @@ message Nested {
   int32 UPPER_CASE_V3 = 1;
 }
 
+message Upper {
+  int32 VALIDATE = 1;
+  int32 async = 20;
+}
 message Test {
+  Upper validate = 10001;
+
   int32 UPPERCASE = 1;
   int32 UPPERCASE_V2 = 2;
   int32 UPPER_CAMEL_CASE = 3;

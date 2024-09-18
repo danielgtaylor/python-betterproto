@@ -29,6 +29,7 @@ from typing import (
     Dict,
     Generator,
     Iterable,
+    List,
     Mapping,
     Optional,
     Set,
@@ -183,6 +184,8 @@ class FieldMetadata:
 
     # Holding the original field name on proto file
     name: Optional[str] = None
+    # Holding py_name aliases
+    aliases: Optional[Set[str]] = None
 
     @staticmethod
     def get(field: dataclasses.Field) -> "FieldMetadata":
@@ -199,6 +202,7 @@ def dataclass_field(
     wraps: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     return dataclasses.field(
@@ -212,6 +216,7 @@ def dataclass_field(
                 wraps,
                 optional,
                 name,
+                aliases,
             )
         },
     )
@@ -227,8 +232,16 @@ def enum_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
-    return dataclass_field(number, TYPE_ENUM, group=group, optional=optional, name=name)
+    return dataclass_field(
+        number,
+        TYPE_ENUM,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
+    )
 
 
 def bool_field(
@@ -236,8 +249,16 @@ def bool_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
-    return dataclass_field(number, TYPE_BOOL, group=group, optional=optional, name=name)
+    return dataclass_field(
+        number,
+        TYPE_BOOL,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
+    )
 
 
 def int32_field(
@@ -245,9 +266,15 @@ def int32_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_INT32, group=group, optional=optional, name=name
+        number,
+        TYPE_INT32,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -256,9 +283,15 @@ def int64_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_INT64, group=group, optional=optional, name=name
+        number,
+        TYPE_INT64,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -267,9 +300,15 @@ def uint32_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_UINT32, group=group, optional=optional, name=name
+        number,
+        TYPE_UINT32,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -278,9 +317,15 @@ def uint64_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_UINT64, group=group, optional=optional, name=name
+        number,
+        TYPE_UINT64,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -289,9 +334,15 @@ def sint32_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_SINT32, group=group, optional=optional, name=name
+        number,
+        TYPE_SINT32,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -300,9 +351,15 @@ def sint64_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_SINT64, group=group, optional=optional, name=name
+        number,
+        TYPE_SINT64,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -311,9 +368,15 @@ def float_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_FLOAT, group=group, optional=optional, name=name
+        number,
+        TYPE_FLOAT,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -322,9 +385,15 @@ def double_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_DOUBLE, group=group, optional=optional, name=name
+        number,
+        TYPE_DOUBLE,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -333,6 +402,7 @@ def fixed32_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
         number,
@@ -340,6 +410,7 @@ def fixed32_field(
         group=group,
         optional=optional,
         name=name,
+        aliases=aliases,
     )
 
 
@@ -348,6 +419,7 @@ def fixed64_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
         number,
@@ -355,6 +427,7 @@ def fixed64_field(
         group=group,
         optional=optional,
         name=name,
+        aliases=aliases,
     )
 
 
@@ -363,6 +436,7 @@ def sfixed32_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
         number,
@@ -370,6 +444,7 @@ def sfixed32_field(
         group=group,
         optional=optional,
         name=name,
+        aliases=aliases,
     )
 
 
@@ -378,6 +453,7 @@ def sfixed64_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
         number,
@@ -385,6 +461,7 @@ def sfixed64_field(
         group=group,
         optional=optional,
         name=name,
+        aliases=aliases,
     )
 
 
@@ -393,9 +470,15 @@ def string_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_STRING, group=group, optional=optional, name=name
+        number,
+        TYPE_STRING,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -404,9 +487,15 @@ def bytes_field(
     group: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_BYTES, group=group, optional=optional, name=name
+        number,
+        TYPE_BYTES,
+        group=group,
+        optional=optional,
+        name=name,
+        aliases=aliases,
     )
 
 
@@ -416,6 +505,7 @@ def message_field(
     wraps: Optional[str] = None,
     optional: bool = False,
     name: Optional[str] = None,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
         number,
@@ -424,6 +514,7 @@ def message_field(
         wraps=wraps,
         optional=optional,
         name=name,
+        aliases=aliases,
     )
 
 
@@ -434,6 +525,7 @@ def map_field(
     group: Optional[str] = None,
     name: Optional[str] = None,
     optional: bool = False,
+    aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
         number,
@@ -442,6 +534,7 @@ def map_field(
         group=group,
         name=name,
         optional=optional,
+        aliases=aliases,
     )
 
 
@@ -764,6 +857,7 @@ class ProtoClassMetadata:
         "default_gen",
         "cls_by_field",
         "field_name_by_number",
+        "field_by_alias",
         "meta_by_field_name",
         "sorted_field_names",
     )
@@ -775,17 +869,20 @@ class ProtoClassMetadata:
     sorted_field_names: Tuple[str, ...]
     default_gen: Dict[str, Callable[[], Any]]
     cls_by_field: Dict[str, Type]
+    field_by_alias: Dict[str, FieldMetadata]
 
     def __init__(self, cls: Type["Message"]):
         by_field = {}
         by_group: Dict[str, Set] = {}
         by_field_name = {}
         by_field_number = {}
+        by_field_alias = {}
 
         fields = dataclasses.fields(cls)
         for field in fields:
             meta = FieldMetadata.get(field)
-
+            if meta.name:
+                by_field_alias[meta.name] = field
             if meta.group:
                 # This is part of a one-of group.
                 by_field[field.name] = meta.group
@@ -795,10 +892,21 @@ class ProtoClassMetadata:
             by_field_name[field.name] = meta
             by_field_number[meta.number] = field.name
 
+        for field in fields:
+            meta = FieldMetadata.get(field)
+            if meta.aliases:
+                for alias in meta.aliases:
+                    if alias in set(by_field_alias) + set(by_field_name):
+                        raise Exception(
+                            "field name alias trying to shadow declared field"
+                        )
+                    by_field_alias[alias] = meta
+
         self.oneof_group_by_field = by_field
         self.oneof_field_by_group = by_group
         self.field_name_by_number = by_field_number
         self.meta_by_field_name = by_field_name
+        self.field_by_alias = by_field_alias
         self.sorted_field_names = tuple(
             by_field_number[number] for number in sorted(by_field_number)
         )

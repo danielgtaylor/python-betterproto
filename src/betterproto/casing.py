@@ -1,5 +1,6 @@
 import keyword
 import re
+import typing
 
 
 # Word delimiters and symbols that will not be preserved when re-casing.
@@ -13,6 +14,11 @@ WORD = "[A-Z]*[a-z]*[0-9]*"
 # Uppercase word, not followed by lowercase letters.
 # language=PythonRegExp
 WORD_UPPER = "[A-Z]+(?![a-z])[0-9]*"
+
+
+EXTRA_SANTIZE_WORDS = {
+    "validate",
+}
 
 
 def safe_snake_case(value: str) -> str:
@@ -134,9 +140,11 @@ def lowercase_first(value: str) -> str:
     return value[0:1].lower() + value[1:]
 
 
-def sanitize_name(value: str) -> str:
+def sanitize_name(
+    value: str, extra_words: typing.Set[str] = EXTRA_SANTIZE_WORDS
+) -> str:
     # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
-    if keyword.iskeyword(value):
+    if keyword.iskeyword(value) or value in extra_words:
         return f"{value}_"
     if not value.isidentifier():
         return f"_{value}"
