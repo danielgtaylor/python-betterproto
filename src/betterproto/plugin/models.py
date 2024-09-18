@@ -501,35 +501,6 @@ class FieldCompiler(MessageCompiler):
         )
 
     @property
-    def default_value_string(self) -> str:
-        """Python representation of the default proto value."""
-        if self.repeated:
-            return "[]"
-        if self.optional:
-            return "None"
-        if self.py_type == "int":
-            return "0"
-        if self.py_type == "float":
-            return "0.0"
-        elif self.py_type == "bool":
-            return "False"
-        elif self.py_type == "str":
-            return '""'
-        elif self.py_type == "bytes":
-            return 'b""'
-        elif self.field_type == "enum":
-            enum_proto_obj_name = self.proto_obj.type_name.split(".").pop()
-            enum = next(
-                e
-                for e in self.output_file.enums
-                if e.proto_obj.name == enum_proto_obj_name
-            )
-            return enum.default_value_string
-        else:
-            # Message type
-            return "None"
-
-    @property
     def packed(self) -> bool:
         """True if the wire representation is a packed format."""
         return self.repeated and self.proto_obj.type in PROTO_PACKED_TYPES
@@ -686,14 +657,6 @@ class EnumDefinitionCompiler(MessageCompiler):
             for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
         ]
         super().__post_init__()  # call MessageCompiler __post_init__
-
-    @property
-    def default_value_string(self) -> str:
-        """Python representation of the default value for Enums.
-
-        As per the spec, this is the first value of the Enum.
-        """
-        return str(self.entries[0].value)  # ideally, should ALWAYS be int(0)!
 
 
 @dataclass
