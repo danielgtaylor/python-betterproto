@@ -184,7 +184,7 @@ class Placeholder:
 
 # We can't simply use object() here because pydantic automatically performs deep-copy of mutable default values
 # See #606
-PLACEHOLDER: Placeholder = Placeholder()
+PLACEHOLDER: Any = Placeholder()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -221,7 +221,7 @@ def dataclass_field(
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     return dataclasses.field(
-        default=None if optional else PLACEHOLDER,
+        default=None if optional else PLACEHOLDER,  # type: ignore
         metadata={
             "betterproto": FieldMetadata(
                 number, proto_type, map_types, group, wraps, optional
