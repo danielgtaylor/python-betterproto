@@ -1,27 +1,33 @@
-from betterproto import Casing
+from betterproto import Casing, Message
 from tests.output_betterproto.casing_message_field_uppercase import (
     Test,
     Upper,
 )
+from tests.output_betterproto_pydantic_optionals.casing_message_field_uppercase import (
+    Test as TestPyd,
+    Upper as UpperPyd,
+)
 
 
 def test_message_casing():
-    msg1 = Upper(validate_=1212, async_=231231)
+    msg1 = UpperPyd(validate_=1212, async_=231231)
     msg1d = msg1.to_dict()
     print(msg1d)
     print(Upper.from_dict(msg1d))
 
-    message = Test()
-
-    assert hasattr(
-        message, "uppercase"
-    ), "UPPERCASE attribute is converted to 'uppercase' in python"
-    assert hasattr(
-        message, "uppercase_v2"
-    ), "UPPERCASE_V2 attribute is converted to 'uppercase_v2' in python"
-    assert hasattr(
-        message, "upper_camel_case"
-    ), "UPPER_CAMEL_CASE attribute is converted to upper_camel_case in python"
+    for ctor in [Test, TestPyd]:
+        
+        message = TestPyd()
+        assert hasattr(message, "validate_")
+        assert hasattr(
+            message, "uppercase"
+        ), "UPPERCASE attribute is converted to 'uppercase' in python"
+        assert hasattr(
+            message, "uppercase_v2"
+        ), "UPPERCASE_V2 attribute is converted to 'uppercase_v2' in python"
+        assert hasattr(
+            message, "upper_camel_case"
+        ), "UPPER_CAMEL_CASE attribute is converted to upper_camel_case in python"
 
 
 def test_message_casing_roundtrip():
@@ -86,14 +92,16 @@ def test_message_casing_roundtrip():
         },
     }
 
-    def compare_expected(message: Test):
-        message_dict = message.to_dict(casing=None)
-        assert message_dict == original_case_dict, message_dict
-        message_dict = message.to_dict(casing=Casing.CAMEL)
-        assert message_dict == camel_case_dict, message_dict
-        message_dict = message.to_dict(casing=Casing.SNAKE)
-        assert message_dict == snake_case_dict, message_dict
+    for ctor in []:
 
-    compare_expected(Test.from_dict(snake_case_dict))
-    compare_expected(Test.from_dict(original_case_dict))
-    compare_expected(Test.from_dict(camel_case_dict))
+        def compare_expected(message: Message):
+            message_dict = message.to_dict(casing=None)
+            assert message_dict == original_case_dict, message_dict
+            message_dict = message.to_dict(casing=Casing.CAMEL)
+            assert message_dict == camel_case_dict, message_dict
+            message_dict = message.to_dict(casing=Casing.SNAKE)
+            assert message_dict == snake_case_dict, message_dict
+
+        compare_expected(ctor.from_dict(snake_case_dict))
+        compare_expected(ctor.from_dict(original_case_dict))
+        compare_expected(ctor.from_dict(camel_case_dict))
