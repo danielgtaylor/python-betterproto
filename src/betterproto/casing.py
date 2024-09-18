@@ -1,6 +1,6 @@
-import typing
 import keyword
 import re
+import typing
 
 
 # Word delimiters and symbols that will not be preserved when re-casing.
@@ -140,7 +140,9 @@ def lowercase_first(value: str) -> str:
     return value[0:1].lower() + value[1:]
 
 
-def sanitize_name(value: str, extra_words: typing.Set[str] = EXTRA_SANTIZE_WORDS) -> str:
+def sanitize_name(
+    value: str, extra_words: typing.Set[str] = EXTRA_SANTIZE_WORDS
+) -> str:
     # https://www.python.org/dev/peps/pep-0008/#descriptive-naming-styles
     if keyword.iskeyword(value) or value in extra_words:
         return f"{value}_"
