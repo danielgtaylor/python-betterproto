@@ -1,8 +1,13 @@
 from betterproto import Casing
-from tests.output_betterproto.casing_message_field_uppercase import Test
+from tests.output_betterproto.casing_message_field_uppercase import Test, Upper
 
 
 def test_message_casing():
+    msg1 = Upper(validate_=1212, async_=231231)
+    msg1d = msg1.to_dict()
+    print(msg1d)
+    print(Upper.from_dict(msg1d))
+
     message = Test()
 
     assert hasattr(
@@ -18,6 +23,9 @@ def test_message_casing():
 
 def test_message_casing_roundtrip():
     snake_case_dict = {
+        "validate": {
+            "validate": 100001,
+        },
         "uppercase": 1,
         "uppercase_v2": 2,
         "upper_camel_case": 3,
@@ -35,6 +43,9 @@ def test_message_casing_roundtrip():
         },
     }
     original_case_dict = {
+        "validate": {
+            "VALIDATE": 100001,
+        },
         "UPPERCASE": 1,
         "UPPERCASE_V2": 2,
         "UPPER_CAMEL_CASE": 3,
@@ -52,6 +63,9 @@ def test_message_casing_roundtrip():
         },
     }
     camel_case_dict = {
+        "validate": {
+            "validate": 100001,
+        },
         "uppercase": 1,
         "uppercaseV2": 2,
         "upperCamelCase": 3,
