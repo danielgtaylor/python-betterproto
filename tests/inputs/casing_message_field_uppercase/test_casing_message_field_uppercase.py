@@ -1,4 +1,7 @@
-from betterproto import Casing, Message
+from betterproto import (
+    Casing,
+    Message,
+)
 from tests.output_betterproto.casing_message_field_uppercase import (
     Test,
     Upper,
@@ -16,7 +19,6 @@ def test_message_casing():
     print(Upper.from_dict(msg1d))
 
     for ctor in [Test, TestPyd]:
-        
         message = TestPyd()
         assert hasattr(message, "validate_")
         assert hasattr(
