@@ -19,6 +19,7 @@ EXTRA_SANTIZE_WORDS = {
     "validate",
 }
 
+
 def safe_snake_case(value: str) -> str:
     """Snake case a value taking into account Python keywords."""
     value = snake_case(value)

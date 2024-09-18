@@ -1,5 +1,8 @@
 from betterproto import Casing
-from tests.output_betterproto.casing_message_field_uppercase import Test, Upper
+from tests.output_betterproto.casing_message_field_uppercase import (
+    Test,
+    Upper,
+)
 
 
 def test_message_casing():

@@ -29,10 +29,10 @@ from typing import (
     Dict,
     Generator,
     Iterable,
+    List,
     Mapping,
     Optional,
     Set,
-    List,
     Tuple,
     Type,
     Union,
@@ -337,7 +337,11 @@ def sint32_field(
     aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_SINT32, group=group, optional=optional, name=name,
+        number,
+        TYPE_SINT32,
+        group=group,
+        optional=optional,
+        name=name,
         aliases=aliases,
     )
 
@@ -350,7 +354,11 @@ def sint64_field(
     aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_SINT64, group=group, optional=optional, name=name,
+        number,
+        TYPE_SINT64,
+        group=group,
+        optional=optional,
+        name=name,
         aliases=aliases,
     )
 
@@ -363,7 +371,11 @@ def float_field(
     aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_FLOAT, group=group, optional=optional, name=name,
+        number,
+        TYPE_FLOAT,
+        group=group,
+        optional=optional,
+        name=name,
         aliases=aliases,
     )
 
@@ -376,7 +388,11 @@ def double_field(
     aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_DOUBLE, group=group, optional=optional, name=name,
+        number,
+        TYPE_DOUBLE,
+        group=group,
+        optional=optional,
+        name=name,
         aliases=aliases,
     )
 
@@ -457,7 +473,11 @@ def string_field(
     aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_STRING, group=group, optional=optional, name=name,
+        number,
+        TYPE_STRING,
+        group=group,
+        optional=optional,
+        name=name,
         aliases=aliases,
     )
 
@@ -470,7 +490,11 @@ def bytes_field(
     aliases: Optional[Set[str]] = None,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_BYTES, group=group, optional=optional, name=name,
+        number,
+        TYPE_BYTES,
+        group=group,
+        optional=optional,
+        name=name,
         aliases=aliases,
     )
 
@@ -873,7 +897,9 @@ class ProtoClassMetadata:
             if meta.aliases:
                 for alias in meta.aliases:
                     if alias in set(by_field_alias) + set(by_field_name):
-                        raise Exception("field name alias trying to shadow declared field")
+                        raise Exception(
+                            "field name alias trying to shadow declared field"
+                        )
                     by_field_alias[alias] = meta
 
         self.oneof_group_by_field = by_field
