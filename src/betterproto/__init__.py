@@ -169,7 +169,22 @@ class Casing(builtin_enum.Enum):
     SNAKE = snake_case  #: A snake_case sterilization function.
 
 
-PLACEHOLDER: Any = object()
+class Placeholder:
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return "<PLACEHOLDER>"
+
+    def __copy__(self) -> Self:
+        return self
+
+    def __deepcopy__(self, _) -> Self:
+        return self
+
+
+# We can't simply use object() here because pydantic automatically performs deep-copy of mutable default values
+# See #606
+PLACEHOLDER: Any = Placeholder()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -206,7 +221,7 @@ def dataclass_field(
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     return dataclasses.field(
-        default=None if optional else PLACEHOLDER,
+        default=None if optional else PLACEHOLDER,  # type: ignore
         metadata={
             "betterproto": FieldMetadata(
                 number, proto_type, map_types, group, wraps, optional
