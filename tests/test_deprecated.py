@@ -35,17 +35,15 @@ def test_message_with_deprecated_field(message):
 
 
 def test_message_with_deprecated_field_not_set(message):
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         Test(value=10)
-
-    assert not record
 
 
 def test_message_with_deprecated_field_not_set_default(message):
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         _ = Test(value=10).message
-
-    assert not record
 
 
 @pytest.mark.asyncio
@@ -58,7 +56,6 @@ async def test_service_with_deprecated_method():
     assert len(record) == 1
     assert str(record[0].message) == f"TestService.deprecated_func is deprecated"
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         await stub.func(Empty())
-
-    assert not record
