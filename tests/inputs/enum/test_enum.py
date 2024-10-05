@@ -1,3 +1,6 @@
+import betterproto
+from dataclasses import dataclass
+
 from tests.output_betterproto.enum import (
     ArithmeticOperator,
     Choice,
@@ -112,3 +115,50 @@ def test_renamed_enum_members():
         "MINUS",
         "_0_PREFIXED",
     }
+
+
+def test_enum_full_name():
+    assert ArithmeticOperator.NONE.full_name == "ARITHMETIC_OPERATOR_NONE"
+    assert ArithmeticOperator.PLUS.full_name == "ARITHMETIC_OPERATOR_PLUS"
+    assert ArithmeticOperator._0_PREFIXED.full_name == "ARITHMETIC_OPERATOR_0_PREFIXED"
+
+
+def test_enum_to_json():
+    assert Test(op=ArithmeticOperator.NONE).to_json() == '{}'
+    assert Test(op=ArithmeticOperator.PLUS).to_json(
+    ) == '{"op": "ARITHMETIC_OPERATOR_PLUS"}'
+    assert Test(op=ArithmeticOperator._0_PREFIXED).to_json(
+    ) == '{"op": "ARITHMETIC_OPERATOR_0_PREFIXED"}'
+
+
+def test_enum_from_json():
+    assert Test().from_json('{}').op == ArithmeticOperator.NONE
+    assert Test().from_json(
+        '{"op": "ARITHMETIC_OPERATOR_PLUS"}').op == ArithmeticOperator.PLUS
+    assert Test().from_json(
+        '{"op": "ARITHMETIC_OPERATOR_0_PREFIXED"}').op == ArithmeticOperator._0_PREFIXED
+
+
+class EnumCompat(betterproto.Enum):
+    NONE = 0
+    PLUS = 1
+    MINUS = 2
+
+
+@dataclass(eq=False, repr=False)
+class CompatTest(betterproto.Message):
+    enum: "EnumCompat" = betterproto.enum_field(1)
+
+
+def test_enum_to_json_backwards_compat():
+    assert CompatTest(enum=EnumCompat.NONE).to_json() == '{}'
+    assert CompatTest(enum=EnumCompat.PLUS).to_json(
+    ) == '{"enum": "PLUS"}'
+    assert CompatTest(enum=EnumCompat.MINUS).to_json(
+    ) == '{"enum": "MINUS"}'
+
+
+def test_enum_from_json_backwards_compat():
+    assert CompatTest().from_json('{}').enum == EnumCompat.NONE
+    assert CompatTest().from_json('{"enum": "PLUS"}').enum == EnumCompat.PLUS
+    assert CompatTest().from_json('{"enum": "MINUS"}').enum == EnumCompat.MINUS
