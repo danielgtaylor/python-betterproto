@@ -12,3 +12,10 @@ message Message {
     option deprecated = true;
     string value = 1;
 }
+
+message Empty {}
+
+service TestService {
+    rpc func(Empty) returns (Empty);
+    rpc deprecated_func(Empty) returns (Empty) { option deprecated = true; };
+}

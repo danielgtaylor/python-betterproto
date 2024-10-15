@@ -43,7 +43,11 @@ class {{ enum.py_name }}(betterproto.Enum):
 {% endfor %}
 {% endif %}
 {% for message in output_file.messages %}
+{% if output_file.pydantic_dataclasses %}
+@dataclass(eq=False, repr=False, config={"extra": "forbid"})
+{% else %}
 @dataclass(eq=False, repr=False)
+{% endif %}
 class {{ message.py_name }}(betterproto.Message):
     {% if message.comment %}
 {{ message.comment }}
@@ -90,7 +94,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+            , {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
             , {{ method.py_input_message_param }}_iterator: {{ output_file.typing_compiler.union(output_file.typing_compiler.async_iterable(method.py_input_message_type), output_file.typing_compiler.iterable(method.py_input_message_type)) }}
@@ -103,6 +107,10 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             ) -> {% if method.server_streaming %}{{ output_file.typing_compiler.async_iterator(method.py_output_message_type ) }}{% else %}"{{ method.py_output_message_type }}"{% endif %}:
         {% if method.comment %}
 {{ method.comment }}
+
+        {% endif %}
+        {% if method.proto_obj.options.deprecated %}
+        warnings.warn("{{ service.py_name }}.{{ method.py_name }} is deprecated", DeprecationWarning)
 
         {% endif %}
         {% if method.server_streaming %}
@@ -165,7 +173,7 @@ class {{ service.py_name }}Base(ServiceBase):
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
-            {%- if method.py_input_message -%}, {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"{%- endif -%}
+            , {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
             , {{ method.py_input_message_param }}_iterator: {{ output_file.typing_compiler.async_iterator(method.py_input_message_type) }}

@@ -276,8 +276,21 @@ class OutputTemplate:
     @property
     def python_module_imports(self) -> Set[str]:
         imports = set()
+
+        has_deprecated = False
+        if any(m.deprecated for m in self.messages):
+            has_deprecated = True
         if any(x for x in self.messages if any(x.deprecated_fields)):
+            has_deprecated = True
+        if any(
+            any(m.proto_obj.options.deprecated for m in s.methods)
+            for s in self.services
+        ):
+            has_deprecated = True
+
+        if has_deprecated:
             imports.add("warnings")
+
         if self.builtins_import:
             imports.add("builtins")
         return imports
@@ -489,35 +502,6 @@ class FieldCompiler(MessageCompiler):
         )
 
     @property
-    def default_value_string(self) -> str:
-        """Python representation of the default proto value."""
-        if self.repeated:
-            return "[]"
-        if self.optional:
-            return "None"
-        if self.py_type == "int":
-            return "0"
-        if self.py_type == "float":
-            return "0.0"
-        elif self.py_type == "bool":
-            return "False"
-        elif self.py_type == "str":
-            return '""'
-        elif self.py_type == "bytes":
-            return 'b""'
-        elif self.field_type == "enum":
-            enum_proto_obj_name = self.proto_obj.type_name.split(".").pop()
-            enum = next(
-                e
-                for e in self.output_file.enums
-                if e.proto_obj.name == enum_proto_obj_name
-            )
-            return enum.default_value_string
-        else:
-            # Message type
-            return "None"
-
-    @property
     def packed(self) -> bool:
         """True if the wire representation is a packed format."""
         return self.repeated and self.proto_obj.type in PROTO_PACKED_TYPES
@@ -677,14 +661,6 @@ class EnumDefinitionCompiler(MessageCompiler):
         ]
         super().__post_init__()  # call MessageCompiler __post_init__
 
-    @property
-    def default_value_string(self) -> str:
-        """Python representation of the default value for Enums.
-
-        As per the spec, this is the first value of the Enum.
-        """
-        return str(self.entries[0].value)  # ideally, should ALWAYS be int(0)!
-
 
 @dataclass
 class ServiceCompiler(ProtoContentBase):
@@ -744,30 +720,6 @@ class ServiceMethodCompiler(ProtoContentBase):
             f"{self.output_file.package}." if self.output_file.package else ""
         )
         return f"/{package_part}{self.parent.proto_name}/{self.proto_name}"
-
-    @property
-    def py_input_message(self) -> Optional[MessageCompiler]:
-        """Find the input message object.
-
-        Returns
-        -------
-        Optional[MessageCompiler]
-            Method instance representing the input message.
-            If not input message could be found or there are no
-            input messages, None is returned.
-        """
-        package, name = parse_source_type_name(self.proto_obj.input_type)
-
-        # Nested types are currently flattened without dots.
-        # Todo: keep a fully quantified name in types, that is
-        # comparable with method.input_type
-        for msg in self.request.all_messages:
-            if (
-                msg.py_name == pythonize_class_name(name.replace(".", ""))
-                and msg.output_file.package == package
-            ):
-                return msg
-        return None
 
     @property
     def py_input_message_type(self) -> str:

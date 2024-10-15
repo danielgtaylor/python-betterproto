@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package invalid_field;
+
+message Test {
+    int32 x = 1;
+}

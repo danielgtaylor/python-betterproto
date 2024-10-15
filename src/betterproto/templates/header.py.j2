@@ -5,16 +5,9 @@
 {% for i in output_file.python_module_imports|sort %}
 import {{ i }}
 {% endfor %}
-{% set type_checking_imported = False %}
 
 {% if output_file.pydantic_dataclasses %}
-from typing import TYPE_CHECKING
-{% set type_checking_imported = True %}
-
-if TYPE_CHECKING:
-    from dataclasses import dataclass
-else:
-    from pydantic.dataclasses import dataclass
+from pydantic.dataclasses import dataclass
 from pydantic.dataclasses import rebuild_dataclass
 {%- else -%}
 from dataclasses import dataclass
@@ -46,7 +39,7 @@ import grpclib
 {{ i }}
 {% endfor %}
 
-{% if output_file.imports_type_checking_only and not type_checking_imported %}
+{% if output_file.imports_type_checking_only %}
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
