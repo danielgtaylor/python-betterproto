@@ -26,5 +26,5 @@ import "other.proto";
 //           (root: Test & RootPackageMessage) <-------> (other: OtherPackageMessage)
 message Test {
   RootPackageMessage message = 1;
-  other.OtherPackageMessage other = 2;
+  other.OtherPackageMessage other_value = 2;
 }
