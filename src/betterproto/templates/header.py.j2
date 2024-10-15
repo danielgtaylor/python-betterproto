@@ -2,6 +2,20 @@
 # sources: {{ ', '.join(output_file.input_filenames) }}
 # plugin: python-betterproto
 # This file has been @generated
+
+__all__ = [
+    {%- for enum in output_file.enums %}
+        "{{ enum.py_name }}",
+    {%- endfor -%}
+    {%- for message in output_file.messages -%}
+        "{{ message.py_name }}",
+    {%- endfor -%}
+    {%- for service in output_file.services -%}
+        "{{ service.py_name }}Stub",
+        "{{ service.py_name }}Base",
+    {%- endfor -%}
+]
+
 {% for i in output_file.python_module_imports|sort %}
 import {{ i }}
 {% endfor %}
