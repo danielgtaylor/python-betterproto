@@ -146,28 +146,28 @@ class NoTyping310TypingCompiler(TypingCompiler):
         return type
 
     def optional(self, type: str) -> str:
-        return f'"{self._fmt(type)} | None"'
+        return f'{self._fmt(type)} | None'
 
     def list(self, type: str) -> str:
-        return f'"list[{self._fmt(type)}]"'
+        return f'list[{self._fmt(type)}]'
 
     def dict(self, key: str, value: str) -> str:
-        return f'"dict[{key}, {self._fmt(value)}]"'
+        return f'dict[{key}, {self._fmt(value)}]'
 
     def union(self, *types: str) -> str:
-        return f'"{" | ".join(map(self._fmt, types))}"'
+        return f'{" | ".join(map(self._fmt, types))}'
 
     def iterable(self, type: str) -> str:
         self._imports["collections.abc"].add("Iterable")
-        return f'"Iterable[{type}]"'
+        return f'Iterable[{type}]'
 
     def async_iterable(self, type: str) -> str:
         self._imports["collections.abc"].add("AsyncIterable")
-        return f'"AsyncIterable[{type}]"'
+        return f'AsyncIterable[{type}]'
 
     def async_iterator(self, type: str) -> str:
         self._imports["collections.abc"].add("AsyncIterator")
-        return f'"AsyncIterator[{type}]"'
+        return f'AsyncIterator[{type}]'
 
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         return {k: v if v else None for k, v in self._imports.items()}
