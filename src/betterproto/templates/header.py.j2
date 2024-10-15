@@ -8,7 +8,6 @@ import {{ i }}
 
 {% if output_file.pydantic_dataclasses %}
 from pydantic.dataclasses import dataclass
-from pydantic.dataclasses import rebuild_dataclass
 {%- else -%}
 from dataclasses import dataclass
 {% endif %}
