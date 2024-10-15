@@ -35,10 +35,6 @@ from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
 {% endif %}
 
-{% for i in output_file.imports|sort %}
-{{ i }}
-{% endfor %}
-
 {% if output_file.imports_type_checking_only %}
 from typing import TYPE_CHECKING
 

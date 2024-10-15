@@ -238,7 +238,7 @@ class OutputTemplate:
     parent_request: PluginRequestCompiler
     package_proto_obj: FileDescriptorProto
     input_files: List[str] = field(default_factory=list)
-    imports: Set[str] = field(default_factory=set)
+    imports_end: Set[str] = field(default_factory=set)
     datetime_imports: Set[str] = field(default_factory=set)
     pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
@@ -532,7 +532,7 @@ class FieldCompiler(MessageCompiler):
             # Type referencing another defined Message or a named enum
             return get_type_reference(
                 package=self.output_file.package,
-                imports=self.output_file.imports,
+                imports=self.output_file.imports_end,
                 source_type=self.proto_obj.type_name,
                 typing_compiler=self.typing_compiler,
                 pydantic=self.output_file.pydantic_dataclasses,
@@ -730,7 +730,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         """
         return get_type_reference(
             package=self.output_file.package,
-            imports=self.output_file.imports,
+            imports=self.output_file.imports_end,
             source_type=self.proto_obj.input_type,
             typing_compiler=self.output_file.typing_compiler,
             unwrap=False,
@@ -760,7 +760,7 @@ class ServiceMethodCompiler(ProtoContentBase):
         """
         return get_type_reference(
             package=self.output_file.package,
-            imports=self.output_file.imports,
+            imports=self.output_file.imports_end,
             source_type=self.proto_obj.output_type,
             typing_compiler=self.output_file.typing_compiler,
             unwrap=False,

@@ -143,6 +143,10 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% endfor %}
 {% endfor %}
 
+{% for i in output_file.imports_end %}
+{{ i }}
+{% endfor %}
+
 {% for service in output_file.services %}
 class {{ service.py_name }}Base(ServiceBase):
     {% if service.comment %}
