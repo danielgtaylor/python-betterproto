@@ -77,14 +77,14 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             , {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: {{ output_file.typing_compiler.union(output_file.typing_compiler.async_iterable(method.py_input_message_type), output_file.typing_compiler.iterable(method.py_input_message_type)) }}
+            , {{ method.py_input_message_param }}_iterator: "{{ output_file.typing_compiler.union(output_file.typing_compiler.async_iterable(method.py_input_message_type), output_file.typing_compiler.iterable(method.py_input_message_type)) }}"
         {%- endif -%}
             ,
             *
             , timeout: {{ output_file.typing_compiler.optional("float") }} = None
             , deadline: {{ output_file.typing_compiler.optional('"Deadline"') }} = None
             , metadata: {{ output_file.typing_compiler.optional('"MetadataLike"') }} = None
-            ) -> {% if method.server_streaming %}{{ output_file.typing_compiler.async_iterator(method.py_output_message_type ) }}{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> "{% if method.server_streaming %}{{ output_file.typing_compiler.async_iterator(method.py_output_message_type ) }}{% else %}{{ method.py_output_message_type }}{% endif %}":
         {% if method.comment %}
 {{ method.comment }}
 
