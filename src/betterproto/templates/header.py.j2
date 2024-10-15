@@ -3,8 +3,8 @@
 # plugin: python-betterproto
 # This file has been @generated
 
-__all__ = [
-    {%- for enum in output_file.enums %}
+__all__ = (
+    {%- for enum in output_file.enums -%}
         "{{ enum.py_name }}",
     {%- endfor -%}
     {%- for message in output_file.messages -%}
@@ -14,7 +14,7 @@ __all__ = [
         "{{ service.py_name }}Stub",
         "{{ service.py_name }}Base",
     {%- endfor -%}
-]
+)
 
 {% for i in output_file.python_module_imports|sort %}
 import {{ i }}
