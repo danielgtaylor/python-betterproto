@@ -485,13 +485,6 @@ class FieldCompiler(MessageCompiler):
         return self.proto_obj.proto3_optional
 
     @property
-    def mutable(self) -> bool:
-        """True if the field is a mutable type, otherwise False."""
-        return self.annotation.startswith(
-            ("typing.List[", "typing.Dict[", "dict[", "list[", "Dict[", "List[")
-        )
-
-    @property
     def field_type(self) -> str:
         """String representation of proto field type."""
         return (
