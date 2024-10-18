@@ -100,9 +100,9 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
             request_data.output_packages[output_package_name].output = False
 
         if "pydantic_dataclasses" in plugin_options:
-            request_data.output_packages[
-                output_package_name
-            ].pydantic_dataclasses = True
+            request_data.output_packages[output_package_name].pydantic_dataclasses = (
+                True
+            )
 
         # Gather any typing generation options.
         typing_opts = [
@@ -114,17 +114,17 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         # Set the compiler type.
         typing_opt = typing_opts[0] if typing_opts else "direct"
         if typing_opt == "direct":
-            request_data.output_packages[
-                output_package_name
-            ].typing_compiler = DirectImportTypingCompiler()
+            request_data.output_packages[output_package_name].typing_compiler = (
+                DirectImportTypingCompiler()
+            )
         elif typing_opt == "root":
-            request_data.output_packages[
-                output_package_name
-            ].typing_compiler = TypingImportTypingCompiler()
+            request_data.output_packages[output_package_name].typing_compiler = (
+                TypingImportTypingCompiler()
+            )
         elif typing_opt == "310":
-            request_data.output_packages[
-                output_package_name
-            ].typing_compiler = NoTyping310TypingCompiler()
+            request_data.output_packages[output_package_name].typing_compiler = (
+                NoTyping310TypingCompiler()
+            )
 
     # Read Messages and Enums
     # We need to read Messages before Services in so that we can
@@ -249,12 +249,21 @@ def read_protobuf_type(
 
 
 def read_protobuf_service(
-    source_file: FileDescriptorProto, service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
+    source_file: FileDescriptorProto,
+    service: ServiceDescriptorProto,
+    index: int,
+    output_package: OutputTemplate,
 ) -> None:
     service_data = ServiceCompiler(
-        source_file=source_file, parent=output_package, proto_obj=service, path=[6, index]
+        source_file=source_file,
+        parent=output_package,
+        proto_obj=service,
+        path=[6, index],
     )
     for j, method in enumerate(service.method):
         ServiceMethodCompiler(
-            source_file=source_file, parent=service_data, proto_obj=method, path=[6, index, 2, j]
+            source_file=source_file,
+            parent=service_data,
+            proto_obj=method,
+            path=[6, index, 2, j],
         )

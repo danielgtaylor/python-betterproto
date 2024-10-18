@@ -3,7 +3,12 @@ import inspect
 
 
 def test_documentation():
-    from .output_betterproto.documentation import Enum, Test, ServiceBase, ServiceStub
+    from .output_betterproto.documentation import (
+        Enum,
+        ServiceBase,
+        ServiceStub,
+        Test,
+    )
 
     assert Test.__doc__ == "Documentation of message"
 
