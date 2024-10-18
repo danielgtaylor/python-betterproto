@@ -1,0 +1,20 @@
+syntax = "proto3";
+package documentation;
+
+// Documentation of message
+message Test {
+    // Documentation of field
+    uint32 x = 1;
+}
+
+// Documentation of enum
+enum Enum {
+    // Documentation of variant
+    Enum_Variant = 0;
+}
+
+// Documentation of service
+service Service {
+    // Documentation of method
+    rpc get(Test) returns (Test);
+}

@@ -143,7 +143,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     for output_package_name, output_package in request_data.output_packages.items():
         for proto_input_file in output_package.input_files:
             for index, service in enumerate(proto_input_file.service):
-                read_protobuf_service(service, index, output_package)
+                read_protobuf_service(proto_input_file, service, index, output_package)
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
@@ -249,12 +249,21 @@ def read_protobuf_type(
 
 
 def read_protobuf_service(
-    service: ServiceDescriptorProto, index: int, output_package: OutputTemplate
+    source_file: FileDescriptorProto,
+    service: ServiceDescriptorProto,
+    index: int,
+    output_package: OutputTemplate,
 ) -> None:
     service_data = ServiceCompiler(
-        parent=output_package, proto_obj=service, path=[6, index]
+        source_file=source_file,
+        parent=output_package,
+        proto_obj=service,
+        path=[6, index],
     )
     for j, method in enumerate(service.method):
         ServiceMethodCompiler(
-            parent=service_data, proto_obj=method, path=[6, index, 2, j]
+            source_file=source_file,
+            parent=service_data,
+            proto_obj=method,
+            path=[6, index, 2, j],
         )

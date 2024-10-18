@@ -661,6 +661,7 @@ class EnumDefinitionCompiler(MessageCompiler):
 
 @dataclass
 class ServiceCompiler(ProtoContentBase):
+    source_file: FileDescriptorProto
     parent: OutputTemplate = PLACEHOLDER
     proto_obj: DescriptorProto = PLACEHOLDER
     path: List[int] = PLACEHOLDER
@@ -682,6 +683,7 @@ class ServiceCompiler(ProtoContentBase):
 
 @dataclass
 class ServiceMethodCompiler(ProtoContentBase):
+    source_file: FileDescriptorProto
     parent: ServiceCompiler
     proto_obj: MethodDescriptorProto
     path: List[int] = PLACEHOLDER
