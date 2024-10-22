@@ -169,7 +169,7 @@ def get_comment(
                 lines.append("")
 
             if lines:
-                lines.pop() # Remove the last empty line
+                lines.pop()  # Remove the last empty line
 
             # It is common for one line comments to start with a space, for example: // comment
             # We don't add this space to the generated file.
