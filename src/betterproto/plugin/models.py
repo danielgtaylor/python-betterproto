@@ -153,11 +153,30 @@ def get_comment(
 ) -> str:
     pad = " " * indent
     for sci_loc in proto_file.source_code_info.location:
-        if list(sci_loc.path) == path and sci_loc.leading_comments:
-            lines = sci_loc.leading_comments.strip().split("\n")
+        if list(sci_loc.path) == path:
+            lines = []
+
+            for comment in sci_loc.leading_detached_comments:
+                lines += comment.strip().split("\n")
+                lines.append("")
+
+            if sci_loc.leading_comments:
+                lines += sci_loc.leading_comments.strip().split("\n")
+                lines.append("")
+
+            if sci_loc.trailing_comments:
+                lines += sci_loc.trailing_comments.strip().split("\n")
+                lines.append("")
+
+            if lines:
+                lines.pop() # Remove the last empty line
+
+            # It is common for one line comments to start with a space, for example: // comment
+            # We don't add this space to the generated file.
+            lines = [line[1:] if line and line[0] == " " else line for line in lines]
+
             # This is a field, message, enum, service, or method
             if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
-                lines[0] = lines[0].strip('"')
                 return f'{pad}"""{lines[0]}"""'
             else:
                 joined = f"\n{pad}".join(lines)
