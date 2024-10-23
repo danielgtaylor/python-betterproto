@@ -2,7 +2,14 @@ import ast
 import inspect
 
 
-def test_documentation():
+def check(generated_doc: str, type: str) -> None:
+    assert f"Documentation of {type} 1" in generated_doc
+    assert "other line 1" in generated_doc
+    assert f"Documentation of {type} 2" in generated_doc
+    assert "other line 2" in generated_doc
+    assert f"Documentation of {type} 3" in generated_doc
+
+def test_documentation() -> None:
     from .output_betterproto.documentation import (
         Enum,
         ServiceBase,
@@ -10,20 +17,20 @@ def test_documentation():
         Test,
     )
 
-    assert Test.__doc__ == "Documentation of message"
+    check(Test.__doc__, "message")
 
     source = inspect.getsource(Test)
     tree = ast.parse(source)
-    assert tree.body[0].body[2].value.value == "Documentation of field"
+    check(tree.body[0].body[2].value.value, "field")
 
-    assert Enum.__doc__ == "Documentation of enum"
+    check(Enum.__doc__, "enum")
 
     source = inspect.getsource(Enum)
     tree = ast.parse(source)
-    assert tree.body[0].body[2].value.value == "Documentation of variant"
+    check(tree.body[0].body[2].value.value, "variant")
 
-    assert ServiceBase.__doc__ == "Documentation of service"
-    assert ServiceBase.get.__doc__ == "Documentation of method"
+    check(ServiceBase.__doc__, "service")
+    check(ServiceBase.get.__doc__, "method")
 
-    assert ServiceStub.__doc__ == "Documentation of service"
-    assert ServiceStub.get.__doc__ == "Documentation of method"
+    check(ServiceStub.__doc__, "service")
+    check(ServiceStub.get.__doc__, "method")
