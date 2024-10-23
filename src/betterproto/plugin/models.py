@@ -154,21 +154,22 @@ def get_comment(
     pad = " " * indent
     for sci_loc in proto_file.source_code_info.location:
         if list(sci_loc.path) == path:
+            all_comments = list(sci_loc.leading_detached_comments)
+            if sci_loc.leading_comments:
+                all_comments.append(sci_loc.leading_comments)
+            if sci_loc.trailing_comments:
+                all_comments.append(sci_loc.trailing_comments)
+
             lines = []
 
-            for comment in sci_loc.leading_detached_comments:
-                lines += comment.strip().split("\n")
+            for comment in all_comments:
+                lines += comment.split("\n")
                 lines.append("")
 
-            if sci_loc.leading_comments:
-                lines += sci_loc.leading_comments.strip().split("\n")
-                lines.append("")
+            # Remove consecutive empty lines
+            lines = [line for i, line in enumerate(lines) if line or (i == 0 or lines[i - 1])]
 
-            if sci_loc.trailing_comments:
-                lines += sci_loc.trailing_comments.strip().split("\n")
-                lines.append("")
-
-            if lines:
+            if lines and not lines[-1]:
                 lines.pop()  # Remove the last empty line
 
             # It is common for one line comments to start with a space, for example: // comment
