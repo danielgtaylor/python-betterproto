@@ -9,6 +9,7 @@ def check(generated_doc: str, type: str) -> None:
     assert "other line 2" in generated_doc
     assert f"Documentation of {type} 3" in generated_doc
 
+
 def test_documentation() -> None:
     from .output_betterproto.documentation import (
         Enum,

@@ -167,7 +167,9 @@ def get_comment(
                 lines.append("")
 
             # Remove consecutive empty lines
-            lines = [line for i, line in enumerate(lines) if line or (i == 0 or lines[i - 1])]
+            lines = [
+                line for i, line in enumerate(lines) if line or (i == 0 or lines[i - 1])
+            ]
 
             if lines and not lines[-1]:
                 lines.pop()  # Remove the last empty line
