@@ -625,7 +625,7 @@ class MapEntryCompiler(FieldCompiler):
                 # Get proto types
                 self.proto_k_type = FieldDescriptorProtoType(nested.field[0].type).name
                 self.proto_v_type = FieldDescriptorProtoType(nested.field[1].type).name
-        super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
+        super().__post_init__()
 
     @property
     def betterproto_field_args(self) -> List[str]:
