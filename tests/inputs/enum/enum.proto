@@ -6,6 +6,7 @@ package enum;
 message Test {
   Choice choice = 1;
   repeated Choice choices = 2;
+  ArithmeticOperator op = 3;
 }
 
 enum Choice {
