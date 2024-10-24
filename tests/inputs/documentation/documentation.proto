@@ -1,20 +1,44 @@
 syntax = "proto3";
 package documentation;
 
-// Documentation of message
-message Test {
-    // Documentation of field
-    uint32 x = 1;
+// Documentation of message 1
+// other line 1
+
+// Documentation of message 2
+// other line 2
+message Test { // Documentation of message 3
+    // Documentation of field 1
+    // other line 1
+
+    // Documentation of field 2
+    // other line 2
+    uint32 x = 1; // Documentation of field 3
 }
 
-// Documentation of enum
-enum Enum {
-    // Documentation of variant
-    Enum_Variant = 0;
+// Documentation of enum 1
+// other line 1
+
+// Documentation of enum 2
+// other line 2
+enum Enum { // Documentation of enum 3
+    // Documentation of variant 1
+    // other line 1
+
+    // Documentation of variant 2
+    // other line 2
+    Enum_Variant = 0; // Documentation of variant 3
 }
 
-// Documentation of service
-service Service {
-    // Documentation of method
-    rpc get(Test) returns (Test);
+// Documentation of service 1
+// other line 1
+
+// Documentation of service 2
+// other line 2
+service Service { // Documentation of service 3
+    // Documentation of method 1
+    // other line 1
+
+    // Documentation of method 2
+    // other line 2
+    rpc get(Test) returns (Test); // Documentation of method 3
 }
