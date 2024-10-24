@@ -228,6 +228,10 @@ class ProtoContentBase:
             proto_file=self.source_file, path=self.path, indent=self.comment_indent
         )
 
+    @property
+    def deprecated(self) -> bool:
+        return self.proto_obj.options.deprecated
+
 
 @dataclass
 class PluginRequestCompiler:
@@ -329,7 +333,6 @@ class MessageCompiler(ProtoContentBase):
     fields: List[Union["FieldCompiler", "MessageCompiler"]] = field(
         default_factory=list
     )
-    deprecated: bool = field(default=False, init=False)
     builtins_types: Set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
@@ -339,7 +342,6 @@ class MessageCompiler(ProtoContentBase):
                 self.output_file.enums.append(self)
             else:
                 self.output_file.messages.append(self)
-        self.deprecated = self.proto_obj.options.deprecated
         super().__post_init__()
 
     @property
@@ -417,16 +419,22 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
 
 
 @dataclass
-class FieldCompiler(MessageCompiler):
+class FieldCompiler(ProtoContentBase):
+    source_file: FileDescriptorProto
+    typing_compiler: TypingCompiler
+    path: List[int] = PLACEHOLDER
+    builtins_types: Set[str] = field(default_factory=set)
+
     parent: MessageCompiler = PLACEHOLDER
     proto_obj: FieldDescriptorProto = PLACEHOLDER
 
     def __post_init__(self) -> None:
         # Add field to message
-        self.parent.fields.append(self)
+        if isinstance(self.parent, MessageCompiler):  # TODO make this useless
+            self.parent.fields.append(self)
         # Check for new imports
         self.add_imports_to(self.output_file)
-        super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
+        super().__post_init__()
 
     def get_field_string(self, indent: int = 4) -> str:
         """Construct string representation of this field as a field."""
