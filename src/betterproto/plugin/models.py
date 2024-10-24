@@ -329,12 +329,6 @@ class MessageCompiler(ProtoContentBase):
         return pythonize_class_name(self.proto_name)
 
     @property
-    def annotation(self) -> str:
-        if self.repeated:
-            return self.typing_compiler.list(self.py_name)
-        return self.py_name
-
-    @property
     def deprecated_fields(self) -> Iterator[str]:
         for f in self.fields:
             if f.deprecated:
