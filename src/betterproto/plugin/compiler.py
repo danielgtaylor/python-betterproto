@@ -32,6 +32,7 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
         trim_blocks=True,
         lstrip_blocks=True,
         loader=jinja2.FileSystemLoader(templates_folder),
+        undefined=jinja2.StrictUndefined,
     )
     # Load the body first so we have a compleate list of imports needed.
     body_template = env.get_template("template.py.j2")
