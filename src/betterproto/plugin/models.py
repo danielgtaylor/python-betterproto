@@ -214,10 +214,7 @@ class ProtoContentBase:
 
     @property
     def request(self) -> "PluginRequestCompiler":
-        current = self
-        while not isinstance(current, OutputTemplate):
-            current = current.parent
-        return current.parent_request
+        return self.output_file.parent_request
 
     @property
     def comment(self) -> str:
@@ -430,7 +427,7 @@ class FieldCompiler(ProtoContentBase):
 
     def __post_init__(self) -> None:
         # Add field to message
-        if isinstance(self.parent, MessageCompiler):  # TODO make this useless
+        if isinstance(self.parent, MessageCompiler):
             self.parent.fields.append(self)
         # Check for new imports
         self.add_imports_to(self.output_file)
