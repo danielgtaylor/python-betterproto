@@ -17,8 +17,8 @@ from .naming import pythonize_class_name
 
 
 if TYPE_CHECKING:
-    from ..plugin.typing_compiler import TypingCompiler
     from ..plugin.models import PluginRequestCompiler
+    from ..plugin.typing_compiler import TypingCompiler
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,
@@ -33,7 +33,9 @@ WRAPPER_TYPES: Dict[str, Type] = {
 }
 
 
-def parse_source_type_name(field_type_name: str, request: "PluginRequestCompiler") -> Tuple[str, str]:
+def parse_source_type_name(
+    field_type_name: str, request: "PluginRequestCompiler"
+) -> Tuple[str, str]:
     """
     Split full source type name into package and type name.
     E.g. 'root.package.Message' -> ('root.package', 'Message')

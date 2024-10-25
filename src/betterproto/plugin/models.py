@@ -65,9 +65,7 @@ from betterproto.lib.google.protobuf import (
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
 from .. import which_one_of
-from ..compile.importing import (
-    get_type_reference,
-)
+from ..compile.importing import get_type_reference
 from ..compile.naming import (
     pythonize_class_name,
     pythonize_enum_member_name,
@@ -247,7 +245,9 @@ class PluginRequestCompiler:
             List of all of the messages in this request.
         """
         return [
-            msg for output in self.output_packages.values() for msg in output.messages.values()
+            msg
+            for output in self.output_packages.values()
+            for msg in output.messages.values()
         ]
 
 
