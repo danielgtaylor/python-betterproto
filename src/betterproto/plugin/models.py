@@ -462,15 +462,14 @@ class FieldCompiler(ProtoContentBase):
 
     @property
     def datetime_imports(self) -> Set[str]:
-        # imports = set()
-        # annotation = self.annotation
-        # # FIXME: false positives - e.g. `MyDatetimedelta`
-        # if "timedelta" in annotation:
-        #     imports.add("timedelta")
-        # if "datetime" in annotation:
-        #     imports.add("datetime")
-        # return imports
-        return {"timedelta", "datetime"}
+        imports = set()
+        annotation = self.annotation
+        # FIXME: false positives - e.g. `MyDatetimedelta`
+        if "timedelta" in annotation:
+            imports.add("timedelta")
+        if "datetime" in annotation:
+            imports.add("datetime")
+        return imports
 
     @property
     def pydantic_imports(self) -> Set[str]:
