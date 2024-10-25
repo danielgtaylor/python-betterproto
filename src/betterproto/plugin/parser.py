@@ -40,7 +40,6 @@ from .models import (
 from .typing_compiler import (
     DirectImportTypingCompiler,
     NoTyping310TypingCompiler,
-    TypingCompiler,
     TypingImportTypingCompiler,
 )
 
@@ -61,7 +60,9 @@ def traverse(
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
-            item.name = next_prefix = f"{prefix}.{item.name}" if prefix else item.name
+            should_rename = not isinstance(item, DescriptorProto) or not item.options.map_entry
+
+            item.name = next_prefix = f"{prefix}.{item.name}" if prefix and should_rename else item.name
             yield item, [*path, i]
 
             if isinstance(item, DescriptorProto):
@@ -144,6 +145,21 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         for proto_input_file in output_package.input_files:
             for index, service in enumerate(proto_input_file.service):
                 read_protobuf_service(proto_input_file, service, index, output_package)
+
+    # All the hierarchy is ready. We can perform pre-computations before generating the output files
+    for package in request_data.output_packages.values():
+        for message in package.messages.values():
+            for field in message.fields:
+                field.ready()
+            message.ready()
+        for enum in package.enums.values():
+            for variant in enum.fields:
+                variant.ready()
+            enum.ready()
+        for service in package.services.values():
+            for method in service.methods:
+                method.ready()
+            service.ready()
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()

@@ -204,6 +204,9 @@ class ProtoContentBase:
             if field_val is PLACEHOLDER:
                 raise ValueError(f"`{field_name}` is a required field.")
 
+    def ready(self) -> None:
+        pass
+
     @property
     def output_file(self) -> "OutputTemplate":
         current = self
@@ -428,9 +431,11 @@ class FieldCompiler(ProtoContentBase):
         # Add field to message
         if isinstance(self.parent, MessageCompiler):
             self.parent.fields.append(self)
+        super().__post_init__()
+
+    def ready(self) -> None:
         # Check for new imports
         self.add_imports_to(self.output_file)
-        super().__post_init__()
 
     def get_field_string(self, indent: int = 4) -> str:
         """Construct string representation of this field as a field."""
@@ -473,10 +478,9 @@ class FieldCompiler(ProtoContentBase):
 
     @property
     def use_builtins(self) -> bool:
-        return False
-        # return self.py_type in self.parent.builtins_types or (
-        #     self.py_type == self.py_name and self.py_name in dir(builtins)
-        # )
+        return self.py_type in self.parent.builtins_types or (
+            self.py_type == self.py_name and self.py_name in dir(builtins)
+        )
 
     def add_imports_to(self, output_file: OutputTemplate) -> None:
         output_file.datetime_imports.update(self.datetime_imports)
@@ -594,12 +598,22 @@ class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
 
 @dataclass
 class MapEntryCompiler(FieldCompiler):
-    py_k_type: Type = PLACEHOLDER
-    py_v_type: Type = PLACEHOLDER
-    proto_k_type: str = PLACEHOLDER
-    proto_v_type: str = PLACEHOLDER
+    py_k_type: Type = None
+    py_v_type: Type = None
+    proto_k_type: str = ""
+    proto_v_type: str = ""
 
-    def __post_init__(self) -> None:
+    def __post_init__(self):
+        map_entry = f"{self.proto_obj.name.replace('_', '').lower()}entry"
+        for nested in self.parent.proto_obj.nested_type:
+            if (
+                nested.name.replace("_", "").lower() == map_entry
+                and nested.options.map_entry
+            ):
+                pass
+        return super().__post_init__()
+
+    def ready(self) -> None:
         """Explore nested types and set k_type and v_type if unset."""
         map_entry = f"{self.proto_obj.name.replace('_', '').lower()}entry"
         for nested in self.parent.proto_obj.nested_type:
@@ -624,7 +638,9 @@ class MapEntryCompiler(FieldCompiler):
                 # Get proto types
                 self.proto_k_type = FieldDescriptorProtoType(nested.field[0].type).name
                 self.proto_v_type = FieldDescriptorProtoType(nested.field[1].type).name
-        super().__post_init__()
+                return
+
+        raise ValueError("can't find enum")
 
     @property
     def betterproto_field_args(self) -> List[str]:
