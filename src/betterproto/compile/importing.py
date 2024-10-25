@@ -18,6 +18,7 @@ from .naming import pythonize_class_name
 
 if TYPE_CHECKING:
     from ..plugin.typing_compiler import TypingCompiler
+    from ..plugin.models import PluginRequestCompiler
 
 WRAPPER_TYPES: Dict[str, Type] = {
     ".google.protobuf.DoubleValue": google_protobuf.DoubleValue,
@@ -32,12 +33,46 @@ WRAPPER_TYPES: Dict[str, Type] = {
 }
 
 
-def parse_source_type_name(field_type_name: str) -> Tuple[str, str]:
+def parse_source_type_name(field_type_name: str, request: "PluginRequestCompiler") -> Tuple[str, str]:
     """
     Split full source type name into package and type name.
     E.g. 'root.package.Message' -> ('root.package', 'Message')
          'root.Message.SomeEnum' -> ('root', 'Message.SomeEnum')
     """
+    if field_type_name[0] != ".":
+        raise RuntimeError
+    field_type_name = field_type_name[1:]
+    parts = field_type_name.split(".")
+
+    answer = None
+
+    # a.b.c:
+    # i=0: "", "a.b.c"
+    # i=1: "a", "b.c"
+    # i=2: "a.b", "c"
+    for i in range(len(parts)):
+        if i == 0:  # TODO
+            continue
+
+        package_name, object_name = ".".join(parts[:i]), ".".join(parts[i:])
+        import sys
+        print("Trying", package_name, "|", object_name, file=sys.stderr)
+
+
+        if package := request.output_packages.get(package_name):
+            print("->", list(package.messages.keys()), file=sys.stderr)
+            print("->", list(package.enums.keys()), file=sys.stderr)
+            if object_name in package.messages or object_name in package.enums:
+                if answer:
+                    raise ValueError(f"ambiguous definition: {field_type_name}")
+                answer = package_name, object_name
+
+    if answer:
+        return answer
+
+    raise ValueError(f"can't find type name: {field_type_name}")
+
+
     package_match = re.match(r"^\.?([^A-Z]+)\.(.+)", field_type_name)
     if package_match:
         package = package_match.group(1)
@@ -54,6 +89,7 @@ def get_type_reference(
     imports: set,
     source_type: str,
     typing_compiler: TypingCompiler,
+    request: "PluginRequestCompiler",
     unwrap: bool = True,
     pydantic: bool = False,
 ) -> str:
@@ -72,7 +108,7 @@ def get_type_reference(
         elif source_type == ".google.protobuf.Timestamp":
             return "datetime"
 
-    source_package, source_type = parse_source_type_name(source_type)
+    source_package, source_type = parse_source_type_name(source_type, request)
 
     current_package: List[str] = package.split(".") if package else []
     py_package: List[str] = source_package.split(".") if source_package else []

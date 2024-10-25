@@ -67,7 +67,6 @@ from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 from .. import which_one_of
 from ..compile.importing import (
     get_type_reference,
-    parse_source_type_name,
 )
 from ..compile.naming import (
     pythonize_class_name,
@@ -458,14 +457,15 @@ class FieldCompiler(ProtoContentBase):
 
     @property
     def datetime_imports(self) -> Set[str]:
-        imports = set()
-        annotation = self.annotation
-        # FIXME: false positives - e.g. `MyDatetimedelta`
-        if "timedelta" in annotation:
-            imports.add("timedelta")
-        if "datetime" in annotation:
-            imports.add("datetime")
-        return imports
+        # imports = set()
+        # annotation = self.annotation
+        # # FIXME: false positives - e.g. `MyDatetimedelta`
+        # if "timedelta" in annotation:
+        #     imports.add("timedelta")
+        # if "datetime" in annotation:
+        #     imports.add("datetime")
+        # return imports
+        return {"timedelta", "datetime"}
 
     @property
     def pydantic_imports(self) -> Set[str]:
@@ -473,9 +473,10 @@ class FieldCompiler(ProtoContentBase):
 
     @property
     def use_builtins(self) -> bool:
-        return self.py_type in self.parent.builtins_types or (
-            self.py_type == self.py_name and self.py_name in dir(builtins)
-        )
+        return False
+        # return self.py_type in self.parent.builtins_types or (
+        #     self.py_type == self.py_name and self.py_name in dir(builtins)
+        # )
 
     def add_imports_to(self, output_file: OutputTemplate) -> None:
         output_file.datetime_imports.update(self.datetime_imports)
@@ -549,6 +550,7 @@ class FieldCompiler(ProtoContentBase):
                 imports=self.output_file.imports_end,
                 source_type=self.proto_obj.type_name,
                 typing_compiler=self.typing_compiler,
+                request=self.request,
                 pydantic=self.output_file.pydantic_dataclasses,
             )
         else:
@@ -749,6 +751,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports_end,
             source_type=self.proto_obj.input_type,
             typing_compiler=self.output_file.typing_compiler,
+            request=self.request,
             unwrap=False,
             pydantic=self.output_file.pydantic_dataclasses,
         ).strip('"')
@@ -779,6 +782,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports_end,
             source_type=self.proto_obj.output_type,
             typing_compiler=self.output_file.typing_compiler,
+            request=self.request,
             unwrap=False,
             pydantic=self.output_file.pydantic_dataclasses,
         ).strip('"')
