@@ -51,9 +51,6 @@ def parse_source_type_name(field_type_name: str, request: "PluginRequestCompiler
     # i=1: "a", "b.c"
     # i=2: "a.b", "c"
     for i in range(len(parts)):
-        if i == 0:  # TODO
-            continue
-
         package_name, object_name = ".".join(parts[:i]), ".".join(parts[i:])
 
         if package := request.output_packages.get(package_name):
