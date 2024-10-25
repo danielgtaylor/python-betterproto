@@ -22,7 +22,7 @@ class {{ enum.py_name }}(betterproto.Enum):
 
 {% endfor %}
 {% endif %}
-{% for message in output_file.messages %}
+{% for _, message in output_file.messages|dictsort(by="key") %}
 {% if output_file.pydantic_dataclasses %}
 @dataclass(eq=False, repr=False, config={"extra": "forbid"})
 {% else %}

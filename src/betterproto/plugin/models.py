@@ -245,7 +245,7 @@ class PluginRequestCompiler:
             List of all of the messages in this request.
         """
         return [
-            msg for output in self.output_packages.values() for msg in output.messages
+            msg for output in self.output_packages.values() for msg in output.messages.values()
         ]
 
 
@@ -265,7 +265,7 @@ class OutputTemplate:
     datetime_imports: Set[str] = field(default_factory=set)
     pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
-    messages: List["MessageCompiler"] = field(default_factory=list)
+    messages: Dict[str, "MessageCompiler"] = field(default_factory=dict)
     enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
     services: List["ServiceCompiler"] = field(default_factory=list)
     imports_type_checking_only: Set[str] = field(default_factory=set)
@@ -300,9 +300,9 @@ class OutputTemplate:
         imports = set()
 
         has_deprecated = False
-        if any(m.deprecated for m in self.messages):
+        if any(m.deprecated for m in self.messages.values()):
             has_deprecated = True
-        if any(x for x in self.messages if any(x.deprecated_fields)):
+        if any(x for x in self.messages.values() if any(x.deprecated_fields)):
             has_deprecated = True
         if any(
             any(m.proto_obj.options.deprecated for m in s.methods)
@@ -338,7 +338,7 @@ class MessageCompiler(ProtoContentBase):
             if isinstance(self, EnumDefinitionCompiler):
                 self.output_file.enums.append(self)
             else:
-                self.output_file.messages.append(self)
+                self.output_file.messages[self.proto_name] = self
         super().__post_init__()
 
     @property
