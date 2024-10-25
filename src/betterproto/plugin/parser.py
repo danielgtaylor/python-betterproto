@@ -61,7 +61,7 @@ def traverse(
         for i, item in enumerate(items):
             # Adjust the name since we flatten the hierarchy.
             # Todo: don't change the name, but include full name in returned tuple
-            item.name = next_prefix = f"{prefix}_{item.name}"
+            item.name = next_prefix = f"{prefix}.{item.name}"
             yield item, [*path, i]
 
             if isinstance(item, DescriptorProto):
