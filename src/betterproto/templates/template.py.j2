@@ -1,4 +1,4 @@
-{% if output_file.enums %}{% for enum in output_file.enums %}
+{% if output_file.enums %}{% for _, enum in output_file.enums|dictsort(by="key") %}
 class {{ enum.py_name }}(betterproto.Enum):
     {% if enum.comment %}
 {{ enum.comment }}
@@ -63,7 +63,7 @@ class {{ message.py_name }}(betterproto.Message):
     {%  endif %}
 
 {% endfor %}
-{% for service in output_file.services %}
+{% for _, service in output_file.services|dictsort(by="key") %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
 {{ service.comment }}
@@ -147,7 +147,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {{ i }}
 {% endfor %}
 
-{% for service in output_file.services %}
+{% for _, service in output_file.services|dictsort(by="key") %}
 class {{ service.py_name }}Base(ServiceBase):
     {% if service.comment %}
 {{ service.comment }}

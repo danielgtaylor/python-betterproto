@@ -266,8 +266,8 @@ class OutputTemplate:
     pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
     messages: Dict[str, "MessageCompiler"] = field(default_factory=dict)
-    enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
-    services: List["ServiceCompiler"] = field(default_factory=list)
+    enums: Dict[str, "EnumDefinitionCompiler"] = field(default_factory=dict)
+    services: Dict[str, "ServiceCompiler"] = field(default_factory=dict)
     imports_type_checking_only: Set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
     output: bool = True
@@ -306,7 +306,7 @@ class OutputTemplate:
             has_deprecated = True
         if any(
             any(m.proto_obj.options.deprecated for m in s.methods)
-            for s in self.services
+            for s in self.services.values()
         ):
             has_deprecated = True
 
@@ -336,7 +336,7 @@ class MessageCompiler(ProtoContentBase):
         # Add message to output file
         if isinstance(self.parent, OutputTemplate):
             if isinstance(self, EnumDefinitionCompiler):
-                self.output_file.enums.append(self)
+                self.output_file.enums[self.proto_name] = self
             else:
                 self.output_file.messages[self.proto_name] = self
         super().__post_init__()
@@ -683,7 +683,7 @@ class ServiceCompiler(ProtoContentBase):
 
     def __post_init__(self) -> None:
         # Add service to output file
-        self.output_file.services.append(self)
+        self.output_file.services[self.proto_name] = self
         super().__post_init__()  # check for unset fields
 
     @property
