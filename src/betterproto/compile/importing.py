@@ -55,13 +55,8 @@ def parse_source_type_name(field_type_name: str, request: "PluginRequestCompiler
             continue
 
         package_name, object_name = ".".join(parts[:i]), ".".join(parts[i:])
-        import sys
-        print("Trying", package_name, "|", object_name, file=sys.stderr)
-
 
         if package := request.output_packages.get(package_name):
-            print("->", list(package.messages.keys()), file=sys.stderr)
-            print("->", list(package.enums.keys()), file=sys.stderr)
             if object_name in package.messages or object_name in package.enums:
                 if answer:
                     raise ValueError(f"ambiguous definition: {field_type_name}")
@@ -71,16 +66,6 @@ def parse_source_type_name(field_type_name: str, request: "PluginRequestCompiler
         return answer
 
     raise ValueError(f"can't find type name: {field_type_name}")
-
-
-    package_match = re.match(r"^\.?([^A-Z]+)\.(.+)", field_type_name)
-    if package_match:
-        package = package_match.group(1)
-        name = package_match.group(2)
-    else:
-        package = ""
-        name = field_type_name.lstrip(".")
-    return package, name
 
 
 def get_type_reference(
