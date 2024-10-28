@@ -222,6 +222,107 @@ def test_json_casing():
     }
 
 
+def test_dict_pydantic_base_model():
+    from pydantic import BaseModel, Field, StrictBool, StrictStr
+    from typing import TYPE_CHECKING
+    import json
+    if TYPE_CHECKING:
+        from dataclasses import dataclass
+    else:
+        from pydantic.dataclasses import dataclass
+
+    # openapitools codegen python-nextgen tpl
+    class PydModelA(BaseModel):
+        path: Optional[StrictStr] = Field(None, description="bla bla bla")
+        validate_: Optional[StrictBool] = Field(
+            None,
+            description="bla bla bla",
+            alias="validate",
+        )
+        __properties = ["validate"]
+
+        class Config:
+            allow_population_by_field_name = True
+            allow_population_by_alias = True
+            validate_assignment = True
+
+        @classmethod
+        def from_dict(cls, obj: dict) -> "PydModelA":
+            """Create an instance of PydModelA from a dict"""
+            if obj is None:
+                return None
+            if not isinstance(obj, dict):
+                return PydModelA.parse_obj(obj)
+            _obj = PydModelA.parse_obj({
+                "path": obj.get("path"),
+                "validate": obj.get("validate"),
+            })
+            return _obj
+
+        def json(self, **kws):
+            kws.setdefault("by_alias", True)
+            return super().json(**kws)
+
+        def dict(self, **kws):
+            kws.setdefault("by_alias", True)
+            return super().dict(**kws)
+        
+        def to_dict(self):
+            """Returns the dictionary representation of the model using alias"""
+            _dict = self.dict(by_alias=True, exclude={}, exclude_none=True)
+            return _dict
+
+    @dataclass(eq=False, repr=False)
+    class ModelA(betterproto.Message):
+        path: Optional[str] = betterproto.string_field(4, optional=True)
+        validate_: Optional[bool] = betterproto.bool_field(
+            100, optional=True, name="validate"
+        )
+
+    def fsx(inp):
+        return {key: val for key, val in sorted(inp.items(), key = lambda ele: ele[0])}
+
+
+    for (inp, exp0, exp1) in (
+        (
+            {},
+            PydModelA(), ModelA(),
+        ),
+        (
+            {"path": None, "validate": True},
+            PydModelA(validate_=True),
+            ModelA(path=None, validate_=True),
+        ),
+        (
+            {"path": "/debug/hist/ab-hits"},
+            PydModelA(path="/debug/hist/ab-hits"),
+            ModelA(path="/debug/hist/ab-hits"),
+        ),
+    ):    
+        m0 = PydModelA.parse_obj(inp)
+        m1 = ModelA.parse_obj(inp)
+        assert m0 == exp0, f"{m0} == {exp0}"
+        assert m1 == exp1, f"{m1} == {exp1}"
+
+        m0 = PydModelA.from_dict(inp) # deserializer
+        m1 = ModelA.from_dict(inp)
+        assert m0 == exp0, f"{m0} == {exp0}"
+        assert m1 == exp1, f"{m1} == {exp1}"
+
+        d0 = fsx(m0.dict())
+        d1 = fsx(m1.dict())
+        assert d0 == d1, f"{d0} == {d1}"
+
+        d0 = fsx(m0.to_dict()) # serializer
+        d1 = fsx(m1.to_dict())
+        assert d0 == d1, f"{d0} == {d1}"
+
+
+        j0 = fsx(json.loads(m0.json()))
+        j1 = fsx(json.loads(m1.json()))
+        assert j0 == j1, f"{j0} == {j1}"
+
+
 def test_dict_casing():
     @dataclass
     class CasingTest(betterproto.Message):

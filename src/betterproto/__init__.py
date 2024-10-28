@@ -1649,6 +1649,11 @@ class Message(ABC):
         """
         return cls().parse(data)
 
+    def dict(self, **kwargs):
+        kwargs.setdefault("casing", None)
+        kwargs.setdefault("include_default_values", True)
+        return self.to_dict(**kwargs)
+
     def to_dict(
         self,
         casing: Optional[Casing] = Casing.CAMEL,
@@ -1912,6 +1917,10 @@ class Message(ABC):
         self._serialized_on_wire = True
         return self
 
+    @hybridmethod
+    def parse_obj(cls: type[Self], value: Mapping[str, Any]) -> Self:
+        return cls.from_dict(value)
+
     @from_dict.instancemethod
     def from_dict(self, value: Mapping[str, Any]) -> Self:
         """
@@ -1932,6 +1941,10 @@ class Message(ABC):
         for field, value in self._from_dict_init(value).items():
             setattr(self, field, value)
         return self
+
+    @parse_obj.instancemethod
+    def parse_obj(self, value: Mapping[str, Any]) -> Self:
+        return self.from_dict(value)
 
     def to_json(
         self,
@@ -1969,6 +1982,11 @@ class Message(ABC):
             self.to_dict(include_default_values=include_default_values, casing=casing),
             indent=indent,
         )
+
+    def json(self, **kwargs):
+        kwargs.setdefault("casing", None)
+        kwargs.setdefault("include_default_values", True)
+        return self.to_json(**kwargs)
 
     def from_json(self: T, value: Union[str, bytes]) -> T:
         """A helper function to return the message instance from its JSON
