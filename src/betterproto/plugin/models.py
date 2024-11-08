@@ -449,6 +449,8 @@ class FieldCompiler(MessageCompiler):
             args.append(f"wraps={self.field_wraps}")
         if self.optional:
             args.append(f"optional=True")
+        if self.repeated:
+            args.append(f"repeated=True")
         return args
 
     @property
