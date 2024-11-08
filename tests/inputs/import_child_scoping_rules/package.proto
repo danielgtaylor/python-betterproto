@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package import_child_scoping_rules.aaa.bbb;
+
+import "child.proto";
+
+message Msg {
+    .import_child_scoping_rules.aaa.bbb.ccc.ddd.ChildMessage a = 1;
+    import_child_scoping_rules.aaa.bbb.ccc.ddd.ChildMessage b = 2;
+    aaa.bbb.ccc.ddd.ChildMessage c = 3;
+    bbb.ccc.ddd.ChildMessage d = 4;
+    ccc.ddd.ChildMessage e = 5;
+}
