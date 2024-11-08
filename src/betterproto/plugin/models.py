@@ -203,6 +203,9 @@ class ProtoContentBase:
                 raise ValueError(f"`{field_name}` is a required field.")
 
     def ready(self) -> None:
+        """
+        This function is called after all the compilers are created, but before generating the output code.
+        """
         pass
 
     @property
