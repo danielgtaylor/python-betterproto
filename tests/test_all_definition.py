@@ -16,4 +16,4 @@ def test_all_definition():
         "TestStub",
         "TestBase",
     )
-    assert enum.__all__ ==  ("ArithmeticOperator", "Choice", "Test")
+    assert enum.__all__ == ("ArithmeticOperator", "Choice", "Test")

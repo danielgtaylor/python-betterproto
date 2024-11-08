@@ -40,7 +40,7 @@ def parse_source_type_name(
     Split full source type name into package and type name.
     E.g. 'root.package.Message' -> ('root.package', 'Message')
          'root.Message.SomeEnum' -> ('root', 'Message.SomeEnum')
-    
+
     The function goes through the symbols that have been defined (names, enums, packages) to find the actual package and
     name of the object that is referenced.
     """
