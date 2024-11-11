@@ -913,7 +913,8 @@ class Message(ABC):
 
             # Empty messages can still be sent on the wire if they were
             # set (or received empty).
-            serialize_empty = isinstance(value, Message) and value._serialized_on_wire
+            # TODO this is here for historical reasons, now if a message is defined (ie not None), it should be sent
+            serialize_empty = isinstance(value, Message)
 
             include_default_value_for_oneof = self._include_default_value_for_oneof(
                 field_name=field_name, meta=meta
@@ -1019,7 +1020,7 @@ class Message(ABC):
 
             # Empty messages can still be sent on the wire if they were
             # set (or received empty).
-            serialize_empty = isinstance(value, Message) and value._serialized_on_wire
+            serialize_empty = isinstance(value, Message)
 
             include_default_value_for_oneof = self._include_default_value_for_oneof(
                 field_name=field_name, meta=meta
