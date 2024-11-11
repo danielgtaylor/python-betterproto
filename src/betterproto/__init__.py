@@ -748,7 +748,6 @@ class Message(ABC):
             Calls :meth:`__bool__`.
     """
 
-    _serialized_on_wire: bool
     _unknown_fields: bytes
     _group_current: Dict[str, str]
     _betterproto_meta: ClassVar[ProtoClassMetadata]
@@ -767,17 +766,7 @@ class Message(ABC):
                 if value is not None:
                     group_current[meta.group] = field_name
 
-            # if value is not PLACEHOLDER and not (meta.optional and value is None):
-            #     # Found a non-sentinel value
-            #     all_sentinel = False
-
-            #     if meta.group:
-            #         # This was set, so make it the selected value of the one-of.
-            #         group_current[meta.group] = field_name
-
         # Now that all the defaults are set, reset it!
-        # self.__dict__["_serialized_on_wire"] = not all_sentinel
-        self.__dict__["_serialized_on_wire"] = False
         self.__dict__["_unknown_fields"] = b""
         self.__dict__["_group_current"] = group_current
 
@@ -821,17 +810,6 @@ class Message(ABC):
     #         yield field_name, self.__raw_get(field_name), PLACEHOLDER
 
     def __setattr__(self, attr: str, value: Any) -> None:
-        if (
-            isinstance(value, Message)
-            and hasattr(value, "_betterproto")
-            and not value._betterproto.meta_by_field_name
-        ):
-            value._serialized_on_wire = True
-
-        if attr != "_serialized_on_wire":
-            # Track when a field has been set.
-            self.__dict__["_serialized_on_wire"] = True
-
         if hasattr(self, "_group_current"):  # __post_init__ had already run
             if attr in self._betterproto.oneof_group_by_field:
                 group = self._betterproto.oneof_group_by_field[attr]
@@ -1206,7 +1184,6 @@ class Message(ABC):
                     value = _get_wrapper(meta.wraps)().parse(value).value
                 else:
                     value = cls().parse(value)
-                    value._serialized_on_wire = True
             elif meta.proto_type == TYPE_MAP:
                 value = self._betterproto.cls_by_field[field_name]().parse(value)
 
@@ -1247,7 +1224,6 @@ class Message(ABC):
             size, _ = load_varint(stream)
 
         # Got some data over the wire
-        self._serialized_on_wire = True
         proto_meta = self._betterproto
         read = 0
         for parsed in load_fields(stream):
@@ -1570,9 +1546,7 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
-        self = cls(**cls._from_dict_init(value))
-        self._serialized_on_wire = True
-        return self
+        return cls(**cls._from_dict_init(value))
 
     @from_dict.instancemethod
     def from_dict(self, value: Mapping[str, Any]) -> Self:
@@ -1590,7 +1564,6 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
-        self._serialized_on_wire = True
         for field, value in self._from_dict_init(value).items():
             setattr(self, field, value)
         return self
@@ -1744,7 +1717,6 @@ class Message(ABC):
         :class:`Message`
             The initialized message.
         """
-        self._serialized_on_wire = True
         for key in value:
             field_name = safe_snake_case(key)
             meta = self._betterproto.meta_by_field_name.get(field_name)
@@ -1844,20 +1816,6 @@ try:
     Message.__bytes__ = __bytes_patch
 except ModuleNotFoundError:
     pass
-
-
-def serialized_on_wire(message: Message) -> bool:
-    """
-    If this message was or should be serialized on the wire. This can be used to detect
-    presence (e.g. optional wrapper message) and is used internally during
-    parsing/serialization.
-
-    Returns
-    --------
-    :class:`bool`
-        Whether this message was or should be serialized on the wire.
-    """
-    return message._serialized_on_wire
 
 
 def which_one_of(message: Message, group_name: str) -> Tuple[str, Optional[Any]]:
