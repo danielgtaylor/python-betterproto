@@ -763,7 +763,10 @@ class Message(ABC):
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            # value = self.__raw_get(field_name)
+                value = self.__raw_get(field_name)
+                if value is not None:
+                    group_current[meta.group] = field_name
+
             # if value is not PLACEHOLDER and not (meta.optional and value is None):
             #     # Found a non-sentinel value
             #     all_sentinel = False
