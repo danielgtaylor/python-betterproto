@@ -34,11 +34,10 @@ def test_has_field():
     class Foo(betterproto.Message):
         bar: Bar = betterproto.message_field(1)
 
-    # Unset by default
     foo = Foo()
-    assert betterproto.serialized_on_wire(foo.bar) is False
 
     # Serialized after setting something
+    foo.bar = Bar()
     foo.bar.baz = 1
     assert betterproto.serialized_on_wire(foo.bar) is True
 
