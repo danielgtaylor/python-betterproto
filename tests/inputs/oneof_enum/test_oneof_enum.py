@@ -42,6 +42,5 @@ def test_which_one_of_returns_second_field_when_set():
     message = Test()
     message.from_json(get_test_case_json_data("oneof_enum")[0].json)
     assert message.move == Move(x=2, y=3)
-    assert not hasattr(message, "signal")
-    assert object.__getattribute__(message, "signal") == betterproto.PLACEHOLDER
+    assert message.signal == 0
     assert betterproto.which_one_of(message, "action") == ("move", Move(x=2, y=3))
