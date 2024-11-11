@@ -154,8 +154,7 @@ def test_oneof_support():
     foo.baz = "test"
 
     # Other oneof fields should now be unset
-    assert not hasattr(foo, "bar")
-    assert object.__getattribute__(foo, "bar") == betterproto.PLACEHOLDER
+    assert foo.bar is None
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
     foo.sub = Sub(val=1)
@@ -164,8 +163,7 @@ def test_oneof_support():
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
-    assert not hasattr(foo, "sub")
-    assert object.__getattribute__(foo, "sub") == betterproto.PLACEHOLDER
+    assert foo.sub is None
     assert betterproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
