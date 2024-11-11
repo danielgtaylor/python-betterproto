@@ -227,7 +227,7 @@ def dataclass_field(
 
 
 def enum_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
-    return dataclass_field(number, TYPE_ENUM, lambda: 0, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_ENUM, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def bool_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
@@ -1160,6 +1160,9 @@ class Message(ABC):
         if t is datetime:
             # Offsets are relative to 1970-01-01T00:00:00Z
             return datetime_default_gen
+        # In proto 3, message fields are always optional
+        if issubclass(t, Message):
+            return type(None)
         # This is either a primitive scalar or another message type. Calling
         # it should result in its zero value.
         return t
