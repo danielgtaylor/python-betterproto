@@ -204,7 +204,7 @@ def dataclass_field(
     repeated: bool = False,
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
-    if optional:
+    if optional or group:
         def default_factory():
             return None
     elif repeated:
