@@ -148,7 +148,7 @@ def test_recursive_message_defaults():
 class PickledMessage(betterproto.Message):
     foo: bool = betterproto.bool_field(1)
     bar: int = betterproto.int32_field(2)
-    baz: List[str] = betterproto.string_field(3)
+    baz: List[str] = betterproto.string_field(3, repeated=True)
 
 
 def test_copyability():

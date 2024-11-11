@@ -55,7 +55,7 @@ def test_has_field():
 
     @dataclass
     class WithCollections(betterproto.Message):
-        test_list: List[str] = betterproto.string_field(1)
+        test_list: List[str] = betterproto.string_field(1, repeated=True)
         test_map: Dict[str, str] = betterproto.map_field(
             2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
         )
@@ -640,7 +640,7 @@ def test_iso_datetime():
 def test_iso_datetime_list():
     @dataclass
     class Envelope(betterproto.Message):
-        timestamps: List[datetime] = betterproto.message_field(1)
+        timestamps: List[datetime] = betterproto.message_field(1, repeated=True)
 
     msg = Envelope()
 
