@@ -96,7 +96,7 @@ def test_enum_as_int_json():
 
     @dataclass
     class Foo(betterproto.Message):
-        bar: TestEnum = betterproto.enum_field(1)
+        bar: TestEnum = betterproto.enum_field(1, enum_default_value=lambda: TestEnum.try_value(0))
 
     # JSON strings are supported, but ints should still be supported too.
     foo = Foo().from_dict({"bar": 1})

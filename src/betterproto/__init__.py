@@ -226,8 +226,8 @@ def dataclass_field(
 # out at runtime. The generated dataclass variables are still typed correctly.
 
 
-def enum_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
-    return dataclass_field(number, TYPE_ENUM, lambda: 0, group=group, optional=optional, repeated=repeated)
+def enum_field(number: int, enum_default_value: Callable[[], Enum], group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
+    return dataclass_field(number, TYPE_ENUM, enum_default_value, group=group, optional=optional, repeated=repeated)
 
 
 def bool_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:

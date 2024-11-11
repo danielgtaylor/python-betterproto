@@ -510,7 +510,7 @@ class Type(betterproto.Message):
     source_context: "SourceContext" = betterproto.message_field(5)
     """The source context."""
 
-    syntax: "Syntax" = betterproto.enum_field(6)
+    syntax: "Syntax" = betterproto.enum_field(6, enum_default_value=lambda: Syntax.try_value(0))
     """The source syntax."""
 
 
@@ -518,10 +518,10 @@ class Type(betterproto.Message):
 class Field(betterproto.Message):
     """A single field of a message type."""
 
-    kind: "FieldKind" = betterproto.enum_field(1)
+    kind: "FieldKind" = betterproto.enum_field(1, enum_default_value=lambda: FieldKind.try_value(0))
     """The field type."""
 
-    cardinality: "FieldCardinality" = betterproto.enum_field(2)
+    cardinality: "FieldCardinality" = betterproto.enum_field(2, enum_default_value=lambda: FieldCardinality.try_value(0))
     """The field cardinality."""
 
     number: int = betterproto.int32_field(3)
@@ -575,7 +575,7 @@ class Enum(betterproto.Message):
     source_context: "SourceContext" = betterproto.message_field(4)
     """The source context."""
 
-    syntax: "Syntax" = betterproto.enum_field(5)
+    syntax: "Syntax" = betterproto.enum_field(5, enum_default_value=lambda: Syntax.try_value(0))
     """The source syntax."""
 
 
@@ -675,7 +675,7 @@ class Api(betterproto.Message):
     mixins: List["Mixin"] = betterproto.message_field(6, repeated=True)
     """Included interfaces. See [Mixin][]."""
 
-    syntax: "Syntax" = betterproto.enum_field(7)
+    syntax: "Syntax" = betterproto.enum_field(7, enum_default_value=lambda: Syntax.try_value(0))
     """The source syntax of the service."""
 
 
@@ -701,7 +701,7 @@ class Method(betterproto.Message):
     options: List["Option"] = betterproto.message_field(6, repeated=True)
     """Any metadata attached to the method."""
 
-    syntax: "Syntax" = betterproto.enum_field(7)
+    syntax: "Syntax" = betterproto.enum_field(7, enum_default_value=lambda: Syntax.try_value(0))
     """The source syntax of this method."""
 
 
@@ -994,12 +994,12 @@ class FieldDescriptorProto(betterproto.Message):
     
     """
 
-    label: "FieldDescriptorProtoLabel" = betterproto.enum_field(4)
+    label: "FieldDescriptorProtoLabel" = betterproto.enum_field(4, enum_default_value=lambda: FieldDescriptorProtoLabel.try_value(0))
     """
     
     """
 
-    type: "FieldDescriptorProtoType" = betterproto.enum_field(5)
+    type: "FieldDescriptorProtoType" = betterproto.enum_field(5, enum_default_value=lambda: FieldDescriptorProtoType.try_value(0))
     """
     If type_name is set, this need not be set.  If both this and type_name
     are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
@@ -1292,7 +1292,7 @@ class FileOptions(betterproto.Message):
     This option has no effect on when used with the lite runtime.
     """
 
-    optimize_for: "FileOptionsOptimizeMode" = betterproto.enum_field(9)
+    optimize_for: "FileOptionsOptimizeMode" = betterproto.enum_field(9, enum_default_value=lambda: FileOptionsOptimizeMode.try_value(0))
     """
     
     """
@@ -1486,7 +1486,7 @@ class MessageOptions(betterproto.Message):
 class FieldOptions(betterproto.Message):
     """ """
 
-    ctype: "FieldOptionsCType" = betterproto.enum_field(1)
+    ctype: "FieldOptionsCType" = betterproto.enum_field(1, enum_default_value=lambda: FieldOptionsCType.try_value(0))
     """
     The ctype option instructs the C++ code generator to use a different
     representation of the field than it normally would.  See the specific
@@ -1503,7 +1503,7 @@ class FieldOptions(betterproto.Message):
     false will avoid using packed encoding.
     """
 
-    jstype: "FieldOptionsJsType" = betterproto.enum_field(6)
+    jstype: "FieldOptionsJsType" = betterproto.enum_field(6, enum_default_value=lambda: FieldOptionsJsType.try_value(0))
     """
     The jstype option determines the JavaScript type used for values of the
     field.  The option is permitted only for 64 bit integral and fixed types
@@ -1658,7 +1658,7 @@ class MethodOptions(betterproto.Message):
     this is a formalization for deprecating methods.
     """
 
-    idempotency_level: "MethodOptionsIdempotencyLevel" = betterproto.enum_field(34)
+    idempotency_level: "MethodOptionsIdempotencyLevel" = betterproto.enum_field(34, enum_default_value=lambda: MethodOptionsIdempotencyLevel.try_value(0))
     """
     
     """
@@ -2307,7 +2307,7 @@ class Value(betterproto.Message):
     The JSON representation for `Value` is JSON value.
     """
 
-    null_value: "NullValue" = betterproto.enum_field(1, group="kind")
+    null_value: "NullValue" = betterproto.enum_field(1, enum_default_value=lambda: NullValue.try_value(0), group="kind")
     """Represents a null value."""
 
     number_value: float = betterproto.double_field(2, group="kind")
