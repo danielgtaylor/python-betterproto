@@ -169,24 +169,6 @@ class Casing(builtin_enum.Enum):
     SNAKE = snake_case  #: A snake_case sterilization function.
 
 
-class Placeholder:
-    __slots__ = ()
-
-    def __repr__(self) -> str:
-        return "<PLACEHOLDER>"
-
-    def __copy__(self) -> Self:
-        return self
-
-    def __deepcopy__(self, _) -> Self:
-        return self
-
-
-# We can't simply use object() here because pydantic automatically performs deep-copy of mutable default values
-# See #606
-PLACEHOLDER: Any = Placeholder()
-
-
 @dataclasses.dataclass(frozen=True)
 class FieldMetadata:
     """Stores internal metadata used for parsing & serialization."""
@@ -213,6 +195,7 @@ class FieldMetadata:
 def dataclass_field(
     number: int,
     proto_type: str,
+    default_factory: Callable[[], Any],
     *,
     map_types: Optional[Tuple[str, str]] = None,
     group: Optional[str] = None,
@@ -221,8 +204,15 @@ def dataclass_field(
     repeated: bool = False,
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
+    if optional:
+        def default_factory():
+            return None
+    elif repeated:
+        def default_factory():
+            return []
+
     return dataclasses.field(
-        default=None if optional else PLACEHOLDER,  # type: ignore
+        default_factory=default_factory,
         metadata={
             "betterproto": FieldMetadata(
                 number, proto_type, map_types, group, wraps, optional
@@ -236,96 +226,96 @@ def dataclass_field(
 # out at runtime. The generated dataclass variables are still typed correctly.
 
 
-def enum_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,) -> Any:
-    return dataclass_field(number, TYPE_ENUM, group=group, optional=optional, repeated=repeated)
+def enum_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
+    return dataclass_field(number, TYPE_ENUM, lambda: 0, optional=optional, repeated=repeated)
 
 
-def bool_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,) -> Any:
-    return dataclass_field(number, TYPE_BOOL, group=group, optional=optional, repeated=repeated)
+def bool_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
+    return dataclass_field(number, TYPE_BOOL, lambda: False, group=group, optional=optional, repeated=repeated)
 
 
 def int32_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_INT32, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_INT32, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def int64_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_INT64, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_INT64, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def uint32_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_UINT32, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_UINT32, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def uint64_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_UINT64, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_UINT64, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def sint32_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SINT32, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_SINT32, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def sint64_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SINT64, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_SINT64, lambda: 0, group=group, optional=optional, repeated=repeated)
 
 
 def float_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_FLOAT, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_FLOAT, lambda: 0., group=group, optional=optional, repeated=repeated)
 
 
 def double_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_DOUBLE, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_DOUBLE, lambda: 0., group=group, optional=optional, repeated=repeated)
 
 
 def fixed32_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_FIXED32, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_FIXED32, lambda: 0., group=group, optional=optional, repeated=repeated)
 
 
 def fixed64_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_FIXED64, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_FIXED64, lambda: 0., group=group, optional=optional, repeated=repeated)
 
 
 def sfixed32_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SFIXED32, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_SFIXED32, lambda: 0., group=group, optional=optional, repeated=repeated)
 
 
 def sfixed64_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SFIXED64, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_SFIXED64, lambda: 0., group=group, optional=optional, repeated=repeated)
 
 
 def string_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_STRING, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_STRING, lambda: "", group=group, optional=optional, repeated=repeated)
 
 
 def bytes_field(
     number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_BYTES, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(number, TYPE_BYTES, lambda: b"", group=group, optional=optional, repeated=repeated)
 
 
 def message_field(
@@ -336,7 +326,7 @@ def message_field(
     repeated: bool = False,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MESSAGE, group=group, wraps=wraps, optional=optional
+        number, TYPE_MESSAGE, lambda: None, group=group, wraps=wraps, optional=optional, repeated=repeated
     )
 
 
@@ -344,7 +334,7 @@ def map_field(
     number: int, key_type: str, value_type: str, group: Optional[str] = None
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MAP, map_types=(key_type, value_type), group=group
+        number, TYPE_MAP, lambda: dict(), map_types=(key_type, value_type), group=group
     )
 
 
@@ -729,8 +719,8 @@ class ProtoClassMetadata:
                 field_cls[field.name] = dataclasses.make_dataclass(
                     "Entry",
                     [
-                        ("key", kt, dataclass_field(1, meta.map_types[0])),
-                        ("value", vt, dataclass_field(2, meta.map_types[1])),
+                        ("key", kt, dataclass_field(1, meta.map_types[0], default_factory=lambda: kt())),
+                        ("value", vt, dataclass_field(2, meta.map_types[1], default_factory=lambda: vt())),
                     ],
                     bases=(Message,),
                 )
@@ -764,8 +754,8 @@ class Message(ABC):
     _betterproto_meta: ClassVar[ProtoClassMetadata]
 
     def __post_init__(self) -> None:
-        # Keep track of whether every field was default
-        all_sentinel = True
+        # # Keep track of whether every field was default
+        # all_sentinel = True
 
         # Set current field of each group after `__init__` has already been run.
         group_current: Dict[str, Optional[str]] = {}
@@ -773,17 +763,18 @@ class Message(ABC):
             if meta.group:
                 group_current.setdefault(meta.group)
 
-            value = self.__raw_get(field_name)
-            if value is not PLACEHOLDER and not (meta.optional and value is None):
-                # Found a non-sentinel value
-                all_sentinel = False
+            # value = self.__raw_get(field_name)
+            # if value is not PLACEHOLDER and not (meta.optional and value is None):
+            #     # Found a non-sentinel value
+            #     all_sentinel = False
 
-                if meta.group:
-                    # This was set, so make it the selected value of the one-of.
-                    group_current[meta.group] = field_name
+            #     if meta.group:
+            #         # This was set, so make it the selected value of the one-of.
+            #         group_current[meta.group] = field_name
 
         # Now that all the defaults are set, reset it!
-        self.__dict__["_serialized_on_wire"] = not all_sentinel
+        # self.__dict__["_serialized_on_wire"] = not all_sentinel
+        self.__dict__["_serialized_on_wire"] = False
         self.__dict__["_unknown_fields"] = b""
         self.__dict__["_group_current"] = group_current
 
@@ -797,12 +788,6 @@ class Message(ABC):
         for field_name in self._betterproto.meta_by_field_name:
             self_val = self.__raw_get(field_name)
             other_val = other.__raw_get(field_name)
-            if self_val is PLACEHOLDER:
-                if other_val is PLACEHOLDER:
-                    continue
-                self_val = self._get_field_default(field_name)
-            elif other_val is PLACEHOLDER:
-                other_val = other._get_field_default(field_name)
 
             if self_val != other_val:
                 # We consider two nan values to be the same for the
@@ -825,48 +810,12 @@ class Message(ABC):
             f"{field_name}={value!r}"
             for field_name in self._betterproto.sorted_field_names
             for value in (self.__raw_get(field_name),)
-            if value is not PLACEHOLDER
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
-    def __rich_repr__(self) -> Iterable[Tuple[str, Any, Any]]:
-        for field_name in self._betterproto.sorted_field_names:
-            yield field_name, self.__raw_get(field_name), PLACEHOLDER
-
-    if not TYPE_CHECKING:
-
-        def __getattribute__(self, name: str) -> Any:
-            """
-            Lazily initialize default values to avoid infinite recursion for recursive
-            message types.
-            Raise :class:`AttributeError` on attempts to access unset ``oneof`` fields.
-            """
-            try:
-                group_current = super().__getattribute__("_group_current")
-            except AttributeError:
-                pass
-            else:
-                if name not in {"__class__", "_betterproto"}:
-                    group = self._betterproto.oneof_group_by_field.get(name)
-                    if group is not None and group_current[group] != name:
-                        if sys.version_info < (3, 10):
-                            raise AttributeError(
-                                f"{group!r} is set to {group_current[group]!r}, not {name!r}"
-                            )
-                        else:
-                            raise AttributeError(
-                                f"{group!r} is set to {group_current[group]!r}, not {name!r}",
-                                name=name,
-                                obj=self,
-                            )
-
-            value = super().__getattribute__(name)
-            if value is not PLACEHOLDER:
-                return value
-
-            value = self._get_field_default(name)
-            super().__setattr__(name, value)
-            return value
+    # def __rich_repr__(self) -> Iterable[Tuple[str, Any, Any]]:
+    #     for field_name in self._betterproto.sorted_field_names:
+    #         yield field_name, self.__raw_get(field_name), PLACEHOLDER
 
     def __setattr__(self, attr: str, value: Any) -> None:
         if (
@@ -887,15 +836,14 @@ class Message(ABC):
                     if field.name == attr:
                         self._group_current[group] = field.name
                     else:
-                        super().__setattr__(field.name, PLACEHOLDER)
+                        super().__setattr__(field.name, None)
 
         super().__setattr__(attr, value)
 
     def __bool__(self) -> bool:
         """True if the Message has any fields with non-default values."""
         return any(
-            self.__raw_get(field_name)
-            not in (PLACEHOLDER, self._get_field_default(field_name))
+            self.__raw_get(field_name) != self._get_field_default(field_name)
             for field_name in self._betterproto.meta_by_field_name
         )
 
@@ -903,16 +851,14 @@ class Message(ABC):
         kwargs = {}
         for name in self._betterproto.sorted_field_names:
             value = self.__raw_get(name)
-            if value is not PLACEHOLDER:
-                kwargs[name] = deepcopy(value)
+            kwargs[name] = deepcopy(value)
         return self.__class__(**kwargs)  # type: ignore
 
     def __copy__(self: T, _: Any = {}) -> T:
         kwargs = {}
         for name in self._betterproto.sorted_field_names:
             value = self.__raw_get(name)
-            if value is not PLACEHOLDER:
-                kwargs[name] = value
+            kwargs[name] = value
         return self.__class__(**kwargs)  # type: ignore
 
     @classproperty
@@ -1853,12 +1799,7 @@ class Message(ABC):
         :class:`bool`
             `True` if field has been set, otherwise `False`.
         """
-        default = (
-            PLACEHOLDER
-            if not self._betterproto.meta_by_field_name[name].optional
-            else None
-        )
-        return self.__raw_get(name) is not default
+        return self.__raw_get(name) is not self._get_field_default(name)
 
     @classmethod
     def _validate_field_groups(cls, values):
