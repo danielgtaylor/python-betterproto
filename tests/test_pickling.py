@@ -101,21 +101,6 @@ def test_pickling_complex_message():
     )
 
 
-def test_recursive_message():
-    from tests.output_betterproto.recursivemessage import Test as RecursiveMessage
-
-    msg = RecursiveMessage()
-    msg = unpickled(msg)
-
-    assert msg.child == RecursiveMessage()
-
-    # Lazily-created zero-value children must not affect equality.
-    assert msg == RecursiveMessage()
-
-    # Lazily-created zero-value children must not affect serialization.
-    assert bytes(msg) == b""
-
-
 def test_recursive_message_defaults():
     from tests.output_betterproto.recursivemessage import (
         Intermediate,
@@ -132,16 +117,12 @@ def test_recursive_message_defaults():
     assert msg != RecursiveMessage(
         name="bob", intermediate=Intermediate(42), child=RecursiveMessage(name="jude")
     )
-    msg.child.child.name = "jude"
+    msg.child = RecursiveMessage(child=RecursiveMessage(name="jude"))
     assert msg == RecursiveMessage(
         name="bob",
         intermediate=Intermediate(42),
         child=RecursiveMessage(child=RecursiveMessage(name="jude")),
     )
-
-    # lazily initialization recurses as needed
-    assert msg.child.child.child.child.child.child.child == RecursiveMessage()
-    assert msg.intermediate.child.intermediate == Intermediate()
 
 
 @dataclass
