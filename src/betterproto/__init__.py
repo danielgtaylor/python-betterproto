@@ -1428,13 +1428,7 @@ class Message(ABC):
                 elif value is None:
                     if include_default_values:
                         output[cased_name] = value
-                elif (
-                    value._serialized_on_wire
-                    or include_default_values
-                    or self._include_default_value_for_oneof(
-                        field_name=field_name, meta=meta
-                    )
-                ):
+                else:
                     output[cased_name] = value.to_dict(casing, include_default_values)
             elif meta.proto_type == TYPE_MAP:
                 output_map = {**value}
@@ -1715,13 +1709,7 @@ class Message(ABC):
                 elif value is None:
                     if include_default_values:
                         output[cased_name] = None
-                elif (
-                    value._serialized_on_wire
-                    or include_default_values
-                    or self._include_default_value_for_oneof(
-                        field_name=field_name, meta=meta
-                    )
-                ):
+                else:
                     output[cased_name] = value.to_pydict(casing, include_default_values)
             elif meta.proto_type == TYPE_MAP:
                 for k in value:
