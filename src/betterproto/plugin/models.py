@@ -600,8 +600,8 @@ class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
 
 @dataclass
 class MapEntryCompiler(FieldCompiler):
-    py_k_type: Type = None
-    py_v_type: Type = None
+    py_k_type: Optional[Type] = None
+    py_v_type: Optional[Type] = None
     proto_k_type: str = ""
     proto_v_type: str = ""
 
