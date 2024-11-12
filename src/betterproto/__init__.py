@@ -871,10 +871,7 @@ class Message(ABC):
             dump_varint(len(self), stream)
 
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            try:
-                value = getattr(self, field_name)
-            except AttributeError:
-                continue
+            value = getattr(self, field_name)
 
             if value is None:
                 # Optional items should be skipped. This is used for the Google
@@ -978,10 +975,7 @@ class Message(ABC):
         """
         size = 0
         for field_name, meta in self._betterproto.meta_by_field_name.items():
-            try:
-                value = getattr(self, field_name)
-            except AttributeError:
-                continue
+            value = getattr(self, field_name)
 
             if value is None:
                 # Optional items should be skipped. This is used for the Google
@@ -1259,11 +1253,7 @@ class Message(ABC):
                     parsed.wire_type, meta, field_name, parsed.value
                 )
 
-            try:
-                current = getattr(self, field_name)
-            except AttributeError:
-                current = self._get_field_default(field_name)
-                setattr(self, field_name, current)
+            current = getattr(self, field_name)
 
             if meta.proto_type == TYPE_MAP:
                 # Value represents a single key/value pair entry in the map.
@@ -1363,10 +1353,7 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
-            try:
-                value = getattr(self, field_name)
-            except AttributeError:
-                value = self._get_field_default(field_name)
+            value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
                 if isinstance(value, datetime):
