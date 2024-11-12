@@ -127,25 +127,26 @@ PROTO_PACKED_TYPES = (
 )
 
 
-def monkey_patch_oneof_index():
-    """
-    The compiler message types are written for proto2, but we read them as proto3.
-    For this to work in the case of the oneof_index fields, which depend on being able
-    to tell whether they were set, we have to treat them as oneof fields. This method
-    monkey patches the generated classes after the fact to force this behaviour.
-    """
-    object.__setattr__(
-        FieldDescriptorProto.__dataclass_fields__["oneof_index"].metadata[
-            "betterproto"
-        ],
-        "group",
-        "oneof_index",
-    )
-    object.__setattr__(
-        Field.__dataclass_fields__["oneof_index"].metadata["betterproto"],
-        "group",
-        "oneof_index",
-    )
+# TODO patch again to make field optional
+# def monkey_patch_oneof_index():
+#     """
+#     The compiler message types are written for proto2, but we read them as proto3.
+#     For this to work in the case of the oneof_index fields, which depend on being able
+#     to tell whether they were set, we have to treat them as oneof fields. This method
+#     monkey patches the generated classes after the fact to force this behaviour.
+#     """
+#     object.__setattr__(
+#         FieldDescriptorProto.__dataclass_fields__["oneof_index"].metadata[
+#             "betterproto"
+#         ],
+#         "group",
+#         "oneof_index",
+#     )
+#     object.__setattr__(
+#         Field.__dataclass_fields__["oneof_index"].metadata["betterproto"],
+#         "group",
+#         "oneof_index",
+#     )
 
 
 def get_comment(
@@ -304,7 +305,7 @@ class OutputTemplate:
         if any(x for x in self.messages if any(x.deprecated_fields)):
             has_deprecated = True
         if any(
-            any(m.proto_obj.options.deprecated for m in s.methods)
+            any(m.proto_obj.options and m.proto_obj.options.deprecated for m in s.methods)
             for s in self.services
         ):
             has_deprecated = True
@@ -339,7 +340,7 @@ class MessageCompiler(ProtoContentBase):
                 self.output_file.enums.append(self)
             else:
                 self.output_file.messages.append(self)
-        self.deprecated = self.proto_obj.options.deprecated
+        self.deprecated = self.proto_obj.options and self.proto_obj.options.deprecated
         super().__post_init__()
 
     @property
@@ -401,6 +402,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
     True if proto_field_obj is a OneOf, otherwise False.
 
     .. warning::
+        TODO update comment
         Becuase the message from protoc is defined in proto2, and betterproto works with
         proto3, and interpreting the FieldDescriptorProto.oneof_index field requires
         distinguishing between default and unset values (which proto3 doesn't support),
@@ -412,7 +414,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
 
     return (
         not proto_field_obj.proto3_optional
-        and which_one_of(proto_field_obj, "oneof_index")[0] == "oneof_index"
+        and proto_field_obj.oneof_index is not None
     )
 
 
