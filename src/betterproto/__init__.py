@@ -802,6 +802,7 @@ class Message(ABC):
             f"{field_name}={value!r}"
             for field_name in self._betterproto.sorted_field_names
             for value in (self.__raw_get(field_name),)
+            if value != self._get_field_default(field_name)
         ]
         return f"{self.__class__.__name__}({', '.join(parts)})"
 
