@@ -570,6 +570,10 @@ class FieldCompiler(MessageCompiler):
 @dataclass
 class OneOfFieldCompiler(FieldCompiler):
     @property
+    def optional(self) -> bool:
+        return True
+
+    @property
     def betterproto_field_args(self) -> List[str]:
         args = super().betterproto_field_args
         group = self.parent.proto_obj.oneof_decl[self.proto_obj.oneof_index].name
@@ -579,13 +583,6 @@ class OneOfFieldCompiler(FieldCompiler):
 
 @dataclass
 class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
-    @property
-    def optional(self) -> bool:
-        # Force the optional to be True. This will allow the pydantic dataclass
-        # to validate the object correctly by allowing the field to be let empty.
-        # We add a pydantic validator later to ensure exactly one field is defined.
-        return True
-
     @property
     def pydantic_imports(self) -> Set[str]:
         return {"model_validator"}
