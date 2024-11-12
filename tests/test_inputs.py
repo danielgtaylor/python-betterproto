@@ -187,7 +187,6 @@ def test_message_json(repeat, test_data: TestData) -> None:
             message.from_json(sample.json)
             message_json = message.to_json(indent=0)
 
-
             print(message)
             print(message_json)
             print(message.to_dict())

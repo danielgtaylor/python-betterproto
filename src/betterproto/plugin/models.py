@@ -305,7 +305,10 @@ class OutputTemplate:
         if any(x for x in self.messages if any(x.deprecated_fields)):
             has_deprecated = True
         if any(
-            any(m.proto_obj.options and m.proto_obj.options.deprecated for m in s.methods)
+            any(
+                m.proto_obj.options and m.proto_obj.options.deprecated
+                for m in s.methods
+            )
             for s in self.services
         ):
             has_deprecated = True
@@ -413,8 +416,7 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
     """
 
     return (
-        not proto_field_obj.proto3_optional
-        and proto_field_obj.oneof_index is not None
+        not proto_field_obj.proto3_optional and proto_field_obj.oneof_index is not None
     )
 
 
@@ -454,7 +456,8 @@ class FieldCompiler(MessageCompiler):
         if self.repeated:
             args.append("repeated=True")
         if self.field_type == "enum":
-            args.append(f"enum_default_value=lambda: {self.py_type.strip('"')}.try_value(0)")
+            t = self.py_type.strip('"')
+            args.append(f"enum_default_value=lambda: {t}.try_value(0)")
         return args
 
     @property

@@ -122,7 +122,9 @@ class CodeGeneratorResponse(betterproto.Message):
      effect for plugins that have FEATURE_SUPPORTS_EDITIONS set.
     """
 
-    file: List["CodeGeneratorResponseFile"] = betterproto.message_field(15, repeated=True)
+    file: List["CodeGeneratorResponseFile"] = betterproto.message_field(
+        15, repeated=True
+    )
 
 
 @dataclass(eq=False, repr=False)

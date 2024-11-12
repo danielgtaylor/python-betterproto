@@ -1,8 +1,8 @@
+import sys
 from dataclasses import dataclass
+from typing import Optional
 
 import pytest
-import sys
-from typing import Optional
 
 import betterproto
 

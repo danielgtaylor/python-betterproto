@@ -205,9 +205,12 @@ def dataclass_field(
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     if repeated:
+
         def default_factory():
             return []
+
     elif optional or group:
+
         def default_factory():
             return None
 
@@ -226,96 +229,251 @@ def dataclass_field(
 # out at runtime. The generated dataclass variables are still typed correctly.
 
 
-def enum_field(number: int, enum_default_value: Callable[[], Enum], group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
-    return dataclass_field(number, TYPE_ENUM, enum_default_value, group=group, optional=optional, repeated=repeated)
+def enum_field(
+    number: int,
+    enum_default_value: Callable[[], Enum],
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
+) -> Any:
+    return dataclass_field(
+        number,
+        TYPE_ENUM,
+        enum_default_value,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
-def bool_field(number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False) -> Any:
-    return dataclass_field(number, TYPE_BOOL, lambda: False, group=group, optional=optional, repeated=repeated)
+def bool_field(
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
+) -> Any:
+    return dataclass_field(
+        number,
+        TYPE_BOOL,
+        lambda: False,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def int32_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_INT32, lambda: 0, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number, TYPE_INT32, lambda: 0, group=group, optional=optional, repeated=repeated
+    )
 
 
 def int64_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_INT64, lambda: 0, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number, TYPE_INT64, lambda: 0, group=group, optional=optional, repeated=repeated
+    )
 
 
 def uint32_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_UINT32, lambda: 0, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_UINT32,
+        lambda: 0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def uint64_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_UINT64, lambda: 0, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_UINT64,
+        lambda: 0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def sint32_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SINT32, lambda: 0, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_SINT32,
+        lambda: 0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def sint64_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SINT64, lambda: 0, group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_SINT64,
+        lambda: 0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def float_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_FLOAT, lambda: 0., group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_FLOAT,
+        lambda: 0.0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def double_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_DOUBLE, lambda: 0., group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_DOUBLE,
+        lambda: 0.0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def fixed32_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_FIXED32, lambda: 0., group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_FIXED32,
+        lambda: 0.0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def fixed64_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_FIXED64, lambda: 0., group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_FIXED64,
+        lambda: 0.0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def sfixed32_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SFIXED32, lambda: 0., group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_SFIXED32,
+        lambda: 0.0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def sfixed64_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_SFIXED64, lambda: 0., group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_SFIXED64,
+        lambda: 0.0,
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def string_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_STRING, lambda: "", group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_STRING,
+        lambda: "",
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def bytes_field(
-    number: int, group: Optional[str] = None, optional: bool = False, repeated: bool = False,
+    number: int,
+    group: Optional[str] = None,
+    optional: bool = False,
+    repeated: bool = False,
 ) -> Any:
-    return dataclass_field(number, TYPE_BYTES, lambda: b"", group=group, optional=optional, repeated=repeated)
+    return dataclass_field(
+        number,
+        TYPE_BYTES,
+        lambda: b"",
+        group=group,
+        optional=optional,
+        repeated=repeated,
+    )
 
 
 def message_field(
@@ -326,7 +484,13 @@ def message_field(
     repeated: bool = False,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MESSAGE, lambda: None, group=group, wraps=wraps, optional=optional, repeated=repeated
+        number,
+        TYPE_MESSAGE,
+        lambda: None,
+        group=group,
+        wraps=wraps,
+        optional=optional,
+        repeated=repeated,
     )
 
 
@@ -719,8 +883,20 @@ class ProtoClassMetadata:
                 field_cls[field.name] = dataclasses.make_dataclass(
                     "Entry",
                     [
-                        ("key", kt, dataclass_field(1, meta.map_types[0], default_factory=lambda: kt())),
-                        ("value", vt, dataclass_field(2, meta.map_types[1], default_factory=lambda: vt())),
+                        (
+                            "key",
+                            kt,
+                            dataclass_field(
+                                1, meta.map_types[0], default_factory=lambda: kt()
+                            ),
+                        ),
+                        (
+                            "value",
+                            vt,
+                            dataclass_field(
+                                2, meta.map_types[1], default_factory=lambda: vt()
+                            ),
+                        ),
                     ],
                     bases=(Message,),
                 )
