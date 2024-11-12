@@ -283,11 +283,11 @@ On Python 3.10 and later, you can use a `match` statement to access the provided
 ```py
 test = Test()
 match test:
-    case Test(on=value):
+    case Test(on=bool(value)):
         print(value)  # value: bool
-    case Test(count=value):
+    case Test(count=int(value)):
         print(value)  # value: int
-    case Test(name=value):
+    case Test(name=str(value)):
         print(value)  # value: str
     case _:
         print("No value provided")
