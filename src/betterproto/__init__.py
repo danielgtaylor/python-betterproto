@@ -1737,6 +1737,7 @@ class Message(ABC):
                     elif meta.wraps:
                         v = value[key]
                     else:
+                        raise NotImplementedError
                         # NOTE: `from_pydict` mutates the underlying message, so no
                         # assignment here is necessary.
                         v.from_pydict(value[key])
