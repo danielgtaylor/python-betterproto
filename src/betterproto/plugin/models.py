@@ -450,9 +450,11 @@ class FieldCompiler(MessageCompiler):
         if self.field_wraps:
             args.append(f"wraps={self.field_wraps}")
         if self.optional:
-            args.append(f"optional=True")
+            args.append("optional=True")
         if self.repeated:
-            args.append(f"repeated=True")
+            args.append("repeated=True")
+        if self.field_type == "enum":
+            args.append(f"enum_default_value=lambda: {self.py_type.strip('"')}.try_value(0)")
         return args
 
     @property
