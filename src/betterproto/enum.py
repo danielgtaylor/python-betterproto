@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 from enum import (
     EnumMeta,
     IntEnum,
@@ -90,15 +89,8 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         def __iter__(cls) -> Generator[Enum, None, None]:
             yield from cls._member_map_.values()
 
-        if sys.version_info >= (3, 8):  # 3.8 added __reversed__ to dict_values
-
-            def __reversed__(cls) -> Generator[Enum, None, None]:
-                yield from reversed(cls._member_map_.values())
-
-        else:
-
-            def __reversed__(cls) -> Generator[Enum, None, None]:
-                yield from reversed(tuple(cls._member_map_.values()))
+        def __reversed__(cls) -> Generator[Enum, None, None]:
+            yield from reversed(cls._member_map_.values())
 
         def __getitem__(cls, key: str) -> Enum:
             return cls._member_map_[key]
