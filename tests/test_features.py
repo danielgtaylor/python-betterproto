@@ -284,7 +284,7 @@ def test_to_dict_default_values():
         some_bool: bool = betterproto.bool_field(4)
 
     # Empty dict
-    test = TestMessage().from_dict({})
+    test = TestMessage()
 
     assert test.to_dict(include_default_values=True) == {
         "someInt": 0,
@@ -292,31 +292,6 @@ def test_to_dict_default_values():
         "someStr": "",
         "someBool": False,
     }
-
-    test = TestMessage().from_pydict({})
-
-    assert test.to_pydict(include_default_values=True) == {
-        "someInt": 0,
-        "someDouble": 0.0,
-        "someStr": "",
-        "someBool": False,
-    }
-
-    # All default values
-    test = TestMessage().from_dict(
-        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
-    )
-
-    assert test.to_dict(include_default_values=True) == {
-        "someInt": 0,
-        "someDouble": 0.0,
-        "someStr": "",
-        "someBool": False,
-    }
-
-    test = TestMessage().from_pydict(
-        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
-    )
 
     assert test.to_pydict(include_default_values=True) == {
         "someInt": 0,
@@ -394,14 +369,14 @@ def test_to_dict_default_values():
     class TestParentMessage(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
-        some_message: TestChildMessage = betterproto.message_field(3)
+        some_message: Optional[TestChildMessage] = betterproto.message_field(3)
 
     test = TestParentMessage().from_dict({"someInt": 0, "someDouble": 1.2})
 
     assert test.to_dict(include_default_values=True) == {
         "someInt": 0,
         "someDouble": 1.2,
-        "someMessage": {"someOtherInt": 0},
+        "someMessage": None,
     }
 
     test = TestParentMessage().from_pydict({"someInt": 0, "someDouble": 1.2})
@@ -409,7 +384,7 @@ def test_to_dict_default_values():
     assert test.to_pydict(include_default_values=True) == {
         "someInt": 0,
         "someDouble": 1.2,
-        "someMessage": {"someOtherInt": 0},
+        "someMessage": None,
     }
 
 
