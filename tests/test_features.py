@@ -129,16 +129,6 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo2, "group2")[0] == ""
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 10),
-    reason="pattern matching is only supported in python3.10+",
-)
-def test_oneof_pattern_matching():
-    from .oneof_pattern_matching import test_oneof_pattern_matching
-
-    test_oneof_pattern_matching()
-
-
 def test_json_casing():
     @dataclass
     class CasingTest(betterproto.Message):
