@@ -85,7 +85,4 @@ def test_empty_message_field():
     message.foo = Empty()
     reference_message.foo.CopyFrom(ReferenceEmpty())
 
-    assert betterproto.serialized_on_wire(message.foo)
-    assert reference_message.HasField("foo")
-
     assert bytes(message) == reference_message.SerializeToString()

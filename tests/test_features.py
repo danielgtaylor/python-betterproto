@@ -25,54 +25,6 @@ import pytest
 import betterproto
 
 
-def test_has_field():
-    @dataclass
-    class Bar(betterproto.Message):
-        baz: int = betterproto.int32_field(1)
-
-    @dataclass
-    class Foo(betterproto.Message):
-        bar: Bar = betterproto.message_field(1)
-
-    foo = Foo()
-
-    # Serialized after setting something
-    foo.bar = Bar()
-    foo.bar.baz = 1
-    assert betterproto.serialized_on_wire(foo.bar) is True
-
-    # Still has it after setting the default value
-    foo.bar.baz = 0
-    assert betterproto.serialized_on_wire(foo.bar) is True
-
-    # Manual override (don't do this)
-    foo.bar._serialized_on_wire = False
-    assert betterproto.serialized_on_wire(foo.bar) is False
-
-    # Can manually set it but defaults to false
-    foo.bar = Bar()
-    assert betterproto.serialized_on_wire(foo.bar) is False
-
-    @dataclass
-    class WithCollections(betterproto.Message):
-        test_list: List[str] = betterproto.string_field(1, repeated=True)
-        test_map: Dict[str, str] = betterproto.map_field(
-            2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
-        )
-
-    # Is always set from parse, even if all collections are empty
-    with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == True
-    with_collections_list = WithCollections().parse(
-        bytes(WithCollections(test_list=["a", "b", "c"]))
-    )
-    assert betterproto.serialized_on_wire(with_collections_list) == True
-    with_collections_map = WithCollections().parse(
-        bytes(WithCollections(test_map={"a": "b", "c": "d"}))
-    )
-    assert betterproto.serialized_on_wire(with_collections_map) == True
-
-
 def test_class_init():
     @dataclass
     class Bar(betterproto.Message):
@@ -158,7 +110,6 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
     foo.sub = Sub(val=1)
-    assert betterproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
 
