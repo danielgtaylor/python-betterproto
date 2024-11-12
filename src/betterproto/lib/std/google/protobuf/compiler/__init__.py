@@ -36,7 +36,7 @@ class Version(betterproto.Message):
 class CodeGeneratorRequest(betterproto.Message):
     """An encoded CodeGeneratorRequest is written to the plugin's stdin."""
 
-    file_to_generate: List[str] = betterproto.string_field(1)
+    file_to_generate: List[str] = betterproto.string_field(1, repeated=True)
     """
     The .proto files that were explicitly listed on the command-line.  The
      code generator should generate code only for these files.  Each file's
@@ -48,7 +48,7 @@ class CodeGeneratorRequest(betterproto.Message):
 
     proto_file: List[
         "betterproto_lib_google_protobuf.FileDescriptorProto"
-    ] = betterproto.message_field(15)
+    ] = betterproto.message_field(15, repeated=True)
     """
     FileDescriptorProtos for all files in files_to_generate and everything
      they import.  The files will appear in topological order, so each file
@@ -73,7 +73,7 @@ class CodeGeneratorRequest(betterproto.Message):
 
     source_file_descriptors: List[
         "betterproto_lib_google_protobuf.FileDescriptorProto"
-    ] = betterproto.message_field(17)
+    ] = betterproto.message_field(17, repeated=True)
     """
     File descriptors with all options, including source-retention options.
      These descriptors are only provided for the files listed in
@@ -122,7 +122,7 @@ class CodeGeneratorResponse(betterproto.Message):
      effect for plugins that have FEATURE_SUPPORTS_EDITIONS set.
     """
 
-    file: List["CodeGeneratorResponseFile"] = betterproto.message_field(15)
+    file: List["CodeGeneratorResponseFile"] = betterproto.message_field(15, repeated=True)
 
 
 @dataclass(eq=False, repr=False)
