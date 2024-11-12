@@ -504,7 +504,7 @@ class FieldCompiler(MessageCompiler):
 
     @property
     def optional(self) -> bool:
-        return self.proto_obj.proto3_optional
+        return self.proto_obj.proto3_optional or self.field_type == "message"
 
     @property
     def field_type(self) -> str:
