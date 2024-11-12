@@ -1714,21 +1714,18 @@ class Message(ABC):
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
                     v = getattr(self, field_name)
-                    if isinstance(v, list):
-                        cls = self._betterproto.cls_by_field[field_name]
+                    cls = self._betterproto.cls_by_field[field_name]
+                    if issubclass(cls, list):
                         for item in value[key]:
                             v.append(cls().from_pydict(item))
-                    elif isinstance(v, datetime):
+                    elif issubclass(cls, datetime):
                         v = value[key]
-                    elif isinstance(v, timedelta):
+                    elif issubclass(cls, timedelta):
                         v = value[key]
                     elif meta.wraps:
                         v = value[key]
                     else:
-                        raise NotImplementedError
-                        # NOTE: `from_pydict` mutates the underlying message, so no
-                        # assignment here is necessary.
-                        v.from_pydict(value[key])
+                        v = cls().from_pydict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
                     v = getattr(self, field_name)
                     cls = self._betterproto.cls_by_field[f"{field_name}.value"]
