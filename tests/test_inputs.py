@@ -204,8 +204,8 @@ def test_binary_compatibility(test_data: TestData) -> None:
         reference_instance = Parse(sample.json, reference_module().Test())
         reference_binary_output = reference_instance.SerializeToString()
 
-        plugin_instance_from_json: betterproto.Message = (
-            plugin_module.Test().from_json(sample.json)
+        plugin_instance_from_json: betterproto.Message = plugin_module.Test().from_json(
+            sample.json
         )
         plugin_instance_from_binary = plugin_module.Test.FromString(
             reference_binary_output
