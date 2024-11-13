@@ -174,22 +174,21 @@ def test_message_equality(test_data: TestData) -> None:
 
 
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
-def test_message_json(repeat, test_data: TestData) -> None:
+def test_message_json(test_data: TestData) -> None:
     plugin_module, _, json_data = test_data
 
-    for _ in range(repeat):
-        for sample in json_data:
-            if sample.belongs_to(test_input_config.non_symmetrical_json):
-                continue
+    for sample in json_data:
+        if sample.belongs_to(test_input_config.non_symmetrical_json):
+            continue
 
-            message: betterproto.Message = plugin_module.Test()
+        message: betterproto.Message = plugin_module.Test()
 
-            message.from_json(sample.json)
-            message_json = message.to_json(0)
+        message.from_json(sample.json)
+        message_json = message.to_json(0)
 
-            assert dict_replace_nans(json.loads(message_json)) == dict_replace_nans(
-                json.loads(sample.json)
-            )
+        assert dict_replace_nans(json.loads(message_json)) == dict_replace_nans(
+            json.loads(sample.json)
+        )
 
 
 @pytest.mark.parametrize("test_data", test_cases.services, indirect=True)
@@ -198,28 +197,27 @@ def test_service_can_be_instantiated(test_data: TestData) -> None:
 
 
 @pytest.mark.parametrize("test_data", test_cases.messages_with_json, indirect=True)
-def test_binary_compatibility(repeat, test_data: TestData) -> None:
+def test_binary_compatibility(test_data: TestData) -> None:
     plugin_module, reference_module, json_data = test_data
 
     for sample in json_data:
         reference_instance = Parse(sample.json, reference_module().Test())
         reference_binary_output = reference_instance.SerializeToString()
 
-        for _ in range(repeat):
-            plugin_instance_from_json: betterproto.Message = (
-                plugin_module.Test().from_json(sample.json)
-            )
-            plugin_instance_from_binary = plugin_module.Test.FromString(
-                reference_binary_output
-            )
+        plugin_instance_from_json: betterproto.Message = plugin_module.Test().from_json(
+            sample.json
+        )
+        plugin_instance_from_binary = plugin_module.Test.FromString(
+            reference_binary_output
+        )
 
-            # Generally this can't be relied on, but here we are aiming to match the
-            # existing Python implementation and aren't doing anything tricky.
-            # https://developers.google.com/protocol-buffers/docs/encoding#implications
-            assert bytes(plugin_instance_from_json) == reference_binary_output
-            assert bytes(plugin_instance_from_binary) == reference_binary_output
+        # Generally this can't be relied on, but here we are aiming to match the
+        # existing Python implementation and aren't doing anything tricky.
+        # https://developers.google.com/protocol-buffers/docs/encoding#implications
+        assert bytes(plugin_instance_from_json) == reference_binary_output
+        assert bytes(plugin_instance_from_binary) == reference_binary_output
 
-            assert plugin_instance_from_json == plugin_instance_from_binary
-            assert dict_replace_nans(
-                plugin_instance_from_json.to_dict()
-            ) == dict_replace_nans(plugin_instance_from_binary.to_dict())
+        assert plugin_instance_from_json == plugin_instance_from_binary
+        assert dict_replace_nans(
+            plugin_instance_from_json.to_dict()
+        ) == dict_replace_nans(plugin_instance_from_binary.to_dict())
