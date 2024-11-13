@@ -53,9 +53,9 @@ class CodeGeneratorRequest(betterproto.Message):
     parameter: str = betterproto.string_field(2)
     """The generator parameter passed on the command-line."""
 
-    proto_file: List[
-        "betterproto_lib_pydantic_google_protobuf.FileDescriptorProto"
-    ] = betterproto.message_field(15)
+    proto_file: List["betterproto_lib_pydantic_google_protobuf.FileDescriptorProto"] = (
+        betterproto.message_field(15)
+    )
     """
     FileDescriptorProtos for all files in files_to_generate and everything
      they import.  The files will appear in topological order, so each file
@@ -195,9 +195,9 @@ class CodeGeneratorResponseFile(betterproto.Message):
     content: str = betterproto.string_field(15)
     """The file contents."""
 
-    generated_code_info: (
-        "betterproto_lib_pydantic_google_protobuf.GeneratedCodeInfo"
-    ) = betterproto.message_field(16)
+    generated_code_info: "betterproto_lib_pydantic_google_protobuf.GeneratedCodeInfo" = betterproto.message_field(
+        16
+    )
     """
     Information describing the file content being inserted. If an insertion
      point is used, this information will be appropriately offset and inserted

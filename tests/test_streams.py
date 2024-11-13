@@ -46,9 +46,10 @@ java = which("java")
 
 
 def test_load_varint_too_long():
-    with BytesIO(
-        b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01"
-    ) as stream, pytest.raises(ValueError):
+    with (
+        BytesIO(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01") as stream,
+        pytest.raises(ValueError),
+    ):
         betterproto.load_varint(stream)
 
     with BytesIO(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01") as stream:
@@ -62,7 +63,7 @@ def test_load_varint_file():
         stream.read(2)  # Skip until first multi-byte
         assert betterproto.load_varint(stream) == (
             123456789,
-            b"\x95\x9A\xEF\x3A",
+            b"\x95\x9a\xef\x3a",
         )  # Multi-byte varint
 
 
@@ -83,9 +84,10 @@ def test_dump_varint_file(tmp_path):
         betterproto.dump_varint(123456789, stream)  # Multi-byte varint
 
     # Check that file contents are as expected
-    with open(tmp_path / "dump_varint_file.out", "rb") as test_stream, open(
-        streams_path / "message_dump_file_single.expected", "rb"
-    ) as exp_stream:
+    with (
+        open(tmp_path / "dump_varint_file.out", "rb") as test_stream,
+        open(streams_path / "message_dump_file_single.expected", "rb") as exp_stream,
+    ):
         assert betterproto.load_varint(test_stream) == betterproto.load_varint(
             exp_stream
         )
@@ -111,9 +113,10 @@ def test_message_dump_file_single(tmp_path):
         oneof_example.dump(stream)
 
     # Check that the outputted file is exactly as expected
-    with open(tmp_path / "message_dump_file_single.out", "rb") as test_stream, open(
-        streams_path / "message_dump_file_single.expected", "rb"
-    ) as exp_stream:
+    with (
+        open(tmp_path / "message_dump_file_single.out", "rb") as test_stream,
+        open(streams_path / "message_dump_file_single.expected", "rb") as exp_stream,
+    ):
         assert test_stream.read() == exp_stream.read()
 
 
@@ -125,9 +128,10 @@ def test_message_dump_file_multiple(tmp_path):
         nested_example.dump(stream)
 
     # Check that all three Messages were outputted to the file correctly
-    with open(tmp_path / "message_dump_file_multiple.out", "rb") as test_stream, open(
-        streams_path / "message_dump_file_multiple.expected", "rb"
-    ) as exp_stream:
+    with (
+        open(tmp_path / "message_dump_file_multiple.out", "rb") as test_stream,
+        open(streams_path / "message_dump_file_multiple.expected", "rb") as exp_stream,
+    ):
         assert test_stream.read() == exp_stream.read()
 
 
@@ -137,9 +141,10 @@ def test_message_dump_delimited(tmp_path):
         oneof_example.dump(stream, betterproto.SIZE_DELIMITED)
         nested_example.dump(stream, betterproto.SIZE_DELIMITED)
 
-    with open(tmp_path / "message_dump_delimited.out", "rb") as test_stream, open(
-        streams_path / "delimited_messages.in", "rb"
-    ) as exp_stream:
+    with (
+        open(tmp_path / "message_dump_delimited.out", "rb") as test_stream,
+        open(streams_path / "delimited_messages.in", "rb") as exp_stream,
+    ):
         assert test_stream.read() == exp_stream.read()
 
 
@@ -165,9 +170,10 @@ def test_message_load_file_multiple():
 
 
 def test_message_load_too_small():
-    with open(
-        streams_path / "message_dump_file_single.expected", "rb"
-    ) as stream, pytest.raises(ValueError):
+    with (
+        open(streams_path / "message_dump_file_single.expected", "rb") as stream,
+        pytest.raises(ValueError),
+    ):
         oneof.Test().load(stream, len_oneof - 1)
 
 
@@ -180,9 +186,10 @@ def test_message_load_delimited():
 
 
 def test_message_load_too_large():
-    with open(
-        streams_path / "message_dump_file_single.expected", "rb"
-    ) as stream, pytest.raises(ValueError):
+    with (
+        open(streams_path / "message_dump_file_single.expected", "rb") as stream,
+        pytest.raises(ValueError),
+    ):
         oneof.Test().load(stream, len_oneof + 1)
 
 
@@ -272,9 +279,10 @@ def test_dump_varint_negative(tmp_path):
         with pytest.raises(ValueError):
             betterproto.dump_varint(beyond, stream)
 
-    with open(streams_path / "dump_varint_negative.expected", "rb") as exp_stream, open(
-        tmp_path / "dump_varint_negative.out", "rb"
-    ) as test_stream:
+    with (
+        open(streams_path / "dump_varint_negative.expected", "rb") as exp_stream,
+        open(tmp_path / "dump_varint_negative.out", "rb") as test_stream,
+    ):
         assert test_stream.read() == exp_stream.read()
 
 
@@ -286,9 +294,10 @@ def test_dump_varint_positive(tmp_path):
         betterproto.dump_varint(single_byte, stream)
         betterproto.dump_varint(multi_byte, stream)
 
-    with open(tmp_path / "dump_varint_positive.out", "rb") as test_stream, open(
-        streams_path / "dump_varint_positive.expected", "rb"
-    ) as exp_stream:
+    with (
+        open(tmp_path / "dump_varint_positive.out", "rb") as test_stream,
+        open(streams_path / "dump_varint_positive.expected", "rb") as exp_stream,
+    ):
         assert test_stream.read() == exp_stream.read()
 
 
@@ -338,7 +347,7 @@ def run_java_single_varint(value: int, tmp_path) -> int:
 
 def test_single_varint(compile_jar, tmp_path):
     single_byte = (1, b"\x01")
-    multi_byte = (123456789, b"\x95\x9A\xEF\x3A")
+    multi_byte = (123456789, b"\x95\x9a\xef\x3a")
 
     # Write a single-byte varint to a file and have Java read it back
     returned = run_java_single_varint(single_byte[0], tmp_path)
@@ -351,8 +360,8 @@ def test_single_varint(compile_jar, tmp_path):
 
 def test_multiple_varints(compile_jar, tmp_path):
     single_byte = (1, b"\x01")
-    multi_byte = (123456789, b"\x95\x9A\xEF\x3A")
-    over32 = (3000000000, b"\x80\xBC\xC1\x96\x0B")
+    multi_byte = (123456789, b"\x95\x9a\xef\x3a")
+    over32 = (3000000000, b"\x80\xbc\xc1\x96\x0b")
 
     # Write two varints to the same file
     with open(tmp_path / "py_multiple_varints.out", "wb") as stream:

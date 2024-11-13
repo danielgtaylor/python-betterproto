@@ -66,8 +66,7 @@ if sys.version_info >= (3, 10):
     from types import UnionType as _types_UnionType
 else:
 
-    class _types_UnionType:
-        ...
+    class _types_UnionType: ...
 
 
 # Proto 3 data types
