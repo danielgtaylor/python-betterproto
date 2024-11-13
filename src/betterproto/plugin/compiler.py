@@ -7,8 +7,6 @@ from .module_validation import ModuleValidator
 
 try:
     # betterproto[compiler] specific dependencies
-    import black
-    import isort.api
     import jinja2
 except ImportError as err:
     print(
