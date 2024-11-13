@@ -2,16 +2,13 @@ ci:
   autofix_prs: false
 
 repos:
-  - repo: https://github.com/pycqa/isort
-    rev: 5.11.5
+  - repo: https://github.com/astral-sh/ruff
+    rev: 0.6.9
     hooks:
-      - id: isort
-
-  - repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-      - id: black
-        args: ["--target-version", "py310"]
+      - id: ruff
+        args: ["format", "--diff", "src", "tests"]
+      - id: ruff
+        args: ["check", "--select", "I", "src", "tests"]
 
   - repo: https://github.com/PyCQA/doc8
     rev: 0.10.1
