@@ -41,7 +41,6 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         mcs, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any]
     ) -> Self:
         value_map = {}
-
         member_map = {}
 
         new_mcs = type(
