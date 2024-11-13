@@ -1,5 +1,6 @@
 import os.path
 import sys
+import subprocess
 
 from .module_validation import ModuleValidator
 
@@ -40,21 +41,16 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
 
     code = body_template.render(output_file=output_file)
     code = header_template.render(output_file=output_file) + code
-    code = isort.api.sort_code_string(
-        code=code,
-        show_diff=False,
-        py_version=37,
-        profile="black",
-        combine_as_imports=True,
-        lines_after_imports=2,
-        quiet=True,
-        force_grid_wrap=2,
-        known_third_party=["grpclib", "betterproto"],
+
+    # Sort imports, delete unused ones
+    code = subprocess.check_output(
+        ["ruff", "check", "--select", "I,F401", "--fix", "--silent", "-"],
+        input=code,
+        encoding="utf-8",
     )
-    code = black.format_str(
-        src_contents=code,
-        mode=black.Mode(),
-    )
+
+    # Format the code
+    code = subprocess.check_output(["ruff", "format", "-"], input=code, encoding="utf-8")
 
     # Validate the generated code.
     validator = ModuleValidator(iter(code.splitlines()))
