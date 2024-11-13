@@ -1,6 +1,6 @@
 import os.path
-import sys
 import subprocess
+import sys
 
 from .module_validation import ModuleValidator
 
@@ -48,7 +48,9 @@ def outputfile_compiler(output_file: OutputTemplate) -> str:
     )
 
     # Format the code
-    code = subprocess.check_output(["ruff", "format", "-"], input=code, encoding="utf-8")
+    code = subprocess.check_output(
+        ["ruff", "format", "-"], input=code, encoding="utf-8"
+    )
 
     # Validate the generated code.
     validator = ModuleValidator(iter(code.splitlines()))

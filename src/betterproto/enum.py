@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import sys
 from enum import (
-    IntEnum,
     EnumMeta,
+    IntEnum,
 )
 from types import MappingProxyType
 from typing import (
@@ -42,10 +42,6 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
     ) -> Self:
         value_map = {}
 
-
-
-
-        
         member_map = {}
 
         new_mcs = type(
