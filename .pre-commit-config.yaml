@@ -2,13 +2,13 @@ ci:
   autofix_prs: false
 
 repos:
-  - repo: https://github.com/astral-sh/ruff
-    rev: 0.6.9
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
     hooks:
+      - id: ruff-format
+        args: ["--diff", "src", "tests"]
       - id: ruff
-        args: ["format", "--diff", "src", "tests"]
-      - id: ruff
-        args: ["check", "--select", "I", "src", "tests"]
+        args: ["--select", "I", "src", "tests"]
 
   - repo: https://github.com/PyCQA/doc8
     rev: 0.10.1
