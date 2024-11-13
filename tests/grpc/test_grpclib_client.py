@@ -1,5 +1,4 @@
 import asyncio
-import sys
 import uuid
 
 import grpclib
@@ -91,9 +90,6 @@ async def test_trailer_only_error_stream_unary(
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(
-    sys.version_info < (3, 8), reason="async mock spy does works for python3.8+"
-)
 async def test_service_call_mutable_defaults(mocker):
     async with ChannelFor([ThingService()]) as channel:
         client = ThingServiceClient(channel)
