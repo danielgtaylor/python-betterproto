@@ -13,7 +13,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-ruff = { version = "^0.6.9", optional = true }
+# The Ruff version is pinned. To update it, also update it in .pre-commit-config.yaml
+ruff = { version = "~0.7.4", optional = true }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
