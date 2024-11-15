@@ -205,14 +205,10 @@ def dataclass_field(
 ) -> dataclasses.Field:
     """Creates a dataclass field with attached protobuf metadata."""
     if repeated:
-
-        def default_factory():
-            return []
+        default_factory = list
 
     elif optional or group:
-
-        def default_factory():
-            return None
+        default_factory = type(None)
 
     return dataclasses.field(
         default_factory=default_factory,
@@ -255,7 +251,7 @@ def bool_field(
     return dataclass_field(
         number,
         TYPE_BOOL,
-        lambda: False,
+        bool,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -269,7 +265,7 @@ def int32_field(
     repeated: bool = False,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_INT32, lambda: 0, group=group, optional=optional, repeated=repeated
+        number, TYPE_INT32, int, group=group, optional=optional, repeated=repeated
     )
 
 
@@ -280,7 +276,7 @@ def int64_field(
     repeated: bool = False,
 ) -> Any:
     return dataclass_field(
-        number, TYPE_INT64, lambda: 0, group=group, optional=optional, repeated=repeated
+        number, TYPE_INT64, int, group=group, optional=optional, repeated=repeated
     )
 
 
@@ -293,7 +289,7 @@ def uint32_field(
     return dataclass_field(
         number,
         TYPE_UINT32,
-        lambda: 0,
+        int,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -309,7 +305,7 @@ def uint64_field(
     return dataclass_field(
         number,
         TYPE_UINT64,
-        lambda: 0,
+        int,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -325,7 +321,7 @@ def sint32_field(
     return dataclass_field(
         number,
         TYPE_SINT32,
-        lambda: 0,
+        int,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -341,7 +337,7 @@ def sint64_field(
     return dataclass_field(
         number,
         TYPE_SINT64,
-        lambda: 0,
+        int,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -357,7 +353,7 @@ def float_field(
     return dataclass_field(
         number,
         TYPE_FLOAT,
-        lambda: 0.0,
+        float,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -373,7 +369,7 @@ def double_field(
     return dataclass_field(
         number,
         TYPE_DOUBLE,
-        lambda: 0.0,
+        float,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -389,7 +385,7 @@ def fixed32_field(
     return dataclass_field(
         number,
         TYPE_FIXED32,
-        lambda: 0.0,
+        float,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -405,7 +401,7 @@ def fixed64_field(
     return dataclass_field(
         number,
         TYPE_FIXED64,
-        lambda: 0.0,
+        float,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -421,7 +417,7 @@ def sfixed32_field(
     return dataclass_field(
         number,
         TYPE_SFIXED32,
-        lambda: 0.0,
+        float,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -437,7 +433,7 @@ def sfixed64_field(
     return dataclass_field(
         number,
         TYPE_SFIXED64,
-        lambda: 0.0,
+        float,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -453,7 +449,7 @@ def string_field(
     return dataclass_field(
         number,
         TYPE_STRING,
-        lambda: "",
+        str,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -469,7 +465,7 @@ def bytes_field(
     return dataclass_field(
         number,
         TYPE_BYTES,
-        lambda: b"",
+        bytes,
         group=group,
         optional=optional,
         repeated=repeated,
@@ -486,7 +482,7 @@ def message_field(
     return dataclass_field(
         number,
         TYPE_MESSAGE,
-        lambda: None,
+        type(None),
         group=group,
         wraps=wraps,
         optional=optional,
@@ -498,7 +494,7 @@ def map_field(
     number: int, key_type: str, value_type: str, group: Optional[str] = None
 ) -> Any:
     return dataclass_field(
-        number, TYPE_MAP, lambda: dict(), map_types=(key_type, value_type), group=group
+        number, TYPE_MAP, dict, map_types=(key_type, value_type), group=group
     )
 
 
@@ -886,16 +882,12 @@ class ProtoClassMetadata:
                         (
                             "key",
                             kt,
-                            dataclass_field(
-                                1, meta.map_types[0], default_factory=lambda: kt()
-                            ),
+                            dataclass_field(1, meta.map_types[0], default_factory=kt),
                         ),
                         (
                             "value",
                             vt,
-                            dataclass_field(
-                                2, meta.map_types[1], default_factory=lambda: vt()
-                            ),
+                            dataclass_field(2, meta.map_types[1], default_factory=vt),
                         ),
                     ],
                     bases=(Message,),
