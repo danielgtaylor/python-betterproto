@@ -13,11 +13,11 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-black = { version = ">=23.1.0", optional = true }
+# The Ruff version is pinned. To update it, also update it in .pre-commit-config.yaml
+ruff = { version = "~0.7.4", optional = true }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
-isort = { version = "^5.11.5", optional = true }
 typing-extensions = "^4.7.1"
 betterproto-rust-codec = { version = "0.1.1", optional = true }
 
@@ -47,9 +47,16 @@ tomlkit = ">=0.7.0"
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
 [tool.poetry.extras]
-compiler = ["black", "isort", "jinja2"]
+compiler = ["ruff", "jinja2"]
 rust-codec = ["betterproto-rust-codec"]
 
+[tool.ruff]
+extend-exclude = ["tests/output_*"]
+target-version = "py38"
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
 
 # Dev workflow tasks
 
@@ -65,13 +72,29 @@ help = "Run tests"
 cmd  = "mypy src --ignore-missing-imports"
 help = "Check types with mypy"
 
-[tool.poe.tasks]
-_black = "black . --exclude tests/output_ --target-version py310"
-_isort = "isort . --extend-skip-glob 'tests/output_*/**/*'"
-
 [tool.poe.tasks.format]
-sequence  = ["_black", "_isort"]
-help = "Apply black and isort formatting to source code"
+sequence = ["_format", "_sort-imports"]
+help = "Format the source code, and sort the imports"
+
+[tool.poe.tasks.check]
+sequence = ["_check-format", "_check-imports"]
+help = "Check that the source code is formatted and the imports sorted"
+
+[tool.poe.tasks._format]
+cmd = "ruff format src tests"
+help = "Format the source code without sorting the imports"
+
+[tool.poe.tasks._sort-imports]
+cmd = "ruff check --select I --fix src tests"
+help = "Sort the imports"
+
+[tool.poe.tasks._check-format]
+cmd = "ruff format --diff src tests"
+help = "Check that the source code is formatted"
+
+[tool.poe.tasks._check-imports]
+cmd = "ruff check --select I src tests"
+help = "Check that the imports are sorted"
 
 [tool.poe.tasks.docs]
 cmd  = "sphinx-build docs docs/build"
@@ -105,23 +128,6 @@ help = "Regenerate the types in betterproto.lib.std.google"
 [tool.poe.tasks.full-test]
 shell = "poe generate && tox"
 help = "Run tests with multiple pythons"
-
-[tool.poe.tasks.check-style]
-cmd = "black . --check --diff"
-help = "Check if code style is correct"
-
-[tool.isort]
-py_version = 37
-profile = "black"
-force_single_line = false
-combine_as_imports = true
-lines_after_imports = 2
-include_trailing_comma = true
-force_grid_wrap = 2
-src_paths = ["src", "tests"]
-
-[tool.black]
-target-version = ['py37']
 
 [tool.doc8]
 paths = ["docs"]

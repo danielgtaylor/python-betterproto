@@ -1204,9 +1204,9 @@ class EnumDescriptorProto(betterproto.Message):
     name: str = betterproto.string_field(1)
     value: List["EnumValueDescriptorProto"] = betterproto.message_field(2)
     options: "EnumOptions" = betterproto.message_field(3)
-    reserved_range: List[
-        "EnumDescriptorProtoEnumReservedRange"
-    ] = betterproto.message_field(4)
+    reserved_range: List["EnumDescriptorProtoEnumReservedRange"] = (
+        betterproto.message_field(4)
+    )
     """
     Range of reserved numeric values. Reserved numeric values may not be used
      by enum values in the same enum declaration. Reserved ranges may not
@@ -1792,9 +1792,9 @@ class FeatureSetDefaults(betterproto.Message):
      for the closest matching edition, followed by proto merges.
     """
 
-    defaults: List[
-        "FeatureSetDefaultsFeatureSetEditionDefault"
-    ] = betterproto.message_field(1)
+    defaults: List["FeatureSetDefaultsFeatureSetEditionDefault"] = (
+        betterproto.message_field(1)
+    )
     minimum_edition: "Edition" = betterproto.enum_field(4)
     """
     The minimum supported edition (inclusive) when this was constructed.

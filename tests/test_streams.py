@@ -62,7 +62,7 @@ def test_load_varint_file():
         stream.read(2)  # Skip until first multi-byte
         assert betterproto.load_varint(stream) == (
             123456789,
-            b"\x95\x9A\xEF\x3A",
+            b"\x95\x9a\xef\x3a",
         )  # Multi-byte varint
 
 
@@ -338,7 +338,7 @@ def run_java_single_varint(value: int, tmp_path) -> int:
 
 def test_single_varint(compile_jar, tmp_path):
     single_byte = (1, b"\x01")
-    multi_byte = (123456789, b"\x95\x9A\xEF\x3A")
+    multi_byte = (123456789, b"\x95\x9a\xef\x3a")
 
     # Write a single-byte varint to a file and have Java read it back
     returned = run_java_single_varint(single_byte[0], tmp_path)
@@ -351,8 +351,8 @@ def test_single_varint(compile_jar, tmp_path):
 
 def test_multiple_varints(compile_jar, tmp_path):
     single_byte = (1, b"\x01")
-    multi_byte = (123456789, b"\x95\x9A\xEF\x3A")
-    over32 = (3000000000, b"\x80\xBC\xC1\x96\x0B")
+    multi_byte = (123456789, b"\x95\x9a\xef\x3a")
+    over32 = (3000000000, b"\x80\xbc\xc1\x96\x0b")
 
     # Write two varints to the same file
     with open(tmp_path / "py_multiple_varints.out", "wb") as stream:
