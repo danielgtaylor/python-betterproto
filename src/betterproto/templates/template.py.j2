@@ -89,7 +89,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {{ method.comment }}
 
         {% endif %}
-        {% if method.proto_obj.options.deprecated %}
+        {% if method.proto_obj.options and method.proto_obj.options.deprecated %}
         warnings.warn("{{ service.py_name }}.{{ method.py_name }} is deprecated", DeprecationWarning)
 
         {% endif %}

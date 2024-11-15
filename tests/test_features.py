@@ -25,55 +25,6 @@ import pytest
 import betterproto
 
 
-def test_has_field():
-    @dataclass
-    class Bar(betterproto.Message):
-        baz: int = betterproto.int32_field(1)
-
-    @dataclass
-    class Foo(betterproto.Message):
-        bar: Bar = betterproto.message_field(1)
-
-    # Unset by default
-    foo = Foo()
-    assert betterproto.serialized_on_wire(foo.bar) is False
-
-    # Serialized after setting something
-    foo.bar.baz = 1
-    assert betterproto.serialized_on_wire(foo.bar) is True
-
-    # Still has it after setting the default value
-    foo.bar.baz = 0
-    assert betterproto.serialized_on_wire(foo.bar) is True
-
-    # Manual override (don't do this)
-    foo.bar._serialized_on_wire = False
-    assert betterproto.serialized_on_wire(foo.bar) is False
-
-    # Can manually set it but defaults to false
-    foo.bar = Bar()
-    assert betterproto.serialized_on_wire(foo.bar) is False
-
-    @dataclass
-    class WithCollections(betterproto.Message):
-        test_list: List[str] = betterproto.string_field(1)
-        test_map: Dict[str, str] = betterproto.map_field(
-            2, betterproto.TYPE_STRING, betterproto.TYPE_STRING
-        )
-
-    # Is always set from parse, even if all collections are empty
-    with_collections_empty = WithCollections().parse(bytes(WithCollections()))
-    assert betterproto.serialized_on_wire(with_collections_empty) == True
-    with_collections_list = WithCollections().parse(
-        bytes(WithCollections(test_list=["a", "b", "c"]))
-    )
-    assert betterproto.serialized_on_wire(with_collections_list) == True
-    with_collections_map = WithCollections().parse(
-        bytes(WithCollections(test_map={"a": "b", "c": "d"}))
-    )
-    assert betterproto.serialized_on_wire(with_collections_map) == True
-
-
 def test_class_init():
     @dataclass
     class Bar(betterproto.Message):
@@ -97,7 +48,9 @@ def test_enum_as_int_json():
 
     @dataclass
     class Foo(betterproto.Message):
-        bar: TestEnum = betterproto.enum_field(1)
+        bar: TestEnum = betterproto.enum_field(
+            1, enum_default_value=lambda: TestEnum.try_value(0)
+        )
 
     # JSON strings are supported, but ints should still be supported too.
     foo = Foo().from_dict({"bar": 1})
@@ -155,18 +108,15 @@ def test_oneof_support():
     foo.baz = "test"
 
     # Other oneof fields should now be unset
-    assert not hasattr(foo, "bar")
-    assert object.__getattribute__(foo, "bar") == betterproto.PLACEHOLDER
+    assert foo.bar is None
     assert betterproto.which_one_of(foo, "group1")[0] == "baz"
 
     foo.sub = Sub(val=1)
-    assert betterproto.serialized_on_wire(foo.sub)
 
     foo.abc = "test"
 
     # Group 1 shouldn't be touched, group 2 should have reset
-    assert not hasattr(foo, "sub")
-    assert object.__getattribute__(foo, "sub") == betterproto.PLACEHOLDER
+    assert foo.sub is None
     assert betterproto.which_one_of(foo, "group2")[0] == "abc"
 
     # Zero value should always serialize for one-of
@@ -179,16 +129,6 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo2, "group1")[0] == "bar"
     assert foo.bar == 0
     assert betterproto.which_one_of(foo2, "group2")[0] == ""
-
-
-@pytest.mark.skipif(
-    sys.version_info < (3, 10),
-    reason="pattern matching is only supported in python3.10+",
-)
-def test_oneof_pattern_matching():
-    from .oneof_pattern_matching import test_oneof_pattern_matching
-
-    test_oneof_pattern_matching()
 
 
 def test_json_casing():
@@ -346,7 +286,7 @@ def test_to_dict_default_values():
         some_bool: bool = betterproto.bool_field(4)
 
     # Empty dict
-    test = TestMessage().from_dict({})
+    test = TestMessage()
 
     assert test.to_dict(include_default_values=True) == {
         "someInt": 0,
@@ -354,31 +294,6 @@ def test_to_dict_default_values():
         "someStr": "",
         "someBool": False,
     }
-
-    test = TestMessage().from_pydict({})
-
-    assert test.to_pydict(include_default_values=True) == {
-        "someInt": 0,
-        "someDouble": 0.0,
-        "someStr": "",
-        "someBool": False,
-    }
-
-    # All default values
-    test = TestMessage().from_dict(
-        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
-    )
-
-    assert test.to_dict(include_default_values=True) == {
-        "someInt": 0,
-        "someDouble": 0.0,
-        "someStr": "",
-        "someBool": False,
-    }
-
-    test = TestMessage().from_pydict(
-        {"someInt": 0, "someDouble": 0.0, "someStr": "", "someBool": False}
-    )
 
     assert test.to_pydict(include_default_values=True) == {
         "someInt": 0,
@@ -456,14 +371,14 @@ def test_to_dict_default_values():
     class TestParentMessage(betterproto.Message):
         some_int: int = betterproto.int32_field(1)
         some_double: float = betterproto.double_field(2)
-        some_message: TestChildMessage = betterproto.message_field(3)
+        some_message: Optional[TestChildMessage] = betterproto.message_field(3)
 
     test = TestParentMessage().from_dict({"someInt": 0, "someDouble": 1.2})
 
     assert test.to_dict(include_default_values=True) == {
         "someInt": 0,
         "someDouble": 1.2,
-        "someMessage": {"someOtherInt": 0},
+        "someMessage": None,
     }
 
     test = TestParentMessage().from_pydict({"someInt": 0, "someDouble": 1.2})
@@ -471,7 +386,7 @@ def test_to_dict_default_values():
     assert test.to_pydict(include_default_values=True) == {
         "someInt": 0,
         "someDouble": 1.2,
-        "someMessage": {"someOtherInt": 0},
+        "someMessage": None,
     }
 
 
@@ -641,7 +556,7 @@ def test_iso_datetime():
 def test_iso_datetime_list():
     @dataclass
     class Envelope(betterproto.Message):
-        timestamps: List[datetime] = betterproto.message_field(1)
+        timestamps: List[datetime] = betterproto.message_field(1, repeated=True)
 
     msg = Envelope()
 

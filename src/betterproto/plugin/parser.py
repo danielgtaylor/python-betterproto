@@ -205,7 +205,7 @@ def read_protobuf_type(
     output_package: OutputTemplate,
 ) -> None:
     if isinstance(item, DescriptorProto):
-        if item.options.map_entry:
+        if item.options and item.options.map_entry:
             # Skip generated map entry messages since we just use dicts
             return
         # Process Message

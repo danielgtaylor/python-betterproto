@@ -58,10 +58,8 @@ def test_bytes_are_the_same_for_oneof():
 
     # None of these fields were explicitly set BUT they should not actually be null
     # themselves
-    assert not hasattr(message, "foo")
-    assert object.__getattribute__(message, "foo") == betterproto.PLACEHOLDER
-    assert not hasattr(message2, "foo")
-    assert object.__getattribute__(message2, "foo") == betterproto.PLACEHOLDER
+    assert message.foo is None
+    assert message2.foo is None
 
     assert isinstance(message_reference.foo, ReferenceFoo)
     assert isinstance(message_reference2.foo, ReferenceFoo)
@@ -86,8 +84,5 @@ def test_empty_message_field():
 
     message.foo = Empty()
     reference_message.foo.CopyFrom(ReferenceEmpty())
-
-    assert betterproto.serialized_on_wire(message.foo)
-    assert reference_message.HasField("foo")
 
     assert bytes(message) == reference_message.SerializeToString()

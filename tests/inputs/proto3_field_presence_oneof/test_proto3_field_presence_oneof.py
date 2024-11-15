@@ -18,7 +18,6 @@ def test_serialization():
 
     test_empty_nested(Test(nested=Nested()))
     test_empty_nested(Test(nested=Nested(inner=None)))
-    test_empty_nested(Test(nested=Nested(inner=InnerNested(a=None))))
 
     def test_empty_with_optional(message: Test) -> None:
         # '12' => tag 2, length delimited
