@@ -47,6 +47,7 @@ import betterproto
 {% if output_file.services %}
 from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+import grpc
 {% endif %}
 
 {% if output_file.imports_type_checking_only %}

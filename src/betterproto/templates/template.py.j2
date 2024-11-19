@@ -74,8 +74,6 @@ class {{ service.py_name }}SyncStub():
     pass
     {% endif %}
 
-    import grpc
-
     def __init__(self, channel: grpc.Channel):
         self._channel = channel
 
@@ -84,10 +82,9 @@ class {{ service.py_name }}SyncStub():
         {%- if not method.client_streaming -%}
             , {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"
         {%- else -%}
-            {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}: {{ output_file.typing_compiler.iterable(method.py_input_message_type) }}
+            , {{ method.py_input_message_param }}_iterator: "{{ output_file.typing_compiler.iterable(method.py_input_message_type) }}"
         {%- endif -%}
-            ) -> {% if method.server_streaming %}{{ output_file.typing_compiler.sync_iterator(method.py_output_message_type ) }}{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> "{% if method.server_streaming %}{{ output_file.typing_compiler.sync_iterator(method.py_output_message_type ) }}{% else %}{{ method.py_output_message_type }}{% endif %}":
         {% if method.comment %}
 {{ method.comment }}
 
@@ -102,7 +99,7 @@ class {{ service.py_name }}SyncStub():
             "{{ method.route }}",
             {{ method.py_input_message_type }}.SerializeToString,
             {{ method.py_output_message_type }}.FromString,
-        )({{ method.py_input_message_param }}):
+        )({{ method.py_input_message_param }}_iterator):
             yield response
             {% else %}{# i.e. not client streaming #}
         for response in self._channel.unary_stream(
@@ -119,7 +116,7 @@ class {{ service.py_name }}SyncStub():
             "{{ method.route }}",
             {{ method.py_input_message_type }}.SerializeToString,
             {{ method.py_output_message_type }}.FromString,
-        )({{ method.py_input_message_param }})
+        )({{ method.py_input_message_param }}_iterator)
             {% else %}{# i.e. not client streaming #}
         return self._channel.unary_unary(
             "{{ method.route }}",
@@ -230,9 +227,9 @@ class {{ service.py_name }}Base(ServiceBase):
             , {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"
         {%- else -%}
             {# Client streaming: need a request iterator instead #}
-            , {{ method.py_input_message_param }}_iterator: {{ output_file.typing_compiler.async_iterator(method.py_input_message_type) }}
+            , {{ method.py_input_message_param }}_iterator: "{{ output_file.typing_compiler.async_iterator(method.py_input_message_type) }}"
         {%- endif -%}
-            ) -> {% if method.server_streaming %}{{ output_file.typing_compiler.async_iterator(method.py_output_message_type) }}{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+            ) -> "{% if method.server_streaming %}{{ output_file.typing_compiler.async_iterator(method.py_output_message_type) }}{% else %}{{ method.py_output_message_type }}{% endif %}":
         {% if method.comment %}
 {{ method.comment }}
 
