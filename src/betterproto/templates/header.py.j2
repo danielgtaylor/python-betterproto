@@ -12,6 +12,7 @@ __all__ = (
     {%- endfor -%}
     {%- for service in output_file.services -%}
         "{{ service.py_name }}Stub",
+        "{{ service.py_name }}SyncStub",
         "{{ service.py_name }}Base",
     {%- endfor -%}
 )

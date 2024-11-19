@@ -63,6 +63,76 @@ class {{ message.py_name }}(betterproto.Message):
     {%  endif %}
 
 {% endfor %}
+
+
+{% for service in output_file.services %}
+class {{ service.py_name }}SyncStub():
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% elif not service.methods %}
+    pass
+    {% endif %}
+
+    import grpc
+
+    def __init__(self, channel: grpc.Channel):
+        self._channel = channel
+
+    {% for method in service.methods %}
+    def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            , {{ method.py_input_message_param }}: "{{ method.py_input_message_type }}"
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , {{ method.py_input_message_param }}: {{ output_file.typing_compiler.iterable(method.py_input_message_type) }}
+        {%- endif -%}
+            ) -> {% if method.server_streaming %}{{ output_file.typing_compiler.sync_iterator(method.py_output_message_type ) }}{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        {% if method.proto_obj.options.deprecated %}
+        warnings.warn("{{ service.py_name }}.{{ method.py_name }} is deprecated", DeprecationWarning)
+
+        {% endif %}
+        {% if method.server_streaming %}
+            {% if method.client_streaming %}
+        for response in self._channel.stream_stream(
+            "{{ method.route }}",
+            {{ method.py_input_message_type }}.SerializeToString,
+            {{ method.py_output_message_type }}.FromString,
+        )({{ method.py_input_message_param }}):
+            yield response
+            {% else %}{# i.e. not client streaming #}
+        for response in self._channel.unary_stream(
+            "{{ method.route }}",
+            {{ method.py_input_message_type }}.SerializeToString,
+            {{ method.py_output_message_type }}.FromString,
+        )({{ method.py_input_message_param }}):
+            yield response
+
+            {% endif %}{# if client streaming #}
+        {% else %}{# i.e. not server streaming #}
+            {% if method.client_streaming %}
+        return self._channel.stream_unary(
+            "{{ method.route }}",
+            {{ method.py_input_message_type }}.SerializeToString,
+            {{ method.py_output_message_type }}.FromString,
+        )({{ method.py_input_message_param }})
+            {% else %}{# i.e. not client streaming #}
+        return self._channel.unary_unary(
+            "{{ method.route }}",
+            {{ method.py_input_message_type }}.SerializeToString,
+            {{ method.py_output_message_type }}.FromString,
+        )({{ method.py_input_message_param }})
+            {% endif %}{# client streaming #}
+        {% endif %}
+
+    {% endfor %}
+{% endfor %}
+
+
 {% for service in output_file.services %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):
     {% if service.comment %}
