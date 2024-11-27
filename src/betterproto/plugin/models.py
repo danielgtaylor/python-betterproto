@@ -65,10 +65,7 @@ from betterproto.lib.google.protobuf import (
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
 from .. import which_one_of
-from ..compile.importing import (
-    get_type_reference,
-    parse_source_type_name,
-)
+from ..compile.importing import get_type_reference
 from ..compile.naming import (
     pythonize_class_name,
     pythonize_enum_member_name,
@@ -205,6 +202,12 @@ class ProtoContentBase:
             if field_val is PLACEHOLDER:
                 raise ValueError(f"`{field_name}` is a required field.")
 
+    def ready(self) -> None:
+        """
+        This function is called after all the compilers are created, but before generating the output code.
+        """
+        pass
+
     @property
     def output_file(self) -> "OutputTemplate":
         current = self
@@ -214,10 +217,7 @@ class ProtoContentBase:
 
     @property
     def request(self) -> "PluginRequestCompiler":
-        current = self
-        while not isinstance(current, OutputTemplate):
-            current = current.parent
-        return current.parent_request
+        return self.output_file.parent_request
 
     @property
     def comment(self) -> str:
@@ -227,6 +227,10 @@ class ProtoContentBase:
         return get_comment(
             proto_file=self.source_file, path=self.path, indent=self.comment_indent
         )
+
+    @property
+    def deprecated(self) -> bool:
+        return self.proto_obj.options.deprecated
 
 
 @dataclass
@@ -244,7 +248,9 @@ class PluginRequestCompiler:
             List of all of the messages in this request.
         """
         return [
-            msg for output in self.output_packages.values() for msg in output.messages
+            msg
+            for output in self.output_packages.values()
+            for msg in output.messages.values()
         ]
 
 
@@ -264,9 +270,9 @@ class OutputTemplate:
     datetime_imports: Set[str] = field(default_factory=set)
     pydantic_imports: Set[str] = field(default_factory=set)
     builtins_import: bool = False
-    messages: List["MessageCompiler"] = field(default_factory=list)
-    enums: List["EnumDefinitionCompiler"] = field(default_factory=list)
-    services: List["ServiceCompiler"] = field(default_factory=list)
+    messages: Dict[str, "MessageCompiler"] = field(default_factory=dict)
+    enums: Dict[str, "EnumDefinitionCompiler"] = field(default_factory=dict)
+    services: Dict[str, "ServiceCompiler"] = field(default_factory=dict)
     imports_type_checking_only: Set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
     output: bool = True
@@ -299,13 +305,13 @@ class OutputTemplate:
         imports = set()
 
         has_deprecated = False
-        if any(m.deprecated for m in self.messages):
+        if any(m.deprecated for m in self.messages.values()):
             has_deprecated = True
-        if any(x for x in self.messages if any(x.deprecated_fields)):
+        if any(x for x in self.messages.values() if any(x.deprecated_fields)):
             has_deprecated = True
         if any(
             any(m.proto_obj.options.deprecated for m in s.methods)
-            for s in self.services
+            for s in self.services.values()
         ):
             has_deprecated = True
 
@@ -329,17 +335,15 @@ class MessageCompiler(ProtoContentBase):
     fields: List[Union["FieldCompiler", "MessageCompiler"]] = field(
         default_factory=list
     )
-    deprecated: bool = field(default=False, init=False)
     builtins_types: Set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         # Add message to output file
         if isinstance(self.parent, OutputTemplate):
             if isinstance(self, EnumDefinitionCompiler):
-                self.output_file.enums.append(self)
+                self.output_file.enums[self.proto_name] = self
             else:
-                self.output_file.messages.append(self)
-        self.deprecated = self.proto_obj.options.deprecated
+                self.output_file.messages[self.proto_name] = self
         super().__post_init__()
 
     @property
@@ -417,16 +421,24 @@ def is_oneof(proto_field_obj: FieldDescriptorProto) -> bool:
 
 
 @dataclass
-class FieldCompiler(MessageCompiler):
+class FieldCompiler(ProtoContentBase):
+    source_file: FileDescriptorProto
+    typing_compiler: TypingCompiler
+    path: List[int] = PLACEHOLDER
+    builtins_types: Set[str] = field(default_factory=set)
+
     parent: MessageCompiler = PLACEHOLDER
     proto_obj: FieldDescriptorProto = PLACEHOLDER
 
     def __post_init__(self) -> None:
         # Add field to message
-        self.parent.fields.append(self)
+        if isinstance(self.parent, MessageCompiler):
+            self.parent.fields.append(self)
+        super().__post_init__()
+
+    def ready(self) -> None:
         # Check for new imports
         self.add_imports_to(self.output_file)
-        super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
 
     def get_field_string(self, indent: int = 4) -> str:
         """Construct string representation of this field as a field."""
@@ -544,6 +556,7 @@ class FieldCompiler(MessageCompiler):
                 imports=self.output_file.imports_end,
                 source_type=self.proto_obj.type_name,
                 typing_compiler=self.typing_compiler,
+                request=self.request,
                 pydantic=self.output_file.pydantic_dataclasses,
             )
         else:
@@ -587,12 +600,22 @@ class PydanticOneOfFieldCompiler(OneOfFieldCompiler):
 
 @dataclass
 class MapEntryCompiler(FieldCompiler):
-    py_k_type: Type = PLACEHOLDER
-    py_v_type: Type = PLACEHOLDER
-    proto_k_type: str = PLACEHOLDER
-    proto_v_type: str = PLACEHOLDER
+    py_k_type: Optional[Type] = None
+    py_v_type: Optional[Type] = None
+    proto_k_type: str = ""
+    proto_v_type: str = ""
 
-    def __post_init__(self) -> None:
+    def __post_init__(self):
+        map_entry = f"{self.proto_obj.name.replace('_', '').lower()}entry"
+        for nested in self.parent.proto_obj.nested_type:
+            if (
+                nested.name.replace("_", "").lower() == map_entry
+                and nested.options.map_entry
+            ):
+                pass
+        return super().__post_init__()
+
+    def ready(self) -> None:
         """Explore nested types and set k_type and v_type if unset."""
         map_entry = f"{self.proto_obj.name.replace('_', '').lower()}entry"
         for nested in self.parent.proto_obj.nested_type:
@@ -617,7 +640,9 @@ class MapEntryCompiler(FieldCompiler):
                 # Get proto types
                 self.proto_k_type = FieldDescriptorProtoType(nested.field[0].type).name
                 self.proto_v_type = FieldDescriptorProtoType(nested.field[1].type).name
-        super().__post_init__()  # call FieldCompiler-> MessageCompiler __post_init__
+                return
+
+        raise ValueError("can't find enum")
 
     @property
     def betterproto_field_args(self) -> List[str]:
@@ -678,7 +703,7 @@ class ServiceCompiler(ProtoContentBase):
 
     def __post_init__(self) -> None:
         # Add service to output file
-        self.output_file.services.append(self)
+        self.output_file.services[self.proto_name] = self
         super().__post_init__()  # check for unset fields
 
     @property
@@ -744,6 +769,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports_end,
             source_type=self.proto_obj.input_type,
             typing_compiler=self.output_file.typing_compiler,
+            request=self.request,
             unwrap=False,
             pydantic=self.output_file.pydantic_dataclasses,
         ).strip('"')
@@ -774,6 +800,7 @@ class ServiceMethodCompiler(ProtoContentBase):
             imports=self.output_file.imports_end,
             source_type=self.proto_obj.output_type,
             typing_compiler=self.output_file.typing_compiler,
+            request=self.request,
             unwrap=False,
             pydantic=self.output_file.pydantic_dataclasses,
         ).strip('"')
