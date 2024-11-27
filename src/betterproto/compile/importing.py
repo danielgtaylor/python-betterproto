@@ -61,6 +61,7 @@ def parse_source_type_name(
         if package := request.output_packages.get(package_name):
             if object_name in package.messages or object_name in package.enums:
                 if answer:
+                    # This should have already been handeled by protoc
                     raise ValueError(f"ambiguous definition: {field_type_name}")
                 answer = package_name, object_name
 
