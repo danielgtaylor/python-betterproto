@@ -23,7 +23,7 @@ class {{ enum.py_name }}(betterproto.Enum):
         # Return the schema for validation and serialization
         return core_schema.chain_schema(
             [
-                core_schema.int_schema(),  # Validate as a string first
+                core_schema.int_schema(ge=0),  # Validate as a string first
                 core_schema.no_info_plain_validator_function(validate),  # Custom validation
             ]
         )
