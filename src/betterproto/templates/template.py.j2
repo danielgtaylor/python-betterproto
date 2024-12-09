@@ -17,7 +17,16 @@ class {{ enum.py_name }}(betterproto.Enum):
     def __get_pydantic_core_schema__(cls, _source_type, _handler):
         from pydantic_core import core_schema
 
-        return core_schema.int_schema(ge=0)
+        def validate(value: int) -> "{{ enum.py_name }}":
+            return cls(value)
+
+        # Return the schema for validation and serialization
+        return core_schema.chain_schema(
+            [
+                core_schema.int_schema(ge=0),  # Validate as a string first
+                core_schema.no_info_plain_validator_function(validate),  # Custom validation
+            ]
+        )
     {% endif %}
 
 {% endfor %}
