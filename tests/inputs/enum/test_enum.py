@@ -4,6 +4,11 @@ from tests.output_betterproto.enum import (
     Test,
 )
 
+from tests.output_betterproto_pydantic.enum import (
+    Test as TestPyd,
+    Choice as ChoicePyd,
+)
+
 
 def test_enum_set_and_get():
     assert Test(choice=Choice.ZERO).choice == Choice.ZERO
@@ -112,3 +117,7 @@ def test_renamed_enum_members():
         "MINUS",
         "_0_PREFIXED",
     }
+
+def test_pydantic_enum_preserve_type():
+    test = TestPyd(choice=ChoicePyd.ZERO)
+    assert isinstance(test.choice, ChoicePyd)
