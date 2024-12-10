@@ -3,10 +3,9 @@ from tests.output_betterproto.enum import (
     Choice,
     Test,
 )
-
 from tests.output_betterproto_pydantic.enum import (
-    Test as TestPyd,
     Choice as ChoicePyd,
+    Test as TestPyd,
 )
 
 
@@ -117,6 +116,7 @@ def test_renamed_enum_members():
         "MINUS",
         "_0_PREFIXED",
     }
+
 
 def test_pydantic_enum_preserve_type():
     test = TestPyd(choice=ChoicePyd.ZERO)
