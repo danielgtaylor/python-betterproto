@@ -439,7 +439,7 @@ value3: str | int = 1
 
 ## Development
 
-- _Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!_
+- _Join us on [Discord](https://discord.gg/DEVteTupPb)!_
 - _See how you can help &rarr; [Contributing](.github/CONTRIBUTING.md)_
 
 ### Requirements
@@ -575,7 +575,7 @@ protoc \
 
 ## Community
 
-Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
+Join us on [Discord](https://discord.gg/DEVteTupPb)!
 
 ## License
 

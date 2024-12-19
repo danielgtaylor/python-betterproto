@@ -8,7 +8,7 @@ body:
       value: >
         Thanks for taking the time to fill out a bug report!
         
-        If you're not sure it's a bug and you just have a question, the [community Slack channel](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ) is a better place for general questions than a GitHub issue.
+        If you're not sure it's a bug and you just have a question, the [community Discord channel](https://discord.gg/DEVteTupPb) is a better place for general questions than a GitHub issue.
 
   - type: input
     attributes:

@@ -2,7 +2,7 @@
 
 There's lots to do, and we're working hard, so any help is welcome!
 
-- :speech_balloon: Join us on [Slack](https://join.slack.com/t/betterproto/shared_invite/zt-f0n0uolx-iN8gBNrkPxtKHTLpG3o1OQ)!
+- :speech_balloon: Join us on [Discord](https://discord.gg/DEVteTupPb)!
 
 What can you do?
 
@@ -20,4 +20,4 @@ What can you do?
         - [Good first issues](https://github.com/danielgtaylor/python-betterproto/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
         - [Issues with tests](https://github.com/danielgtaylor/python-betterproto/issues?q=is%3Aissue+is%3Aopen+label%3A%22has+test%22)
     - New bugfix or idea
-        - If you'd like to discuss your idea first, join us on Slack!
+        - If you'd like to discuss your idea first, join us on Discord!
