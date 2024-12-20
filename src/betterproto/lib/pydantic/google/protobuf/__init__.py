@@ -663,7 +663,9 @@ class Type(betterproto.Message):
     source_context: "SourceContext" = betterproto.message_field(5)
     """The source context."""
 
-    syntax: "Syntax" = betterproto.enum_field(6)
+    syntax: "Syntax" = betterproto.enum_field(
+        6, enum_default_value=lambda: Syntax.try_value(0)
+    )
     """The source syntax."""
 
     edition: str = betterproto.string_field(7)
@@ -676,10 +678,14 @@ class Type(betterproto.Message):
 class Field(betterproto.Message):
     """A single field of a message type."""
 
-    kind: "FieldKind" = betterproto.enum_field(1)
+    kind: "FieldKind" = betterproto.enum_field(
+        1, enum_default_value=lambda: FieldKind.try_value(0)
+    )
     """The field type."""
 
-    cardinality: "FieldCardinality" = betterproto.enum_field(2)
+    cardinality: "FieldCardinality" = betterproto.enum_field(
+        2, enum_default_value=lambda: FieldCardinality.try_value(0)
+    )
     """The field cardinality."""
 
     number: int = betterproto.int32_field(3)
@@ -733,7 +739,9 @@ class Enum(betterproto.Message):
     source_context: "SourceContext" = betterproto.message_field(4)
     """The source context."""
 
-    syntax: "Syntax" = betterproto.enum_field(5)
+    syntax: "Syntax" = betterproto.enum_field(
+        5, enum_default_value=lambda: Syntax.try_value(0)
+    )
     """The source syntax."""
 
     edition: str = betterproto.string_field(6)
@@ -838,7 +846,9 @@ class Api(betterproto.Message):
     mixins: List["Mixin"] = betterproto.message_field(6)
     """Included interfaces. See [Mixin][]."""
 
-    syntax: "Syntax" = betterproto.enum_field(7)
+    syntax: "Syntax" = betterproto.enum_field(
+        7, enum_default_value=lambda: Syntax.try_value(0)
+    )
     """The source syntax of the service."""
 
 
@@ -864,7 +874,9 @@ class Method(betterproto.Message):
     options: List["Option"] = betterproto.message_field(6)
     """Any metadata attached to the method."""
 
-    syntax: "Syntax" = betterproto.enum_field(7)
+    syntax: "Syntax" = betterproto.enum_field(
+        7, enum_default_value=lambda: Syntax.try_value(0)
+    )
     """The source syntax of this method."""
 
 
@@ -1012,7 +1024,9 @@ class FileDescriptorProto(betterproto.Message):
      If `edition` is present, this value must be "editions".
     """
 
-    edition: "Edition" = betterproto.enum_field(14)
+    edition: "Edition" = betterproto.enum_field(
+        14, enum_default_value=lambda: Edition.try_value(0)
+    )
     """The edition of the proto file."""
 
 
@@ -1072,7 +1086,10 @@ class ExtensionRangeOptions(betterproto.Message):
     features: "FeatureSet" = betterproto.message_field(50)
     """Any features defined in the specific edition."""
 
-    verification: "ExtensionRangeOptionsVerificationState" = betterproto.enum_field(3)
+    verification: "ExtensionRangeOptionsVerificationState" = betterproto.enum_field(
+        3,
+        enum_default_value=lambda: ExtensionRangeOptionsVerificationState.try_value(0),
+    )
     """
     The verification state of the range.
      TODO: flip the default to DECLARATION once all empty ranges
@@ -1118,8 +1135,12 @@ class FieldDescriptorProto(betterproto.Message):
 
     name: str = betterproto.string_field(1)
     number: int = betterproto.int32_field(3)
-    label: "FieldDescriptorProtoLabel" = betterproto.enum_field(4)
-    type: "FieldDescriptorProtoType" = betterproto.enum_field(5)
+    label: "FieldDescriptorProtoLabel" = betterproto.enum_field(
+        4, enum_default_value=lambda: FieldDescriptorProtoLabel.try_value(0)
+    )
+    type: "FieldDescriptorProtoType" = betterproto.enum_field(
+        5, enum_default_value=lambda: FieldDescriptorProtoType.try_value(0)
+    )
     """
     If type_name is set, this need not be set.  If both this and type_name
      are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or TYPE_GROUP.
@@ -1315,7 +1336,9 @@ class FileOptions(betterproto.Message):
      This option has no effect on when used with the lite runtime.
     """
 
-    optimize_for: "FileOptionsOptimizeMode" = betterproto.enum_field(9)
+    optimize_for: "FileOptionsOptimizeMode" = betterproto.enum_field(
+        9, enum_default_value=lambda: FileOptionsOptimizeMode.try_value(0)
+    )
     go_package: str = betterproto.string_field(11)
     """
     Sets the Go package where structs generated from this .proto will be
@@ -1512,7 +1535,9 @@ class MessageOptions(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class FieldOptions(betterproto.Message):
-    ctype: "FieldOptionsCType" = betterproto.enum_field(1)
+    ctype: "FieldOptionsCType" = betterproto.enum_field(
+        1, enum_default_value=lambda: FieldOptionsCType.try_value(0)
+    )
     """
     The ctype option instructs the C++ code generator to use a different
      representation of the field than it normally would.  See the specific
@@ -1533,7 +1558,9 @@ class FieldOptions(betterproto.Message):
      the behavior.
     """
 
-    jstype: "FieldOptionsJsType" = betterproto.enum_field(6)
+    jstype: "FieldOptionsJsType" = betterproto.enum_field(
+        6, enum_default_value=lambda: FieldOptionsJsType.try_value(0)
+    )
     """
     The jstype option determines the JavaScript type used for values of the
      field.  The option is permitted only for 64 bit integral and fixed types
@@ -1598,8 +1625,12 @@ class FieldOptions(betterproto.Message):
      formats, e.g. when the field contains sensitive credentials.
     """
 
-    retention: "FieldOptionsOptionRetention" = betterproto.enum_field(17)
-    targets: List["FieldOptionsOptionTargetType"] = betterproto.enum_field(19)
+    retention: "FieldOptionsOptionRetention" = betterproto.enum_field(
+        17, enum_default_value=lambda: FieldOptionsOptionRetention.try_value(0)
+    )
+    targets: List["FieldOptionsOptionTargetType"] = betterproto.enum_field(
+        19, enum_default_value=lambda: FieldOptionsOptionTargetType.try_value(0)
+    )
     edition_defaults: List["FieldOptionsEditionDefault"] = betterproto.message_field(20)
     features: "FeatureSet" = betterproto.message_field(21)
     """Any features defined in the specific edition."""
@@ -1610,7 +1641,9 @@ class FieldOptions(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class FieldOptionsEditionDefault(betterproto.Message):
-    edition: "Edition" = betterproto.enum_field(3)
+    edition: "Edition" = betterproto.enum_field(
+        3, enum_default_value=lambda: Edition.try_value(0)
+    )
     value: str = betterproto.string_field(2)
 
 
@@ -1715,7 +1748,9 @@ class MethodOptions(betterproto.Message):
      this is a formalization for deprecating methods.
     """
 
-    idempotency_level: "MethodOptionsIdempotencyLevel" = betterproto.enum_field(34)
+    idempotency_level: "MethodOptionsIdempotencyLevel" = betterproto.enum_field(
+        34, enum_default_value=lambda: MethodOptionsIdempotencyLevel.try_value(0)
+    )
     features: "FeatureSet" = betterproto.message_field(35)
     """Any features defined in the specific edition."""
 
@@ -1773,14 +1808,24 @@ class FeatureSet(betterproto.Message):
      conflict here.
     """
 
-    field_presence: "FeatureSetFieldPresence" = betterproto.enum_field(1)
-    enum_type: "FeatureSetEnumType" = betterproto.enum_field(2)
-    repeated_field_encoding: "FeatureSetRepeatedFieldEncoding" = betterproto.enum_field(
-        3
+    field_presence: "FeatureSetFieldPresence" = betterproto.enum_field(
+        1, enum_default_value=lambda: FeatureSetFieldPresence.try_value(0)
     )
-    utf8_validation: "FeatureSetUtf8Validation" = betterproto.enum_field(4)
-    message_encoding: "FeatureSetMessageEncoding" = betterproto.enum_field(5)
-    json_format: "FeatureSetJsonFormat" = betterproto.enum_field(6)
+    enum_type: "FeatureSetEnumType" = betterproto.enum_field(
+        2, enum_default_value=lambda: FeatureSetEnumType.try_value(0)
+    )
+    repeated_field_encoding: "FeatureSetRepeatedFieldEncoding" = betterproto.enum_field(
+        3, enum_default_value=lambda: FeatureSetRepeatedFieldEncoding.try_value(0)
+    )
+    utf8_validation: "FeatureSetUtf8Validation" = betterproto.enum_field(
+        4, enum_default_value=lambda: FeatureSetUtf8Validation.try_value(0)
+    )
+    message_encoding: "FeatureSetMessageEncoding" = betterproto.enum_field(
+        5, enum_default_value=lambda: FeatureSetMessageEncoding.try_value(0)
+    )
+    json_format: "FeatureSetJsonFormat" = betterproto.enum_field(
+        6, enum_default_value=lambda: FeatureSetJsonFormat.try_value(0)
+    )
 
 
 @dataclass(eq=False, repr=False)
@@ -1795,13 +1840,17 @@ class FeatureSetDefaults(betterproto.Message):
     defaults: List[
         "FeatureSetDefaultsFeatureSetEditionDefault"
     ] = betterproto.message_field(1)
-    minimum_edition: "Edition" = betterproto.enum_field(4)
+    minimum_edition: "Edition" = betterproto.enum_field(
+        4, enum_default_value=lambda: Edition.try_value(0)
+    )
     """
     The minimum supported edition (inclusive) when this was constructed.
      Editions before this will not have defaults.
     """
 
-    maximum_edition: "Edition" = betterproto.enum_field(5)
+    maximum_edition: "Edition" = betterproto.enum_field(
+        5, enum_default_value=lambda: Edition.try_value(0)
+    )
     """
     The maximum known edition (inclusive) when this was constructed. Editions
      after this will not have reliable defaults.
@@ -1817,7 +1866,9 @@ class FeatureSetDefaultsFeatureSetEditionDefault(betterproto.Message):
      be used.  This field must be in strict ascending order by edition.
     """
 
-    edition: "Edition" = betterproto.enum_field(3)
+    edition: "Edition" = betterproto.enum_field(
+        3, enum_default_value=lambda: Edition.try_value(0)
+    )
     features: "FeatureSet" = betterproto.message_field(2)
 
 
@@ -2008,7 +2059,9 @@ class GeneratedCodeInfoAnnotation(betterproto.Message):
      the last relevant byte (so the length of the text = end - begin).
     """
 
-    semantic: "GeneratedCodeInfoAnnotationSemantic" = betterproto.enum_field(5)
+    semantic: "GeneratedCodeInfoAnnotationSemantic" = betterproto.enum_field(
+        5, enum_default_value=lambda: GeneratedCodeInfoAnnotationSemantic.try_value(0)
+    )
 
 
 @dataclass(eq=False, repr=False)
@@ -2372,7 +2425,10 @@ class Value(betterproto.Message):
     """
 
     null_value: Optional["NullValue"] = betterproto.enum_field(
-        1, optional=True, group="kind"
+        1,
+        enum_default_value=lambda: NullValue.try_value(0),
+        optional=True,
+        group="kind",
     )
     """Represents a null value."""
 

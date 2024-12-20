@@ -19,30 +19,6 @@ regenerating your protobufs of course) although there are some minor differences
     :meth:`betterproto.Message.__bytes__` respectively.
 
 
-Determining if a message was sent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Sometimes it is useful to be able to determine whether a message has been sent on
-the wire. This is how the Google wrapper types work to let you know whether a value is
-unset (set as the default/zero value), or set as something else, for example.
-
-Use ``betterproto.serialized_on_wire(message)`` to determine if it was sent. This is
-a little bit different from the official Google generated Python code, and it lives
-outside the generated ``Message`` class to prevent name clashes. Note that it only
-supports Proto 3 and thus can only be used to check if ``Message`` fields are set.
-You cannot check if a scalar was sent on the wire.
-
-.. code-block:: python
-
-    # Old way (official Google Protobuf package)
-    >>> mymessage.HasField('myfield')
-    True
-
-    # New way (this project)
-    >>> betterproto.serialized_on_wire(mymessage.myfield)
-    True
-
-
 One-of Support
 ~~~~~~~~~~~~~~
 
