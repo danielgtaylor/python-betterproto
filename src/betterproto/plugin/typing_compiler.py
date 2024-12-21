@@ -92,6 +92,14 @@ class DirectImportTypingCompiler(TypingCompiler):
     def async_iterator(self, type: str) -> str:
         self._imports["typing"].add("AsyncIterator")
         return f"AsyncIterator[{type}]"
+    
+    def sync_iterable(self, type: str) -> str:
+        self._imports["typing"].add("Iterable")
+        return f"Iterable[{type}]"
+
+    def sync_iterator(self, type: str) -> str:
+        self._imports["typing"].add("Iterator")
+        return f"Iterator[{type}]"
 
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         return {k: v if v else None for k, v in self._imports.items()}
