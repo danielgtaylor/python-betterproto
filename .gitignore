@@ -18,3 +18,4 @@ output
 .asv
 venv
 .devcontainer
+.ruff_cache
