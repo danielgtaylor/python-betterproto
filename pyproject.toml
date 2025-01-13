@@ -1,8 +1,10 @@
-[tool.poetry]
+[project]
 name = "betterproto"
 version = "2.0.0b7"
 description = "A better Protobuf / gRPC generator & library"
-authors = ["Daniel G. Taylor <danielgtaylor@gmail.com>"]
+authors = [
+    {name = "Daniel G. Taylor", email = "danielgtaylor@gmail.com"}
+]
 readme = "README.md"
 repository = "https://github.com/danielgtaylor/python-betterproto"
 keywords = ["protobuf", "gRPC"]
@@ -10,9 +12,10 @@ license = "MIT"
 packages = [
     { include = "betterproto", from = "src" }
 ]
+requires-python = ">=3.8"
+dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
 # The Ruff version is pinned. To update it, also update it in .pre-commit-config.yaml
 ruff = { version = "~0.7.4", optional = true }
 grpclib = "^0.4.1"
@@ -43,10 +46,10 @@ protobuf = "^4"
 cachelib = "^0.10.2"
 tomlkit = ">=0.7.0"
 
-[tool.poetry.scripts]
+[project.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
 
-[tool.poetry.extras]
+[project.optional-dependencies]
 compiler = ["ruff", "jinja2"]
 rust-codec = ["betterproto-rust-codec"]
 
@@ -162,5 +165,5 @@ require_poetry = true
 """
 
 [build-system]
-requires = ["poetry-core>=1.0.0,<2"]
+requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
