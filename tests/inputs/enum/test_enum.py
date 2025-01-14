@@ -27,9 +27,9 @@ def test_enum_is_comparable_with_int():
 
 
 def test_enum_to_dict():
-    assert (
-        "choice" not in Test(choice=Choice.ZERO).to_dict()
-    ), "Default enum value is not serialized"
+    assert "choice" not in Test(choice=Choice.ZERO).to_dict(), (
+        "Default enum value is not serialized"
+    )
     assert (
         Test(choice=Choice.ZERO).to_dict(include_default_values=True)["choice"]
         == "ZERO"

@@ -17,7 +17,7 @@ dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
 # The Ruff version is pinned. To update it, also update it in .pre-commit-config.yaml
-ruff = { version = "~0.7.4", optional = true }
+ruff = { version = "~0.9.1", optional = true }
 grpclib = "^0.4.1"
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
