@@ -56,9 +56,9 @@ def test_reference_google_wellknown_types_non_wrappers(
     )
 
     assert name == expected_name
-    assert imports.__contains__(
-        expected_import
-    ), f"{expected_import} not found in {imports}"
+    assert imports.__contains__(expected_import), (
+        f"{expected_import} not found in {imports}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -102,9 +102,9 @@ def test_reference_google_wellknown_types_non_wrappers_pydantic(
     )
 
     assert name == expected_name
-    assert imports.__contains__(
-        expected_import
-    ), f"{expected_import} not found in {imports}"
+    assert imports.__contains__(expected_import), (
+        f"{expected_import} not found in {imports}"
+    )
 
 
 @pytest.mark.parametrize(
