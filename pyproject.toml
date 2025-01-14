@@ -12,7 +12,7 @@ license = "MIT"
 packages = [
     { include = "betterproto", from = "src" }
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.8,<4.0"
 dynamic = ["dependencies"]
 
 [tool.poetry.dependencies]
