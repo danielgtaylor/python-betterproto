@@ -165,5 +165,5 @@ require_poetry = true
 """
 
 [build-system]
-requires = ["poetry-core>=2.0.0"]
+requires = ["poetry-core>=2.0.0,<3"]
 build-backend = "poetry.core.masonry.api"
