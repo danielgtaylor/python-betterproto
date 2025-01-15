@@ -4,13 +4,13 @@
 # This file has been @generated
 
 __all__ = (
-    {%- for enum in output_file.enums -%}
+    {% for _, enum in output_file.enums|dictsort(by="key") %}
         "{{ enum.py_name }}",
     {%- endfor -%}
-    {%- for message in output_file.messages -%}
+    {% for _, message in output_file.messages|dictsort(by="key") %}
         "{{ message.py_name }}",
     {%- endfor -%}
-    {%- for service in output_file.services -%}
+    {% for _, service in output_file.services|dictsort(by="key") %}
         "{{ service.py_name }}Stub",
         "{{ service.py_name }}Base",
     {%- endfor -%}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package import_nested_child_package_from_root.package.child.otherchild;
+
+message ChildMessage {
+
+}
