@@ -24,8 +24,10 @@ jobs:
         run: python -m pip install poetry
       - name: Build package
         run: poetry build
-      - name: Publish package to PyPI
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.pypi }}
-        run: poetry publish -n
+      - name: Publish Package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: ${{ secrets.ARTIFACTORY_CI_USER }}
+          password: ${{ secrets.ARTIFACTORY_CI_PASSWORD }}
+          repository-url: "https://artifactory.dev.earnin.net/artifactory/api/pypi/pypi-local/"
+          verbose: true
