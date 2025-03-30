@@ -132,6 +132,9 @@ class Enum(IntEnum if TYPE_CHECKING else int, metaclass=EnumType):
             super().__setattr__(self, "value", value)
             return self
 
+    def __getnewargs_ex__(self) -> Tuple[Tuple[()], Dict[str, Any]]:
+        return (), {"name": self.name, "value": self.value}
+
     def __str__(self) -> str:
         return self.name or "None"
 

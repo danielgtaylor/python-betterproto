@@ -57,6 +57,11 @@ class Complex(betterproto.Message):
     )
 
 
+class BetterprotoEnum(betterproto.Enum):
+    UNSPECIFIED = 0
+    ONE = 1
+
+
 def complex_msg():
     return Complex(
         foo_str="yep",
@@ -201,3 +206,11 @@ def test_message_can_be_cached():
             .string_value
             == "world"
         )
+
+
+def test_pickle_enum():
+    enum = BetterprotoEnum.ONE
+    assert unpickled(enum) == enum
+
+    enum = BetterprotoEnum.UNSPECIFIED
+    assert unpickled(enum) == enum
