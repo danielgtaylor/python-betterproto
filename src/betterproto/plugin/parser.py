@@ -151,8 +151,10 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
         if not output_package.output:
             continue
 
+        output_name = output_package.package_proto_obj.name.split('/')[-1].split('.')[0] + ".py"
+
         # Add files to the response object
-        output_path = pathlib.Path(*output_package_name.split("."), "__init__.py")
+        output_path = pathlib.Path(*output_package_name.split("."), output_name)
         output_paths.add(output_path)
 
         response.file.append(
