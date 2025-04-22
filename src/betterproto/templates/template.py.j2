@@ -20,6 +20,26 @@ class {{ enum.py_name }}(betterproto.Enum):
         return core_schema.int_schema(ge=0)
     {% endif %}
 
+    @property
+    def full_name(self):
+        return {{ enum.py_name }}_full_name_map[self.value]
+
+    @classmethod
+    def from_full_name(cls, full_name):
+        return cls.from_string({{ enum.py_name }}_full_name_reverse_map[full_name])
+
+
+{{ enum.py_name }}_full_name_map = {
+{% for entry in enum.entries %}
+    {{ entry.value }}: "{{ entry.full_name }}",
+{% endfor %}
+}
+
+{{ enum.py_name }}_full_name_reverse_map = {
+{% for entry in enum.entries %}
+    "{{ entry.full_name }}": "{{ entry.name }}",
+{% endfor %}
+}
 {% endfor %}
 {% endif %}
 {% for message in output_file.messages %}
