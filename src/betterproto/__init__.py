@@ -1728,7 +1728,10 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
-            value = getattr(self, field_name)
+            try:
+                value = getattr(self, field_name)
+            except AttributeError:
+                value = self._get_field_default(field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
                 if isinstance(value, datetime):
@@ -1809,7 +1812,11 @@ class Message(ABC):
 
             if value[key] is not None:
                 if meta.proto_type == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
+                    try:
+                        v = getattr(self, field_name)
+                    except AttributeError:
+                        v = self._get_field_default(field_name)
+                        setattr(self, field_name, v)
                     if isinstance(v, list):
                         cls = self._betterproto.cls_by_field[field_name]
                         for item in value[key]:
@@ -1825,7 +1832,11 @@ class Message(ABC):
                         # assignment here is necessary.
                         v.from_pydict(value[key])
                 elif meta.map_types and meta.map_types[1] == TYPE_MESSAGE:
-                    v = getattr(self, field_name)
+                    try:
+                        v = getattr(self, field_name)
+                    except AttributeError:
+                        v = self._get_field_default(field_name)
+                        setattr(self, field_name, v)
                     cls = self._betterproto.cls_by_field[f"{field_name}.value"]
                     for k in value[key]:
                         v[k] = cls().from_pydict(value[key][k])

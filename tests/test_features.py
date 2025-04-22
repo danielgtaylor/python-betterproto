@@ -181,6 +181,49 @@ def test_oneof_support():
     assert betterproto.which_one_of(foo2, "group2")[0] == ""
 
 
+def test_oneof_dict_pydict():
+
+    class Sub(betterproto.Enum):
+        aaa = 1
+        bbb = 2
+
+
+    @dataclass
+    class Foo(betterproto.Message):
+        bar: int = betterproto.int32_field(1, group="group1")
+        baz: str = betterproto.string_field(2, group="group1")
+        sub: Sub = betterproto.enum_field(3, group="group1")
+
+    foo1 = Foo(bar=1)
+
+    assert foo1.to_dict() == {"bar": 1}
+    assert foo1.to_pydict() == {"bar": 1}
+
+    foo2 = Foo(baz="baz")
+
+    assert foo2.to_dict() == {"baz": "baz"}
+    assert foo2.to_pydict() == {"baz": "baz"}
+
+    foo3 = Foo(sub=Sub.bbb)
+
+    # Enum fields should serialize as strings in to_dict, serialize as Enum values in to_pydict
+    assert foo3.to_dict() == {"sub": "bbb"}
+    assert foo3.to_pydict() == {"sub": Sub.bbb}
+
+    foo4 = Foo().from_dict({"bar": 1})
+    assert foo4.bar == 1
+
+    foo5 = Foo().from_pydict({"bar": 1})
+    assert foo5.bar == 1
+
+    foo6 = Foo().from_dict({"sub": "bbb"})
+    assert foo6.sub == Sub.bbb
+
+    foo7 = Foo().from_pydict({"sub": 2})
+    assert foo7.sub == Sub.bbb
+
+
+
 @pytest.mark.skipif(
     sys.version_info < (3, 10),
     reason="pattern matching is only supported in python3.10+",
