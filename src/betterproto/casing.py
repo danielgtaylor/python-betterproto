@@ -8,11 +8,11 @@ SYMBOLS = "[^a-zA-Z0-9]*"
 
 # Optionally capitalized word.
 # language=PythonRegExp
-WORD = "[A-Z]*[a-z]*[0-9]*"
+WORD = "[A-Z]*([a-z]|[0-9][A-Z]*)*"
 
 # Uppercase word, not followed by lowercase letters.
 # language=PythonRegExp
-WORD_UPPER = "[A-Z]+(?![a-z])[0-9]*"
+WORD_UPPER = "([A-Z]+(?![a-z])[0-9]*)+"
 
 
 def safe_snake_case(value: str) -> str:
