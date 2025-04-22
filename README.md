@@ -15,7 +15,7 @@ This project aims to provide an improved experience when using Protobuf / gRPC i
   - Timezone-aware `datetime` and `timedelta` objects
   - Relative imports
   - Mypy type checking
-- [Pydantic Models](https://docs.pydantic.dev/) generation (see #generating-pydantic-models)
+- [Pydantic Models](https://docs.pydantic.dev/) generation (see [Generating pydantic models](#generating-pydantic-models))
 
 This project is heavily inspired by, and borrows functionality from:
 
