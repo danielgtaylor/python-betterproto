@@ -68,11 +68,11 @@ The following tests are automatically executed for all cases:
 
 ## Running the tests
 
-- `pipenv run generate`  
+- `poe generate`  
   This generates:
   - `betterproto/tests/output_betterproto` &mdash; *the plugin generated python classes*
   - `betterproto/tests/output_reference` &mdash; *reference implementation classes*
-- `pipenv run test`
+- `poe test`
 
 ## Intentionally Failing tests
 
