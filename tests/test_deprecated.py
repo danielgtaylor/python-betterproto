@@ -59,3 +59,17 @@ async def test_service_with_deprecated_method():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         await stub.func(Empty())
+
+
+def test_warnings_import_for_deprecated_message():
+    """Verify that deprecated messages trigger the warnings import."""
+    with pytest.warns(DeprecationWarning):
+        # This should trigger the warnings import in the generated code
+        Message(value="test")
+
+    # Check that warnings module is properly imported in the generated file
+    import tests.output_betterproto.deprecated as deprecated_module
+
+    assert "warnings" in deprecated_module.__dict__, (
+        "warnings module should be imported for deprecated messages"
+    )
