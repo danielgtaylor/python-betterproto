@@ -306,7 +306,10 @@ class OutputTemplate:
         if any(any(f.deprecated for f in m.fields) for m in self.messages):
             has_deprecated = True
         # Check if any methods in any services are marked as deprecated
-        if any(any(m.proto_obj.options.deprecated for m in s.methods) for s in self.services):
+        if any(
+            any(m.proto_obj.options.deprecated for m in s.methods)
+            for s in self.services
+        ):
             has_deprecated = True
 
         if has_deprecated:

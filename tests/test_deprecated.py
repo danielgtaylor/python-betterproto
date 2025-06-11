@@ -66,8 +66,10 @@ def test_warnings_import_for_deprecated_message():
     with pytest.warns(DeprecationWarning):
         # This should trigger the warnings import in the generated code
         Message(value="test")
-    
+
     # Check that warnings module is properly imported in the generated file
     import tests.output_betterproto.deprecated as deprecated_module
-    assert 'warnings' in deprecated_module.__dict__, \
+
+    assert "warnings" in deprecated_module.__dict__, (
         "warnings module should be imported for deprecated messages"
+    )
