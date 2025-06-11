@@ -299,14 +299,14 @@ class OutputTemplate:
         imports = set()
 
         has_deprecated = False
+        # Check if any messages are marked as deprecated
         if any(m.deprecated for m in self.messages):
             has_deprecated = True
-        if any(x for x in self.messages if any(x.deprecated_fields)):
+        # Check if any fields in any messages are marked as deprecated
+        if any(any(f.deprecated for f in m.fields) for m in self.messages):
             has_deprecated = True
-        if any(
-            any(m.proto_obj.options.deprecated for m in s.methods)
-            for s in self.services
-        ):
+        # Check if any methods in any services are marked as deprecated
+        if any(any(m.proto_obj.options.deprecated for m in s.methods) for s in self.services):
             has_deprecated = True
 
         if has_deprecated:
