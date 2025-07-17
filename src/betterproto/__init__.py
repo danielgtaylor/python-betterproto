@@ -967,9 +967,9 @@ class Message(ABC):
                 field_name=field_name, meta=meta
             )
 
-            if value == self._get_field_default(field_name) and not (
+            if not (
                 selected_in_group or serialize_empty or include_default_value_for_oneof
-            ):
+            ) and value == self._get_field_default(field_name):
                 # Default (zero) values are not serialized. Two exceptions are
                 # if this is the selected oneof item or if we know we have to
                 # serialize an empty message (i.e. zero value was explicitly
@@ -1073,9 +1073,9 @@ class Message(ABC):
                 field_name=field_name, meta=meta
             )
 
-            if value == self._get_field_default(field_name) and not (
+            if not (
                 selected_in_group or serialize_empty or include_default_value_for_oneof
-            ):
+            ) and value == self._get_field_default(field_name):
                 # Default (zero) values are not serialized. Two exceptions are
                 # if this is the selected oneof item or if we know we have to
                 # serialize an empty message (i.e. zero value was explicitly
