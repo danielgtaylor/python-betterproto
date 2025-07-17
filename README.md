@@ -2,6 +2,9 @@
 
 ![](https://github.com/danielgtaylor/python-betterproto/actions/workflows/ci.yml/badge.svg)
 
+> :warning: Betterproto has moved to a new repository: [https://github.com/betterproto/python-betterproto2](https://github.com/betterproto/python-betterproto2). This new version is a major redesign, addressing several bugs and introducing new features. It is still under active development: documentation is incomplete, work is ongoing, and breaking changes may occur. If you'd like to contribute, please submit your pull requests to the new repository.
+
+
 > :octocat: If you're reading this on github, please be aware that it might mention unreleased features! See the latest released README on [pypi](https://pypi.org/project/betterproto/).
 
 This project aims to provide an improved experience when using Protobuf / gRPC in a modern Python environment by making use of modern language features and generating readable, understandable, idiomatic Python code. It will not support legacy features or environments (e.g. Protobuf 2). The following are supported:
