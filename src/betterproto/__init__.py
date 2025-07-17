@@ -1728,6 +1728,8 @@ class Message(ABC):
         defaults = self._betterproto.default_gen
         for field_name, meta in self._betterproto.meta_by_field_name.items():
             field_is_repeated = defaults[field_name] is list
+            if self.__raw_get(field_name) is PLACEHOLDER and not include_default_values:
+                continue
             value = getattr(self, field_name)
             cased_name = casing(field_name).rstrip("_")  # type: ignore
             if meta.proto_type == TYPE_MESSAGE:
@@ -1775,13 +1777,7 @@ class Message(ABC):
 
                 if value or include_default_values:
                     output[cased_name] = value
-            elif (
-                value != self._get_field_default(field_name)
-                or include_default_values
-                or self._include_default_value_for_oneof(
-                    field_name=field_name, meta=meta
-                )
-            ):
+            else:
                 output[cased_name] = value
         return output
 
