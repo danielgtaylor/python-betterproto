@@ -14,6 +14,7 @@ def test_all_definition():
         "GetThingRequest",
         "GetThingResponse",
         "TestStub",
+        "TestSyncStub",
         "TestBase",
     )
     assert enum.__all__ == ("Choice", "ArithmeticOperator", "Test")
