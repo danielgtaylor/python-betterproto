@@ -64,13 +64,15 @@ class {{ message.py_name }}(betterproto.Message):
 
 {% endfor %}
 {% for service in output_file.services %}
+{% if output_file.use_grpcio %}
+class {{ service.py_name }}Stub(ServiceStub):
+{% else %}
 class {{ service.py_name }}Stub(betterproto.ServiceStub):
+{% endif %}
     {% if service.comment %}
 {{ service.comment }}
-
-    {% elif not service.methods %}
-    pass
     {% endif %}
+
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
         {%- if not method.client_streaming -%}
@@ -79,22 +81,72 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             {# Client streaming: need a request iterator instead #}
             , {{ method.py_input_message_param }}_iterator: "{{ output_file.typing_compiler.union(output_file.typing_compiler.async_iterable(method.py_input_message_type), output_file.typing_compiler.iterable(method.py_input_message_type)) }}"
         {%- endif -%}
-            ,
-            *
             , timeout: {{ output_file.typing_compiler.optional("float") }} = None
+            {% if not output_file.use_grpcio %}
             , deadline: {{ output_file.typing_compiler.optional('"Deadline"') }} = None
+            {% endif %}
             , metadata: {{ output_file.typing_compiler.optional('"MetadataLike"') }} = None
             ) -> "{% if method.server_streaming %}{{ output_file.typing_compiler.async_iterator(method.py_output_message_type ) }}{% else %}{{ method.py_output_message_type }}{% endif %}":
         {% if method.comment %}
 {{ method.comment }}
 
         {% endif %}
-        {% if method.proto_obj.options.deprecated %}
-        warnings.warn("{{ service.py_name }}.{{ method.py_name }} is deprecated", DeprecationWarning)
-
-        {% endif %}
-        {% if method.server_streaming %}
-            {% if method.client_streaming %}
+        {% if output_file.use_grpcio %}
+            {% if method.server_streaming %}
+                {% if method.client_streaming %}
+        # stream_stream pour grpcio - direct call
+        call = self.channel.stream_stream(
+            "{{ method.route }}",
+            request_serializer={{ method.py_input_message_type }}.SerializeToString,
+            response_deserializer={{ method.py_output_message_type.strip('"') }}.FromString,
+        )(
+            self._wrap_message_iterator({{ method.py_input_message_param }}_iterator),
+            timeout=timeout,
+            metadata=metadata,
+        )
+        async for response in call:
+            yield response
+                {% else %}
+        # unary_stream pour grpcio - direct call
+        call = self.channel.unary_stream(
+            "{{ method.route }}",
+            request_serializer={{ method.py_input_message_type }}.SerializeToString,
+            response_deserializer={{ method.py_output_message_type.strip('"') }}.FromString,
+        )(
+            {{ method.py_input_message_param }},
+            timeout=timeout,
+            metadata=metadata,
+        )
+        async for response in call:
+            yield response
+                {% endif %}
+            {% else %}
+                {% if method.client_streaming %}
+        # stream_unary pour grpcio - direct call
+        return await self.channel.stream_unary(
+            "{{ method.route }}",
+            request_serializer={{ method.py_input_message_type }}.SerializeToString,
+            response_deserializer={{ method.py_output_message_type.strip('"') }}.FromString,
+        )(
+            self._wrap_message_iterator({{ method.py_input_message_param }}_iterator),
+            timeout=timeout,
+            metadata=metadata,
+        )
+                {% else %}
+        return await self.channel.unary_unary(
+            "{{ method.route }}",
+            request_serializer={{ method.py_input_message_type }}.SerializeToString,
+            response_deserializer={{ method.py_output_message_type.strip('"') }}.FromString,
+        )(
+            {{ method.py_input_message_param }},
+            timeout=timeout,
+            metadata=metadata,
+        )
+                {% endif %}
+            {% endif %}
+        {% else %}
+            {% if method.server_streaming %}
+                {% if method.client_streaming %}
         async for response in self._stream_stream(
             "{{ method.route }}",
             {{ method.py_input_message_param }}_iterator,
@@ -105,7 +157,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             metadata=metadata,
         ):
             yield response
-            {% else %}{# i.e. not client streaming #}
+                {% else %}
         async for response in self._unary_stream(
             "{{ method.route }}",
             {{ method.py_input_message_param }},
@@ -115,10 +167,9 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             metadata=metadata,
         ):
             yield response
-
-            {% endif %}{# if client streaming #}
-        {% else %}{# i.e. not server streaming #}
-            {% if method.client_streaming %}
+                {% endif %}
+            {% else %}
+                {% if method.client_streaming %}
         return await self._stream_unary(
             "{{ method.route }}",
             {{ method.py_input_message_param }}_iterator,
@@ -128,7 +179,7 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             deadline=deadline,
             metadata=metadata,
         )
-            {% else %}{# i.e. not client streaming #}
+                {% else %}
         return await self._unary_unary(
             "{{ method.route }}",
             {{ method.py_input_message_param }},
@@ -137,7 +188,8 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
             deadline=deadline,
             metadata=metadata,
         )
-            {% endif %}{# client streaming #}
+                {% endif %}
+            {% endif %}
         {% endif %}
 
     {% endfor %}
@@ -147,12 +199,19 @@ class {{ service.py_name }}Stub(betterproto.ServiceStub):
 {{ i }}
 {% endfor %}
 
+
+{% if not output_file.use_grpcio %}
 {% for service in output_file.services %}
 class {{ service.py_name }}Base(ServiceBase):
     {% if service.comment %}
 {{ service.comment }}
 
     {% endif %}
+
+    @property
+    def __proto_path__(self):
+        """Return the proto path for this service."""
+        return "{% if output_file.package %}{{ output_file.package }}.{% endif %}{{ service.proto_name }}"
 
     {% for method in service.methods %}
     async def {{ method.py_name }}(self
@@ -215,3 +274,79 @@ class {{ service.py_name }}Base(ServiceBase):
         }
 
 {% endfor %}
+{% endif %}
+{% if output_file.use_grpcio %}
+{% for service in output_file.services %}
+class {{ service.py_name }}Base(ServiceBase):
+    {% if service.comment %}
+{{ service.comment }}
+
+    {% endif %}
+
+    @property
+    def __proto_path__(self) -> str:
+        return "{% if output_file.package %}{{ output_file.package }}.{% endif %}{{ service.proto_name }}"
+
+    {% for method in service.methods %}
+    async def {{ method.py_name }}(self
+        {%- if not method.client_streaming -%}
+            , request: "{{ method.py_input_message_type }}"
+        {%- else -%}
+            {# Client streaming: need a request iterator instead #}
+            , request_iterator: "{{ output_file.typing_compiler.async_iterator(method.py_input_message_type) }}"
+        {%- endif -%}
+            , context: grpc.aio.ServicerContext
+            ) -> {% if method.server_streaming %}"{{ output_file.typing_compiler.async_generator(method.py_output_message_type) }}"{% else %}"{{ method.py_output_message_type }}"{% endif %}:
+        {% if method.comment %}
+{{ method.comment }}
+
+        {% endif %}
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    {% endfor %}
+
+
+    @property
+    def __rpc_methods__(self):
+        return {
+        {% for method in service.methods %}
+            "{{ method.proto_name }}":
+            {% if not method.client_streaming and not method.server_streaming %}
+                grpc.unary_unary_rpc_method_handler(
+            {% elif method.client_streaming and method.server_streaming %}
+                grpc.stream_stream_rpc_method_handler(
+            {% elif method.client_streaming %}
+                grpc.stream_unary_rpc_method_handler(
+            {% else %}
+                grpc.unary_stream_rpc_method_handler(
+            {% endif %}
+                    self.{{ method.py_name }},
+                    request_deserializer={{ method.py_input_message_type }}.FromString,
+                    response_serializer={{ method.py_output_message_type.strip('"') }}.SerializeToString,
+                ),
+        {% endfor %}
+        }
+
+{% endfor %}
+{% endif %}
+
+{% if output_file.use_grpcio %}
+{% for service in output_file.services %}
+
+def add_{{ service.py_name }}Servicer_to_server(servicer, server):
+    """Add {{ service.py_name }}Servicer to the server."""
+    rpc_method_handlers = {
+    {% for method in service.methods %}
+        "{{ method.proto_name }}": servicer.__rpc_methods__["{{ method.proto_name }}"],
+    {% endfor %}
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+        "{% if output_file.package %}{{ output_file.package }}.{% endif %}{{ service.proto_name }}",
+        rpc_method_handlers
+    )
+    server.add_generic_rpc_handlers((generic_handler,))
+
+{% endfor %}
+{% endif %}

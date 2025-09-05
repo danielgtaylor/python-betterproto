@@ -90,17 +90,26 @@ async def generate_test_case_output(
     clear_directory(test_case_output_path_reference)
     clear_directory(test_case_output_path_betterproto)
 
-    (
-        (ref_out, ref_err, ref_code),
-        (plg_out, plg_err, plg_code),
-        (plg_out_pyd, plg_err_pyd, plg_code_pyd),
-    ) = await asyncio.gather(
+    tasks = [
         protoc(test_case_input_path, test_case_output_path_reference, True),
         protoc(test_case_input_path, test_case_output_path_betterproto, False),
-        protoc(
-            test_case_input_path, test_case_output_path_betterproto_pyd, False, True
-        ),
-    )
+        protoc(test_case_input_path, test_case_output_path_betterproto_pyd, False, True),
+    ]
+
+    is_service_test_case = test_case_name == "service"
+    if is_service_test_case:
+        test_case_output_path_grpcio = output_path_betterproto.joinpath("service_grpcio")
+        os.makedirs(test_case_output_path_grpcio, exist_ok=True)
+        clear_directory(test_case_output_path_grpcio)
+        tasks.append(protoc(test_case_input_path, test_case_output_path_grpcio, False, False, True))
+
+    results = await asyncio.gather(*tasks)
+
+    if is_service_test_case:
+        (ref_out, ref_err, ref_code), (plg_out, plg_err, plg_code), (plg_out_pyd, plg_err_pyd, plg_code_pyd), (grpcio_out, grpcio_err, grpcio_code) = results
+    else:
+        (ref_out, ref_err, ref_code), (plg_out, plg_err, plg_code), (plg_out_pyd, plg_err_pyd, plg_code_pyd) = results
+        grpcio_out, grpcio_err, grpcio_code = b"", b"", 0
 
     if ref_code == 0:
         print(f"\033[31;1;4mGenerated reference output for {test_case_name!r}\033[0m")
@@ -161,7 +170,7 @@ async def generate_test_case_output(
             sys.stderr.buffer.write(plg_err_pyd)
             sys.stderr.buffer.flush()
 
-    return max(ref_code, plg_code, plg_code_pyd)
+    return max(ref_code, plg_code, plg_code_pyd, grpcio_code)
 
 
 HELP = "\n".join(

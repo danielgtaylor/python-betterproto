@@ -19,6 +19,7 @@ dynamic = ["dependencies"]
 # The Ruff version is pinned. To update it, also update it in .pre-commit-config.yaml
 ruff = { version = "~0.9.1", optional = true }
 grpclib = "^0.4.1"
+grpcio = { version = ">=1.73.0", optional = true }
 jinja2 = { version = ">=3.0.3", optional = true }
 python-dateutil = "^2.8"
 typing-extensions = "^4.7.1"
@@ -45,6 +46,7 @@ pydantic = ">=2.0,<3"
 protobuf = "^5"
 cachelib = "^0.13.0"
 tomlkit = ">=0.7.0"
+grpcio-testing = "^1.54.2"
 
 [project.scripts]
 protoc-gen-python_betterproto = "betterproto.plugin:main"
@@ -52,6 +54,7 @@ protoc-gen-python_betterproto = "betterproto.plugin:main"
 [project.optional-dependencies]
 compiler = ["ruff", "jinja2"]
 rust-codec = ["betterproto-rust-codec"]
+grpcio = ["grpcio"]
 
 [tool.ruff]
 extend-exclude = ["tests/output_*"]

@@ -18,6 +18,7 @@ from typing import (
     Union,
 )
 
+from betterproto.plugin.parser import USE_GRPCIO_FLAG
 
 os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
 
@@ -44,12 +45,13 @@ async def protoc(
     output_dir: Union[str, Path],
     reference: bool = False,
     pydantic_dataclasses: bool = False,
+    grpcio: bool = False,
 ):
     path: Path = Path(path).resolve()
     output_dir: Path = Path(output_dir).resolve()
     python_out_option: str = "python_betterproto_out" if not reference else "python_out"
 
-    if pydantic_dataclasses:
+    if pydantic_dataclasses or grpcio:
         plugin_path = Path("src/betterproto/plugin/main.py")
 
         if "Win" in platform.system():
@@ -76,11 +78,20 @@ async def protoc(
             "grpc.tools.protoc",
             f"--plugin=protoc-gen-custom={plugin_path.as_posix()}",
             "--experimental_allow_proto3_optional",
-            "--custom_opt=pydantic_dataclasses",
-            f"--proto_path={path.as_posix()}",
-            f"--custom_out={output_dir.as_posix()}",
-            *[p.as_posix() for p in path.glob("*.proto")],
         ]
+
+        if pydantic_dataclasses:
+            command.append("--custom_opt=pydantic_dataclasses")
+        if grpcio:
+            command.append(f"--custom_opt={USE_GRPCIO_FLAG}")
+
+        command.extend(
+            [
+                f"--proto_path={path.as_posix()}",
+                f"--custom_out={output_dir.as_posix()}",
+                *[p.as_posix() for p in path.glob("*.proto")],
+            ]
+        )
     else:
         command = [
             sys.executable,

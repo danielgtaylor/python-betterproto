@@ -13,6 +13,9 @@ __all__ = (
     {%- for service in output_file.services -%}
         "{{ service.py_name }}Stub",
         "{{ service.py_name }}Base",
+        {%- if output_file.use_grpcio -%}
+        "add_{{ service.py_name }}Servicer_to_server",
+        {%- endif -%}
     {%- endfor -%}
 )
 
@@ -29,7 +32,7 @@ from dataclasses import dataclass
 {% if output_file.datetime_imports %}
 from datetime import {% for i in output_file.datetime_imports|sort %}{{ i }}{% if not loop.last %}, {% endif %}{% endfor %}
 
-{% endif%}
+{% endif %}
 {% set typing_imports = output_file.typing_compiler.imports() %}
 {% if typing_imports %}
 {% for line in output_file.typing_compiler.import_lines() %}
@@ -42,8 +45,16 @@ from pydantic import {% for i in output_file.pydantic_imports|sort %}{{ i }}{% i
 
 {% endif %}
 
+
+{% if output_file.use_grpcio %}
+import grpc
+from betterproto.grpc.grpcio_client import ServiceStub
+from betterproto.grpc.grpcio_server import ServiceBase
+{% endif %}
+
 import betterproto
-{% if output_file.services %}
+{% if not output_file.use_grpcio %}
+from betterproto.grpc.grpclib_client import ServiceStub
 from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
 {% endif %}

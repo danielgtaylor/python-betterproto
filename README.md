@@ -536,6 +536,16 @@ protoc \
     /usr/local/include/google/protobuf/*.proto
 ```
 
+### Using grpcio library instead of grpclib
+
+In order to use the `grpcio` library instead of `grpclib`, you can use the `--python_betterproto_opt=USE_GRPCIO`
+option when running the `protoc` command. 
+This will generate stubs compatible with the `grpcio` library.
+
+Example:
+```sh
+protoc -I . --python_betterproto_out=.  --python_betterproto_opt=USE_GRPCIO demo.proto
+```
 ### TODO
 
 - [x] Fixed length fields

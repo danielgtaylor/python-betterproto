@@ -40,9 +40,10 @@ from .models import (
 from .typing_compiler import (
     DirectImportTypingCompiler,
     NoTyping310TypingCompiler,
-    TypingCompiler,
     TypingImportTypingCompiler,
 )
+
+USE_GRPCIO_FLAG = "USE_GRPCIO"
 
 
 def traverse(
@@ -80,6 +81,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     response.supported_features = CodeGeneratorResponseFeature.FEATURE_PROTO3_OPTIONAL
 
     request_data = PluginRequestCompiler(plugin_request_obj=request)
+    use_grpcio = USE_GRPCIO_FLAG in plugin_options
     # Gather output packages
     for proto_file in request.proto_file:
         output_package_name = proto_file.package
@@ -90,7 +92,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
             )
         # Add this input file to the output corresponding to this package
         request_data.output_packages[output_package_name].input_files.append(proto_file)
-
+        request_data.output_packages[output_package_name].use_grpcio = use_grpcio
         if (
             proto_file.package == "google.protobuf"
             and "INCLUDE_GOOGLE" not in plugin_options
@@ -143,7 +145,7 @@ def generate_code(request: CodeGeneratorRequest) -> CodeGeneratorResponse:
     for output_package_name, output_package in request_data.output_packages.items():
         for proto_input_file in output_package.input_files:
             for index, service in enumerate(proto_input_file.service):
-                read_protobuf_service(proto_input_file, service, index, output_package)
+                read_protobuf_service(proto_input_file, service, index, output_package, use_grpcio)
 
     # Generate output files
     output_paths: Set[pathlib.Path] = set()
@@ -253,6 +255,7 @@ def read_protobuf_service(
     service: ServiceDescriptorProto,
     index: int,
     output_package: OutputTemplate,
+    use_grpcio: bool = False,
 ) -> None:
     service_data = ServiceCompiler(
         source_file=source_file,
@@ -266,4 +269,5 @@ def read_protobuf_service(
             parent=service_data,
             proto_obj=method,
             path=[6, index, 2, j],
+            use_grpcio=use_grpcio,
         )
