@@ -42,6 +42,10 @@ class TypingCompiler(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def async_generator(self, type: str) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         """
         Returns either the direct import as a key with none as value, or a set of
@@ -93,6 +97,10 @@ class DirectImportTypingCompiler(TypingCompiler):
         self._imports["typing"].add("AsyncIterator")
         return f"AsyncIterator[{type}]"
 
+    def async_generator(self, type: str) -> str:
+        self._imports["typing"].add("AsyncGenerator")
+        return f"AsyncGenerator[{type}, None]"
+
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         return {k: v if v else None for k, v in self._imports.items()}
 
@@ -128,6 +136,10 @@ class TypingImportTypingCompiler(TypingCompiler):
     def async_iterator(self, type: str) -> str:
         self._imported = True
         return f"typing.AsyncIterator[{type}]"
+
+    def async_generator(self, type: str) -> str:
+        self._imported = True
+        return f"typing.AsyncGenerator[{type}, None]"
 
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         if self._imported:
@@ -168,6 +180,10 @@ class NoTyping310TypingCompiler(TypingCompiler):
     def async_iterator(self, type: str) -> str:
         self._imports["collections.abc"].add("AsyncIterator")
         return f'"AsyncIterator[{type}]"'
+
+    def async_generator(self, type: str) -> str:
+        self._imports["collections.abc"].add("AsyncGenerator")
+        return f'"AsyncGenerator[{type}, None]"'
 
     def imports(self) -> Dict[str, Optional[Set[str]]]:
         return {k: v if v else None for k, v in self._imports.items()}

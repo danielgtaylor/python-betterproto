@@ -270,6 +270,7 @@ class OutputTemplate:
     imports_type_checking_only: Set[str] = field(default_factory=set)
     pydantic_dataclasses: bool = False
     output: bool = True
+    use_grpcio: bool = False
     typing_compiler: TypingCompiler = field(default_factory=DirectImportTypingCompiler)
 
     @property
@@ -697,18 +698,20 @@ class ServiceMethodCompiler(ProtoContentBase):
     proto_obj: MethodDescriptorProto
     path: List[int] = PLACEHOLDER
     comment_indent: int = 8
+    use_grpcio: bool = False
 
     def __post_init__(self) -> None:
         # Add method to service
         self.parent.methods.append(self)
 
-        self.output_file.imports_type_checking_only.add("import grpclib.server")
-        self.output_file.imports_type_checking_only.add(
-            "from betterproto.grpc.grpclib_client import MetadataLike"
-        )
-        self.output_file.imports_type_checking_only.add(
-            "from grpclib.metadata import Deadline"
-        )
+        if self.use_grpcio:
+            imports = ["import grpc.aio", "from betterproto.grpc.grpcio_client import MetadataLike"]
+        else:
+            imports = ["import grpclib.server", "from betterproto.grpc.grpclib_client import MetadataLike",
+                       "from grpclib.metadata import Deadline"]
+
+        for import_line in imports:
+            self.output_file.imports_type_checking_only.add(import_line)
 
         super().__post_init__()  # check for unset fields
 
