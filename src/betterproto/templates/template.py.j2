@@ -4,6 +4,9 @@ class {{ enum.py_name }}(betterproto.Enum):
 {{ enum.comment }}
 
     {% endif %}
+    # Mapping from Python member names to original proto names (for canonical JSON)
+    _proto_names_ = { {% for entry in enum.entries %}"{{ entry.name }}": "{{ entry.proto_name }}", {% endfor %}}
+
     {% for entry in enum.entries %}
     {{ entry.name }} = {{ entry.value }}
         {% if entry.comment %}

@@ -251,6 +251,17 @@ For compatibility the default is to convert field names to `camelCase`. You can 
 MyMessage().to_dict(casing=betterproto.Casing.SNAKE)
 ```
 
+#### Proto3 canonical JSON
+
+By default, enum values are serialized using their stripped Python names (e.g. `"HEARTS"` for a proto enum value `SUIT_HEARTS`). To use the original `.proto` enum names as required by the [proto3 JSON spec](https://protobuf.dev/programming-guides/json/), pass `proto3_json=True`:
+
+```python
+Card(suit=Suit.HEARTS).to_dict(proto3_json=True)
+# {"suit": "SUIT_HEARTS"}  instead of  {"suit": "HEARTS"}
+```
+
+When deserializing, `from_dict()` accepts both formats (stripped names, full proto names, and integer values).
+
 ### Determining if a message was sent
 
 Sometimes it is useful to be able to determine whether a message has been sent on the wire. This is how the Google wrapper types work to let you know whether a value is unset, set as the default (zero value), or set as something else, for example.

@@ -650,6 +650,7 @@ class EnumDefinitionCompiler(MessageCompiler):
         name: str
         value: int
         comment: str
+        proto_name: str  # Original name from .proto file
 
     def __post_init__(self) -> None:
         # Get entries/allowed values for this Enum
@@ -662,6 +663,7 @@ class EnumDefinitionCompiler(MessageCompiler):
                 comment=get_comment(
                     proto_file=self.source_file, path=self.path + [2, entry_number]
                 ),
+                proto_name=entry_proto_value.name,
             )
             for entry_number, entry_proto_value in enumerate(self.proto_obj.value)
         ]

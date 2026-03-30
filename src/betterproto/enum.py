@@ -35,12 +35,14 @@ def _is_descriptor(obj: object) -> bool:
 class EnumType(EnumMeta if TYPE_CHECKING else type):
     _value_map_: Mapping[int, Enum]
     _member_map_: Mapping[str, Enum]
+    _proto_names_: Dict[str, str]  # Maps Python name -> original proto name
 
     def __new__(
         mcs, name: str, bases: Tuple[type, ...], namespace: Dict[str, Any]
     ) -> Self:
         value_map = {}
         member_map = {}
+        proto_names = namespace.pop("_proto_names_", {})
 
         new_mcs = type(
             f"{name}Type",
@@ -50,7 +52,11 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
                     + [EnumType, type]
                 )
             ),  # reorder the bases so EnumType and type are last to avoid conflicts
-            {"_value_map_": value_map, "_member_map_": member_map},
+            {
+                "_value_map_": value_map,
+                "_member_map_": member_map,
+                "_proto_names_": proto_names,
+            },
         )
 
         members = {
@@ -71,7 +77,8 @@ class EnumType(EnumMeta if TYPE_CHECKING else type):
         for name, value in members.items():
             member = value_map.get(value)
             if member is None:
-                member = cls.__new__(cls, name=name, value=value)  # type: ignore
+                proto_name = proto_names.get(name, name)
+                member = cls.__new__(cls, name=name, value=value, proto_name=proto_name)  # type: ignore
                 value_map[value] = member
             member_map[name] = member
             type.__setattr__(new_mcs, name, member)
@@ -123,17 +130,27 @@ class Enum(IntEnum if TYPE_CHECKING else int, metaclass=EnumType):
 
     name: Optional[str]
     value: int
+    proto_name: Optional[str]
 
     if not TYPE_CHECKING:
 
-        def __new__(cls, *, name: Optional[str], value: int) -> Self:
+        def __new__(
+            cls, *, name: Optional[str], value: int, proto_name: Optional[str] = None
+        ) -> Self:
             self = super().__new__(cls, value)
             super().__setattr__(self, "name", name)
             super().__setattr__(self, "value", value)
+            # proto_name is the original name from the .proto file (e.g. "MARK_TYPE_BOLD")
+            # used for proto3 canonical JSON serialization
+            super().__setattr__(self, "proto_name", proto_name or name)
             return self
 
     def __getnewargs_ex__(self) -> Tuple[Tuple[()], Dict[str, Any]]:
-        return (), {"name": self.name, "value": self.value}
+        return (), {
+            "name": self.name,
+            "value": self.value,
+            "proto_name": self.proto_name,
+        }
 
     def __str__(self) -> str:
         return self.name or "None"
@@ -181,6 +198,9 @@ class Enum(IntEnum if TYPE_CHECKING else int, metaclass=EnumType):
     def from_string(cls, name: str) -> Self:
         """Return the value which corresponds to the string name.
 
+        Accepts both the Python member name (e.g. "BOLD") and the original
+        proto name (e.g. "MARK_TYPE_BOLD") per the proto3 JSON spec.
+
         Parameters
         -----------
         name: :class:`str`
@@ -191,7 +211,12 @@ class Enum(IntEnum if TYPE_CHECKING else int, metaclass=EnumType):
         :exc:`ValueError`
             The member was not found in the Enum.
         """
-        try:
-            return cls._member_map_[name]
-        except KeyError as e:
-            raise ValueError(f"Unknown value {name} for enum {cls.__name__}") from e
+        # Try stripped Python name first
+        member = cls._member_map_.get(name)
+        if member is not None:
+            return member
+        # Try original proto name
+        for m in cls._member_map_.values():
+            if getattr(m, "proto_name", None) == name:
+                return m
+        raise ValueError(f"Unknown value {name} for enum {cls.__name__}")

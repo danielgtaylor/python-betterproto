@@ -1405,7 +1405,10 @@ class Message(ABC):
         return cls().parse(data)
 
     def to_dict(
-        self, casing: Casing = Casing.CAMEL, include_default_values: bool = False
+        self,
+        casing: Casing = Casing.CAMEL,
+        include_default_values: bool = False,
+        proto3_json: bool = False,
     ) -> Dict[str, Any]:
         """
         Returns a JSON serializable dict representation of this object.
@@ -1419,6 +1422,10 @@ class Message(ABC):
             If ``True`` will include the default values of fields. Default is ``False``.
             E.g. an ``int32`` field will be included with a value of ``0`` if this is
             set to ``True``, otherwise this would be ignored.
+        proto3_json: :class:`bool`
+            If ``True`` will use proto3 canonical JSON format for enum values,
+            serializing them with their original .proto names (e.g. "MARK_TYPE_BOLD")
+            instead of the stripped Python names (e.g. "BOLD"). Default is ``False``.
 
         Returns
         --------
@@ -1466,7 +1473,8 @@ class Message(ABC):
                         value = [_Duration.delta_to_json(i) for i in value]
                     else:
                         value = [
-                            i.to_dict(casing, include_default_values) for i in value
+                            i.to_dict(casing, include_default_values, proto3_json)
+                            for i in value
                         ]
                     if value or include_default_values:
                         output[cased_name] = value
@@ -1480,12 +1488,16 @@ class Message(ABC):
                         field_name=field_name, meta=meta
                     )
                 ):
-                    output[cased_name] = value.to_dict(casing, include_default_values)
+                    output[cased_name] = value.to_dict(
+                        casing, include_default_values, proto3_json
+                    )
             elif meta.proto_type == TYPE_MAP:
                 output_map = {**value}
                 for k in value:
                     if hasattr(value[k], "to_dict"):
-                        output_map[k] = value[k].to_dict(casing, include_default_values)
+                        output_map[k] = value[k].to_dict(
+                            casing, include_default_values, proto3_json
+                        )
 
                 if value or include_default_values:
                     output[cased_name] = output_map
@@ -1514,24 +1526,32 @@ class Message(ABC):
                     else:
                         output[cased_name] = b64encode(value).decode("utf8")
                 elif meta.proto_type == TYPE_ENUM:
+
+                    def _enum_name(member):
+                        if proto3_json:
+                            return getattr(member, "proto_name", None) or member.name
+                        return member.name
+
                     if field_is_repeated:
                         enum_class = field_types[field_name].__args__[0]
                         if isinstance(value, typing.Iterable) and not isinstance(
                             value, str
                         ):
-                            output[cased_name] = [enum_class(el).name for el in value]
+                            output[cased_name] = [
+                                _enum_name(enum_class(el)) for el in value
+                            ]
                         else:
                             # transparently upgrade single value to repeated
-                            output[cased_name] = [enum_class(value).name]
+                            output[cased_name] = [_enum_name(enum_class(value))]
                     elif value is None:
                         if include_default_values:
                             output[cased_name] = value
                     elif meta.optional:
                         enum_class = field_types[field_name].__args__[0]
-                        output[cased_name] = enum_class(value).name
+                        output[cased_name] = _enum_name(enum_class(value))
                     else:
                         enum_class = field_types[field_name]  # noqa
-                        output[cased_name] = enum_class(value).name
+                        output[cased_name] = _enum_name(enum_class(value))
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
                     if field_is_repeated:
                         output[cased_name] = [_dump_float(n) for n in value]
@@ -1591,10 +1611,18 @@ class Message(ABC):
                     )
                 elif meta.proto_type == TYPE_ENUM:
                     enum_cls = cls._betterproto.cls_by_field[field_name]
+
+                    def _parse_enum(e, ec=enum_cls):
+                        if isinstance(e, int):
+                            return ec.try_value(e)
+                        return ec.from_string(e)
+
                     if isinstance(value, list):
-                        value = [enum_cls.from_string(e) for e in value]
+                        value = [_parse_enum(e) for e in value]
+                    elif isinstance(value, int):
+                        value = _parse_enum(value)
                     elif isinstance(value, str):
-                        value = enum_cls.from_string(value)
+                        value = _parse_enum(value)
                 elif meta.proto_type in (TYPE_FLOAT, TYPE_DOUBLE):
                     value = (
                         [_parse_float(n) for n in value]
