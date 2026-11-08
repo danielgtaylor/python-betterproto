@@ -42,6 +42,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Tuple,
     Type,
     Union,
 )
@@ -61,6 +62,7 @@ from betterproto.lib.google.protobuf import (
     FieldDescriptorProtoType,
     FileDescriptorProto,
     MethodDescriptorProto,
+    SourceCodeInfoLocation,
 )
 from betterproto.lib.google.protobuf.compiler import CodeGeneratorRequest
 
@@ -149,10 +151,16 @@ def monkey_patch_oneof_index():
 
 
 def get_comment(
-    proto_file: "FileDescriptorProto", path: List[int], indent: int = 4
+    proto_file: "FileDescriptorProto",
+    path: List[int],
+    indent: int = 4,
+    *,
+    locations: Optional[Iterable[SourceCodeInfoLocation]] = None,
 ) -> str:
     pad = " " * indent
-    for sci_loc in proto_file.source_code_info.location:
+    if locations is None:
+        locations = proto_file.source_code_info.location
+    for sci_loc in locations:
         if list(sci_loc.path) == path:
             all_comments = list(sci_loc.leading_detached_comments)
             if sci_loc.leading_comments:
@@ -224,7 +232,7 @@ class ProtoContentBase:
         """Crawl the proto source code and retrieve comments
         for this object.
         """
-        return get_comment(
+        return self.request.get_comment(
             proto_file=self.source_file, path=self.path, indent=self.comment_indent
         )
 
@@ -233,6 +241,30 @@ class ProtoContentBase:
 class PluginRequestCompiler:
     plugin_request_obj: CodeGeneratorRequest
     output_packages: Dict[str, "OutputTemplate"] = field(default_factory=dict)
+    _comment_locations: Dict[int, Dict[Tuple[int, ...], SourceCodeInfoLocation]] = (
+        field(default_factory=dict, init=False, repr=False)
+    )
+
+    def get_comment(
+        self, proto_file: FileDescriptorProto, path: List[int], indent: int = 4
+    ) -> str:
+        # Source files live for the duration of this request. Index each one once,
+        # rather than scanning all its locations for every generated declaration.
+        file_id = id(proto_file)
+        if file_id not in self._comment_locations:
+            locations = {}
+            for location in proto_file.source_code_info.location:
+                # Match the first location, as the linear search does.
+                locations.setdefault(tuple(location.path), location)
+            self._comment_locations[file_id] = locations
+
+        location = self._comment_locations[file_id].get(tuple(path))
+        return get_comment(
+            proto_file,
+            path,
+            indent,
+            locations=() if location is None else (location,),
+        )
 
     @property
     def all_messages(self) -> List["MessageCompiler"]:
@@ -659,7 +691,7 @@ class EnumDefinitionCompiler(MessageCompiler):
                     entry_proto_value.name, self.proto_obj.name
                 ),
                 value=entry_proto_value.number,
-                comment=get_comment(
+                comment=self.request.get_comment(
                     proto_file=self.source_file, path=self.path + [2, entry_number]
                 ),
             )
