@@ -1,0 +1,9 @@
+syntax = "proto3";
+package documentation_escaping;
+
+// Ends a docstring early: """; raise RuntimeError("comment escaped the docstring"); """
+// A "quoted" word, a trailing quote" and a backslash \ in a comment.
+message Test {
+    // Short: """
+    uint32 x = 1;
+}
