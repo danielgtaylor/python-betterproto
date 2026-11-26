@@ -178,6 +178,11 @@ def get_comment(
             # We don't add this space to the generated file.
             lines = [line[1:] if line and line[0] == " " else line for line in lines]
 
+            # The comment is emitted inside a triple-quoted docstring, so escape
+            # backslashes and double quotes: otherwise a comment containing """
+            # would end the docstring and the rest would become code.
+            lines = [line.replace("\\", "\\\\").replace('"', '\\"') for line in lines]
+
             # This is a field, message, enum, service, or method
             if len(lines) == 1 and len(lines[0]) < 79 - indent - 6:
                 return f'{pad}"""{lines[0]}"""'
